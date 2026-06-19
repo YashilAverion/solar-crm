@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Margin Master - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== COMPONENTS & MODALS ========== */
+        .actions-cell { display: flex; gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 500px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); animation: slideUp 0.3s ease; max-height: 92vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        /* ========== FORM & FILTERS ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .field { display: flex; flex-direction: column; justify-content: center; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .required::after { content: " *"; color: #b93a20; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; outline: none; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); grid-column: 1 / -1; gap: 8px; }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .adv-filter-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 12px; }
+        .adv-filter-grid .field label { font-size: 11px; margin-bottom: 2px; }
+        .form-control-sm { height: 26px !important; padding: 5px 8px !important; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; background: var(--surface); outline: none; box-shadow: none; transition: all 0.2s; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        /* ========== COMPACT DYNAMIC TABLES ========== */
+        .compact-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .compact-table th { background: #f8fafc; font-size: 11px !important; font-weight: 700 !important; color: #212529 !important; text-transform: uppercase; padding: 4px 6px !important; border: 1px solid var(--border); text-align: center; }
+        .compact-table td { padding: 4px !important; border: 1px solid var(--border); vertical-align: middle; text-align: center; }
+        .compact-table input, .compact-table select { height: 26px !important; padding: 2px 6px !important; font-size: 11px !important; font-weight: 500 !important; color: #212529 !important; border: 1px solid var(--border); border-radius: 4px; width: 100%; box-sizing: border-box; outline: none; background: #fff; box-shadow: none; }
+        .compact-table input:focus, .compact-table select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .btn-add-row { background: transparent; border: 1px dashed var(--primary); color: var(--primary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-add-row:hover { background: #eef2f8; }
+        .btn-del-row { background: #fef0ee; color: #b93a20; border: 1px solid #f5c4bb; border-radius: 4px; width: 24px; height: 24px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-del-row:hover { background: #b93a20; color: #fff; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: 1 / -1; }
+
+        /* ========== HISTORY ========== */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 10px 14px; margin-bottom: 8px; background: #f8fafc; border-radius: 0 8px 8px 0; transition: all 0.2s; }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; }
+        .history-date { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 2px; }
+        .history-action { font-size: 13px; color: var(--text-dark); font-weight: 600; }
+
+        /* ========== PAGINATION ========== */
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+
+        /* ========== STRICT GLOBAL UI RULES ========== */
+        .col-center { text-align: center !important; vertical-align: middle !important; }
+        table th {
+            position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px);
+            border-bottom: 2px solid var(--border); border-right: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 0.4px;
+            color: #212529 !important; font-weight: 700 !important; font-size: 11px !important;
+            text-align: center !important; vertical-align: middle !important;
+            padding: 6px 8px !important; line-height: 1.3; z-index: 10;
+            cursor: pointer; user-select: none;
+        }
+        table th:hover { background: #f1f5f9; }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        table td {
+            color: #212529 !important; font-weight: 500 !important;
+            text-align: center !important; vertical-align: middle !important;
+            border-bottom: 1px solid #f1f5f9; padding: 4px 8px !important;
+        }
+        table td .act-btn { color: #212529 !important; font-weight: 700 !important; }
+        table tbody tr:hover td { background: #f8fafc; }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Margin Master</div>
+        <div class="search-wrap">
+            <input type="text" id="globalSearch" placeholder="Search Type, State or Area..." autocomplete="off">
+        </div>
+        <div class="tb-spacer"></div>
+        <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="deleteSelectedRows()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn" style="border-radius: 20px; margin-right: 8px;" onclick="exportToExcel()">📥 Export Excel</button>
+        <button class="tb-btn" style="border-radius: 20px; margin-right: 8px;" onclick="document.getElementById('excelUpload').click()">📤 Upload Excel</button>
+        <button class="tb-btn" style="border-radius: 20px;" onclick="document.getElementById('filterModal').style.display='flex'">⚙️ More Filters</button>
+        <button class="tb-btn btn-add" onclick="openAddModal()">+ Add Margin</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Records</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">Margin entries in database</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">States Covered</div>
+            <div class="stat-val" id="statStates">0</div>
+            <div class="stat-sub">Across Australia</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Size Ranges</div>
+            <div class="stat-val" id="statSizes">0</div>
+            <div class="stat-sub">Unique system sizes</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-center" style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                        <th class="col-center">Sr. No</th>
+                        <th class="col-center" onclick="sortData('margin_type')">Type of Product <span class="sort-arrow" id="sort_margin_type"></span></th>
+                        <th class="col-center" onclick="sortData('state')">State <span class="sort-arrow" id="sort_state"></span></th>
+                        <th class="col-center" onclick="sortData('area')">Area <span class="sort-arrow" id="sort_area"></span></th>
+                        <th class="col-center">Size</th>
+                        <th class="col-center">Margin</th>
+                        <th class="col-center" onclick="sortData('created_by')">Created By <span class="sort-arrow" id="sort_created_by"></span></th>
+                        <th class="col-center" onclick="sortData('created_date')">Created Date <span class="sort-arrow" id="sort_created_date"></span></th>
+                        <th class="col-center" onclick="sortData('last_update_by')">Last Update By <span class="sort-arrow" id="sort_last_update_by"></span></th>
+                        <th class="col-center" onclick="sortData('last_updated_date')">Last Updated Date <span class="sort-arrow" id="sort_last_updated_date"></span></th>
+                        <th class="col-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="dataBody"></tbody>
+            </table>
+        </div>
+        <div id="paginationControls" style="display: flex; align-items: center; justify-content: center; padding: 8px 0; flex-shrink: 0;"></div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div id="filterModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <button class="modal-close" onclick="document.getElementById('filterModal').style.display='none'">✕</button>
+        <div class="modal-title">More Filters</div>
+        <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
+
+            <div class="field">
+                <label>Type of Product</label>
+                <select id="flt_type" class="form-control-sm">
+                    <option value="">All Types</option>
+                    <option value="PV">PV</option>
+                    <option value="Battery">Battery</option>
+                    <option value="PV + Battery">PV + Battery</option>
+                </select>
+            </div>
+            <div class="field full-width">
+                <label>State</label>
+                <select id="flt_state" class="form-control-sm">
+                    <option value="">All States</option>
+                    <option value="WA">WA</option>
+                    <option value="NSW">NSW</option>
+                    <option value="VIC">VIC</option>
+                    <option value="QLD">QLD</option>
+                    <option value="SA">SA</option>
+                    <option value="TAS">TAS</option>
+                    <option value="NT">NT</option>
+                    <option value="ACT">ACT</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Area</label>
+                <select id="flt_area" class="form-control-sm">
+                    <option value="">All Areas</option>
+                    <option value="Metro">Metro</option>
+                    <option value="Regional">Regional</option>
+                </select>
+            </div>
+            
+            <div class="field">
+                <label>Size From</label>
+                <input type="number" id="flt_size_from" class="form-control-sm" placeholder="e.g. 5">
+            </div>
+
+            <div class="field">
+                <label>Size To</label>
+                <input type="number" id="flt_size_to" class="form-control-sm" placeholder="e.g. 20">
+            </div>
+
+        </div>
+        <div class="form-footer">
+            <button class="btn-save" style="background: var(--text-muted);" onclick="resetFilters()">Reset</button>
+            <button class="btn-save" onclick="applyFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('addModal').style.display='none'">✕</button>
+        <div class="modal-title" id="addModalTitle">Add Margin</div>
+        <form id="dataForm" onsubmit="saveData(event)">
+            <input type="hidden" id="edit_id" value="">
+            <div class="form-grid">
+                <div class="field">
+                    <label class="required">Type of Product</label>
+                    <select id="margin_type" required>
+                        <option value="">Select Type</option>
+                        <option value="PV">PV</option>
+                        <option value="Battery">Battery</option>
+                        <option value="PV + Battery">PV + Battery</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">State</label>
+                    <select id="margin_state" required>
+                        <option value="">Select State</option>
+                        <option value="WA">WA</option><option value="NSW">NSW</option><option value="VIC">VIC</option>
+                        <option value="QLD">QLD</option><option value="SA">SA</option><option value="TAS">TAS</option>
+                        <option value="NT">NT</option><option value="ACT">ACT</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">Area</label>
+                    <select id="margin_area" required>
+                        <option value="">Select Area</option>
+                        <option value="Metro">Metro</option>
+                        <option value="Regional">Regional</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="section-divider">Size & Margins</div>
+            <table class="compact-table" id="dynamicMarginTable">
+                <thead>
+                    <tr>
+                        <th>Size Type</th><th>From</th><th>To</th><th>$ Margin</th><th>Unit</th>
+                        <th><button type="button" class="btn-add-row" onclick="addMarginRow()">➕</button></th>
+                    </tr>
+                </thead>
+                <tbody id="dynamicMarginBody">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveBtn">Save Margin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Change History</div>
+        <ul class="history-list" id="historyBody" style="max-height: 400px; overflow-y: auto;"></ul>
+    </div>
+</div>
+
+<script>
+    let allData = [];
+    let currentSortCol = '';
+    let isSortAsc = true;
+    let activeFilters = { margin_type: '', state: '', area: '', size_from: '', size_to: '' };
+    let globalSearchTerm = '';
+    let lastFilteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 100;
+
+    function renderTable() {
+        const body = document.getElementById('dataBody');
+        body.innerHTML = '';
+        let filtered = allData;
+
+        if (globalSearchTerm) {
+            const term = globalSearchTerm.toLowerCase();
+            filtered = filtered.filter(row =>
+                (row.state || '').toLowerCase().includes(term) ||
+                (row.margin_type || '').toLowerCase().includes(term) ||
+                (row.area || '').toLowerCase().includes(term)
+            );
+        }
+
+        if (activeFilters.margin_type) filtered = filtered.filter(row => row.margin_type === activeFilters.margin_type);
+        if (activeFilters.state) filtered = filtered.filter(row => row.state === activeFilters.state);
+        if (activeFilters.area) filtered = filtered.filter(row => row.area === activeFilters.area);
+        if (activeFilters.size_from || activeFilters.size_to) {
+            const sFrom = parseFloat(activeFilters.size_from) || 0;
+            const sTo = parseFloat(activeFilters.size_to) || Infinity;
+            filtered = filtered.filter(row => {
+                return row.margins && row.margins.some(m => {
+                    return m.to >= sFrom && m.from <= sTo;
+                });
+            });
+        }
+
+        document.getElementById('statTotal').innerText = filtered.length;
+        document.getElementById('statStates').innerText = new Set(filtered.map(x => x.state)).size;
+        document.getElementById('statSizes').innerText = filtered.reduce((acc, row) => acc + (row.margins ? row.margins.length : 0), 0);
+
+        lastFilteredData = filtered;
+
+        const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const visibleData = filtered.slice(start, start + rowsPerPage);
+
+        if (filtered.length === 0) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No records found. Try uploading an Excel file.</td></tr>`;
+            renderPagination();
+            return;
+        }
+
+        let htmlString = '';
+        visibleData.forEach((p, index) => {
+            const srNo = start + index + 1;
+            const sizeHtml = p.margins ? p.margins.map(m => `${m.from} - ${m.to} ${m.unit}`).join('<br>') : '-';
+            const marginHtml = p.margins ? p.margins.map(m => `$${m.margin}`).join('<br>') : '-';
+
+            htmlString += `
+                <tr>
+                    <td class="col-center"><input type="checkbox" class="row-checkbox" value="${p.id}" onclick="updateBulkDeleteBtn()" style="cursor: pointer; width: 14px; height: 14px;"></td>
+                    <td class="col-center">${srNo}</td>
+                    <td class="col-center">${p.margin_type || ''}</td>
+                    <td class="col-center">${p.state || ''}</td>
+                    <td class="col-center">${p.area || ''}</td>
+                    <td class="col-center">${sizeHtml}</td>
+                    <td class="col-center" style="font-weight: 700 !important; color: #10b981 !important;">${marginHtml}</td>
+                    <td class="col-center">${p.created_by || '-'}</td>
+                    <td class="col-center" style="color: var(--text-muted) !important;">${p.created_date || '-'}</td>
+                    <td class="col-center">${p.last_update_by || '-'}</td>
+                    <td class="col-center" style="color: var(--text-muted) !important;">${p.last_updated_date || '-'}</td>
+                    <td class="col-center">
+                        <div class="actions-cell">
+                            <button class="act-btn" title="Edit" onclick="editRecord(${p.id})">✏️</button>
+                            <button class="act-btn" title="History" onclick="viewHistory(${p.id})">🕒</button>
+                            <button class="act-btn act-btn-del" title="Delete" onclick="deleteData(${p.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        body.innerHTML = htmlString;
+        renderPagination();
+        const selectAllCb = document.getElementById('selectAllCheckbox');
+        if (selectAllCb) selectAllCb.checked = false;
+        updateBulkDeleteBtn();
+    }
+
+    function renderPagination() {
+        const controls = document.getElementById('paginationControls');
+        if (!controls) return;
+        const totalPages = Math.ceil(lastFilteredData.length / rowsPerPage) || 1;
+        controls.innerHTML = `
+            <button class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>← Previous</button>
+            <span style="margin: 0 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);">Page ${currentPage} of ${totalPages}</span>
+            <button class="page-btn" onclick="changePage(1)" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>Next →</button>
+        `;
+    }
+
+    function changePage(direction) {
+        const newPage = currentPage + direction;
+        const totalPages = Math.ceil(lastFilteredData.length / rowsPerPage) || 1;
+        if (newPage >= 1 && newPage <= totalPages) { currentPage = newPage; renderTable(); }
+    }
+
+    function sortData(column) {
+        if (currentSortCol === column) isSortAsc = !isSortAsc; else { currentSortCol = column; isSortAsc = true; }
+        allData.sort((a, b) => {
+            let va = a[column], vb = b[column];
+            if (typeof va === 'string') va = va.toLowerCase();
+            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (va < vb) return isSortAsc ? -1 : 1;
+            if (va > vb) return isSortAsc ? 1 : -1;
+            return 0;
+        });
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        if (document.getElementById(`sort_${column}`)) document.getElementById(`sort_${column}`).innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1;
+        renderTable();
+    }
+
+    let globalSearchTimeout;
+    document.getElementById('globalSearch').addEventListener('input', function(e) {
+        clearTimeout(globalSearchTimeout);
+        globalSearchTimeout = setTimeout(() => {
+            globalSearchTerm = e.target.value.trim();
+            currentPage = 1;
+            renderTable();
+        }, 400);
+    });
+
+    function applyFilters() {
+        activeFilters.margin_type = document.getElementById('flt_type').value;
+        activeFilters.state = document.getElementById('flt_state').value;
+        activeFilters.area = document.getElementById('flt_area').value;
+        activeFilters.size_from = document.getElementById('flt_size_from').value;
+        activeFilters.size_to = document.getElementById('flt_size_to').value;
+        currentPage = 1;
+        document.getElementById('filterModal').style.display = 'none';
+        renderTable();
+    }
+
+    function resetFilters() {
+        document.getElementById('flt_type').value = '';
+        document.getElementById('flt_state').value = '';
+        document.getElementById('flt_area').value = '';
+        document.getElementById('flt_size_from').value = '';
+        document.getElementById('flt_size_to').value = '';
+        activeFilters = { margin_type: '', state: '', area: '', size_from: '', size_to: '' };
+        currentPage = 1;
+        document.getElementById('filterModal').style.display = 'none';
+        renderTable();
+    }
+
+    function openAddModal() {
+        document.getElementById('dataForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.getElementById('dynamicMarginBody').innerHTML = '';
+        addMarginRow();
+        document.getElementById('addModalTitle').innerText = 'Add Margin';
+        document.getElementById('saveBtn').innerText = 'Save Margin';
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function addMarginRow(sizeType='', from='', to='', margin='', unit='kW') {
+        const tbody = document.getElementById('dynamicMarginBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <select class="m-size-type" onchange="updateUnit(this)" style="width: 100%; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px;">
+                    <option value="">Select</option>
+                    <option value="PV">PV</option>
+                    <option value="Battery">Battery</option>
+                </select>
+            </td>
+            <td><input type="number" class="m-from" step="any" value="${from}" placeholder="0"></td>
+            <td><input type="number" class="m-to" step="any" value="${to}" placeholder="10"></td>
+            <td><input type="number" class="m-margin" step="any" value="${margin}" placeholder="150"></td>
+            <td><input type="text" class="m-unit" value="${unit}" placeholder="e.g. kW"></td>
+            <td><button type="button" class="btn-del-row" onclick="this.closest('tr').remove()">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+        tr.querySelector('.m-size-type').value = sizeType;
+    }
+
+    function updateUnit(selectElement) {
+        const row = selectElement.closest('tr');
+        const unitInput = row.querySelector('.m-unit');
+        
+        if (selectElement.value === 'PV') {
+            unitInput.value = 'kW';
+        } else if (selectElement.value === 'Battery') {
+            unitInput.value = 'kWh';
+        } else {
+            unitInput.value = '';
+        }
+    }
+
+    function editRecord(id) {
+        const rec = allData.find(x => x.id === id);
+        if (!rec) return;
+        document.getElementById('edit_id').value = rec.id;
+        document.getElementById('margin_type').value = rec.margin_type || '';
+        document.getElementById('margin_state').value = rec.state || '';
+        document.getElementById('margin_area').value = rec.area || '';
+        
+        document.getElementById('dynamicMarginBody').innerHTML = '';
+        if (rec.margins && rec.margins.length > 0) {
+            rec.margins.forEach(m => addMarginRow(m.size_type, m.from, m.to, m.margin, m.unit));
+        } else {
+            addMarginRow();
+        }
+
+        document.getElementById('addModalTitle').innerText = 'Edit Margin';
+        document.getElementById('saveBtn').innerText = 'Update Margin';
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    async function saveData(event) {
+        event.preventDefault();
+        const editId = document.getElementById('edit_id').value;
+        const isEdit = !!editId;
+        const currentUser = document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System';
+        const nowStr = new Date().toLocaleString('en-GB');
+
+        const margins = [];
+        document.querySelectorAll('#dynamicMarginBody tr').forEach(tr => {
+            margins.push({
+                size_type: tr.querySelector('.m-size-type').value,
+                from: parseFloat(tr.querySelector('.m-from').value) || 0,
+                to: parseFloat(tr.querySelector('.m-to').value) || 0,
+                margin: parseFloat(tr.querySelector('.m-margin').value) || 0,
+                unit: tr.querySelector('.m-unit').value || 'kW'
+            });
+        });
+
+        const payload = {
+            margin_type: document.getElementById('margin_type').value,
+            state: document.getElementById('margin_state').value,
+            area: document.getElementById('margin_area').value,
+            margins: margins,
+            currentUser: currentUser
+        };
+
+        if (isEdit) {
+            payload.last_update_by = currentUser;
+            payload.last_updated_date = nowStr;
+        } else {
+            payload.created_by = currentUser;
+            payload.created_date = nowStr;
+        }
+
+        const url = isEdit ? `/margin-master/${editId}` : '/margin-master';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                Swal.fire(isEdit ? 'Updated!' : 'Saved!', 'Margin record saved successfully.', 'success');
+                document.getElementById('addModal').style.display = 'none';
+                fetchMarginData();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to save record.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+        }
+    }
+
+    async function deleteData(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?', text: "This margin record will be removed.", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#e8681e', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (isConfirmed) {
+            try {
+                const currentUser = document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System';
+                const res = await fetch(`/margin-master/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentUser })
+                });
+                if (res.ok) {
+                    Swal.fire('Deleted!', 'Record removed.', 'success');
+                    document.getElementById('selectAllCheckbox').checked = false;
+                    updateBulkDeleteBtn();
+                    fetchMarginData();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to delete record.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+            }
+        }
+    }
+
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        const selCount = document.getElementById('selCount');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            selCount.innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const totalCount = document.querySelectorAll('.row-checkbox').length;
+        const master = document.getElementById('selectAllCheckbox');
+        if (master) {
+            master.checked = totalCount > 0 && checkedCount === totalCount;
+        }
+    }
+
+    async function deleteSelectedRows() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?', text: `This will permanently delete ${checkedBoxes.length} selected margin records.`, icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#c53030', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete them!'
+        });
+
+        if (isConfirmed) {
+            try {
+                const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+                const res = await fetch('/margin-master/bulk-delete', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        ids: idsToDelete, 
+                        currentUser: document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System' 
+                    }) 
+                });
+                
+                if (res.ok) {
+                    document.getElementById('selectAllCheckbox').checked = false;
+                    updateBulkDeleteBtn();
+                    Swal.fire('Deleted!', 'Selected records removed.', 'success');
+                    fetchMarginData();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to delete selected records.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+            }
+        }
+    }
+
+    function handleExcelUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                const currentUser = document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System';
+                const nowStr = new Date().toLocaleString('en-GB');
+
+                const recordsToUpload = [];
+                json.forEach(row => {
+                    if(row.State || row.Type || row['Type of Product']) {
+                        recordsToUpload.push({
+                            margin_type: row['Type of Product'] || row.Type || 'PV',
+                            state: row.State || '',
+                            area: row.Area || 'Metro',
+                            margins: [{
+                                size_type: row['Size Type'] || 'System',
+                                from: parseFloat(row.From) || 0,
+                                to: parseFloat(row.To) || 0,
+                                margin: parseFloat(row['$ Margin'] || row.Margin) || 0,
+                                unit: row.Unit || 'kW'
+                            }],
+                            created_by: currentUser,
+                            created_date: nowStr,
+                        });
+                    }
+                });
+                
+                if (recordsToUpload.length === 0) {
+                    Swal.fire('Empty File', 'No valid records found in the Excel file.', 'warning');
+                    return;
+                }
+
+                const res = await fetch('/margin-master/bulk-upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ records: recordsToUpload, currentUser: currentUser })
+                });
+                
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    Swal.fire('Import Successful', `${result.count} records saved.`, 'success');
+                    fetchMarginData();
+                } else {
+                    throw new Error(result.error || 'Failed to upload.');
+                }
+            } catch (err) { Swal.fire('Parsing Error', 'Could not read the Excel file.', 'error'); }
+            finally { document.getElementById('excelUpload').value = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function exportToExcel() {
+        if (lastFilteredData.length === 0) { Swal.fire('Empty', 'No records to export.', 'info'); return; }
+        const exportData = [];
+        lastFilteredData.forEach(item => {
+            if (item.margins && item.margins.length > 0) {
+                item.margins.forEach(m => {
+                    exportData.push({
+                        'Type of Product': item.margin_type,
+                        'State': item.state,
+                        'Area': item.area,
+                        'Size Type': m.size_type,
+                        'From': m.from,
+                        'To': m.to,
+                        '$ Margin': m.margin,
+                        'Unit': m.unit,
+                        'Created By': item.created_by,
+                        'Created Date': item.created_date
+                    });
+                });
+            }
+        });
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Margin Data");
+        XLSX.writeFile(wb, "Margin_Master_Export.xlsx");
+    }
+
+    async function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<li class="history-item"><div class="history-action">Loading...</div></li>';
+        document.getElementById('historyModal').style.display = 'flex';
+        
+        try {
+            const res = await fetch(`/margin-master/${id}/history`);
+            const history = await res.json();
+            
+            if (history.length === 0) {
+                body.innerHTML = '<li class="history-item"><div class="history-action">No history found.</div></li>';
+            } else {
+                body.innerHTML = history.map(h => `
+                    <li class="history-item">
+                        <div class="history-date">${h.date} — ${h.user}</div>
+                        <div class="history-action">${h.action}</div>
+                    </li>
+                `).join('');
+            }
+        } catch (e) {
+            body.innerHTML = '<li class="history-item"><div class="history-action" style="color:#b93a20;">Failed to load history.</div></li>';
+        }
+    }
+
+    async function fetchMarginData() {
+        const body = document.getElementById('dataBody');
+        body.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 40px !important; color: var(--text-muted); font-weight: 600;"><div style="display: inline-block; border: 3px solid #e2e8f0; border-top: 3px solid var(--accent); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 10px;"></div> Loading Data...</td></tr>`;
+        try {
+            const res = await fetch('/margin-master', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Failed to fetch data from the server.');
+            allData = await res.json();
+            renderTable();
+        } catch (e) {
+            console.error("Failed to load data:", e);
+            document.getElementById('dataBody').innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px !important; color: #b93a20;">Failed to load data from server.</td></tr>`;
+            Swal.fire('Connection Error', 'Could not load the margin data from the database.', 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchMarginData);
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

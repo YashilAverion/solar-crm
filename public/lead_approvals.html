@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Approvals - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1c3557; --primary-hover: #16294a; --accent: #e8681e; --accent-hover: #d05a14; --bg: #f4f6f9; --surface: #ffffff; --border: #dde3ed; --text-dark: #1c2b3a; --text-muted: #6b7a8d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        button { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .tb-spacer { flex: 1; }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== CONTENT AREA & TOOLBAR ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-shrink: 0; flex-wrap: wrap; background: var(--surface); padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); }
+        .tt-count { font-size: 13px; font-weight: 700; color: var(--text-dark); background: var(--bg); padding: 3px 8px; border-radius: 5px; }
+        
+        /* ========== BULK BAR ========== */
+        .bulk-bar { display: none; align-items: center; gap: 8px; background: var(--primary); color: #fff; padding: 6px 14px; border-radius: 8px; margin-bottom: 8px; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(28,53,87,0.25); animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .bulk-bar.bb-visible { display: flex; }
+        .bulk-count { font-size: 13px; font-weight: 700; font-family: 'Inter', system-ui, sans-serif; }
+        .bulk-action-btn { border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .bulk-action-btn.bab-danger { background: rgba(185,58,32,0.75); border-color: rgba(185,58,32,0.4); }
+        .bulk-action-btn.bab-danger:hover { background: rgba(185,58,32,1); }
+        .bulk-action-btn.bab-success { background: #10b981; border-color: #059669; }
+        .bulk-action-btn.bab-success:hover { background: #059669; }
+        .bulk-clear { margin-left: auto; background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 14px; cursor: pointer; padding: 3px; border-radius: 50%; transition: all 0.2s; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+        .bulk-clear:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+        /* ========== TABLE ========== */
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        thead th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 8px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-align: center; vertical-align: middle; z-index: 10; height: 32px; cursor: pointer; user-select: none; }
+        tbody tr { transition: all 0.15s; height: 32px; }
+        tbody tr td { border-bottom: 1px solid #f1f5f9; padding: 4px 8px; font-size: 12px; font-weight: 600; text-align: center; vertical-align: middle; color: #212529 !important; }
+        tbody tr:hover td { background: #f8fafc; }
+        
+        /* Table components */
+        .customer-name { font-weight: 600; color: var(--text-dark); font-size: 12px; }
+        .assignee-cell { font-size: 12px; color: var(--text-dark); font-weight: 600; }
+        .age-pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; }
+        .ap-green { color: #1a6b3c; }
+        .ap-amber { color: #c0520f; }
+        .ap-red { color: #b93a20; }
+        .cb-col { width: 36px; text-align: center; }
+        input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
+
+        /* ========== ACTION BUTTONS ========== */
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; font-weight: 700 !important; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        /* ========== PAGINATION ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left { display: flex; align-items: center; gap: 8px; }
+        .pf-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; color: var(--text-dark); outline: none; }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+
+
+        /* ========== HISTORY MODAL ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 420px; border-radius: 12px; position: relative; border: 1px solid var(--border); }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .no-access-overlay { position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:9999; display:none; align-items:center; justify-content:center; }
+        .no-access-box { background:#fff; border-radius:12px; padding:32px 40px; text-align:center; max-width:360px; font-family:'Inter',system-ui,sans-serif; }
+        .no-access-box h2 { font-size:18px; font-weight:700; color:#b93a20; margin-bottom:8px; }
+        .no-access-box p { font-size:13px; color:#475569; margin-bottom:16px; }
+        .no-access-box a { background:var(--accent); color:#fff; padding:8px 20px; border-radius:7px; text-decoration:none; font-weight:600; font-size:13px; display:inline-block; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="no-access-overlay" id="noAccessOverlay">
+    <div class="no-access-box">
+        <h2>Access Restricted</h2>
+        <p>Lead Approvals is only accessible by Managers.</p>
+        <a href="/">Back to Master Leads</a>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Lead Approvals</div>
+        <div class="tb-spacer"></div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Pending Approvals</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">Awaiting decision</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-toolbar">
+            <span class="tt-count" id="tableCount">0 Leads</span>
+        </div>
+
+        <div class="bulk-bar" id="bulkBar">
+            <span class="bulk-count" id="bulkCountLabel">0 Selected</span>
+            <button class="bulk-action-btn bab-success" onclick="bulkAction('approve')">✅ Bulk Approve</button>
+            <button class="bulk-action-btn bab-danger" onclick="bulkAction('decline')">❌ Bulk Decline</button>
+            <button class="bulk-clear" onclick="clearSelection()">✕</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
+                        <th>Type</th>
+                        <th>Entered Date</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Source</th>
+                        <th>Assigned To</th>
+                        <th>Submitted By</th>
+                        <th>Age</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-footer">
+        <div class="pf-left">
+            <span class="pf-label">Show:</span>
+            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()"><option value="30">30</option><option value="50">50</option></select>
+            <span class="total-badge">Total: <span id="totalLeadsCount">0</span></span>
+        </div>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Activity Logs</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<script>
+    let allLeadsData=[], currentPage=1, rowsPerPage=30;
+    let selectedLeadIds = new Set();
+
+    function getAgeDays(dateStr) {
+        if(!dateStr||dateStr==='-') return null;
+        try {
+            const p=dateStr.split(' '), dmy=p[0].split('-');
+            const yr = parseInt(dmy[2]) < 100 ? parseInt(dmy[2]) + 2000 : parseInt(dmy[2]);
+            const leadDate = new Date(yr, parseInt(dmy[1])-1, parseInt(dmy[0]));
+            return Math.floor((new Date() - leadDate) / 86400000);
+        } catch(e) { return null; }
+    }
+
+    async function load() {
+        try {
+            const meRes = await fetch("/api/me");
+            if (!meRes.ok) { window.location.href = "/login"; return; }
+            const me = await meRes.json();
+            const isMgr = me.role === 'Admin' || me.role === 'Manager' || (me.role && me.role.includes('Manager'));
+            if (!isMgr) return;
+
+            const res=await fetch('/api/leads/approvals?t=' + new Date().getTime());
+            allLeadsData=await res.json();
+            document.getElementById('statTotal').innerText=allLeadsData.length;
+            selectedLeadIds.clear(); updateBulkBar(); renderTable();
+        } catch(e) {}
+    }
+
+    function toggleSelectAll(cb) {
+        const start=(currentPage-1)*rowsPerPage;
+        allLeadsData.slice(start,start+rowsPerPage).forEach(l=>{ if(cb.checked) selectedLeadIds.add(l.id); else selectedLeadIds.delete(l.id); });
+        updateBulkBar(); renderTable();
+    }
+    function toggleRowSelect(id,cb) { if(cb.checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id); updateBulkBar(); }
+    function clearSelection() { selectedLeadIds.clear(); document.getElementById('selectAllCb').checked=false; updateBulkBar(); renderTable(); }
+    function updateBulkBar() {
+        const n=selectedLeadIds.size;
+        document.getElementById('bulkCountLabel').innerText=`${n} Lead${n!==1?'s':''} Selected`;
+        document.getElementById('bulkBar').classList.toggle('bb-visible',n>0);
+    }
+
+    function renderTable() {
+        const body=document.getElementById('leadsBody'); body.innerHTML='';
+        document.getElementById('totalLeadsCount').innerText=allLeadsData.length;
+        document.getElementById('tableCount').innerText=`${allLeadsData.length} Leads`;
+        const start=(currentPage-1)*rowsPerPage, visible=allLeadsData.slice(start,start+rowsPerPage);
+        document.getElementById('selectAllCb').checked=visible.length>0&&visible.every(l=>selectedLeadIds.has(l.id));
+
+        let htmlString = '';
+        visible.forEach((l) => {
+            const fullName=`${l.first_name||''} ${l.last_name||''}`.trim();
+            const mergedAddr=`${l.unit_number||''} ${l.address||''}`.trim();
+            const ageDays=getAgeDays(l.lead_entered_date);
+            
+            let agePillHtml='-';
+            if (ageDays!==null) {
+                const cls=ageDays<=3?'ap-green':ageDays<=7?'ap-amber':'ap-red';
+                agePillHtml=`<span class="age-pill ${cls}">${ageDays}d</span>`;
+            }
+            
+            const submittedBy = l.assign_to || '-';
+            const assignedToHtml = `<span style="color:#a0adb8;">— Pending —</span>`;
+            
+            let actHtml=`<div class="actions-cell">`;
+            actHtml+=`<button class="act-btn" style="color:#10b981; border-color:#b3e6cc; background:#edfaf2;" title="Approve" onclick="processAction([${l.id}], 'approve')">✅</button>`;
+            actHtml+=`<button class="act-btn act-btn-del" title="Decline" onclick="processAction([${l.id}], 'decline')">❌</button>`;
+            actHtml+=`<button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
+            actHtml+=`</div>`;
+
+            const isChecked=selectedLeadIds.has(l.id)?'checked':'';
+            htmlString+=`<tr>
+                <td class="cb-col"><input type="checkbox" class="row-cb" ${isChecked} onchange="toggleRowSelect(${l.id},this)"></td>
+                <td>${l.type_of_lead||'-'}</td>
+                <td>${l.lead_entered_date||'-'}</td>
+                <td><span class="customer-name">${fullName||'-'}</span></td>
+                <td>${l.phone_number||'-'}</td>
+                <td>${l.email_id_1||'-'}</td>
+                <td>${mergedAddr||'-'}</td>
+                <td>${l.lead_source||'-'}</td>
+                <td>${assignedToHtml}</td>
+                <td>${submittedBy}</td>
+                <td>${agePillHtml}</td>
+                <td>${actHtml}</td>
+            </tr>`;
+        });
+        body.innerHTML = htmlString;
+    }
+
+    async function processAction(ids, actionType) {
+        const isApprove = actionType === 'approve';
+        const { isConfirmed } = await Swal.fire({
+            title: isApprove ? `Approve ${ids.length} Lead(s)?` : `Decline ${ids.length} Lead(s)?`,
+            text: isApprove ? 'Lead(s) will be approved and moved to Master Leads.' : 'Lead(s) will be declined and moved to Delete Leads.',
+            icon: 'question', showCancelButton: true,
+            confirmButtonColor: isApprove ? '#10b981' : '#ef4444', cancelButtonColor: '#6b7a8d', confirmButtonText: isApprove ? 'Yes, Approve!' : 'Yes, Decline!'
+        });
+        if (!isConfirmed) return;
+        
+        Swal.fire({ title: 'Processing...', text: 'Updating status', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        try {
+            const res = await fetch('/api/leads/approve-decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, actionType }) });
+            if (res.ok) { Swal.fire(isApprove ? 'Approved!' : 'Declined!', `Lead(s) successfully processed.`, 'success'); clearSelection(); load(); }
+            else Swal.fire('Error', 'Failed to process leads.', 'error');
+        } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    async function bulkAction(type) {
+        if(!selectedLeadIds.size) { Swal.fire('Selection Required', 'Select at least one lead.', 'warning'); return; }
+        await processAction([...selectedLeadIds], type);
+    }
+
+    async function viewHistory(id) {
+        const body=document.getElementById('historyBody');
+        body.innerHTML='<li class="history-item"><div class="history-detail">Loading...</div></li>';
+        document.getElementById('historyModal').style.display='flex';
+        try {
+            const res=await fetch(`/leads/${id}/history`);
+            const hist=await res.json();
+            body.innerHTML=hist.map(h=>`<li class="history-item"><div class="history-date">${h.created_at} — ${h.user_name || 'System'}</div><div class="history-action">${h.action}</div><div class="history-detail" style="margin-top:6px;">${h.details}</div></li>`).join('');
+            if(!hist.length) body.innerHTML='<li class="history-item"><div class="history-detail">No history found.</div></li>';
+        } catch(e) { body.innerHTML='<li class="history-item"><div class="history-detail" style="color:#b93a20;">Error loading history.</div></li>'; }
+    }
+
+    function changeRowsPerPage() { rowsPerPage=parseInt(document.getElementById('rowsPerPage').value); currentPage=1; renderTable(); }
+    window.onload = load;
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

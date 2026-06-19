@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Master - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .menu-icon { font-size: 14px; width: 18px; text-align: center; }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ========== TOPBAR ========== */
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); transition: all 0.2s; position: relative; z-index: 5; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); transition: all 0.2s; }
+        .stat-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .stat-card:hover::before { background: var(--primary); }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; letter-spacing: -0.5px; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== CONTENT AREA & TOOLBAR ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-shrink: 0; flex-wrap: wrap; background: var(--surface); padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .tt-count { font-size: 13px; font-weight: 700; color: var(--text-dark); background: var(--bg); padding: 3px 8px; border-radius: 5px; }
+        .tt-spacer { flex: 1; }
+        .filter-chip { background: var(--bg); color: var(--text-muted); font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; white-space: nowrap; }
+        .filter-chip:hover { background: #f1f5f9; color: var(--text-dark); }
+        .filter-chip.fc-active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
+        .toolbar-select { height: 24px; border: 1px solid var(--border); border-radius: 20px; padding: 0 24px 0 10px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center; appearance: none; outline: none; cursor: pointer; transition: all 0.2s; }
+        .toolbar-select:hover { background-color: #f1f5f9; color: var(--text-dark); }
+        .toolbar-select:focus { border-color: var(--primary); color: var(--text-dark); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        /* ========== TABLE ========== */
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        thead th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 8px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-align: center; vertical-align: middle; cursor: pointer; user-select: none; z-index: 10; transition: background 0.2s; resize: horizontal; overflow: hidden; min-width: 60px; height: 32px; line-height: 1.2; }
+        thead th:hover { background: #f1f5f9; color: var(--text-dark); }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        tbody tr { transition: all 0.15s; height: 32px; }
+        tbody tr td { border-bottom: 1px solid #f1f5f9; }
+        tbody tr:hover td { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: none; }
+        td { padding: 4px 8px; font-size: 12px; color: var(--text-dark); font-weight: 600; vertical-align: middle; text-align: center; line-height: 1.3; }
+
+        /* Row states */
+        .row-deleted td { color: #a0adb8 !important; }
+
+        .stock-code { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--primary); background: #eef2f8; padding: 1px 4px; border-radius: 4px; border: 1px solid #c5d3e8; }
+
+        .status-badge { display: inline-flex; align-items: center; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); }
+        .sb-active { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
+        .sb-inactive { background: #f4f6f9; color: #6b7a8d; border-color: #dde3ed; }
+        .sb-pending { background: #fff4ee; color: #c0520f; border-color: #f9c89a; }
+        .sb-deleted { background: #f4f6f9; color: #6b7a8d; border-color: #dde3ed; }
+
+        .prod-name { font-weight: 600; color: var(--text-dark); font-size: 12px; }
+        .expiry-warn { font-size: 12px; font-weight: 600; color: #c0520f; background: #fff4ee; padding: 1px 4px; border-radius: 4px; border: 1px solid #f9c89a; }
+        .expiry-ok { font-size: 12px; color: var(--text-dark); font-weight: 600; }
+        .expiry-expired { font-size: 12px; font-weight: 600; color: #b93a20; background: #fef0ee; padding: 1px 4px; border-radius: 4px; border: 1px solid #f5c4bb; }
+        
+        /* ========== ACTION BUTTONS ========== */
+        .actions-cell { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 64px; margin: auto; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: all 0.2s; color: var(--text-muted); width: 100%; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+        .act-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* ========== PAGINATION ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left { display: flex; align-items: center; gap: 8px; }
+        .pf-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; color: var(--text-dark); background: var(--surface); outline: none; cursor: pointer; }
+        .rows-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .pf-right { display: flex; align-items: center; gap: 8px; }
+        .page-info { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg); }
+
+        /* ========== MODALS ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 1200px; border-radius: 12px; position: relative; max-height: 92vh; overflow-y: auto; margin: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-sm { max-width: 420px; }
+        .modal-md { max-width: 600px; }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; margin-bottom: 4px; }
+        .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px; margin-bottom: 4px; }
+        .field { display: flex; flex-direction: column; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input:not([type="file"]):not([type="radio"]):not([type="checkbox"]), .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; transition: all 0.2s; box-shadow: none; }
+        .field input:focus, .field select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .field input[readonly] { background: #f8fafc; color: #94a3b8; cursor: not-allowed; border-style: dashed; }
+        .field input[type="file"] { padding: 4px 8px; height: auto; min-height: 32px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; }
+        .field input[type="file"]:hover { border-color: var(--primary); }
+        .required-star::after { content: " *"; color: #b93a20; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: span 4; display: flex; align-items: center; }
+        .section-divider-3 { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: span 3; display: flex; align-items: center; }
+        
+        .radio-group { display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface); box-shadow: none; }
+        .radio-label { font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-dark); }
+        .radio-label input { width: 14px; height: 14px; accent-color: var(--primary); border-radius: 3px; }
+
+        .child-section { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin: 4px 0; transition: all 0.2s; }
+        .child-section:hover { border-color: var(--primary); background: #f0f4f8; }
+        .child-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .child-header-row { display: grid; grid-template-columns: 3fr 2fr 100px 32px; gap: 8px; margin-bottom: 6px; padding: 0 4px; }
+        .child-header-row span { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .child-row { display: grid; grid-template-columns: 3fr 2fr 100px 32px; gap: 8px; margin-bottom: 8px; align-items: end; }
+        .child-row input { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; transition: all 0.2s; box-shadow: none; }
+        .child-row input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .remove-btn { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; border-radius: 6px; height: 32px; width: 100%; cursor: pointer; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .remove-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+        
+        .add-child-btn { background: var(--surface); color: var(--primary); border: 1px dashed var(--primary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-top: 4px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .add-child-btn:hover { background: #eef2ff; }
+        
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .btn-save { background: var(--accent); color: #fff; padding: 10px 28px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: flex; align-items: center; gap: 8px; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(232,104,30,0.4); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ========== HISTORY ========== */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .history-date::before { content: ''; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+
+        /* ========== FILTER MODAL ========== */
+        .filter-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 12px; }
+        .filter-field { display: flex; flex-direction: column; }
+        .filter-field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .filter-field input, .filter-field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); background: var(--surface); width: 100%; font-size: 13px; transition: all 0.2s; box-shadow: none; }
+        .filter-field input:focus, .filter-field select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .filter-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .btn-secondary { background: var(--surface); color: var(--text-dark); padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; box-shadow: none; }
+        .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
+
+        /* ========== SMALL MODAL ========== */
+        .sm-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+        .btn-full { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--accent); color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-full:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(232,104,30,0.4); }
+        .btn-full:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ========== AUTOCOMPLETE ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 240px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border-radius: 10px; display: none; padding: 6px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .ac-drop li:last-child { border-bottom: none; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary); }
+        .ac-type-tag { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 10px; margin-left: auto; border: 1px solid var(--border); }
+        .ac-hl { color: var(--primary); font-weight: 700; text-decoration: underline; text-decoration-color: #c7d2fe; text-decoration-thickness: 2px; }
+        .ac-empty { padding: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; }
+
+        .pac-container { z-index: 9999 !important; border-radius: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; font-family: 'Inter', sans-serif !important; }
+        
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+
+        /* Custom Scrollbar for modern look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .cell-wrap-prod { white-space: normal !important; word-break: break-word; text-align: left; min-width: 180px; max-width: 280px; }
+        .cell-wrap-mfg { white-space: normal !important; word-break: break-word; text-align: left; min-width: 120px; max-width: 180px; }
+        .ac-drop li.ac-highlighted { background: #f1f5f9; color: var(--primary) !important; font-weight: 700 !important; }
+        .row-expiring td, .row-expiring .prod-name { color: #dc2626 !important; }
+        .row-expiring .stock-code { color: #dc2626 !important; border-color: #fca5a5 !important; background: #fee2e2 !important; }
+        [data-col] { transition: all 0.2s; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div id="uploadProgressBarContainer" style="display:none; position:fixed; top:20px; right:20px; width:300px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+    <div style="font-size:11px; font-weight:700; margin-bottom:6px;">Uploading Document... <span id="docProgressText">0%</span></div>
+    <div style="width:100%; height:6px; background:#eef2f8; border-radius:3px; overflow:hidden;">
+        <div id="docProgressFill" style="width:0%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Product Master</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalSearch" placeholder="Search manufacturer, brand, model, capacity..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDrop"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn" onclick="document.getElementById('importModal').style.display='flex'">Import</button>
+        <button class="tb-btn" onclick="exportToExcel()">Export</button>
+        <button class="tb-btn" onclick="document.getElementById('filterModal').style.display='flex'">Filters</button>
+        <button class="tb-btn" style="border-radius: 20px; margin-right: 8px;" onclick="document.getElementById('columnVisibilityModal').style.display='flex'">👁️ Columns</button>
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="deleteSelectedRows()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn btn-add" onclick="openAddProductModal()">+ Add Product</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card" onclick="setStatFilter('all')">
+            <div class="stat-label">Total Products</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">All active products</div>
+        </div>
+        <div class="stat-card" onclick="setStatFilter('active')">
+            <div class="stat-label">Active</div>
+            <div class="stat-val" id="statActive">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="setStatFilter('expiring')">
+            <div class="stat-label">Expiring Soon</div>
+            <div class="stat-val" id="statExpiring">0</div>
+            <div class="stat-sub">Within 30 days</div>
+        </div>
+        <div class="stat-card" onclick="setStatFilter('pending')">
+            <div class="stat-label">Pending Deletion</div>
+            <div class="stat-val" id="statPending">0</div>
+            <div class="stat-sub">Awaiting approval</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-toolbar">
+            <span class="tt-count" id="tableCount">0 Products</span>
+            <div class="tt-spacer"></div>
+            <select id="prodStatusFilter" class="toolbar-select" onchange="renderTable()" style="margin-right: 8px;">
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Pending Deletion">Pending Deletion</option>
+            </select>
+            <span class="filter-chip fc-active" id="fc_all" onclick="setChip('all')">All</span>
+            <span class="filter-chip" id="fc_panel" onclick="setChip('panel')">Panel</span>
+            <span class="filter-chip" id="fc_inverter" onclick="setChip('inverter')">Inverter</span>
+            <span class="filter-chip" id="fc_battery" onclick="setChip('battery')">Battery</span>
+            <span class="filter-chip" id="fc_other" onclick="setChip('other')">Other</span>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                        <th data-col="col_cat" onclick="sortData('product_category')">Category <span class="sort-arrow" id="sort_product_category"></span></th>
+                        <th data-col="col_stock" onclick="sortData('stock_code')">Stock Code <span class="sort-arrow" id="sort_stock_code"></span></th>
+                        <th data-col="col_name" onclick="sortData('prod_name')">Product Name <span class="sort-arrow" id="sort_prod_name"></span></th>
+                        <th data-col="col_mfg" onclick="sortData('manufacturer_name')">Manufacturer <span class="sort-arrow" id="sort_manufacturer_name"></span></th>
+                        <th data-col="col_exp" onclick="sortData('pro_expiry_date')">Expiry Date <span class="sort-arrow" id="sort_pro_expiry_date"></span></th>
+                        <th data-col="col_phase" onclick="sortData('no_of_phase')">Phase <span class="sort-arrow" id="sort_no_of_phase"></span></th>
+                        <th data-col="col_panels" onclick="sortData('panels_capacity_w')">Panels (W) <span class="sort-arrow" id="sort_panels_capacity_w"></span></th>
+                        <th data-col="col_ac" onclick="sortData('inv_rt_ac_out_w')">AC Out (W) <span class="sort-arrow" id="sort_inv_rt_ac_out_w"></span></th>
+                        <th data-col="col_dc" onclick="sortData('inv_rt_dc_power_kw')">DC Power (kW) <span class="sort-arrow" id="sort_inv_rt_dc_power_kw"></span></th>
+                        <th data-col="col_mppt" onclick="sortData('inv_mppt')">MPPT <span class="sort-arrow" id="sort_inv_mppt"></span></th>
+                        <th data-col="col_battery" onclick="sortData('usable_battery_kwh')">Battery (kWh) <span class="sort-arrow" id="sort_usable_battery_kwh"></span></th>
+                        <th data-col="col_warranty" onclick="sortData('pro_warranty_years')">Warranty (Yrs) <span class="sort-arrow" id="sort_pro_warranty_years"></span></th>
+                        <th data-col="col_status" onclick="sortData('product_status')">Status <span class="sort-arrow" id="sort_product_status"></span></th>
+                        <th data-col="col_updated" onclick="sortData('last_update_on')">Last Updated <span class="sort-arrow" id="sort_last_update_on"></span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-footer">
+        <div class="pf-left">
+            <span class="pf-label">Show:</span>
+            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+            </select>
+            <span class="total-badge">Total: <span id="totalProductsCount">0</span></span>
+        </div>
+        <div class="pf-right">
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+            <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+    </div>
+</div>
+
+<div id="importModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('importModal').style.display='none'">✕</button>
+        <div class="modal-title">Import Products</div>
+        <p style="font-size:11px;color:#718096;margin-bottom:16px;">Download sample format, fill in product details, then upload. Stock codes and Ex. GST will be auto-calculated.</p>
+        <button class="btn-full" style="background:#2b6cb0;margin-bottom:10px;" onclick="downloadSample()">Download Sample Format</button>
+        <label class="sm-label" style="margin-top:8px;">Upload Filled Excel / CSV</label>
+        <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="width:100%;margin:8px 0 14px;border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 8px;background:#f8fafc;font-size:11px;">
+        <button class="btn-full" onclick="uploadExcel()" id="uploadBtn">Upload & Import</button>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">✕</button>
+        <div class="modal-title"><span id="modalTitle">Add New Product</span></div>
+        <form id="productForm" enctype="multipart/form-data">
+            <input type="hidden" id="edit_id" name="edit_id" value="">
+            <div class="form-grid">
+                <div class="section-divider">Basic Details</div>
+                <div class="field"><label id="lbl_product_category">Product Category</label>
+                    <select name="product_category" id="product_category" onchange="updateMandatoryFields()">
+                        <option value="">Select</option><option>Panel</option><option>Inverter</option><option>Battery</option><option>Wi-Fi & Control Devices</option><option>Electrical Components</option><option>Mounting Components</option><option>Battery Accessories</option>
+                    </select>
+                </div>
+                <div class="field"><label id="lbl_prod_name">Product Name</label><input type="text" name="prod_name" id="prod_name"></div>
+                <div class="field"><label id="lbl_manufacturer_name">Manufacturer Name</label><input type="text" name="manufacturer_name" id="manufacturer_name"></div>
+                <div class="field"><label id="lbl_brand_name">Brand Name</label><input type="text" name="brand_name" id="brand_name"></div>
+                <div class="field"><label id="lbl_model_number">Model Number</label><input type="text" name="model_number" id="model_number"></div>
+                <div class="field"><label>Stock Code</label><input type="text" name="stock_code" id="stock_code" placeholder="Auto-generated" readonly></div>
+                <div class="field">
+                    <label id="lbl_pro_approved_date">Approved Date</label>
+                    <div class="date-input-container" style="display: flex; align-items: center; position: relative;">
+                        <input type="text" id="pro_approved_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px;" oninput="formatAndSyncDateText('pro_approved_date')" onblur="formatAndSyncDateText('pro_approved_date', true)">
+                        <button type="button" class="date-picker-trigger" onclick="document.getElementById('pro_approved_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                        <input type="date" name="pro_approved_date" id="pro_approved_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="syncDateToText('pro_approved_date')">
+                    </div>
+                </div>
+                <div class="field">
+                    <label id="lbl_pro_expiry_date">Expiry Date</label>
+                    <div class="date-input-container" style="display: flex; align-items: center; position: relative;">
+                        <input type="text" id="pro_expiry_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px;" oninput="formatAndSyncDateText('pro_expiry_date')" onblur="formatAndSyncDateText('pro_expiry_date', true)">
+                        <button type="button" class="date-picker-trigger" onclick="document.getElementById('pro_expiry_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                        <input type="date" name="pro_expiry_date" id="pro_expiry_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="syncDateToText('pro_expiry_date')">
+                    </div>
+                </div>
+                <div class="field"><label id="lbl_product_series">Product Series</label><input type="text" name="product_series" id="product_series"></div>
+                <div class="field"><label id="lbl_no_of_phase">Number of Phase</label>
+                    <select name="no_of_phase" id="no_of_phase"><option value="">Select</option><option>Single Phase</option><option>Three Phase</option></select>
+                </div>
+                <div class="field"><label id="lbl_type_of_inverter">Type of Inverter</label>
+                    <select name="type_of_inverter" id="type_of_inverter">
+                        <option value="">Select</option>
+                        <option>Grid Inverter</option>
+                        <option>Hybrid Inverter</option>
+                        <option>Battery Inverter</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="section-divider">Technical Specifications & Pricing</div>
+                <div class="field"><label id="lbl_panels_capacity_w">Panels Capacity (W)</label><input type="text" name="panels_capacity_w" id="panels_capacity_w"></div>
+                <div class="field"><label id="lbl_inv_rt_ac_out_w">Inv. Rated AC Output (W)</label><input type="text" name="inv_rt_ac_out_w" id="inv_rt_ac_out_w"></div>
+                <div class="field"><label id="lbl_inv_rt_dc_power_kw">Inv. Rated DC Power (kW)</label><input type="text" name="inv_rt_dc_power_kw" id="inv_rt_dc_power_kw"></div>
+                <div class="field"><label id="lbl_inv_mppt">Inv. MPPT</label><input type="text" name="inv_mppt" id="inv_mppt"></div>
+                <div class="field"><label id="lbl_nominal_battery_capacity_kwh">Nominal Battery (kWh)</label><input type="text" name="nominal_battery_capacity_kwh" id="nominal_battery_capacity_kwh"></div>
+                <div class="field"><label id="lbl_usable_battery_kwh">Usable Battery (kWh)</label><input type="text" name="usable_battery_kwh" id="usable_battery_kwh"></div>
+                <div class="field"><label id="lbl_no_of_battery_modules">No. of Battery Modules</label><input type="number" name="no_of_battery_modules" id="no_of_battery_modules" min="1"></div>
+                <div class="field"><label id="lbl_pro_warranty_years">Product Warranty (Yrs)</label><input type="text" name="pro_warranty_years" id="pro_warranty_years"></div>
+                <div class="field"><label id="lbl_panels_linear_warranty_years">Panel Linear Warranty (Yrs)</label><input type="text" name="panels_linear_warranty_years" id="panels_linear_warranty_years"></div>
+                <div class="field"><label id="lbl_purchase_price">Purchase Price (Inc. GST $)</label><input type="text" name="purchase_price" id="purchase_price" oninput="calculateExGST()"></div>
+                <div class="field"><label>Purchase Price (Ex. GST $)</label><input type="text" name="purchase_price_ex_gst" id="purchase_price_ex_gst" oninput="calculateIncGST()"></div>
+            </div>
+            <div class="form-grid-3">
+                <div class="section-divider-3">Product Settings</div>
+                <div class="field"><label id="lbl_product_status">Product Status</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="product_status" value="Active" checked> Active</label>
+                        <label class="radio-label"><input type="radio" name="product_status" value="Inactive"> Inactive</label>
+                    </div>
+                </div>
+                <div class="field"><label id="lbl_show_in_quotation">Show in Quotation</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="show_in_quotation" value="Yes" checked> Yes</label>
+                        <label class="radio-label"><input type="radio" name="show_in_quotation" value="No"> No</label>
+                    </div>
+                </div>
+                <div class="field"><label id="lbl_show_in_detailed_reports">Show in Reports</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="show_in_detailed_reports" value="Yes" checked> Yes</label>
+                        <label class="radio-label"><input type="radio" name="show_in_detailed_reports" value="No"> No</label>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:14px;">
+                <div class="child-section">
+                    <div class="child-section-title">Child Products (Combo Building)</div>
+                    <div class="child-header-row"><span>Product Name — Model</span><span>Stock Code</span><span>Qty</span><span></span></div>
+                    <div id="childProductsContainer"></div>
+                    <button type="button" class="add-child-btn" onclick="addChildRow()">+ Add Child Product</button>
+                </div>
+            </div>
+            <div class="form-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
+                <div class="section-divider">Dynamic Documents</div>
+                <div id="dynamicDocumentsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <div style="margin-top: 8px;">
+                    <button type="button" class="add-child-btn" onclick="addDocumentRow()">+ Add Document</button>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveBtn">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Product History</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<div id="filterModal" class="modal">
+    <div class="modal-content modal-md">
+        <button class="modal-close" onclick="document.getElementById('filterModal').style.display='none'">✕</button>
+        <div class="modal-title">Filter Products</div>
+        <div class="filter-grid">
+            <div class="filter-field"><label>Product Category</label>
+                <select id="flt_cat"><option value="">All</option><option>Panel</option><option>Inverter</option><option>Battery</option><option>Wi-Fi & Control Devices</option><option>Electrical Components</option><option>Mounting Components</option><option>Battery Accessories</option></select>
+            </div>
+            <div class="filter-field ac-wrap"><label>Manufacturer Name</label>
+                <input type="text" id="flt_mfg" autocomplete="off" placeholder="Type here...">
+                <ul class="ac-drop" id="flt_mfg_drop"></ul>
+            </div>
+            <div class="filter-field ac-wrap"><label>Brand Name</label>
+                <input type="text" id="flt_brand" autocomplete="off" placeholder="Type here...">
+                <ul class="ac-drop" id="flt_brand_drop"></ul>
+            </div>
+            <div class="filter-field"><label>Product Expiry Date</label><input type="date" id="flt_exp"></div>
+            <div class="filter-field"><label>Number of Phase</label>
+                <select id="flt_phase"><option value="">All</option><option>Single Phase</option><option>Three Phase</option></select>
+            </div>
+            <div class="filter-field"><label>Type of Inverter</label>
+                <select id="flt_type_of_inverter">
+                    <option value="">All</option>
+                    <option>Grid Inverter</option>
+                    <option>Hybrid Inverter</option>
+                    <option>Battery Inverter</option>
+                </select>
+            </div>
+            <div class="filter-field ac-wrap"><label>Panels Capacity (W)</label>
+                <input type="text" id="flt_pan_cap" autocomplete="off" placeholder="Type here...">
+                <ul class="ac-drop" id="flt_pan_cap_drop"></ul>
+            </div>
+            <div class="filter-field ac-wrap"><label>Inv. DC Power (kW)</label>
+                <input type="text" id="flt_dc_pow" autocomplete="off" placeholder="Type here...">
+                <ul class="ac-drop" id="flt_dc_pow_drop"></ul>
+            </div>
+            <div class="filter-field ac-wrap"><label>Usable Battery (kWh)</label>
+                <input type="text" id="flt_bat_cap" autocomplete="off" placeholder="Type here...">
+                <ul class="ac-drop" id="flt_bat_cap_drop"></ul>
+            </div>
+            <div class="filter-field"><label>Product Status</label>
+                <select id="flt_status"><option value="">All</option><option>Active</option><option>Inactive</option></select>
+            </div>
+            <div class="filter-field"><label>Show in Quotation</label>
+                <select id="flt_quo"><option value="">All</option><option>Yes</option><option>No</option></select>
+            </div>
+            <div class="filter-field"><label>Show in Reports</label>
+                <select id="flt_rep"><option value="">All</option><option>Yes</option><option>No</option></select>
+            </div>
+        </div>
+        <div class="filter-footer">
+            <button class="btn-secondary" onclick="clearFilters()">Clear Filters</button>
+            <button class="btn-save" onclick="applyFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<div id="columnVisibilityModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('columnVisibilityModal').style.display='none'">✕</button>
+        <div class="modal-title">Toggle Columns</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding: 10px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_cat', this.checked)"> Category</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_stock', this.checked)"> Stock Code</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_name', this.checked)"> Product Name</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_mfg', this.checked)"> Manufacturer</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_exp', this.checked)"> Expiry Date</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_phase', this.checked)"> Phase</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_panels', this.checked)"> Panels (W)</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_ac', this.checked)"> AC Out (W)</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_dc', this.checked)"> DC Power (kW)</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_mppt', this.checked)"> MPPT</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_battery', this.checked)"> Battery (kWh)</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_warranty', this.checked)"> Warranty (Yrs)</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_status', this.checked)"> Status</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_updated', this.checked)"> Last Updated</label>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    window.loggedInUser = 'System';
+    window.loggedInRole = 'Standard';
+    
+    const form = document.getElementById('productForm');
+    let allProductsData=[], currentPage=1, rowsPerPage=30, totalRecords=0;
+    let currentSortCol='', isSortAsc=true, globalSearchTerm='';
+    let activeChip='all', activeStatFilter='all', activeFilters={};
+    let listMfg=[],listBrand=[],listPanCap=[],listDcPow=[],listBatCap=[],listNames=[],listCodes=[];
+    const mandatoryRules = {
+        'Panel':['prod_name','manufacturer_name','model_number','pro_approved_date','pro_expiry_date','panels_capacity_w','pro_warranty_years','panels_linear_warranty_years','purchase_price'],
+        'Inverter':['prod_name','manufacturer_name','brand_name','model_number','pro_approved_date','pro_expiry_date','product_series','no_of_phase','type_of_inverter','inv_rt_ac_out_w','inv_rt_dc_power_kw','inv_mppt','pro_warranty_years','purchase_price'],
+        'Battery':['prod_name','manufacturer_name','brand_name','model_number','pro_approved_date','pro_expiry_date','product_series','no_of_phase','nominal_battery_capacity_kwh','usable_battery_kwh','no_of_battery_modules','pro_warranty_years','purchase_price']
+    };
+    let activeMandatory=[];
+
+    // Global search autocomplete
+    const gsi=document.getElementById('globalSearch'), gsd=document.getElementById('globalSearchDrop');
+    let globalSearchTimeout;
+    gsi.addEventListener('input',function(){
+        clearTimeout(globalSearchTimeout);
+        const val=this.value.trim(); 
+        
+        globalSearchTimeout = setTimeout(async () => {
+            globalSearchTerm=val.toLowerCase(); currentPage=1;
+            if(val.length<1){gsd.style.display='none';renderTable();return;}
+            
+            try {
+                const res = await fetch(`/products/search?q=${encodeURIComponent(val)}`);
+                const suggestions = await res.json();
+                gsd.innerHTML='';
+                if(!suggestions.length){gsd.innerHTML=`<li class="ac-empty">No results found</li>`;gsd.style.display='block';load();return;}
+                suggestions.forEach(s=>{
+                    const li=document.createElement('li');
+                    const label = `${s.prod_name || s.model_number || s.stock_code}`;
+                    li.innerHTML=`<span>${label}</span> <span style="font-size:10px; color:#6b7a8d; margin-left:auto;">${s.stock_code}</span>`;
+                    const selectItem = () => { gsi.value=label; globalSearchTerm=label.toLowerCase(); gsd.style.display='none'; currentPage=1; load(); };
+                    li.addEventListener('mousedown',e=>{e.preventDefault(); selectItem();});
+                    li.selectItem = selectItem;
+                    gsd.appendChild(li);
+                });
+                gsd.style.display='block';
+            } catch(e) {}
+        }, 400);
+    });
+    let activeSearchIndex = -1;
+    gsi.addEventListener('input', function() { activeSearchIndex = -1; });
+    gsi.addEventListener('blur',()=>setTimeout(()=>{gsd.style.display='none';},200));
+    gsi.addEventListener('keydown', function(e) {
+        const items = gsd.querySelectorAll('li:not(.ac-empty)');
+        if (gsd.style.display === 'block' && items.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSearchIndex = (activeSearchIndex + 1) % items.length;
+                highlightSearchItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSearchIndex = (activeSearchIndex - 1 + items.length) % items.length;
+                highlightSearchItem(items);
+            } else if (e.key === 'Enter') {
+                if (activeSearchIndex >= 0 && activeSearchIndex < items.length) {
+                    e.preventDefault();
+                    if (items[activeSearchIndex].selectItem) {
+                        items[activeSearchIndex].selectItem();
+                    }
+                } else {
+                    e.preventDefault(); gsd.style.display='none'; renderTable();
+                }
+            } else if (e.key === 'Escape') {
+                gsd.style.display = 'none';
+                activeSearchIndex = -1;
+            }
+        } else {
+            if (e.key === 'Enter') { e.preventDefault(); gsd.style.display='none'; renderTable(); }
+        }
+    });
+
+    function highlightSearchItem(items) {
+        items.forEach((item, index) => {
+            if (index === activeSearchIndex) {
+                item.classList.add('ac-highlighted');
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.classList.remove('ac-highlighted');
+            }
+        });
+    }
+
+    function setupCI(inp,drop,getArr,onSel,getTooltip){
+        if(!inp||!drop) return;
+        inp.addEventListener('input',function(){
+            const val=this.value.trim(); drop.innerHTML='';
+            if(!val){drop.style.display='none';return;}
+            const matches=getArr().filter(x=>x&&x.toString().toLowerCase().includes(val.toLowerCase()));
+            if(!matches.length){drop.innerHTML=`<li class="ac-empty">No match</li>`;drop.style.display='block';return;}
+            matches.slice(0,8).forEach(m=>{
+                const li=document.createElement('li');
+                li.innerText=m;
+                if(getTooltip){
+                    const t = getTooltip(m);
+                    if(t) li.title = t;
+                }
+                li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=m;drop.style.display='none';if(onSel)onSel(m);monitorEdits();});
+                drop.appendChild(li);
+            });
+            drop.style.display='block';
+        });
+        inp.addEventListener('blur',()=>setTimeout(()=>{drop.style.display='none';},200));
+    }
+
+    function setupAC(inputId,dropId,getArr){
+        const inp=document.getElementById(inputId),drop=document.getElementById(dropId);
+        if(!inp||!drop) return;
+        inp.addEventListener('input',function(){
+            const val=this.value.trim(); drop.innerHTML='';
+            if(!val){drop.style.display='none';return;}
+            const matches=getArr().filter(x=>x&&x.toString().toLowerCase().includes(val.toLowerCase()));
+            if(!matches.length){drop.innerHTML=`<li class="ac-empty">No match</li>`;drop.style.display='block';return;}
+            matches.slice(0,8).forEach(m=>{const li=document.createElement('li');li.innerText=m;li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=m;drop.style.display='none';});drop.appendChild(li);});
+            drop.style.display='block';
+        });
+        inp.addEventListener('blur',()=>setTimeout(()=>{drop.style.display='none';},200));
+    }
+
+    function getExpiryStatus(ds){
+        if(!ds) return null;
+        try {
+            const p = ds.split('-'); // Format is YYYY-MM-DD
+            const exp = p.length === 3 ? new Date(p[0], p[1]-1, p[2]) : new Date(ds);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const diff = Math.floor((exp - today) / 86400000);
+            if (diff < 0) return { type: 'expired', days: Math.abs(diff) };
+            if (diff <= 30) return { type: 'expiring', days: diff };
+            return { type: 'ok', days: diff };
+        } catch(e) { return null; }
+    }
+
+    function updateStats(products){
+        const active=products.filter(p=>p.product_status!=='Deleted');
+        document.getElementById('statTotal').innerText=active.length;
+        document.getElementById('statActive').innerText=active.filter(p=>p.product_status==='Active').length;
+        document.getElementById('statExpiring').innerText=active.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expiring'; }).length;
+        document.getElementById('statPending').innerText=active.filter(p=>p.product_status==='Pending Deletion').length;
+    }
+
+    function setChip(chip){
+        activeChip=chip;activeStatFilter='all';
+        ['all','panel','inverter','battery','other'].forEach(c=>{const el=document.getElementById('fc_'+c);if(el)el.classList.toggle('fc-active',c===chip);});
+        currentPage=1;renderTable();
+    }
+
+    function setStatFilter(type){
+        activeStatFilter=type;activeChip='all';
+        ['all','panel','inverter','battery','other'].forEach(c=>{const el=document.getElementById('fc_'+c);if(el)el.classList.toggle('fc-active',c==='all');});
+        currentPage=1;renderTable();
+    }
+
+    async function load(){
+        const res=await fetch('/products');allProductsData=await res.json();
+        updateStats(allProductsData);populateSearchArrays();
+        applyColumnVisibility();
+        
+        // Expiry Warning Alert (within 15 days)
+        const expiringSoon = allProductsData.filter(p => {
+            if (p.product_status === 'Deleted' || p.product_status === 'Inactive') return false;
+            const st = getExpiryStatus(p.pro_expiry_date);
+            return st && st.type === 'expiring' && st.days <= 15;
+        });
+        if (expiringSoon.length > 0) {
+            const listHtml = expiringSoon.map(p => `<li><strong>${p.prod_name}</strong> (Stock: ${p.stock_code}) - Expires in ${getExpiryStatus(p.pro_expiry_date).days} days (${p.pro_expiry_date})</li>`).join('');
+            Swal.fire({
+                title: 'Product Expiry Alert (15 Days)',
+                html: `<div style="text-align: left; font-size: 13px;">The following active products are expiring soon:<ul style="margin-top: 8px; padding-left: 20px;">${listHtml}</ul></div>`,
+                icon: 'warning',
+                confirmButtonColor: '#e8681e'
+            });
+        }
+        
+        if(currentSortCol)sortData(currentSortCol,true);else renderTable();
+    }
+
+    function populateSearchArrays(){
+        const mfgs=new Set(),brands=new Set(),panCaps=new Set(),dcPows=new Set(),batCaps=new Set(),names=new Set(),codes=new Set();
+        allProductsData.forEach(p=>{
+            const cn=`${p.prod_name||''} - ${p.model_number||''}`.replace(/^ - | - $/g,'').trim();
+            if(cn)names.add(cn);if(p.stock_code)codes.add(p.stock_code);
+            if(p.manufacturer_name)mfgs.add(p.manufacturer_name);if(p.brand_name)brands.add(p.brand_name);
+            if(p.panels_capacity_w)panCaps.add(p.panels_capacity_w);if(p.inv_rt_dc_power_kw)dcPows.add(p.inv_rt_dc_power_kw);if(p.usable_battery_kwh)batCaps.add(p.usable_battery_kwh);
+        });
+        listMfg=[...mfgs];listBrand=[...brands];listPanCap=[...panCaps];listDcPow=[...dcPows];listBatCap=[...batCaps];listNames=[...names];listCodes=[...codes];
+        setupCI(document.getElementById('flt_mfg'),document.getElementById('flt_mfg_drop'),()=>listMfg);setupCI(document.getElementById('flt_brand'),document.getElementById('flt_brand_drop'),()=>listBrand);
+        setupCI(document.getElementById('flt_pan_cap'),document.getElementById('flt_pan_cap_drop'),()=>listPanCap);setupCI(document.getElementById('flt_dc_pow'),document.getElementById('flt_dc_pow_drop'),()=>listDcPow);setupCI(document.getElementById('flt_bat_cap'),document.getElementById('flt_bat_cap_drop'),()=>listBatCap);
+    }
+
+    function sortData(column,keepDir=false){
+        if(!keepDir){if(currentSortCol===column)isSortAsc=!isSortAsc;else{currentSortCol=column;isSortAsc=true;}}
+        allProductsData.sort((a,b)=>{let va=a[column]?a[column].toString().toLowerCase():'',vb=b[column]?b[column].toString().toLowerCase():'';if(va<vb)return isSortAsc?-1:1;if(va>vb)return isSortAsc?1:-1;return 0;});
+        document.querySelectorAll('.sort-arrow').forEach(el=>el.innerText='');
+        document.getElementById(`sort_${column}`).innerText=isSortAsc?'⬆️':'⬇️';
+        currentPage=1;renderTable();
+    }
+
+    function getFiltered(){
+        const role=window.loggedInRole;
+        let products=role!=='Manager'?allProductsData.filter(p=>p.product_status!=='Deleted'):allProductsData;
+        if(globalSearchTerm){const t=globalSearchTerm;products=products.filter(p=>(p.manufacturer_name&&p.manufacturer_name.toLowerCase().includes(t))||(p.brand_name&&p.brand_name.toLowerCase().includes(t))||(p.model_number&&p.model_number.toLowerCase().includes(t))||(p.panels_capacity_w&&p.panels_capacity_w.toString().toLowerCase().includes(t))||(p.prod_name&&p.prod_name.toLowerCase().includes(t))||(p.stock_code&&p.stock_code.toLowerCase().includes(t)));}
+        if(activeChip==='panel')products=products.filter(p=>p.product_category==='Panel');
+        else if(activeChip==='inverter')products=products.filter(p=>p.product_category==='Inverter');
+        else if(activeChip==='battery')products=products.filter(p=>p.product_category==='Battery');
+        else if(activeChip==='other')products=products.filter(p=>!['Panel','Inverter','Battery'].includes(p.product_category));
+        if(activeStatFilter==='active')products=products.filter(p=>p.product_status==='Active');
+        else if(activeStatFilter==='expiring')products=products.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expiring'; });
+        else if(activeStatFilter==='pending')products=products.filter(p=>p.product_status==='Pending Deletion');
+        if(activeFilters.cat)products=products.filter(p=>p.product_category===activeFilters.cat);
+        if(activeFilters.mfg)products=products.filter(p=>p.manufacturer_name&&p.manufacturer_name.toLowerCase().includes(activeFilters.mfg));
+        if(activeFilters.brand)products=products.filter(p=>p.brand_name&&p.brand_name.toLowerCase().includes(activeFilters.brand));
+        if(activeFilters.exp)products=products.filter(p=>p.pro_expiry_date===activeFilters.exp);
+        if(activeFilters.phase)products=products.filter(p=>p.no_of_phase===activeFilters.phase);
+        if(activeFilters.type_of_inverter)products=products.filter(p=>p.type_of_inverter===activeFilters.type_of_inverter);
+        if(activeFilters.pan_cap)products=products.filter(p=>p.panels_capacity_w===activeFilters.pan_cap);
+        if(activeFilters.dc_pow)products=products.filter(p=>p.inv_rt_dc_power_kw===activeFilters.dc_pow);
+        if(activeFilters.bat_cap)products=products.filter(p=>p.usable_battery_kwh===activeFilters.bat_cap);
+        if(activeFilters.status)products=products.filter(p=>p.product_status===activeFilters.status);
+        if(activeFilters.quo)products=products.filter(p=>p.show_in_quotation===activeFilters.quo);
+        if(activeFilters.rep)products=products.filter(p=>p.show_in_detailed_reports===activeFilters.rep);
+        
+        const psf = document.getElementById('prodStatusFilter')?.value;
+        if (psf) products = products.filter(p => p.product_status === psf);
+        
+        return products;
+    }
+
+    function getStatusBadge(status){
+        const map={'Active':'sb-active','Inactive':'sb-inactive','Pending Deletion':'sb-pending','Deleted':'sb-deleted'};
+        return `<span class="status-badge ${map[status]||'sb-inactive'}">${status||'-'}</span>`;
+    }
+
+    function renderTable(){
+        const body=document.getElementById('productsBody');body.innerHTML='';
+        const role=window.loggedInRole;
+        const filtered=getFiltered();
+        const filteredCount=filtered.length;
+        const totalPages=Math.ceil(filteredCount/rowsPerPage)||1;
+        if(currentPage>totalPages)currentPage=totalPages;
+        const products=filtered.slice((currentPage-1)*rowsPerPage, currentPage*rowsPerPage);
+        document.getElementById('totalProductsCount').innerText=filteredCount;
+        document.getElementById('tableCount').innerText=`${filteredCount} Product${filteredCount!==1?'s':''}`;
+
+        let htmlString = '';
+        products.forEach(p=>{
+            const expStatus=getExpiryStatus(p.pro_expiry_date);
+            let rowClass='';
+            if(p.product_status==='Deleted')rowClass='row-deleted';
+            else if(p.product_status==='Pending Deletion')rowClass='row-pending-del';
+            else if(p.product_status==='Inactive')rowClass='row-inactive';
+            else if(expStatus&&expStatus.type!=='ok')rowClass='row-expiring';
+
+            let expiryHtml=p.pro_expiry_date||'-';
+            if(expStatus){
+                if(expStatus.type==='expired')expiryHtml=`<span class="expiry-expired">${p.pro_expiry_date}</span>`;
+                else if(expStatus.type==='expiring')expiryHtml=`<span class="expiry-warn">${p.pro_expiry_date} (${expStatus.days}d)</span>`;
+                else expiryHtml=`<span class="expiry-ok">${p.pro_expiry_date}</span>`;
+            }
+
+            let actHtml=`<div class="actions-cell">`;
+            if(p.product_status!=='Deleted'){
+                actHtml+=`<button class="act-btn" title="Edit" onclick="editProduct(${p.id})">✏️</button>`;
+                actHtml+=`<button class="act-btn" title="History" onclick="viewProductHistory(${p.id})">🕒</button>`;
+                if(p.product_status==='Pending Deletion'){if(role==='Manager')actHtml+=`<button class="act-btn" title="Approve Delete" onclick="deleteProduct(${p.id})">✅</button>`;else actHtml+=`<span style="grid-column: span 2; text-align: center; font-size:13px;color:#c0520f;font-weight:600;padding:2px;border:1px solid #f9c89a;border-radius:4px;background:#fff4ee;display:flex;align-items:center;justify-content:center;">Del Req</span>`;}
+                else actHtml+=`<button class="act-btn act-btn-del" title="Delete" onclick="deleteProduct(${p.id})">🗑️</button>`;
+            }else{actHtml+=`<button class="act-btn" title="History" onclick="viewProductHistory(${p.id})">🕒</button>`;actHtml+=`<span class="status-badge sb-deleted" style="grid-column: span 2; justify-content: center; padding:0; font-size:13px;">Del</span>`;}
+            actHtml+=`</div>`;
+
+            const cbDis = p.product_status === 'Deleted' ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : '';
+
+            htmlString+=`<tr class="${rowClass}">
+                <td style="text-align: center;"><input type="checkbox" class="row-checkbox" value="${p.id}" onclick="updateBulkDeleteBtn()" style="cursor: pointer; width: 14px; height: 14px;" ${cbDis}></td>
+                <td data-col="col_cat">${p.product_category||'-'}</td>
+                <td data-col="col_stock"><span class="stock-code">${p.stock_code||'-'}</span></td>
+                <td data-col="col_name" class="cell-wrap-prod"><span class="prod-name">${p.prod_name||'-'}</span></td>
+                <td data-col="col_mfg" class="cell-wrap-mfg">${p.manufacturer_name||'-'}</td>
+                <td data-col="col_exp">${expiryHtml}</td>
+                <td data-col="col_phase">${p.no_of_phase||'-'}</td>
+                <td data-col="col_panels">${p.panels_capacity_w||'-'}</td>
+                <td data-col="col_ac">${p.inv_rt_ac_out_w||'-'}</td>
+                <td data-col="col_dc">${p.inv_rt_dc_power_kw||'-'}</td>
+                <td data-col="col_mppt">${p.inv_mppt||'-'}</td>
+                <td data-col="col_battery">${p.usable_battery_kwh||'-'}</td>
+                <td data-col="col_warranty">${p.pro_warranty_years||'-'}</td>
+                <td data-col="col_status">${getStatusBadge(p.product_status)}</td>
+                <td data-col="col_updated" style="color:var(--text-muted); font-weight:600;">${p.last_update_on||'-'}<br><span style="color:var(--text-dark);">${p.last_updated_by||'-'}</span></td>
+                <td>${actHtml}</td>
+            </tr>`;
+        });
+        body.innerHTML = htmlString;
+        document.getElementById('pageInfo').innerText=`Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled=currentPage===1;
+        document.getElementById('nextBtn').disabled=currentPage===totalPages||totalPages===0;
+        document.getElementById('selectAllCheckbox').checked = false;
+        updateBulkDeleteBtn();
+    }
+
+    function updateMandatoryFields(){
+        document.querySelectorAll('.required-star').forEach(el=>el.classList.remove('required-star'));
+        document.querySelectorAll('#productForm input, #productForm select').forEach(el=>el.removeAttribute('required'));
+        document.getElementById('product_category').setAttribute('required','true');
+        document.getElementById('lbl_product_category').classList.add('required-star');
+        const cat=document.getElementById('product_category').value;
+        if (!cat) {
+            activeMandatory = [];
+        } else {
+            activeMandatory=mandatoryRules[cat]||['prod_name','manufacturer_name','model_number'];
+        }
+        activeMandatory.forEach(fid=>{const el=document.getElementById(fid),lbl=document.getElementById('lbl_'+fid);if(el)el.setAttribute('required','true');if(lbl)lbl.classList.add('required-star');});
+        checkAutoStockCode();
+    }
+
+    document.querySelectorAll('#productForm input, #productForm select').forEach(el=>{
+        el.addEventListener('input',()=>{checkAutoStockCode();monitorEdits();});
+        el.addEventListener('change',()=>{checkAutoStockCode();monitorEdits();});
+    });
+
+    async function checkAutoStockCode(){
+        const cat=document.getElementById('product_category').value,sc=document.getElementById('stock_code');
+        if(!cat||!activeMandatory.length||sc.value)return;
+        const allFilled=activeMandatory.every(fid=>document.getElementById(fid)?.value?.trim());
+        if(allFilled){try{const res=await fetch('/products/next-stock-code');const data=await res.json();sc.value=data.nextCode;monitorEdits();}catch(e){}}
+    }
+
+    function calculateExGST(){const inc=parseFloat(document.getElementById('purchase_price').value);document.getElementById('purchase_price_ex_gst').value=!isNaN(inc)?(inc/1.1).toFixed(2):'';checkAutoStockCode();}
+    function calculateIncGST(){const ex=parseFloat(document.getElementById('purchase_price_ex_gst').value);document.getElementById('purchase_price').value=!isNaN(ex)?(ex*1.1).toFixed(2):'';checkAutoStockCode();}
+    
+    function formatAndSyncDateText(id, isBlur = false) {
+        const textInput = document.getElementById(id + '_text');
+        const dateInput = document.getElementById(id);
+        if (!textInput || !dateInput) return;
+
+        let val = textInput.value.trim();
+        if (!val) {
+            dateInput.value = '';
+            dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+        }
+
+        // Try to split by separators (-, /, ., space)
+        let parts = val.split(/[-/\.\s]+/);
+        let dd = '', mm = '', yyyy = '';
+
+        if (parts.length === 3) {
+            dd = parts[0];
+            mm = parts[1];
+            yyyy = parts[2];
+        } else {
+            // Try to parse raw digits
+            let clean = val.replace(/[^0-9]/g, '');
+            if (clean.length === 8) {
+                dd = clean.substring(0, 2);
+                mm = clean.substring(2, 4);
+                yyyy = clean.substring(4, 8);
+            } else if (clean.length === 6) {
+                dd = clean.substring(0, 2);
+                mm = clean.substring(2, 4);
+                yyyy = '20' + clean.substring(4, 6);
+            }
+        }
+
+        if (dd && mm && yyyy) {
+            dd = dd.padStart(2, '0');
+            mm = mm.padStart(2, '0');
+            if (yyyy.length === 2) {
+                yyyy = '20' + yyyy;
+            }
+
+            const d = parseInt(dd, 10);
+            const m = parseInt(mm, 10);
+            const y = parseInt(yyyy, 10);
+
+            if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 1000 && y <= 9999) {
+                const formattedDate = `${yyyy}-${mm}-${dd}`;
+                dateInput.value = formattedDate;
+                
+                if (isBlur) {
+                    textInput.value = `${dd}-${mm}-${yyyy}`;
+                }
+                
+                dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                return;
+            }
+        }
+
+        if (isBlur) {
+            dateInput.value = '';
+            textInput.value = '';
+            dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+            dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function syncDateToText(id) {
+        const dateInput = document.getElementById(id);
+        const textInput = document.getElementById(id + '_text');
+        if (!dateInput || !textInput) return;
+        
+        const val = dateInput.value;
+        if (val && val.includes('-')) {
+            const parts = val.split('-');
+            if (parts.length === 3) {
+                textInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                return;
+            }
+        }
+        textInput.value = '';
+    }
+
+    function monitorEdits(){if(document.getElementById('edit_id').value)document.getElementById('saveBtn').disabled=false;}
+
+    function addChildRow(nameVal='',codeVal='',qtyVal='1'){
+        const container=document.getElementById('childProductsContainer');
+        const row=document.createElement('div');row.className='child-row';
+        row.innerHTML=`<div class="ac-wrap" style="position:relative;"><input type="text" class="cp-name" autocomplete="off" placeholder="Product Name - Model" value="${nameVal}"><ul class="ac-drop cp-nd" style="display:none;"></ul></div><div class="ac-wrap" style="position:relative;"><input type="text" class="cp-code" autocomplete="off" placeholder="Stock Code" value="${codeVal}"><ul class="ac-drop cp-cd" style="display:none;"></ul></div><input type="number" class="cp-qty" value="${qtyVal}" min="1"><button type="button" class="remove-btn" onclick="this.parentElement.remove();monitorEdits();">✕</button>`;
+        const nameInp=row.querySelector('.cp-name'),codeInp=row.querySelector('.cp-code'),nameDrop=row.querySelector('.cp-nd'),codeDrop=row.querySelector('.cp-cd');
+        function setupCI(inp,drop,getArr,onSel,getTooltip){
+            inp.addEventListener('input',function(){
+                const val=this.value.trim();drop.innerHTML='';
+                if(!val){drop.style.display='none';return;}
+                const matches=getArr().filter(x=>x&&x.toLowerCase().includes(val.toLowerCase()));
+                if(!matches.length){drop.style.display='none';return;}
+                matches.slice(0,8).forEach(m=>{
+                    const li=document.createElement('li');
+                    li.innerText=m;
+                    if(getTooltip){
+                        const t = getTooltip(m);
+                        if(t) li.title = t;
+                    }
+                    li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=m;drop.style.display='none';if(onSel)onSel(m);monitorEdits();});
+                    drop.appendChild(li);
+                });
+                drop.style.display='block';
+            });
+            inp.addEventListener('blur',()=>setTimeout(()=>{drop.style.display='none';},200));
+        }
+        setupCI(nameInp,nameDrop,()=>listNames,
+            (val)=>{const m=allProductsData.find(p=>`${p.prod_name||''} - ${p.model_number||''}`.replace(/^ - | - $/g,'').trim()===val);if(m)codeInp.value=m.stock_code;},
+            (val)=>{const m=allProductsData.find(p=>`${p.prod_name||''} - ${p.model_number||''}`.replace(/^ - | - $/g,'').trim()===val);return m ? `Stock Code: ${m.stock_code}` : '';}
+        );
+        setupCI(codeInp,codeDrop,()=>listCodes,
+            (val)=>{const m=allProductsData.find(p=>p.stock_code===val);if(m)nameInp.value=`${m.prod_name||''} - ${m.model_number||''}`.replace(/^ - | - $/g,'').trim();},
+            (val)=>{const m=allProductsData.find(p=>p.stock_code===val);return m ? `${m.prod_name||''} - ${m.model_number||''}`.replace(/^ - | - $/g,'').trim() : '';}
+        );
+        container.appendChild(row);monitorEdits();
+    }
+
+    function resizeImage(file, maxBytes, callback) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1920;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                let quality = 0.8;
+                function compress() {
+                    canvas.toBlob(function(blob) {
+                        if (blob.size <= maxBytes || quality < 0.2) {
+                            callback(null, blob);
+                        } else {
+                            quality -= 0.1;
+                            compress();
+                        }
+                    }, 'image/jpeg', quality);
+                }
+                compress();
+            };
+            img.onerror = function() { callback(new Error("Failed to load image")); };
+        };
+        reader.onerror = function() { callback(new Error("Failed to read file")); };
+    }
+
+    function validateDocFile(input) {
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            if (file.size > 5 * 1024 * 1024 && !file.type.startsWith('image/')) {
+                Swal.fire('File Size Should Not be more than 5 MB', 'Only images can be automatically compressed/resized.', 'error');
+                input.value = '';
+            }
+        }
+    }
+
+    function uploadSingleDocument(btn) {
+        const row = btn.parentElement;
+        const fileInput = row.querySelector('.doc-file-input');
+        const typeSelect = row.querySelector('.doc-type');
+        
+        if (!typeSelect.value) { Swal.fire('Required', 'Please select a Document Type first.', 'warning'); return; }
+        if (!fileInput.files || fileInput.files.length === 0) { Swal.fire('Required', 'Please select a file to upload.', 'warning'); return; }
+        
+        const file = fileInput.files[0];
+        const maxBytes = 5 * 1024 * 1024;
+        
+        const pbc = document.getElementById('uploadProgressBarContainer');
+        const pt = document.getElementById('docProgressText');
+        const pf = document.getElementById('docProgressFill');
+        const titleText = pbc.querySelector('div');
+        
+        pbc.style.display = 'block'; pf.style.width = '0%'; pt.innerText = '0%';
+        btn.disabled = true; btn.innerText = 'Processing...';
+        
+        if (file.size > maxBytes && file.type.startsWith('image/')) {
+            titleText.innerHTML = `Resizing image... <span id="docProgressText">Resizing...</span>`;
+            resizeImage(file, maxBytes, function(err, compressedBlob) {
+                if (err) {
+                    pbc.style.display = 'none';
+                    Swal.fire('Error', 'Image resizing failed.', 'error');
+                    btn.disabled = false; btn.innerText = 'Upload';
+                    return;
+                }
+                const newFileName = file.name.substring(0, file.name.lastIndexOf('.')) + '.jpg';
+                const compressedFile = new File([compressedBlob], newFileName, { type: 'image/jpeg' });
+                uploadFile(compressedFile);
+            });
+        } else if (file.size > maxBytes) {
+            pbc.style.display = 'none';
+            Swal.fire('File Too Large', 'Only images can be automatically compressed. Please select a file under 5 MB.', 'error');
+            btn.disabled = false; btn.innerText = 'Upload';
+        } else {
+            uploadFile(file);
+        }
+        
+        function uploadFile(fileToUpload) {
+            titleText.innerHTML = `Uploading Document... <span id="docProgressText">0%</span>`;
+            const formData = new FormData(); formData.append('file', fileToUpload);
+            btn.innerText = 'Uploading...';
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/products/upload-doc', true);
+            
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const currentPt = document.getElementById('docProgressText');
+                    if (currentPt) currentPt.innerText = percent + '%';
+                    pf.style.width = percent + '%';
+                }
+            };
+            
+            xhr.onload = function() {
+                pbc.style.display = 'none';
+                if (xhr.status === 200) {
+                    const res = JSON.parse(xhr.responseText);
+                    row.querySelector('.doc-url').value = res.url;
+                    row.querySelector('.doc-name').value = res.name;
+                    
+                    const link = document.createElement('a'); link.href = res.url; link.target = '_blank'; link.style.cssText = 'font-size:13px; font-weight:600; color:var(--primary); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;'; link.innerHTML = `📄 ${res.name}`;
+                    const successSpan = document.createElement('span'); successSpan.style.cssText = 'color:#10b981; font-weight:bold; margin-right: 10px;'; successSpan.innerText = '✅ Uploaded';
+                    
+                    row.insertBefore(link, fileInput); row.insertBefore(successSpan, btn);
+                    fileInput.remove(); btn.remove(); monitorEdits();
+                } else { Swal.fire('Error', 'Document upload failed.', 'error'); btn.disabled = false; btn.innerText = 'Upload'; }
+            };
+            
+            xhr.onerror = function() { pbc.style.display = 'none'; Swal.fire('Error', 'Network error during upload.', 'error'); btn.disabled = false; btn.innerText = 'Upload'; };
+            xhr.send(formData);
+        }
+    }
+
+    function addDocumentRow(typeVal = '', fileUrl = '', fileName = '') {
+        const container = document.getElementById('dynamicDocumentsList');
+        const row = document.createElement('div'); row.className = 'doc-row';
+        row.style.cssText = 'display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 8px;';
+        
+        let fileInputHtml = '';
+        if (fileUrl) {
+            fileInputHtml = `<a href="${fileUrl}" target="_blank" style="font-size:13px; font-weight:600; color:var(--primary); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">📄 ${fileName || 'View Document'}</a><input type="hidden" class="doc-url" value="${fileUrl}"><input type="hidden" class="doc-name" value="${fileName}"><span style="color:#10b981; font-weight:bold; margin-right:10px;">✅ Uploaded</span>`;
+        } else {
+            fileInputHtml = `<input type="file" class="doc-file-input" accept=".pdf,.doc,.docx,.png,.jpg" style="flex: 1; padding: 4px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px;" onchange="validateDocFile(this)"><button type="button" class="btn-save doc-upload-btn" style="padding: 6px 12px; font-size: 12px;" onclick="uploadSingleDocument(this)">Upload</button><input type="hidden" class="doc-url" value=""><input type="hidden" class="doc-name" value="">`;
+        }
+
+        row.innerHTML = `<select class="doc-type" style="width: 200px; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background:var(--surface);"><option value="">Select Type</option><option value="Datasheet">Datasheet</option><option value="Installation Manual">Installation Manual</option><option value="WI-FI Manual">WI-FI Manual</option><option value="Warranty Document">Warranty Document</option><option value="SDA Document">SDA Document</option><option value="Other">Other</option></select>${fileInputHtml}<button type="button" class="remove-btn" style="width: 32px; height: 32px; margin: 0; flex-shrink: 0; background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; border-radius: 6px; cursor: pointer; font-weight: 700;" onclick="this.parentElement.remove();monitorEdits();">🗑️</button>`;
+        if (typeVal) { row.querySelector('.doc-type').value = typeVal; }
+        container.appendChild(row);
+    }
+
+    function openAddProductModal(){
+        form.reset();document.getElementById('edit_id').value='';document.getElementById('modalTitle').innerText='Add New Product';
+        document.getElementById('saveBtn').innerText='Save Product';document.getElementById('saveBtn').disabled=false;document.getElementById('stock_code').value='';
+        document.getElementById('childProductsContainer').innerHTML='';addChildRow();
+        document.getElementById('dynamicDocumentsList').innerHTML='';addDocumentRow();
+        syncDateToText('pro_approved_date');syncDateToText('pro_expiry_date');
+        updateMandatoryFields();document.getElementById('modal').style.display='flex';
+    }
+
+    function editProduct(id){
+        const p=allProductsData.find(x=>x.id===id);if(!p)return;
+        form.reset();document.getElementById('edit_id').value=p.id;document.getElementById('modalTitle').innerText='Edit Product';
+        document.getElementById('saveBtn').innerText='Update Product';document.getElementById('saveBtn').disabled=true;
+        ['product_category','prod_name','manufacturer_name','brand_name','model_number','stock_code','pro_approved_date','pro_expiry_date','product_series','no_of_phase','type_of_inverter','panels_capacity_w','inv_rt_ac_out_w','inv_rt_dc_power_kw','inv_mppt','nominal_battery_capacity_kwh','usable_battery_kwh','no_of_battery_modules','pro_warranty_years','panels_linear_warranty_years','purchase_price','purchase_price_ex_gst'].forEach(f=>{const el=document.getElementById(f);if(el)el.value=p[f]||'';});
+        syncDateToText('pro_approved_date');syncDateToText('pro_expiry_date');
+        if(p.product_status){const r=document.querySelector(`input[name="product_status"][value="${p.product_status}"]`);if(r)r.checked=true;}
+        if(p.show_in_quotation){const r=document.querySelector(`input[name="show_in_quotation"][value="${p.show_in_quotation}"]`);if(r)r.checked=true;}
+        if(p.show_in_detailed_reports){const r=document.querySelector(`input[name="show_in_detailed_reports"][value="${p.show_in_detailed_reports}"]`);if(r)r.checked=true;}
+        const cc=document.getElementById('childProductsContainer');cc.innerHTML='';
+        if(p.child_products){try{JSON.parse(p.child_products).forEach(cp=>addChildRow(cp.name,cp.code,cp.qty));}catch(e){}}
+        if(!cc.children.length)addChildRow();
+        
+        document.getElementById('dynamicDocumentsList').innerHTML = '';
+        if (p.dynamic_documents && p.dynamic_documents.length > 0) { p.dynamic_documents.forEach(doc => addDocumentRow(doc.type, doc.url, doc.name)); }
+        if (document.getElementById('dynamicDocumentsList').children.length === 0) { addDocumentRow(); }
+
+        updateMandatoryFields();document.getElementById('modal').style.display='flex';
+    }
+
+    async function viewProductHistory(id){
+        const res=await fetch(`/products/${id}/history`),hist=await res.json();
+        const body=document.getElementById('historyBody');
+        body.innerHTML=hist.map(h=>`<li class="history-item"><div class="history-date">${h.created_at} — ${h.user_name}</div><div class="history-action">${h.action}</div><div class="history-detail">${h.details}</div></li>`).join('');
+        if(!hist.length)body.innerHTML='<li class="history-item"><div class="history-detail">No history found.</div></li>';
+        document.getElementById('historyModal').style.display='flex';
+    }
+
+    async function deleteProduct(id){
+        const cu=window.loggedInUser;
+        const role=window.loggedInRole;
+        const { isConfirmed } = await Swal.fire({
+            title: role === 'Manager' ? 'Permanently delete this product?' : 'Request deletion from Manager?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, proceed!'
+        });
+        if (!isConfirmed) return;
+        const res=await fetch(`/products/${id}/delete-action`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentUser:cu,role})});
+        if(res.ok){Swal.fire('Success', role==='Manager'?'Product deleted.':'Deletion request sent.', 'success');load();}
+    }
+
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        const selCount = document.getElementById('selCount');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            selCount.innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const activeCount = document.querySelectorAll('.row-checkbox:not(:disabled)').length;
+        const master = document.getElementById('selectAllCheckbox');
+        if (master) {
+            master.checked = activeCount > 0 && checkedCount === activeCount;
+        }
+    }
+
+    async function deleteSelectedRows() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+        const cu = window.loggedInUser;
+        const role = window.loggedInRole;
+        const { isConfirmed } = await Swal.fire({
+            title: role === 'Manager' ? `Permanently delete ${checkedBoxes.length} selected products?` : `Request deletion for ${checkedBoxes.length} products?`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#e8681e', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, proceed!'
+        });
+        if (!isConfirmed) return;
+        const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+        try {
+            const res = await fetch('/products/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: idsToDelete, role: role, currentUser: cu }) });
+            if (res.ok) { document.getElementById('selectAllCheckbox').checked = false; updateBulkDeleteBtn(); Swal.fire('Success', role === 'Manager' ? 'Products deleted.' : 'Deletion request sent.', 'success'); load(); }
+            else { const err = await res.json(); Swal.fire('Error', err.error || 'Failed to delete products.', 'error'); }
+        } catch (e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
+    }
+
+    function applyFilters(){
+        activeFilters={cat:document.getElementById('flt_cat').value,mfg:document.getElementById('flt_mfg').value.toLowerCase(),brand:document.getElementById('flt_brand').value.toLowerCase(),exp:document.getElementById('flt_exp').value,phase:document.getElementById('flt_phase').value,type_of_inverter:document.getElementById('flt_type_of_inverter').value,pan_cap:document.getElementById('flt_pan_cap').value,dc_pow:document.getElementById('flt_dc_pow').value,bat_cap:document.getElementById('flt_bat_cap').value,status:document.getElementById('flt_status').value,quo:document.getElementById('flt_quo').value,rep:document.getElementById('flt_rep').value};
+        currentPage=1;document.getElementById('filterModal').style.display='none';renderTable();
+    }
+
+    function clearFilters(){document.querySelectorAll('.filter-grid input, .filter-grid select').forEach(el=>el.value='');activeFilters={};currentPage=1;document.getElementById('filterModal').style.display='none';renderTable();}
+
+    form.onsubmit=async(e)=>{
+        e.preventDefault();
+        const cat = document.getElementById('product_category').value;
+        const batMods = document.getElementById('no_of_battery_modules')?.value;
+        if (cat === 'Battery' && (!batMods || !batMods.trim())) {
+            Swal.fire('Missing Details', 'Please enter the Number of Battery Modules.', 'warning');
+            return;
+        }
+        if(!document.getElementById('stock_code').value){Swal.fire('Missing Details', 'Stock code not generated yet. Fill all mandatory fields.', 'warning');return;}
+        const isEdit=!!document.getElementById('edit_id').value,saveBtn=document.getElementById('saveBtn');
+        saveBtn.disabled=true;saveBtn.innerText=isEdit?'Updating...':'Saving...';
+        const formData=new FormData(form);
+        const childProducts=[];document.querySelectorAll('.child-row').forEach(row=>{const name=row.querySelector('.cp-name')?.value||'',code=row.querySelector('.cp-code')?.value||'',qty=row.querySelector('.cp-qty')?.value||'1';if(name||code)childProducts.push({name,code,qty});});
+        
+        const dynamic_documents = [];
+        document.querySelectorAll('.doc-row').forEach(row => {
+            const type = row.querySelector('.doc-type').value;
+            const url = row.querySelector('.doc-url')?.value || '';
+            const name = row.querySelector('.doc-name')?.value || '';
+            if (type && url) dynamic_documents.push({ type, url, name });
+        });
+
+        formData.append('child_products',JSON.stringify(childProducts));
+        formData.append('dynamic_documents',JSON.stringify(dynamic_documents));
+        formData.append('last_updated_by',window.loggedInUser);
+        try{const url=isEdit?`/products/${document.getElementById('edit_id').value}`:'/products';const res=await fetch(url,{method:isEdit?'PUT':'POST',body:formData});const data=await res.json();if(res.ok){Swal.fire('Success!', isEdit?'Product updated!':'Product saved!', 'success');document.getElementById('modal').style.display='none';load();}else Swal.fire('Error', data.error||'Error saving product.', 'error');}catch(err){Swal.fire('Error', 'Server error.', 'error');}
+        finally{saveBtn.disabled=false;saveBtn.innerText=isEdit?'Update Product':'Save Product';}
+    };
+
+    function downloadSample(){const headers=["Product Category","Product Name","Manufacturer Name","Brand Name","Model Number","Product Approved Date","Product Expiry Date","Product Series","Number Of Phase","Panels Capacity (W)","Inv. Rated AC Output (W)","Inv. Rated DC Power (kW)","Inv. MPPT","Nominal Battery Capacity (kWh)","Usable Battery Capacity (kWh)","No. of Battery Modules","Product Warranty (Years)","Panels Linear Warranty (Years)","Purchase Price ($) (Inc. GST)"];const ws=XLSX.utils.aoa_to_sheet([headers]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Sample");XLSX.writeFile(wb,"Product_Import_Sample.xlsx");}
+
+    async function uploadExcel(){
+        const fi=document.getElementById('importFile');if(!fi.files.length){Swal.fire('Required', 'Please select a file.', 'warning');return;}
+        const btn=document.getElementById('uploadBtn');btn.innerText="Uploading...";btn.disabled=true;
+        const reader=new FileReader();
+        reader.onload=async function(e){
+            const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}),json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            if(!json.length){Swal.fire('Error', 'File is empty.', 'error');btn.innerText="Upload & Import";btn.disabled=false;return;}
+            const products=json.map(row=>({product_category:row["Product Category"]||'',prod_name:row["Product Name"]||'',manufacturer_name:row["Manufacturer Name"]||'',brand_name:row["Brand Name"]||'',model_number:row["Model Number"]||'',pro_approved_date:row["Product Approved Date"]||'',pro_expiry_date:row["Product Expiry Date"]||'',product_series:row["Product Series"]||'',no_of_phase:row["Number Of Phase"]||'',panels_capacity_w:row["Panels Capacity (W)"]||'',inv_rt_ac_out_w:row["Inv. Rated AC Output (W)"]||'',inv_rt_dc_power_kw:row["Inv. Rated DC Power (kW)"]||'',inv_mppt:row["Inv. MPPT"]||'',nominal_battery_capacity_kwh:row["Nominal Battery Capacity (kWh)"]||'',usable_battery_kwh:row["Usable Battery Capacity (kWh)"]||'',no_of_battery_modules:row["No. of Battery Modules"]||'',pro_warranty_years:row["Product Warranty (Years)"]||'',panels_linear_warranty_years:row["Panels Linear Warranty (Years)"]||'',purchase_price:row["Purchase Price ($) (Inc. GST)"]||''}));
+            try{const res=await fetch('/products/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({products,currentUser:window.loggedInUser})});if(res.ok){Swal.fire('Imported!', 'Products imported successfully!', 'success');document.getElementById('importModal').style.display='none';fi.value='';load();}else Swal.fire('Error', 'Error importing products.', 'error');}catch(err){Swal.fire('Error', 'Server error.', 'error');}
+            btn.innerText="Upload & Import";btn.disabled=false;
+        };
+        reader.readAsArrayBuffer(fi.files[0]);
+    }
+
+    function exportToExcel(){
+        const t=document.createElement('table');t.innerHTML=`<tr><th>Category</th><th>Stock Code</th><th>Product Name</th><th>Manufacturer</th><th>Expiry Date</th><th>Phase</th><th>Panels (W)</th><th>AC Out (W)</th><th>DC Power (kW)</th><th>MPPT</th><th>Battery (kWh)</th><th>Warranty (Yrs)</th><th>Status</th><th>Purchase Price</th></tr>`;
+        getFiltered().forEach(p=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${p.product_category||''}</td><td>${p.stock_code||''}</td><td>${p.prod_name||''}</td><td>${p.manufacturer_name||''}</td><td>${p.pro_expiry_date||''}</td><td>${p.no_of_phase||''}</td><td>${p.panels_capacity_w||''}</td><td>${p.inv_rt_ac_out_w||''}</td><td>${p.inv_rt_dc_power_kw||''}</td><td>${p.inv_mppt||''}</td><td>${p.usable_battery_kwh||''}</td><td>${p.pro_warranty_years||''}</td><td>${p.product_status||''}</td><td>${p.purchase_price||''}</td>`;t.appendChild(tr);});
+        XLSX.writeFile(XLSX.utils.table_to_book(t,{sheet:'Products'}),'Solar_CRM_Products.xlsx');
+    }
+
+    document.querySelectorAll('input[type="file"]').forEach(inp=>{inp.addEventListener('change',function(){if(this.files[0]&&this.files[0].size>7*1024*1024){Swal.fire('File Too Large', 'Max file size is 7MB.', 'warning');this.value='';}});});
+
+    function changeRowsPerPage(){rowsPerPage=parseInt(document.getElementById('rowsPerPage').value);currentPage=1;renderTable();}
+    function prevPage(){if(currentPage>1){currentPage--;renderTable();}}
+    function nextPage(){const totalPages=Math.ceil(getFiltered().length/rowsPerPage)||1;if(currentPage<totalPages){currentPage++;renderTable();}}
+
+    function toggleColumn(colId, isVisible) {
+        let cols = JSON.parse(localStorage.getItem('productsCols') || '{}');
+        cols[colId] = isVisible;
+        localStorage.setItem('productsCols', JSON.stringify(cols));
+        applyColumnVisibility();
+    }
+
+    function applyColumnVisibility() {
+        let cols = JSON.parse(localStorage.getItem('productsCols') || '{}');
+        const defaultCols = ['col_cat', 'col_stock', 'col_name', 'col_mfg', 'col_exp', 'col_phase', 'col_panels', 'col_ac', 'col_dc', 'col_mppt', 'col_battery', 'col_warranty', 'col_status', 'col_updated'];
+        defaultCols.forEach(col => {
+            if (cols[col] === undefined) {
+                cols[col] = true;
+            }
+        });
+        localStorage.setItem('productsCols', JSON.stringify(cols));
+
+        const styleId = 'dynamic-col-styles';
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+        let css = '';
+        for (const [col, visible] of Object.entries(cols)) {
+            if (!visible) { css += `[data-col="${col}"] { display: none !important; }\n`; }
+            try {
+                const cb = document.querySelector(`input[onchange="toggleColumn('${col}', this.checked)"]`);
+                if (cb) cb.checked = visible;
+            } catch(e) {
+                console.error("Error setting checkbox for col selector:", col, e);
+            }
+        }
+        styleEl.innerHTML = css;
+    }
+
+    window.onload=load;
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js?v=2"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

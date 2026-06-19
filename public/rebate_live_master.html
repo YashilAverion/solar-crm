@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rebate Live Master - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        table th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.4px; color: #212529 !important; font-weight: 700 !important; font-size: 11px !important; text-align: center !important; padding: 6px 8px !important; z-index: 10; cursor: pointer; user-select: none; }
+        table th:hover { background: #f1f5f9; }
+        table td { color: #212529 !important; font-weight: 500 !important; text-align: center !important; vertical-align: middle !important; border-bottom: 1px solid #f1f5f9; padding: 4px 8px !important; }
+        table tbody tr:hover td { background: #f8fafc; }
+        
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        .status-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); }
+        .sb-active { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
+        .sb-inactive { background: #fef0ee; color: #b93a20; border-color: #f5c4bb; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== COMPONENTS & MODALS ========== */
+        .actions-cell { display: flex; gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 550px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); animation: slideUp 0.3s ease; max-height: 92vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .field { display: flex; flex-direction: column; justify-content: center; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .required::after { content: " *"; color: #b93a20; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--text-dark); outline: none; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .field input[readonly] { background: #f8fafc; color: #94a3b8; cursor: not-allowed; border-style: dashed; }
+        
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-save:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ========== PAGINATION & HISTORY ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg); }
+
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Rebate Live Master</div>
+        <div class="search-wrap">
+            <input type="text" id="globalSearch" placeholder="Search Property Type or State..." autocomplete="off">
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="deleteSelectedRows()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn btn-add" onclick="openAddModal()">+ Add Rebate</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Rebates</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">Active configurations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">States Covered</div>
+            <div class="stat-val" id="statStates">0</div>
+            <div class="stat-sub">Across Australia</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Rates</div>
+            <div class="stat-val" id="statActive">0</div>
+            <div class="stat-sub">Currently applied</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-center" style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                        <th onclick="sortData('type_of_rebate')">Type of Rebate <span class="sort-arrow" id="sort_type_of_rebate"></span></th>
+                        <th onclick="sortData('property_type')">Property Type <span class="sort-arrow" id="sort_property_type"></span></th>
+                        <th onclick="sortData('state')">State <span class="sort-arrow" id="sort_state"></span></th>
+                        <th onclick="sortData('zone')">Zone <span class="sort-arrow" id="sort_zone"></span></th>
+                        <th onclick="sortData('live_rate')">Live Rate ($) <span class="sort-arrow" id="sort_live_rate"></span></th>
+                        <th onclick="sortData('admin_charges')">Admin Charges ($) <span class="sort-arrow" id="sort_admin_charges"></span></th>
+                        <th onclick="sortData('actual_rate')">Actual Rate ($) <span class="sort-arrow" id="sort_actual_rate"></span></th>
+                        <th onclick="sortData('status')">Status <span class="sort-arrow" id="sort_status"></span></th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dataBody"></tbody>
+            </table>
+        </div>
+        <div id="paginationControls" class="pagination-footer"></div>
+    </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('addModal').style.display='none'">✕</button>
+        <div class="modal-title" id="addModalTitle">Add Rebate</div>
+        <form id="dataForm" onsubmit="saveData(event)">
+            <input type="hidden" id="edit_id" value="">
+            <div class="form-grid">
+                <div class="field">
+                    <label class="required">Type of Rebate</label>
+                    <select id="type_of_rebate" required>
+                        <option value="">Select Type</option>
+                        <option value="STC">STC</option>
+                        <option value="LGC">LGC</option>
+                        <option value="VEEC">VEEC</option>
+                        <option value="ESC">ESC</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">Property Type</label>
+                    <select id="property_type" required>
+                        <option value="">Select Property</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">State</label>
+                    <select id="state" required>
+                        <option value="">Select State</option>
+                        <option value="WA">WA</option><option value="NSW">NSW</option><option value="VIC">VIC</option>
+                        <option value="QLD">QLD</option><option value="SA">SA</option><option value="TAS">TAS</option>
+                        <option value="NT">NT</option><option value="ACT">ACT</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">Zone</label>
+                    <input type="number" id="zone" placeholder="e.g. 1, 2, 3" required>
+                </div>
+                
+                <div class="section-divider">Rates & Calculations</div>
+                <div class="field">
+                    <label class="required">Live Rate ($)</label>
+                    <input type="number" id="live_rate" step="0.01" min="0" placeholder="0.00" oninput="calculateActualRate()" required>
+                </div>
+                <div class="field">
+                    <label class="required">Admin Charges ($)</label>
+                    <input type="number" id="admin_charges" step="0.01" min="0" placeholder="0.00" oninput="calculateActualRate()" required>
+                </div>
+                <div class="field full-width">
+                    <label>Actual Rate ($)</label>
+                    <input type="text" id="actual_rate" readonly placeholder="Auto-calculated" style="font-weight: 700; color: #10b981;">
+                </div>
+                <div class="field full-width">
+                    <label class="required">Status</label>
+                    <select id="status" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveBtn">Save Rebate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Change History</div>
+        <ul class="history-list" id="historyBody" style="max-height: 400px; overflow-y: auto;"></ul>
+    </div>
+</div>
+
+<script>
+    window.loggedInUser = 'System';
+    window.loggedInRole = 'Standard';
+
+    let allData = [];
+    let currentSortCol = '';
+    let isSortAsc = true;
+    let globalSearchTerm = '';
+    let lastFilteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 50;
+
+    (async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+
+    async function loadRebates() {
+        const body = document.getElementById('dataBody');
+        body.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 40px !important; color: var(--text-muted); font-weight: 600;">Loading Data...</td></tr>`;
+        try {
+            const res = await fetch('/api/rebate_live_master', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Failed to fetch');
+            allData = await res.json();
+            renderTable();
+        } catch (e) {
+            console.error("Failed to load data:", e);
+            body.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px !important; color: #b93a20;">Failed to load data from server.</td></tr>`;
+        }
+    }
+
+    function calculateActualRate() {
+        const live = parseFloat(document.getElementById('live_rate').value) || 0;
+        const admin = parseFloat(document.getElementById('admin_charges').value) || 0;
+        document.getElementById('actual_rate').value = (live - admin).toFixed(2);
+    }
+
+    function renderTable() {
+        const body = document.getElementById('dataBody');
+        body.innerHTML = '';
+        let filtered = allData;
+
+        if (globalSearchTerm) {
+            const term = globalSearchTerm.toLowerCase();
+            filtered = filtered.filter(row =>
+                (row.state || '').toLowerCase().includes(term) ||
+                (row.property_type || '').toLowerCase().includes(term) ||
+                (row.type_of_rebate || '').toLowerCase().includes(term)
+            );
+        }
+
+        document.getElementById('statTotal').innerText = filtered.length;
+        document.getElementById('statStates').innerText = new Set(filtered.map(x => x.state)).size;
+        document.getElementById('statActive').innerText = filtered.filter(x => x.status !== 'Inactive').length;
+
+        lastFilteredData = filtered;
+
+        const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const visibleData = filtered.slice(start, start + rowsPerPage);
+
+        if (filtered.length === 0) {
+            body.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No records found.</td></tr>`;
+            renderPagination();
+            return;
+        }
+
+        let htmlString = '';
+        visibleData.forEach((p) => {
+            const statusBadge = p.status === 'Active' ? 'sb-active' : 'sb-inactive';
+            htmlString += `
+                <tr>
+                    <td class="col-center"><input type="checkbox" class="row-checkbox" value="${p.id}" onclick="updateBulkDeleteBtn()" style="cursor: pointer; width: 14px; height: 14px;"></td>
+                    <td class="col-center">${p.type_of_rebate || '-'}</td>
+                    <td class="col-center">${p.property_type || '-'}</td>
+                    <td class="col-center">${p.state || '-'}</td>
+                    <td class="col-center">${p.zone || '-'}</td>
+                    <td class="col-center" style="font-weight:700 !important;">$${parseFloat(p.live_rate || 0).toFixed(2)}</td>
+                    <td class="col-center" style="color:#b93a20 !important;">$${parseFloat(p.admin_charges || 0).toFixed(2)}</td>
+                    <td class="col-center" style="font-weight:700 !important; color:#10b981 !important;">$${parseFloat(p.actual_rate || 0).toFixed(2)}</td>
+                    <td class="col-center"><span class="status-badge ${statusBadge}">${p.status || 'Active'}</span></td>
+                    <td class="col-center">
+                        <div class="actions-cell">
+                            <button class="act-btn" title="Edit" onclick="editRecord(${p.id})">✏️</button>
+                            <button class="act-btn" title="History" onclick="viewHistory(${p.id})">🕒</button>
+                            <button class="act-btn act-btn-del" title="Delete" onclick="deleteData(${p.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        body.innerHTML = htmlString;
+        renderPagination();
+        const selectAllCb = document.getElementById('selectAllCheckbox');
+        if (selectAllCb) selectAllCb.checked = false;
+        updateBulkDeleteBtn();
+    }
+
+    function renderPagination() {
+        const controls = document.getElementById('paginationControls');
+        if (!controls) return;
+        const totalPages = Math.ceil(lastFilteredData.length / rowsPerPage) || 1;
+        controls.innerHTML = `
+            <div class="pf-left"><span class="total-badge">Showing ${lastFilteredData.length} records</span></div>
+            <div class="pf-right">
+                <button class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+                <span style="margin: 0 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);">Page ${currentPage} of ${totalPages}</span>
+                <button class="page-btn" onclick="changePage(1)" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>Next →</button>
+            </div>
+        `;
+    }
+
+    function changePage(direction) {
+        const newPage = currentPage + direction;
+        const totalPages = Math.ceil(lastFilteredData.length / rowsPerPage) || 1;
+        if (newPage >= 1 && newPage <= totalPages) { currentPage = newPage; renderTable(); }
+    }
+
+    function sortData(column) {
+        if (currentSortCol === column) isSortAsc = !isSortAsc; else { currentSortCol = column; isSortAsc = true; }
+        allData.sort((a, b) => {
+            let va = a[column], vb = b[column];
+            if (typeof va === 'string') va = va.toLowerCase();
+            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (va < vb) return isSortAsc ? -1 : 1;
+            if (va > vb) return isSortAsc ? 1 : -1;
+            return 0;
+        });
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        if (document.getElementById(`sort_${column}`)) document.getElementById(`sort_${column}`).innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1;
+        renderTable();
+    }
+
+    let globalSearchTimeout;
+    document.getElementById('globalSearch').addEventListener('input', function(e) {
+        clearTimeout(globalSearchTimeout);
+        globalSearchTimeout = setTimeout(() => {
+            globalSearchTerm = e.target.value.trim();
+            currentPage = 1;
+            renderTable();
+        }, 400);
+    });
+
+    function openAddModal() {
+        document.getElementById('dataForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.getElementById('status').value = 'Active';
+        document.getElementById('addModalTitle').innerText = 'Add Rebate';
+        document.getElementById('saveBtn').innerText = 'Save Rebate';
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function editRecord(id) {
+        const rec = allData.find(x => x.id === id);
+        if (!rec) return;
+        document.getElementById('edit_id').value = rec.id;
+        document.getElementById('type_of_rebate').value = rec.type_of_rebate || '';
+        document.getElementById('property_type').value = rec.property_type || '';
+        document.getElementById('state').value = rec.state || '';
+        document.getElementById('zone').value = rec.zone || '';
+        document.getElementById('live_rate').value = rec.live_rate || '';
+        document.getElementById('admin_charges').value = rec.admin_charges || '';
+        document.getElementById('actual_rate').value = rec.actual_rate || '';
+        document.getElementById('status').value = rec.status || 'Active';
+
+        document.getElementById('addModalTitle').innerText = 'Edit Rebate';
+        document.getElementById('saveBtn').innerText = 'Update Rebate';
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    async function saveData(event) {
+        event.preventDefault();
+        const editId = document.getElementById('edit_id').value;
+        const isEdit = !!editId;
+        const nowStr = new Date().toLocaleString('en-GB');
+
+        const payload = {
+            type_of_rebate: document.getElementById('type_of_rebate').value,
+            property_type: document.getElementById('property_type').value,
+            state: document.getElementById('state').value,
+            zone: parseInt(document.getElementById('zone').value) || 0,
+            live_rate: parseFloat(document.getElementById('live_rate').value) || 0,
+            admin_charges: parseFloat(document.getElementById('admin_charges').value) || 0,
+            actual_rate: parseFloat(document.getElementById('actual_rate').value) || 0,
+            status: document.getElementById('status').value || 'Active',
+            currentUser: window.loggedInUser
+        };
+
+        if (isEdit) {
+            payload.last_update_by = window.loggedInUser;
+            payload.last_updated_date = nowStr;
+        } else {
+            payload.created_by = window.loggedInUser;
+            payload.created_date = nowStr;
+        }
+
+        const url = isEdit ? `/api/rebate_live_master/${editId}` : '/api/rebate_live_master';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                Swal.fire(isEdit ? 'Updated!' : 'Saved!', 'Rebate record saved successfully.', 'success');
+                document.getElementById('addModal').style.display = 'none';
+                loadRebates();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to save record.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+        }
+    }
+
+    async function deleteData(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?', text: "This rebate record will be removed.", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#e8681e', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (isConfirmed) {
+            try {
+                const res = await fetch(`/api/rebate_live_master/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentUser: window.loggedInUser })
+                });
+                if (res.ok) {
+                    Swal.fire('Deleted!', 'Record removed.', 'success');
+                    document.getElementById('selectAllCheckbox').checked = false;
+                    updateBulkDeleteBtn();
+                    loadRebates();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to delete record.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+            }
+        }
+    }
+
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            document.getElementById('selCount').innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const totalCount = document.querySelectorAll('.row-checkbox').length;
+        const master = document.getElementById('selectAllCheckbox');
+        if (master) {
+            master.checked = totalCount > 0 && checkedCount === totalCount;
+        }
+    }
+
+    async function deleteSelectedRows() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?', text: `This will permanently delete ${checkedBoxes.length} selected records.`, icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#c53030', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete them!'
+        });
+
+        if (isConfirmed) {
+            try {
+                const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+                const res = await fetch('/api/rebate_live_master/bulk-delete', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        ids: idsToDelete, 
+                        currentUser: window.loggedInUser
+                    }) 
+                });
+                
+                if (res.ok) {
+                    document.getElementById('selectAllCheckbox').checked = false;
+                    updateBulkDeleteBtn();
+                    Swal.fire('Deleted!', 'Selected records removed.', 'success');
+                    loadRebates();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to delete selected records.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+            }
+        }
+    }
+
+    async function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<li class="history-item"><div class="history-action">Loading...</div></li>';
+        document.getElementById('historyModal').style.display = 'flex';
+        
+        try {
+            const res = await fetch(`/api/rebate_live_master/${id}/history`);
+            const history = await res.json();
+            
+            if (history.length === 0) {
+                body.innerHTML = '<li class="history-item"><div class="history-action">No history found.</div></li>';
+            } else {
+                body.innerHTML = history.map(h => `
+                    <li class="history-item">
+                        <div class="history-date">${h.date} — ${h.user}</div>
+                        <div class="history-action">${h.action}</div>
+                    </li>
+                `).join('');
+            }
+        } catch (e) {
+            body.innerHTML = '<li class="history-item"><div class="history-action" style="color:#b93a20;">Failed to load history.</div></li>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadRebates);
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

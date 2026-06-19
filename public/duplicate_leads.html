@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Duplicate Leads - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary:#1c3557; --primary-hover:#16294a; --accent:#e8681e; --accent-hover:#d05a14; --bg:#f4f6f9; --surface:#ffffff; --border:#dde3ed; --text-dark:#1c2b3a; --text-muted:#6b7a8d; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:'Inter',system-ui,sans-serif; font-size:13px; background:var(--bg); overflow:hidden; height:100vh; color:var(--text-dark); }
+        input,select,button,textarea { font-family:inherit; font-size:13px; }
+
+        .sidebar { width:180px; background:#0f172a; height:100vh; position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; }
+        .sb-logo { padding:12px 14px 10px; border-bottom:1px solid #1e293b; }
+        .sb-logo-main { font-size:15px; font-weight:700; color:#f8fafc; }
+        .sb-menu { padding:8px; flex:1; }
+        .sb-section { font-size:10px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1px; padding:6px 8px 4px; }
+        .menu-item { display:flex; align-items:center; gap:8px; padding:6px 8px; margin-bottom:1px; font-size:13px; color:#94a3b8; text-decoration:none; cursor:pointer; transition:all .2s; border-radius:7px; font-weight:500; }
+        .menu-item:hover { color:#f8fafc; background:#1e293b; }
+        .menu-item.active-menu { color:#fff; background:var(--accent); box-shadow:0 4px 6px -1px rgba(232,104,30,.3); }
+        .sb-footer { padding:10px 12px; border-top:1px solid #1e293b; background:#0b1120; }
+        .sb-user { display:flex; align-items:center; gap:10px; }
+        .sb-avatar { width:30px; height:30px; border-radius:8px; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.88rem; font-weight:700; color:#fff; flex-shrink:0; }
+        .sb-uinfo { flex:1; min-width:0; }
+        .sb-uname { font-size:.85rem; font-weight:600; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-urole { font-size:.7rem; color:#64748b; margin-top:1px; }
+
+        .main-wrap { margin-left:180px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+        .topbar { background:var(--surface); height:46px; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid var(--border); flex-shrink:0; z-index:100; }
+        .topbar-title { font-size:15px; font-weight:700; color:var(--text-dark); }
+        .search-wrap { position:relative; flex:1; max-width:320px; margin-left:10px; }
+        .search-wrap input { width:100%; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:13px; color:var(--text-dark); transition:all .2s; }
+        .search-wrap input:focus { border-color:var(--primary); background:var(--surface); outline:none; box-shadow:0 0 0 3px rgba(28,53,87,.1); }
+        .tb-spacer { flex:1; }
+
+        .tb-btn { height:30px; padding:0 10px; border-radius:6px; border:1px solid var(--border); font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; white-space:nowrap; background:var(--surface); color:var(--text-dark); display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+        .tb-btn:hover { background:var(--bg); border-color:#cbd5e1; }
+
+        .filter-chip { background:var(--bg); color:var(--text-muted); font-size:12px; font-weight:600; padding:3px 9px; border-radius:20px; cursor:pointer; border:1px solid var(--border); transition:all .2s; white-space:nowrap; }
+        .filter-chip:hover { background:#e2e8f0; color:var(--text-dark); }
+        .filter-chip.fc-active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+        .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:8px 16px; flex-shrink:0; }
+        .stat-card { background:var(--surface); border-radius:8px; padding:8px 12px; border:1px solid var(--border); transition:all .2s; box-shadow:0 1px 3px rgba(0,0,0,.05); position:relative; overflow:hidden; }
+        .stat-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--border); transition:all .2s; }
+        .stat-card:hover { box-shadow:0 4px 8px rgba(0,0,0,.08); transform:translateY(-1px); }
+        .stat-card:nth-child(1):hover::before { background:#f59e0b; }
+        .stat-card:nth-child(2):hover::before { background:#10b981; }
+        .stat-card:nth-child(3):hover::before { background:#6366f1; }
+        .stat-card:nth-child(4):hover::before { background:#ef4444; }
+        .stat-label { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
+        .stat-val { font-size:22px; font-weight:700; color:var(--text-dark); margin:2px 0 1px; line-height:1; }
+        .stat-sub { font-size:11px; color:#94a3b8; font-weight:500; }
+
+        .content-area { flex:1; overflow:hidden; padding:0 16px 10px; display:flex; flex-direction:column; min-height:0; }
+        .table-toolbar { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-shrink:0; flex-wrap:wrap; background:var(--surface); padding:6px 10px; border-radius:7px; border:1px solid var(--border); }
+        .tt-count { font-size:13px; font-weight:700; color:var(--text-dark); background:var(--bg); padding:3px 8px; border-radius:5px; }
+        .tt-spacer { flex:1; }
+
+        .table-wrap { flex:1; overflow:auto; border-radius:12px; border:1px solid var(--border); background:var(--surface); min-height:0; box-shadow:0 4px 6px -1px rgba(0,0,0,.05); }
+        table { width:100%; border-collapse:separate; border-spacing:0; white-space:nowrap; }
+        thead th { position:sticky; top:0; background:rgba(248,250,252,.95); backdrop-filter:blur(8px); color:#475569; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:6px 8px; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center; vertical-align:middle; cursor:pointer; user-select:none; z-index:10; transition:background .2s; height:32px; }
+        thead th:hover { background:#f1f5f9; color:var(--text-dark); }
+        .sort-arrow { font-size:.75rem; margin-left:6px; color:var(--primary); }
+        tbody tr { transition:all .15s; height:32px; }
+        tbody tr td { border-bottom:1px solid #f1f5f9; }
+        tbody tr:hover td { background:#f8fafc; }
+        tbody tr:last-child td { border-bottom:none; }
+        td { padding:4px 8px; font-size:12px; color:var(--text-dark); font-weight:600; vertical-align:middle; text-align:center; line-height:1.3; }
+
+        .status-badge { display:inline-flex; align-items:center; padding:1px 5px; border-radius:4px; font-size:11px; font-weight:600; white-space:nowrap; border:1px solid #f9c89a; background:#fff4ee; color:#c0520f; }
+        .proj-num { font-size:12px; font-weight:600; color:var(--primary); background:#eef2f8; padding:1px 4px; border-radius:4px; border:1px solid #c5d3e8; }
+        .proj-pending { font-size:12px; font-weight:600; color:#c0520f; background:#fff4ee; padding:1px 4px; border-radius:4px; border:1px solid #f9c89a; }
+        .customer-name { font-weight:600; color:var(--text-dark); font-size:12px; }
+        .assignee-cell { font-size:12px; color:var(--text-dark); font-weight:600; }
+
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; font-weight: 700 !important; }
+        .act-btn:hover { background:#f1f5f9; border-color:#cbd5e1; color:var(--text-dark); transform:translateY(-1px); }
+        .act-btn-approve:hover { background:#edfaf2; border-color:#b3e6cc; color:#1a6b3c; }
+        .act-btn-reject:hover { background:#fef0ee; border-color:#f5c4bb; color:#b93a20; }
+
+        .pagination-footer { background:var(--surface); border-top:1px solid var(--border); padding:5px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+        .pf-left { display:flex; align-items:center; gap:8px; }
+        .pf-label { font-size:12px; font-weight:600; color:var(--text-muted); }
+        .rows-select { height:28px; border:1px solid var(--border); border-radius:5px; padding:0 8px; font-size:12px; font-weight:500; color:var(--text-dark); background:var(--surface); outline:none; cursor:pointer; }
+        .total-badge { background:#f1f5f9; color:var(--text-dark); font-size:13px; font-weight:700; padding:4px 10px; border-radius:5px; border:1px solid #e2e8f0; }
+        .pf-right { display:flex; align-items:center; gap:8px; }
+        .page-info { font-size:12px; font-weight:600; color:var(--text-muted); }
+        .page-btn { background:var(--surface); border:1px solid var(--border); color:var(--text-dark); padding:4px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; transition:all .2s; }
+        .page-btn:hover:not(:disabled) { background:#f1f5f9; border-color:#cbd5e1; }
+        .page-btn:disabled { opacity:.4; cursor:not-allowed; background:var(--bg); }
+
+        /* Modals */
+        .modal { display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background:rgba(15,23,42,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px; }
+        .modal-content { background:var(--surface); padding:20px 24px 16px; width:100%; max-width:1200px; border-radius:12px; position:relative; max-height:88vh; overflow-y:auto; margin:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,.12); border:1px solid var(--border); animation:slideUp .3s ease; }
+        .modal-sm { max-width:420px; }
+        .modal-lg { max-width:1100px; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .modal-close { position:absolute; right:16px; top:16px; background:#f4f6f9; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); transition:all .2s; }
+        .modal-close:hover { background:#fde8e3; color:#b93a20; }
+        .modal-title { font-size:15px; font-weight:700; color:var(--text-dark); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+
+        .history-list { list-style:none; padding:0; margin:0; }
+        .history-item { border-left:4px solid #cbd5e1; padding:14px 18px; margin-bottom:12px; background:#f8fafc; border-radius:0 10px 10px 0; }
+        .history-item:hover { border-left-color:var(--primary); background:#f1f5f9; }
+        .history-date { font-size:.8rem; color:var(--text-muted); font-weight:700; margin-bottom:6px; }
+        .history-action { font-size:1.05rem; color:var(--text-dark); font-weight:700; margin-bottom:4px; }
+        .history-detail { font-size:.95rem; color:#475569; line-height:1.4; }
+
+        /* Lead detail view */
+        .detail-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px 14px; }
+        .detail-field { display:flex; flex-direction:column; gap:3px; }
+        .detail-label { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+        .detail-value { font-size:13px; font-weight:600; color:var(--text-dark); padding:4px 8px; background:var(--bg); border-radius:5px; border:1px solid var(--border); min-height:28px; }
+        .detail-section { font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.8px; padding-bottom:6px; border-bottom:1px solid #c5d3e8; grid-column:span 3; margin-top:6px; }
+
+        .approve-bar { background:#edfaf2; border:1px solid #b3e6cc; border-radius:10px; padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .approve-bar-text { font-size:13px; font-weight:600; color:#1a6b3c; flex:1; }
+        .btn-approve { background:#10b981; color:#fff; border:none; padding:7px 18px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; transition:all .2s; }
+        .btn-approve:hover { background:#059669; transform:translateY(-1px); }
+        .btn-reject { background:#ef4444; color:#fff; border:none; padding:7px 18px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; transition:all .2s; }
+        .btn-reject:hover { background:#dc2626; transform:translateY(-1px); }
+
+        .swal2-popup { width:340px !important; padding:16px 20px 20px !important; border-radius:12px !important; font-family:'Inter',system-ui,sans-serif !important; }
+        .swal2-title { font-size:14px !important; padding:0 !important; margin-bottom:8px !important; color:var(--text-dark) !important; }
+        .swal2-html-container { font-size:12px !important; margin:0 0 16px !important; padding:0 !important; color:var(--text-muted) !important; line-height:1.4 !important; }
+        .swal2-icon { transform:scale(.65) !important; margin:10px auto 4px !important; border-width:3px !important; }
+        .swal2-actions { margin:0 !important; gap:8px !important; width:100% !important; justify-content:center !important; }
+        .swal2-confirm,.swal2-cancel { font-size:12px !important; font-weight:600 !important; padding:0 16px !important; height:28px !important; min-height:28px !important; border-radius:6px !important; margin:0 !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; box-shadow:none !important; }
+        .swal2-confirm { background-color:#10b981 !important; color:#fff !important; }
+        ::-webkit-scrollbar { width:8px; height:8px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+        table td { color:#212529 !important; font-weight:500 !important; }
+        table td .act-btn { color:#212529 !important; font-weight:700 !important; }
+
+        .cb-col { width:36px; text-align:center; }
+        input[type="checkbox"] { width:14px; height:14px; cursor:pointer; accent-color:var(--primary); border-radius:3px; }
+
+        /* BULK BAR */
+        .bulk-bar { display:none; align-items:center; gap:8px; background:var(--primary); color:#fff; padding:6px 14px; border-radius:8px; margin-bottom:8px; flex-shrink:0; box-shadow:0 4px 6px -1px rgba(28,53,87,.25); animation:slideDown .2s ease; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .bulk-bar.bb-visible { display:flex; }
+        .bulk-count { font-size:13px; font-weight:700; font-family:'Inter',system-ui,sans-serif; }
+        .bulk-action-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; padding:4px 12px; border-radius:5px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+        .bulk-action-btn:hover { background:rgba(255,255,255,.22); }
+        .bulk-action-btn.bab-danger { background:rgba(185,58,32,.75); border-color:rgba(185,58,32,.4); }
+        .bulk-action-btn.bab-danger:hover { background:rgba(185,58,32,1); }
+        .bulk-action-btn.bab-success { background:#10b981; border-color:#059669; }
+        .bulk-action-btn.bab-success:hover { background:#059669; }
+        .bulk-clear { margin-left:auto; background:transparent; border:none; color:rgba(255,255,255,.6); font-size:14px; cursor:pointer; padding:3px; border-radius:50%; transition:all .2s; display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
+        .bulk-clear:hover { background:rgba(255,255,255,.12); color:#fff; }
+
+        /* FORM & FILTERS */
+        .form-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px 12px; margin-bottom:4px; }
+        .field { display:flex; flex-direction:column; }
+        .field label { font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+        .field input:not([type="file"]):not([type="radio"]):not([type="checkbox"]),.field select,.field textarea { padding:0 10px; border:1px solid var(--border); border-radius:6px; height:32px; color:var(--text-dark); width:100%; background:var(--surface); font-size:13px; transition:all .2s; }
+        .field input:focus,.field select:focus,.field textarea:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 2px rgba(28,53,87,.1); }
+        .section-divider { font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.8px; margin:10px 0 4px; padding-bottom:6px; border-bottom:1px solid #c5d3e8; grid-column:span 4; display:flex; align-items:center; }
+        .bottom-actions { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+        .btn-save { background:var(--accent); color:#fff; padding:10px 28px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:1rem; transition:all .2s; box-shadow:0 4px 6px -1px rgba(232,104,30,.3); display:flex; align-items:center; gap:8px; }
+        .btn-save:hover { background:var(--accent-hover); transform:translateY(-1px); }
+        .btn-save:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-reset { background: #f1f5f9; color: #64748b; padding: 10px 28px; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.2s; }
+        .btn-reset:hover { background: #e2e8f0; color: #475569; }
+        
+        .adv-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
+        .adv-filter-grid .field label { font-size: 11px; margin-bottom: 2px; }
+        .form-control-sm { height: 26px !important; padding: 5px 8px !important; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; background: var(--surface); outline: none; box-shadow: none; transition: all 0.2s; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        .tab-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); font-weight: 600; padding: 0 12px; height: 30px; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .tab-btn:hover { background: #e2e8f0; }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Duplicate Leads</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalSearch" placeholder="Search name, phone, email, project no..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDropdown"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn" style="margin-right: 8px; border-radius: 6px;" onclick="exportToExcel()">Export</button>
+        <button class="filter-chip" style="margin-right: 8px; border-radius: 20px; font-size: 13px; background: #f1f5f9; padding: 6px 14px; border: 1px solid #cbd5e1; color: var(--text-dark);" onclick="document.getElementById('advancedFilterModal').style.display='flex'">⚙️ More Filters</button>
+        <div style="display:flex; gap:8px;">
+            <button class="tab-btn active" id="tabIn" onclick="switchTab('in')">📥 In</button>
+            <button class="tab-btn" id="tabOut" onclick="switchTab('out')">📤 Out</button>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label" id="statTitleTotal">Pending Approval</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub" id="statDescTotal">Awaiting Manager review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Added Today</div>
+            <div class="stat-val" id="statToday">0</div>
+            <div class="stat-sub">Submitted today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">This Week</div>
+            <div class="stat-val" id="statWeek">0</div>
+            <div class="stat-sub">Last 7 days</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Overdue 7+ Days</div>
+            <div class="stat-val" id="statOverdue">0</div>
+            <div class="stat-sub">Needs attention</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-toolbar">
+            <span class="tt-count" id="tableCount">0 Leads</span>
+            <div class="tt-spacer"></div>
+            <span style="font-size:12px;color:var(--primary);font-weight:600;background:#eef2f8;padding:3px 10px;border-radius:5px;border:1px solid #c5d3e8;">
+            Tracking duplicate approval requests in and out.
+            </span>
+        </div>
+
+        <div class="bulk-bar" id="bulkBar">
+            <span class="bulk-count" id="bulkCountLabel">0 Selected</span>
+            <button class="bulk-action-btn bab-success" id="bulkApproveBtn" onclick="bulkApprove()">✅ Approve</button>
+            <button class="bulk-action-btn bab-danger" id="bulkRejectBtn" onclick="bulkReject()">❌ Reject</button>
+            <button class="bulk-clear" onclick="clearSelection()">✕</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
+                        <th onclick="sortData('type_of_lead')">Type <span class="sort-arrow" id="sort_type_of_lead"></span></th>
+                        <th onclick="sortData('lead_entered_date')">Entered Date <span class="sort-arrow" id="sort_lead_entered_date"></span></th>
+                        <th onclick="sortData('first_name')">Customer <span class="sort-arrow" id="sort_first_name"></span></th>
+                        <th onclick="sortData('phone_number')">Phone <span class="sort-arrow" id="sort_phone_number"></span></th>
+                        <th onclick="sortData('email_id_1')">Email <span class="sort-arrow" id="sort_email_id_1"></span></th>
+                        <th onclick="sortData('address')">Address <span class="sort-arrow" id="sort_address"></span></th>
+                        <th onclick="sortData('suburb')">Suburb / State <span class="sort-arrow" id="sort_suburb"></span></th>
+                        <th onclick="sortData('lead_source')">Source <span class="sort-arrow" id="sort_lead_source"></span></th>
+                        <th onclick="sortData('assign_to')">Assigned To <span class="sort-arrow" id="sort_assign_to"></span></th>
+                        <th onclick="sortData('created_by')">Submitted By <span class="sort-arrow" id="sort_created_by"></span></th>
+                        <th>Age</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-footer">
+        <div class="pf-left">
+            <span class="pf-label">Show:</span>
+            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+            </select>
+            <span class="total-badge">Total: <span id="totalCount">0</span></span>
+        </div>
+        <div class="pf-right">
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+            <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Activity Logs</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<!-- Lead Detail Modal -->
+<div id="detailModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('detailModal').style.display='none'">✕</button>
+        <div class="modal-title" id="detailModalTitle">Lead Detail — Duplicate</div>
+
+        <div class="detail-grid" id="detailGrid"></div>
+    </div>
+</div>
+
+<!-- Advanced Filters Modal -->
+<div id="advancedFilterModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
+        <div class="modal-title">Advanced Filters</div>
+        <div class="adv-filter-grid">
+            <div class="field"><label>Project Status</label><select class="form-control-sm" id="adv_status"><option value="">All</option><option value="Planned">Planned</option><option value="Active">Active</option><option value="On-Hold">On-Hold</option><option value="Cancel">Cancel</option></select></div>
+            <div class="field"><label>Type Of Lead</label><select class="form-control-sm" id="adv_type"><option value="">All</option><option>PV</option><option>Battery</option><option>PV+Battery</option><option>Service</option></select></div>
+            <div class="field"><label>Type Of Property</label><select class="form-control-sm" id="adv_property_type"><option value="">All</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select></div>
+            <div class="field"><label>Lead Source</label><select class="form-control-sm" id="adv_source"><option value="">All</option><option>Website</option><option>Social Media</option><option>Referral</option><option>Other</option><option>SMS Campaign</option><option>Email Campaign</option></select></div>
+            
+            <div class="field"><label>Sub Category</label><select class="form-control-sm" id="adv_sub_cat"><option value="">All</option><option value="Toll Free">Toll Free</option><option value="FB">Facebook (FB)</option><option value="Instagram">Instagram</option><option value="Whatsapp">WhatsApp</option><option value="Email">Email</option><option value="Free Quote">Free Quote</option><option value="Referral">Referral</option></select></div>
+            <div class="field"><label>Assigned To</label><select class="form-control-sm" id="adv_assign_to_user"><option value="">All</option><option>James (Sales)</option><option>David (Sales)</option><option>Emma (Sales)</option><option>Rahul (Sales)</option></select></div>
+            <div class="field"><label>Assigned By</label><select class="form-control-sm" id="adv_assign_by"><option value="">All</option><option value="Manager">Manager</option><option value="Admin">Admin</option></select></div>
+            
+            <div class="field"><label>Unassigned Leads</label><select class="form-control-sm" id="adv_unassigned"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
+            <div class="field"><label>Area</label><select class="form-control-sm" id="adv_area"><option value="">All</option><option>Metro</option><option>Regional</option></select></div>
+            <div class="field"><label>State</label><select class="form-control-sm" id="adv_state"><option value="">All</option><option value="NSW">NSW</option><option value="VIC">VIC</option><option value="QLD">QLD</option><option value="WA">WA</option><option value="SA">SA</option><option value="TAS">TAS</option><option value="ACT">ACT</option><option value="NT">NT</option></select></div>
+            
+            <div class="section-divider" style="grid-column: span 3; border-bottom: none; margin-bottom: 0;">Date Ranges</div>
+            <div class="field"><label>Enter Date (From)</label><input type="date" class="form-control-sm" id="adv_enter_from"></div>
+            <div class="field"><label>Enter Date (To)</label><input type="date" class="form-control-sm" id="adv_enter_to"></div>
+            <div></div>
+            <div class="field"><label>Created Date (From)</label><input type="date" class="form-control-sm" id="adv_created_from"></div>
+            <div class="field"><label>Created Date (To)</label><input type="date" class="form-control-sm" id="adv_created_to"></div>
+            <div></div>
+            <div class="field"><label>Assign Date (From)</label><input type="date" class="form-control-sm" id="adv_assign_from"></div>
+            <div class="field"><label>Assign Date (To)</label><input type="date" class="form-control-sm" id="adv_assign_to"></div>
+            <div></div>
+        </div>
+        <div class="bottom-actions" style="margin-top: 15px; padding-top: 15px; justify-content: flex-end; gap: 12px;">
+            <button class="btn-reset" onclick="resetAdvancedFilters()">Reset Filters</button>
+            <button class="btn-save" onclick="applyAdvancedFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allLeadsData = [], currentPage = 1, rowsPerPage = 30;
+    let currentSortCol = '', isSortAsc = true, searchTerm = '';
+    let currentUser = { role: '', full_name: '' };
+    let currentDetailLeadId = null;
+    let activeAdvFilters = {};
+    let currentTab = 'in';
+    let selectedLeadIds = new Set();
+
+    const gsi = document.getElementById('globalSearch');
+    const gsd = document.getElementById('globalSearchDropdown');
+    let globalSearchTimeout;
+    gsi.addEventListener('input', function() {
+        clearTimeout(globalSearchTimeout);
+        const val = this.value.trim();
+        
+        globalSearchTimeout = setTimeout(() => {
+            searchTerm = val.toLowerCase();
+            currentPage = 1;
+            if (val.length < 1) { gsd.style.display='none'; loadDuplicateLeads(currentTab); return; }
+            const term = val.toLowerCase(), suggestions = [], seen = new Set();
+            allLeadsData.forEach(l => {
+                const fullName = `${l.first_name||''} ${l.last_name||''}`.trim();
+                [{val:fullName,type:'Name',icon:'👤'},{val:l.phone_number,type:'Phone',icon:'📞'},{val:l.email_id_1,type:'Email',icon:'✉️'},{val:l.project_number,type:'Project',icon:'📋'},{val:l.status,type:'Status',icon:'📌'}].forEach(item => {
+                    if (item.val && item.val.toLowerCase().includes(term) && !seen.has(item.val+item.type)) { seen.add(item.val+item.type); suggestions.push(item); }
+                });
+            });
+            gsd.innerHTML = '';
+            if (!suggestions.length) { gsd.innerHTML=`<li class="ac-empty">No results found</li>`; gsd.style.display='block'; loadDuplicateLeads(currentTab); return; }
+            suggestions.slice(0,12).forEach(s => {
+                const li = document.createElement('li');
+                const hl = s.val.replace(new RegExp(`(${escRx(val)})`,'gi'),`<span class="ac-hl">$1</span>`);
+                li.innerHTML = `<span>${s.icon}</span><span>${hl}</span><span class="ac-type-tag">${s.type}</span>`;
+                li.addEventListener('mousedown', e => { e.preventDefault(); gsi.value=s.val; searchTerm=s.val.toLowerCase(); gsd.style.display='none'; currentPage=1; loadDuplicateLeads(currentTab); });
+                gsd.appendChild(li);
+            });
+            gsd.style.display='block'; loadDuplicateLeads(currentTab);
+        }, 400);
+    });
+    gsi.addEventListener('blur', () => setTimeout(() => gsd.style.display = 'none', 200));
+    gsi.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); gsd.style.display = 'none'; loadDuplicateLeads(currentTab); } });
+    function escRx(str) { return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+    function getAgeDays(dateStr) {
+        if (!dateStr || dateStr === '-') return null;
+        try {
+            const p = dateStr.split(' '), dmy = p[0].split('-');
+            const yr = parseInt(dmy[2]) < 100 ? parseInt(dmy[2]) + 2000 : parseInt(dmy[2]);
+            const d = new Date(yr, parseInt(dmy[1]) - 1, parseInt(dmy[0]));
+            const today = new Date(); today.setHours(0,0,0,0);
+            return Math.floor((today - d) / 86400000);
+        } catch(e) { return null; }
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabIn').classList.toggle('active', tab === 'in');
+        document.getElementById('tabOut').classList.toggle('active', tab === 'out');
+        currentPage = 1;
+        clearSelection();
+        loadDuplicateLeads(currentTab);
+    }
+
+    function updateStats(leads) {
+        document.getElementById('statTitleTotal').innerText = currentTab === 'in' ? 'Pending Approval' : 'Total Approved';
+        document.getElementById('statDescTotal').innerText = currentTab === 'in' ? 'Awaiting Manager review' : 'Historical log';
+        
+        document.getElementById('statTotal').innerText = leads.length;
+        document.getElementById('statToday').innerText = leads.filter(l => getAgeDays(l.lead_entered_date) === 0).length;
+        document.getElementById('statWeek').innerText = leads.filter(l => { const d = getAgeDays(l.lead_entered_date); return d !== null && d <= 7; }).length;
+        document.getElementById('statOverdue').innerText = leads.filter(l => { const d = getAgeDays(l.lead_entered_date); return d !== null && d > 7; }).length;
+    }
+
+    async function loadDuplicateLeads(type = 'in') {
+        currentTab = type;
+        try {
+            const params = new URLSearchParams({
+                t: Date.now(),
+                search: searchTerm
+            });
+            for(const key in activeAdvFilters) {
+                if(activeAdvFilters[key]) params.append(key, activeAdvFilters[key]);
+            }
+            const res = await fetch('/api/leads/duplicates?tab=' + type + '&' + params.toString(), { cache: 'no-store', headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } });
+            if (!res.ok) return;
+            allLeadsData = await res.json();
+            if (!Array.isArray(allLeadsData)) allLeadsData = [];
+            updateStats(allLeadsData);
+            updateBulkBar();
+            if (currentSortCol) sortData(currentSortCol, true); else renderTable();
+        } catch(e) { console.error('loadDuplicateLeads() error:', e); }
+    }
+
+    function sortData(column, keepDir = false) {
+        if (!keepDir) {
+            if (currentSortCol === column) isSortAsc = !isSortAsc;
+            else { currentSortCol = column; isSortAsc = true; }
+        }
+        allLeadsData.sort((a, b) => {
+            let va = a[column] ? a[column].toString().toLowerCase() : '';
+            let vb = b[column] ? b[column].toString().toLowerCase() : '';
+            if (va < vb) return isSortAsc ? -1 : 1;
+            if (va > vb) return isSortAsc ? 1 : -1;
+            return 0;
+        });
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        const el = document.getElementById(`sort_${column}`);
+        if (el) el.innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1; renderTable();
+    }
+
+    function getFilteredLeads() {
+        return allLeadsData; // All filtering is now server-side
+    }
+
+    function renderTable() {
+        const body = document.getElementById('leadsBody');
+        body.innerHTML = '';
+        const isManager = currentUser.role === 'Admin' || currentUser.role === 'Manager' || (currentUser.role && currentUser.role.includes('Manager'));
+        const leads = getFilteredLeads();
+        document.getElementById('totalCount').innerText = leads.length;
+        document.getElementById('tableCount').innerText = `${leads.length} Leads`;
+        
+        if (leads.length === 0) {
+            body.innerHTML = `<tr><td colspan="13" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No matching leads found.</td></tr>`;
+            return;
+        }
+        
+        const totalPages = Math.ceil(leads.length / rowsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const visible = leads.slice(start, start + rowsPerPage);
+
+        document.getElementById('selectAllCb').checked = visible.length > 0 && visible.every(l => selectedLeadIds.has(l.id));
+
+        let htmlString = '';
+        visible.forEach(l => {
+            const fullName = `${l.first_name || ''} ${l.last_name || ''}`.trim();
+            const mergedAddr = `${l.unit_number || ''} ${l.address || ''}`.trim();
+            const ageDays = getAgeDays(l.lead_entered_date);
+
+            let agePillHtml = '-';
+            if (ageDays !== null) {
+                const cls = ageDays <= 3 ? 'color:#1a6b3c;' : ageDays <= 7 ? 'color:#c0520f;' : 'color:#b93a20;';
+                agePillHtml = `<span style="font-weight:700;${cls}">${ageDays}d</span>`;
+            }
+
+            let sourceHtml = l.lead_source || '-';
+            if (l.lead_sub_category) sourceHtml += `<br><span style="font-size:11px;color:#94a3b8;">${l.lead_sub_category}</span>`;
+
+            const assignHtml = l.assign_to && l.assign_to !== '-'
+                ? `<div class="assignee-cell">${l.assign_to}</div>`
+                : `<span style="color:#a0adb8;">— Unassigned —</span>`;
+
+            let actHtml = `<button class="act-btn" title="View Details" onclick="openDetail(${l.id})">👁️</button>
+                           <button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
+            if (currentTab === 'in' && isManager) {
+                actHtml += `<button class="act-btn" style="color:#10b981; border-color:#b3e6cc; background:#edfaf2; width:auto; padding:0 6px;" title="Approve Lead" onclick="approveDuplicate(${l.id})">✅</button>`;
+                actHtml += `<button class="act-btn" style="color:#b93a20; border-color:#f5c4bb; background:#fef0ee; width:auto; padding:0 6px; margin-left:4px;" title="Reject Lead" onclick="rejectDuplicate(${l.id})">❌</button>`;
+            }
+
+            const isChecked = selectedLeadIds.has(l.id) ? 'checked' : '';
+
+            htmlString += `<tr>
+                <td class="cb-col"><input type="checkbox" class="row-cb" ${isChecked} onchange="toggleRowSelect(${l.id},this)"></td>
+                <td>${l.type_of_lead || '-'}</td>
+                <td>${l.lead_entered_date || '-'}</td>
+                <td><span class="customer-name">${fullName || '-'}</span></td>
+                <td>${l.phone_number || '-'}</td>
+                <td>${l.email_id_1 || '-'}</td>
+                <td>${mergedAddr || '-'}</td>
+                <td>${l.suburb || '-'} ${l.state || ''}</td>
+                <td>${sourceHtml}</td>
+                <td>${assignHtml}</td>
+                <td>${l.created_by || '-'}</td>
+                <td>${agePillHtml}</td>
+                <td><div class="actions-cell">${actHtml}</div></td>
+            </tr>`;
+        });
+        body.innerHTML = htmlString;
+
+        document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+    }
+
+    function toggleSelectAll(cb) {
+        const start=(currentPage-1)*rowsPerPage;
+        const visible = getFilteredLeads().slice(start,start+rowsPerPage);
+        visible.forEach(l=>{ if(cb.checked) selectedLeadIds.add(l.id); else selectedLeadIds.delete(l.id); });
+        updateBulkBar(); renderTable();
+    }
+    function toggleRowSelect(id,cb) { if(cb.checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id); updateBulkBar(); }
+    function clearSelection() { selectedLeadIds.clear(); document.getElementById('selectAllCb').checked=false; updateBulkBar(); renderTable(); }
+    function updateBulkBar() {
+        const n=selectedLeadIds.size;
+        document.getElementById('bulkCountLabel').innerText=`${n} Lead${n!==1?'s':''} Selected`;
+        document.getElementById('bulkBar').classList.toggle('bb-visible',n>0);
+        const isManager = currentUser.role === 'Admin' || currentUser.role === 'Manager' || (currentUser.role && currentUser.role.includes('Manager'));
+        const appBtn = document.getElementById('bulkApproveBtn');
+        const rejBtn = document.getElementById('bulkRejectBtn');
+        if(appBtn) appBtn.style.display = (isManager && currentTab === 'in') ? 'inline-block' : 'none';
+        if(rejBtn) rejBtn.style.display = (isManager && currentTab === 'in') ? 'inline-block' : 'none';
+    }
+
+    async function bulkApprove() {
+        if(!selectedLeadIds.size) return;
+        const cu = currentUser.full_name || 'System';
+        const { isConfirmed } = await Swal.fire({ title: `Approve ${selectedLeadIds.size} duplicate(s)?`, text: 'Leads will be moved to Master Leads.', icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, Approve!' });
+        if (!isConfirmed) return;
+        Swal.fire({ title: 'Approving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        let successCount = 0;
+        for (const id of selectedLeadIds) {
+            try { const res = await fetch(`/api/leads/${id}/approve-duplicate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentUser: cu }) }); if (res.ok) successCount++; } catch(e) {}
+        }
+        Swal.fire('Approved!', `${successCount} lead(s) approved.`, 'success');
+        clearSelection(); loadDuplicateLeads(currentTab);
+    }
+
+    async function bulkReject() {
+        if(!selectedLeadIds.size) return;
+        const cu = currentUser.full_name || 'System';
+        const { isConfirmed } = await Swal.fire({ title: `Reject ${selectedLeadIds.size} duplicate(s)?`, text: 'These duplicate requests will be deleted.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#b93a20', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, Reject!' });
+        if (!isConfirmed) return;
+        Swal.fire({ title: 'Rejecting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        let successCount = 0;
+        for (const id of selectedLeadIds) {
+            try { const res = await fetch(`/leads/${id}/reject-duplicate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentUser: cu }) }); if (res.ok) successCount++; } catch(e) {}
+        }
+        Swal.fire('Rejected!', `${successCount} lead(s) rejected.`, 'success');
+        clearSelection(); loadDuplicateLeads(currentTab);
+    }
+
+    function openDetail(id) {
+        const l = allLeadsData.find(x => x.id === id);
+        if (!l) return;
+        currentDetailLeadId = id;
+        const isManager = currentUser.role === 'Manager';
+        const fullName = `${l.salutation || ''} ${l.first_name || ''} ${l.last_name || ''}`.trim();
+        const fullAddr = [l.unit_number, l.lot_number, l.address, l.suburb, l.state, l.postcode].filter(Boolean).join(', ');
+
+        document.getElementById('detailModalTitle').innerText = `Lead Detail — ${fullName} — Duplicate`;
+
+        document.getElementById('detailGrid').innerHTML = `
+            <div class="detail-section">Basic Information</div>
+            <div class="detail-field"><div class="detail-label">Type of Lead</div><div class="detail-value">${l.type_of_lead || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Full Name</div><div class="detail-value">${fullName || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Lead Source</div><div class="detail-value">${l.lead_source || '-'}${l.lead_sub_category ? ' / ' + l.lead_sub_category : ''}</div></div>
+            <div class="detail-field"><div class="detail-label">Phone Number</div><div class="detail-value">${l.phone_number || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Phone Number 2</div><div class="detail-value">${l.phone_number_2 || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Landline</div><div class="detail-value">${l.landline_number || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Email 1</div><div class="detail-value">${l.email_id_1 || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Email 2</div><div class="detail-value">${l.email_id_2 || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Service</div><div class="detail-value">${l.service || '-'}</div></div>
+            <div class="detail-section">Address</div>
+            <div class="detail-field" style="grid-column:span 3;"><div class="detail-label">Full Address</div><div class="detail-value">${fullAddr || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Street Type</div><div class="detail-value">${l.street_type || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Area</div><div class="detail-value">${l.area || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Postcode</div><div class="detail-value">${l.postcode || '-'}</div></div>
+            <div class="detail-section">Assignment</div>
+            <div class="detail-field"><div class="detail-label">Assigned To</div><div class="detail-value">${l.assign_to || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Assign Date</div><div class="detail-value">${l.assign_date || '-'}</div></div>
+            <div class="detail-field"><div class="detail-label">Entered Date</div><div class="detail-value">${l.lead_entered_date || '-'}</div></div>
+            <div class="detail-field" style="grid-column:span 3;"><div class="detail-label">Message / Notes</div><div class="detail-value" style="min-height:50px;white-space:normal;">${l.message || '-'}</div></div>
+        `;
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    async function approveDuplicate(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Approve this duplicate?',
+            text: 'Lead will be moved to Master Leads and logged in Outbound.',
+            icon: 'question', showCancelButton: true,
+            confirmButtonColor: '#10b981', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, Approve!'
+        });
+        if (!isConfirmed) return;
+        try {
+            const cu = currentUser.full_name || 'System';
+            const res = await fetch(`/api/leads/${id}/approve-duplicate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser: cu })
+            });
+            if (res.ok) {
+                Swal.fire('Approved!', 'Lead approved and moved successfully.', 'success');
+                loadDuplicateLeads(currentTab);
+            } else {
+                Swal.fire('Error', 'Failed to approve lead.', 'error');
+            }
+        } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    async function rejectDuplicate(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Reject this request?',
+            text: 'This duplicate request will be deleted permanently.',
+            icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#b93a20', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, Reject!'
+        });
+        if (!isConfirmed) return;
+        try {
+            const cu = currentUser.full_name || 'System';
+            const res = await fetch(`/leads/${id}/reject-duplicate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser: cu })
+            });
+            if (res.ok) {
+                Swal.fire('Rejected', 'Duplicate request has been rejected and deleted.', 'success');
+                loadDuplicateLeads(currentTab);
+            } else {
+                Swal.fire('Error', 'Failed to reject lead.', 'error');
+            }
+        } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    async function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<li class="history-item"><div class="history-detail">Loading...</div></li>';
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const res = await fetch(`/leads/${id}/history`);
+            const hist = await res.json();
+            body.innerHTML = hist.map(h => `<li class="history-item"><div class="history-date">${h.created_at} — ${h.user_name || 'System'}</div><div class="history-action">${h.action}</div><div class="history-detail" style="margin-top:6px;">${h.details}</div></li>`).join('');
+            if (!hist.length) body.innerHTML = '<li class="history-item"><div class="history-detail">No history found.</div></li>';
+        } catch(e) { body.innerHTML = '<li class="history-item"><div class="history-detail" style="color:#b93a20;">Error loading history.</div></li>'; }
+    }
+
+    function exportToExcel() {
+        const leads = getFilteredLeads();
+        if (!leads.length) { Swal.fire('No Data', 'No leads to export.', 'warning'); return; }
+        const rows = leads.map(l => ({
+            'Project No': l.project_number || '',
+            'Project Status': l.status || '',
+            'Property Type': l.property_type || '',
+            'Type of Lead': l.type_of_lead || '',
+            'Customer': `${l.first_name||''} ${l.last_name||''}`.trim(),
+            'Phone': l.phone_number || '',
+            'Email': l.email_id_1 || '',
+            'Unit': l.unit_number || '',
+            'Address': l.address || '',
+            'Suburb': l.suburb || '',
+            'State': l.state || '',
+            'Postcode': l.postcode || '',
+            'Area': l.area || '',
+            'Lead Source': l.lead_source || '',
+            'Sub Category': l.lead_sub_category || '',
+            'Assign Date': l.assign_date || '',
+            'Lead Entered Date': l.lead_entered_date || '',
+            'Created Date': l.created_date || '',
+            'Notes / Message': l.message || '',
+            'Age (Days)': getAgeDays(l.lead_entered_date)
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Duplicate_Leads');
+        XLSX.writeFile(wb, `Duplicate_Leads_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function changeRowsPerPage() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); currentPage = 1; renderTable(); }
+    function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+    function nextPage() { if (currentPage < Math.ceil(getFilteredLeads().length / rowsPerPage)) { currentPage++; renderTable(); } }
+</script>
+<script>
+    // ADVANCED FILTER LOGIC
+    function applyAdvancedFilters() {
+        activeAdvFilters = {
+            status: document.getElementById('adv_status').value,
+            type: document.getElementById('adv_type').value,
+            property_type: document.getElementById('adv_property_type').value,
+            source: document.getElementById('adv_source').value,
+            subCat: document.getElementById('adv_sub_cat').value,
+            assignTo: document.getElementById('adv_assign_to_user').value,
+            assignBy: document.getElementById('adv_assign_by').value,
+            unassigned: document.getElementById('adv_unassigned').value,
+            area: document.getElementById('adv_area').value,
+            state: document.getElementById('adv_state').value,
+            enterFrom: document.getElementById('adv_enter_from').value,
+            enterTo: document.getElementById('adv_enter_to').value,
+            createdFrom: document.getElementById('adv_created_from').value,
+            createdTo: document.getElementById('adv_created_to').value,
+            assignFrom: document.getElementById('adv_assign_from').value,
+            assignToDate: document.getElementById('adv_assign_to').value
+        };
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        currentPage = 1;
+        loadDuplicateLeads(currentTab);
+    }
+
+    function resetAdvancedFilters() {
+        document.querySelectorAll('#advancedFilterModal input, #advancedFilterModal select').forEach(el => el.value = '');
+        activeAdvFilters = {};
+        currentPage = 1;
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        loadDuplicateLeads(currentTab);
+    }
+</script>
+
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

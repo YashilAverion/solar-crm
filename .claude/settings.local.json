@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell([System.IO.File]::ReadAllText\\(\"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\\\\modules\\\\installations.js\"\\).Substring\\(0, 100\\))",
+      "PowerShell(Get-Content \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\\\\database\\\\db.js\" -Raw | Select-String -Pattern \"travel_distance_km\" -AllMatches | ForEach-Object { $_.Matches })",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\" -Depth 0 | Where-Object { $_.Extension -in '.js','.json','.ts' } | Select-Object Name)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\" | Where-Object { !$_.PSIsContainer } | Select-Object Name)",
+      "PowerShell(cmd /c \"dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\\\\database\"\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\\\\database\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Solar CRM\\\\public\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Downloads\\\\CRM-FULL-BACKUP-01-05-2026_05-00-00\\\\public\\\\installation_charges.html\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Downloads\\\\CRM-FULL-BACKUP-01-05-2026_05-00-00\\\\modules\\\\installation_charges.js\")",
+      "PowerShell(cmd /c dir \"c:\\\\Users\\\\vishr\\\\OneDrive - Ares Energy\\\\Downloads\\\\\")"
+    ]
+  }
+}

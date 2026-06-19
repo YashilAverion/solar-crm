@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title id="pageTitle">Master Leads - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .menu-icon { font-size: 14px; width: 18px; text-align: center; }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ========== TOPBAR ========== */
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); transition: all 0.2s; position: relative; z-index: 5; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); outline: none; box-shadow: 0 0 0 3px rgba(28,53,87,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+        .profile-select-wrap { display: flex; align-items: center; gap: 5px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; height: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .profile-select-wrap select { border: none; background: transparent; font-weight: 600; color: var(--text-dark); font-size: 13px; outline: none; cursor: pointer; }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); transition: all 0.2s; }
+        .stat-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .stat-card:hover::before { background: var(--primary); }
+        .stat-card:nth-child(2):hover::before { background: #10b981; }
+        .stat-card:nth-child(3):hover::before { background: #f59e0b; }
+        .stat-card:nth-child(4):hover::before { background: #ef4444; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; letter-spacing: -0.5px; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== CONTENT AREA & TOOLBAR ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-shrink: 0; flex-wrap: wrap; background: var(--surface); padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .tt-count { font-size: 13px; font-weight: 700; color: var(--text-dark); background: var(--bg); padding: 3px 8px; border-radius: 5px; }
+        .tt-spacer { flex: 1; }
+        .filter-chip { background: var(--bg); color: var(--text-muted); font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; white-space: nowrap; }
+        .filter-chip:hover { background: #f1f5f9; color: var(--text-dark); }
+        .filter-chip.fc-active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
+        .toolbar-select { height: 24px; border: 1px solid var(--border); border-radius: 20px; padding: 0 24px 0 10px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center; appearance: none; outline: none; cursor: pointer; transition: all 0.2s; }
+        .toolbar-select:hover { background-color: #f1f5f9; color: var(--text-dark); }
+        .toolbar-select:focus { border-color: var(--primary); color: var(--text-dark); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        /* ========== BULK BAR ========== */
+        .bulk-bar { display: none; align-items: center; gap: 8px; background: var(--primary); color: #fff; padding: 6px 14px; border-radius: 8px; margin-bottom: 8px; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(28,53,87,0.25); animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .bulk-bar.bb-visible { display: flex; }
+        .bulk-count { font-size: 13px; font-weight: 700; font-family: 'Inter', system-ui, sans-serif; }
+        .bulk-action-btn { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', system-ui, sans-serif; }
+        .bulk-action-btn:hover { background: rgba(255,255,255,0.22); }
+        .bulk-action-btn.bab-danger { background: rgba(185,58,32,0.75); border-color: rgba(185,58,32,0.4); }
+        .bulk-action-btn.bab-danger:hover { background: rgba(185,58,32,1); }
+        .bulk-action-btn.bab-success { background: #10b981; border-color: #059669; }
+        .bulk-action-btn.bab-success:hover { background: #059669; }
+        .bulk-clear { margin-left: auto; background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 14px; cursor: pointer; padding: 3px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
+        .bulk-clear:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+        /* ========== TABLE ========== */
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        thead th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 8px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-align: center; vertical-align: middle; cursor: pointer; user-select: none; z-index: 10; transition: background 0.2s; resize: horizontal; overflow: hidden; min-width: 60px; height: 32px; line-height: 1.2; }
+        thead th:hover { background: #f1f5f9; color: var(--text-dark); }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        tbody tr { transition: all 0.15s; height: 32px; }
+        tbody tr td { border-bottom: 1px solid #f1f5f9; }
+        tbody tr:hover td { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: none; }
+        td { padding: 4px 8px; font-size: 12px; color: var(--text-dark); font-weight: 600; vertical-align: middle; text-align: center; line-height: 1.3; }
+
+        /* Age row backgrounds removed for clean look */
+        .age-deleted td { color: #a0adb8 !important; }
+
+        /* ========== COMPONENTS IN TABLE ========== */
+        .status-badge { display: inline-flex; align-items: center; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); }
+        .sb-planned { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
+        .sb-inprog { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
+        .sb-new { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
+        .sb-won { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
+        .sb-lost { background: #fef0ee; color: #b93a20; border-color: #f5c4bb; }
+        .sb-pending-a { background: #fff4ee; color: #c0520f; border-color: #f9c89a; }
+        .sb-pending-d { background: #fef0ee; color: #b93a20; border-color: #f5c4bb; }
+        .sb-deleted { background: #f4f6f9; color: #6b7a8d; border-color: #dde3ed; }
+        .sb-follow { background: #fff4ee; color: #c0520f; border-color: #f9c89a; }
+
+        .proj-num { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--primary); background: #eef2f8; padding: 1px 4px; border-radius: 4px; border: 1px solid #c5d3e8; }
+        .proj-pending { font-size: 12px; font-weight: 600; color: #c0520f; background: #fff4ee; padding: 1px 4px; border-radius: 4px; border: 1px solid #f9c89a; }
+
+        .age-pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; }
+        .ap-green { color: #1a6b3c; }
+        .ap-amber { color: #c0520f; }
+        .ap-red { color: #b93a20; }
+        .age-dot { display: none; }
+
+        .name-cell { display: flex; align-items: center; gap: 7px; }
+        .mini-avatar { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; background: #eef2f8; color: #1c3557; border: 1px solid #c5d3e8; }
+        .customer-name { font-weight: 600; color: var(--text-dark); font-size: 12px; }
+        .assignee-cell { font-size: 12px; color: var(--text-dark); font-weight: 600; }
+        .unassigned { color: #111 !important; font-style: normal; font-size: 12px; font-weight: 600 !important; background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+        .assign-date { font-size: 11px; color: #111 !important; margin-top: 1px; font-weight: 600 !important; }
+
+        .cb-col { width: 36px; text-align: center; }
+        input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
+
+        /* ========== ACTION BUTTONS ========== */
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; font-weight: 700 !important; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+        .act-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* ========== PAGINATION ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left { display: flex; align-items: center; gap: 8px; }
+        .pf-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; color: var(--text-dark); background: var(--surface); outline: none; cursor: pointer; }
+        .rows-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79,70,229,0.1); }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .pf-right { display: flex; align-items: center; gap: 8px; }
+        .page-info { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg); }
+
+        /* ========== MODALS ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 1200px; border-radius: 12px; position: relative; max-height: 92vh; overflow-y: auto; margin: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-sm { max-width: 420px; }
+        .modal-lg { max-width: 1100px; }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; margin-bottom: 4px; }
+        .field { display: flex; flex-direction: column; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input:not([type="file"]):not([type="radio"]):not([type="checkbox"]), .field select, .field textarea { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; transition: all 0.2s; }
+        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .field textarea { height: 60px; padding: 6px 10px; resize: vertical; line-height: 1.4; }
+        .required::after { content: " *"; color: #b93a20; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: span 4; display: flex; align-items: center; }
+        .input-group { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); height: 32px; transition: all 0.2s; }
+        .input-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .country-code { background: #f4f6f9; padding: 0 10px; border-right: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; height: 100%; white-space: nowrap; }
+        .input-group input[type="text"] { border: none !important; box-shadow: none !important; height: 100%; border-radius: 0; flex: 1; padding: 0 10px; font-size: 13px; }
+        .bottom-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .checkbox-group { display: flex; gap: 16px; align-items: center; }
+        .check-label { font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-dark); }
+        .check-label input { cursor: pointer; width: 14px; height: 14px; border-radius: 3px; }
+        .btn-save { background: var(--accent); color: #fff; padding: 10px 28px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: flex; align-items: center; gap: 8px; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(232,104,30,0.4); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-reset { background: #f1f5f9; color: #64748b; padding: 10px 28px; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.2s; }
+        .btn-reset:hover { background: #e2e8f0; color: #475569; }
+
+        /* ========== HISTORY ========== */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .history-date::before { content: ''; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+
+        /* ========== DUPLICATE BANNER ========== */
+        .dup-banner { display: none; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1); }
+        .dup-banner.show { display: block; animation: fadeIn 0.3s ease; }
+        .dup-banner-title { font-size: 1.05rem; font-weight: 700; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .dup-banner-detail { font-size: 0.95rem; color: #92400e; margin-bottom: 16px; line-height: 1.6; background: #fef3c7; padding: 12px; border-radius: 8px; }
+        .dup-banner-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .dup-btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .dup-btn-view { background: #3b82f6; color: #fff; box-shadow: 0 2px 4px rgba(59,130,246,0.2); }
+        .dup-btn-view:hover { background: #2563eb; }
+        .dup-btn-add { background: #ea580c; color: #fff; box-shadow: 0 2px 4px rgba(234,88,12,0.2); }
+        .dup-btn-add:hover { background: #c2410c; }
+        .dup-btn-cancel { background: var(--surface); color: var(--text-dark); border: 1px solid var(--border); }
+        .dup-btn-cancel:hover { background: var(--bg); }
+
+        /* ========== AUTOCOMPLETE ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 240px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border-radius: 10px; display: none; padding: 6px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary); }
+        .ac-type-tag { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 10px; margin-left: auto; border: 1px solid var(--border); }
+        .ac-hl { color: var(--primary); font-weight: 700; text-decoration: underline; text-decoration-color: #c7d2fe; text-decoration-thickness: 2px; }
+        .ac-empty { padding: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; }
+
+        /* ========== ADVANCED FILTERS ========== */
+        .adv-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .adv-filter-grid .field label { font-size: 11px; margin-bottom: 2px; }
+        .form-control-sm { height: 26px !important; padding: 5px 8px !important; font-size: 11px !important; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dark); width: 100%; background: var(--surface); outline: none; transition: all 0.2s; box-shadow: none; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        /* ========== SMALL MODAL ========== */
+        .sm-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+        .sm-select, .sm-input { width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 8px; padding: 0 14px; font-size: 0.95rem; color: var(--text-dark); background: var(--surface); margin-bottom: 16px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .sm-select:focus, .sm-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(28,53,87,0.12); }
+        .sm-textarea { width: 100%; height: 100px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 0.95rem; color: var(--text-dark); resize: vertical; margin-bottom: 16px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .sm-textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(28,53,87,0.12); }
+        .btn-full { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-full:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(232,104,30,0.4); }
+        .btn-full:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+
+        .pac-container { z-index: 9999 !important; border-radius: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; font-family: 'Inter', sans-serif !important; }
+        .pac-item { padding: 6px 10px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+        .pac-item:hover { background: #f1f5f9; }
+        .pac-item-query { font-size: 13px; color: var(--text-dark); }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-container { z-index: 9999 !important; } /* Fix: Bring SweetAlert error popup to the absolute front */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+        
+        /* ========== FORM VALIDATION HIGHLIGHT ========== */
+        .shake-error {
+            border-color: #b93a20 !important;
+            background-color: #fff4ee !important;
+            box-shadow: 0 0 0 2px rgba(185,58,32,0.1) !important;
+            animation: shake 0.4s 1;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+        }
+
+        /* Custom Scrollbar for modern look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== GLOBAL TABLE DATA FONT LOCK ========== */
+        table td,
+        table td span:not(.status-badge):not(.proj-pending):not(.proj-num):not(.age-pill),
+        table td div:not(.actions-cell) {
+            color: #212529 !important;
+            font-weight: 500 !important;
+        }
+        
+        table td .act-btn {
+            color: #212529 !important;
+            font-weight: 700 !important;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        // Exact check: This matches the URL and opens the correct dropdown automatically
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            // Loop through parent elements to open them automatically
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        // Standard Link Navigation
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title" id="topbarTitle">Master Leads</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalLeadSearch" placeholder="Search name, phone, email, project no..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDropdown"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn" onclick="testWebsiteLead()">Sim. Lead</button>
+        <button class="tb-btn" onclick="exportToExcel()">Export</button>
+        <input type="hidden" id="userProfile" value="Manager">
+        <button class="tb-btn btn-add" id="addContactBtn" onclick="openAddLeadModal()">+ Add Contact</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card" onclick="applyAgeFilter('all')" title="Show All Leads">
+            <div class="stat-label">Total Leads</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">All leads</div>
+        </div>
+        <div class="stat-card" onclick="applyAgeFilter('today')" title="Today's New Leads">
+            <div class="stat-label">Today's New</div>
+            <div class="stat-val" id="statToday">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="applyAgeFilter('unassigned')" title="Pending Assignment">
+            <div class="stat-label">Pending Assign</div>
+            <div class="stat-val" id="statUnassigned">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="applyAgeFilter('overdue')" title="Overdue 7+ Days">
+            <div class="stat-label">Overdue 7+ Days</div>
+            <div class="stat-val" id="statOverdue">0</div>
+            <div class="stat-sub">Needs attention</div>
+        </div>
+    </div>
+
+
+    <div class="content-area">
+        <div class="table-toolbar">
+            <span class="tt-count" id="tableCount">0 Leads</span>
+            <div class="tt-spacer"></div>
+            <button class="filter-chip" style="margin-right: 8px; border-radius: 20px; font-size: 12px; background: var(--surface);" onclick="document.getElementById('advancedFilterModal').style.display='flex'">⚙️ More Filters</button>
+            <span class="filter-chip fc-active" id="fc_all" onclick="setFilterChip('all')">All</span>
+            <span class="filter-chip" id="fc_today" onclick="setFilterChip('today')">Today</span>
+            <span class="filter-chip" id="fc_fresh" onclick="setFilterChip('fresh')">1-3 Days</span>
+            <span class="filter-chip" id="fc_follow" onclick="setFilterChip('follow')">4-7 Days</span>
+            <span class="filter-chip" id="fc_overdue" onclick="setFilterChip('overdue')">Overdue</span>
+            <span class="filter-chip" id="fc_unassigned" onclick="setFilterChip('unassigned')">Unassigned</span>
+            <span class="filter-chip" id="fc_pending" onclick="setFilterChip('pending')">Pending</span>
+        </div>
+
+        <div class="bulk-bar" id="bulkBar">
+            <span class="bulk-count" id="bulkCountLabel">0 Selected</span>
+            <button class="bulk-action-btn std-bulk-btn" onclick="openBulkAssign()">Bulk Assign</button>
+            <button class="bulk-action-btn std-bulk-btn" onclick="openBulkStatus()">Status</button>
+            <button class="bulk-action-btn bab-danger std-bulk-btn" onclick="bulkDelete()">Delete</button>
+            <button class="bulk-clear" onclick="clearSelection()">✕</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-col"><input type="checkbox" class="row-cb" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
+                        <th onclick="sortData('type_of_lead')">Type <span class="sort-arrow" id="sort_type_of_lead"></span></th>
+                        <th onclick="sortData('lead_entered_date')">Enter / Created Date <span class="sort-arrow" id="sort_lead_entered_date"></span></th>
+                        <th onclick="sortData('project_number')">Project No. <span class="sort-arrow" id="sort_project_number"></span></th>
+                        <th onclick="sortData('first_name')">Customer <span class="sort-arrow" id="sort_first_name"></span></th>
+                        <th onclick="sortData('phone_number')">Phone <span class="sort-arrow" id="sort_phone_number"></span></th>
+                        <th onclick="sortData('email_id_1')">Email <span class="sort-arrow" id="sort_email_id_1"></span></th>
+                        <th onclick="sortData('address')">Address <span class="sort-arrow" id="sort_address"></span></th>
+                        <th onclick="sortData('suburb')">Suburb / State <span class="sort-arrow" id="sort_suburb"></span></th>
+                        <th onclick="sortData('status')">Status <span class="sort-arrow" id="sort_status"></span></th>
+                        <th onclick="sortData('area')">Area <span class="sort-arrow" id="sort_area"></span></th>
+                        <th onclick="sortData('lead_source')">Source <span class="sort-arrow" id="sort_lead_source"></span></th>
+                        <th onclick="sortData('assign_to')">Assigned To <span class="sort-arrow" id="sort_assign_to"></span></th>
+                        <th>Age</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-footer">
+        <div class="pf-left">
+            <span class="pf-label">Show:</span>
+            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+            </select>
+            <span class="total-badge">Total: <span id="totalLeadsCount">0</span></span>
+        </div>
+        <div class="pf-right">
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+            <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">✕</button>
+        <div class="modal-title">
+            <span id="modalTitle">Add New Lead</span>
+            <label class="check-label" style="margin-left:auto; margin-right:36px;">
+                <input type="checkbox" id="quality_lead"> Quality Lead
+            </label>
+        </div>
+<div class="dup-banner" id="dupWarningBanner">
+             <div class="dup-banner-title">Duplicate Lead Detected</div>
+             <div class="dup-banner-detail" id="dupWarningDetail"></div>
+             <div class="dup-banner-actions">
+                 <button class="dup-btn dup-btn-view" onclick="viewExistingLead()">View Existing</button>
+                 <button class="dup-btn" style="background:#7c3aed;color:#fff;" onclick="takeApproval()">Take Approval</button>
+                 <button class="dup-btn dup-btn-cancel" onclick="cancelDuplicate()">Cancel</button>
+             </div>
+         </div>
+        <form id="leadForm">
+            <input type="hidden" id="edit_id" value="">
+            <input type="hidden" id="force_new" value="false">
+            <div class="form-grid">
+                <div class="section-divider">Basic Information</div>
+                <div class="field"><label class="required">Type Of Lead</label>
+                    <select id="type_of_lead"><option value="">Select</option><option>PV</option><option>Battery</option><option>PV+Battery</option><option>Service</option></select>
+                </div>
+                <div class="field"><label class="required">Type Of Property</label>
+                    <select id="property_type" onchange="toggleAbnField(); calculateSolarMetrics();" required><option value="">Select</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select>
+                </div>
+                <div class="field" id="abn_div" style="display:none;"><label class="required">ABN Number</label>
+                    <input type="text" id="abn_number" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+                <div class="field"><label class="required">Salutation</label>
+                    <select id="salutation"><option value="">Select</option><option>Mr</option><option>Mrs</option><option>Ms</option><option>Miss</option></select>
+                </div>
+                <div class="field"><label class="required">First Name</label><input type="text" id="first_name"></div>
+                <div class="field"><label class="required">Last Name</label><input type="text" id="last_name"></div>
+                <div class="field"><label class="required">Phone Number</label>
+                    <div class="input-group"><span class="country-code">+61</span><input type="text" id="phone_number" placeholder="4xx xxx xxx"></div>
+                </div>
+                <div class="field"><label>Phone Number 2</label>
+                    <div class="input-group"><span class="country-code">+61</span><input type="text" id="phone_number_2" placeholder="4xx xxx xxx"></div>
+                </div>
+                <div class="field"><label>Landline</label><input type="text" id="landline_number"></div>
+                <div class="field"><label class="required">Email ID 1</label><input type="text" id="email_id_1"></div>
+                <div class="field"><label>Email ID 2</label><input type="text" id="email_id_2"></div>
+                <div class="field"><label class="required">Lead Source</label>
+                    <select id="lead_source"><option value="">Select</option><option>Website</option><option>Social Media</option><option>Referral</option><option>Other</option><option>SMS Campaign</option><option>Email Campaign</option></select>
+                </div>
+                <div class="field" id="sub_category_div"><label class="required">Sub Category</label>
+                    <select id="lead_sub_category"><option value="">Select</option></select>
+                </div>
+                <div class="field ac-wrap" id="referral_div" style="display:none;">
+                    <label class="required">Referral Project No.</label>
+                    <input type="text" id="referral_project_number" autocomplete="off" placeholder="Type to search...">
+                    <ul class="ac-drop" id="referralDropdown"></ul>
+                </div>
+
+
+                <div class="section-divider">Address Details</div>
+                <div class="field"><label>Google Search</label><input type="text" id="google_address" placeholder="Type address to auto-fill..."></div>
+                <div class="field"><label>Street Type</label><input type="text" id="street_type"></div>
+                <div class="field"><label>Lot Number</label><input type="text" id="lot_number"></div>
+                <div class="field"><label>Unit Number</label><input type="text" id="unit_number"></div>
+                <div class="field"><label class="required">Address</label><input type="text" id="address"></div>
+                <div class="field"><label class="required">Suburb</label><input type="text" id="suburb"></div>
+                <div class="field"><label class="required">State</label><input type="text" id="state"></div>
+                <div class="field"><label class="required">Postcode</label><input type="text" id="postcode"></div>
+                <div class="field" style="grid-column:span 2;"><label>Message (Internal Notes)</label><textarea id="message" placeholder="Add internal notes..."></textarea></div>
+            </div>
+            <div class="bottom-actions">
+                <div class="checkbox-group">
+                    <label class="check-label"><input type="checkbox" id="dnd"> DND</label>
+                    <label class="check-label"><input type="checkbox" id="email_unsubscribe"> Email Unsubscribe</label>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:13px;font-weight:700;color:var(--text-dark);" class="required">Service</span>
+                        <label class="check-label"><input type="radio" name="service_option" value="Yes"> Yes</label>
+                        <label class="check-label"><input type="radio" name="service_option" value="No"> No</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-save" id="saveLeadBtn">Save Lead</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Activity Logs</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<div id="assignModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('assignModal').style.display='none'">✕</button>
+        <div class="modal-title">Assign Lead</div>
+        <input type="hidden" id="assign_lead_id">
+        <label class="sm-label">Select Sales User</label>
+        <select class="sm-select" id="assign_user">
+            <option>James (Sales)</option><option>David (Sales)</option><option>Emma (Sales)</option><option>Rahul (Sales)</option>
+        </select>
+        <button class="btn-full" onclick="confirmAssign()">Assign Lead</button>
+    </div>
+</div>
+
+<div id="transferModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('transferModal').style.display='none'">✕</button>
+        <div class="modal-title">Transfer Lead</div>
+        <input type="hidden" id="transfer_lead_id">
+        <label class="sm-label">Current Assignee</label>
+        <input class="sm-input" type="text" id="existing_assignee" readonly>
+        <label class="sm-label">New Sales User <span style="color:red">*</span></label>
+        <select class="sm-select" id="transfer_user">
+            <option value="">Select</option><option>James (Sales)</option><option>David (Sales)</option><option>Emma (Sales)</option><option>Rahul (Sales)</option>
+        </select>
+        <label class="sm-label">Reason / Notes <span style="color:red">*</span></label>
+        <textarea class="sm-textarea" id="transfer_notes" placeholder="Why are you transferring?"></textarea>
+        <button class="btn-full" onclick="confirmTransfer()">Transfer Lead</button>
+    </div>
+</div>
+
+<div id="bulkAssignModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('bulkAssignModal').style.display='none'">✕</button>
+        <div class="modal-title">Bulk Assign</div>
+        <p style="font-size:11px;color:#718096;margin-bottom:12px;" id="bulkAssignCount"></p>
+        <label class="sm-label">Select Sales User</label>
+        <select class="sm-select" id="bulk_assign_user">
+            <option value="">Select User</option><option>James (Sales)</option><option>David (Sales)</option><option>Emma (Sales)</option><option>Rahul (Sales)</option>
+        </select>
+        <button class="btn-full" onclick="confirmBulkAssign()">Assign All Selected</button>
+    </div>
+</div>
+
+<div id="bulkStatusModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('bulkStatusModal').style.display='none'">✕</button>
+        <div class="modal-title">Bulk Status Change</div>
+        <p style="font-size:11px;color:#718096;margin-bottom:12px;" id="bulkStatusCount"></p>
+        <label class="sm-label">New Status</label>
+        <select class="sm-select" id="bulk_status_value">
+            <option value="">Select Status</option><option>Planned</option><option>In Progress</option><option>Follow Up</option><option>Closed Won</option><option>Closed Lost</option>
+        </select>
+        <button class="btn-full" onclick="confirmBulkStatus()">Update Status</button>
+    </div>
+</div>
+
+<div id="advancedFilterModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
+        <div class="modal-title">Advanced Filters</div>
+        <div class="adv-filter-grid">
+            <div class="field"><label>Project Status</label><select class="form-control-sm" id="adv_status"><option value="">All</option><option value="Planned">Planned</option><option value="Active">Active</option><option value="On-Hold">On-Hold</option><option value="Cancel">Cancel</option></select></div>
+            <div class="field"><label>Type Of Lead</label><select class="form-control-sm" id="adv_type"><option value="">All</option><option>PV</option><option>Battery</option><option>PV+Battery</option><option>Service</option></select></div>
+            <div class="field"><label>Type Of Property</label><select class="form-control-sm" id="adv_property_type"><option value="">All</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select></div>
+            <div class="field"><label>Lead Source</label><select class="form-control-sm" id="adv_source"><option value="">All</option><option>Website</option><option>Social Media</option><option>Referral</option><option>Other</option><option>SMS Campaign</option><option>Email Campaign</option></select></div>
+            
+            <div class="field"><label>Sub Category</label><select class="form-control-sm" id="adv_sub_cat"><option value="">All</option><option value="Toll Free">Toll Free</option><option value="FB">Facebook (FB)</option><option value="Instagram">Instagram</option><option value="Whatsapp">WhatsApp</option><option value="Email">Email</option><option value="Free Quote">Free Quote</option><option value="Referral">Referral</option></select></div>
+            <div class="field"><label>Assigned To</label><select class="form-control-sm" id="adv_assign_to_user"><option value="">All</option><option>James (Sales)</option><option>David (Sales)</option><option>Emma (Sales)</option><option>Rahul (Sales)</option></select></div>
+            <div class="field"><label>Assigned By</label><select class="form-control-sm" id="adv_assign_by"><option value="">All</option><option value="Manager">Manager</option><option value="Admin">Admin</option></select></div>
+            
+            <div class="field"><label>Unassigned Leads</label><select class="form-control-sm" id="adv_unassigned"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
+            <div class="field"><label>Area</label><select class="form-control-sm" id="adv_area"><option value="">All</option><option>Metro</option><option>Regional</option></select></div>
+            <div class="field"><label>State</label><select class="form-control-sm" id="adv_state"><option value="">All</option><option value="NSW">NSW</option><option value="VIC">VIC</option><option value="QLD">QLD</option><option value="WA">WA</option><option value="SA">SA</option><option value="TAS">TAS</option><option value="ACT">ACT</option><option value="NT">NT</option></select></div>
+            
+            <div class="section-divider" style="grid-column: span 3; border-bottom: none; margin-bottom: 0;">Date Ranges</div>
+            <div class="field"><label>Enter Date (From)</label><input type="date" class="form-control-sm" id="adv_enter_from"></div>
+            <div class="field"><label>Enter Date (To)</label><input type="date" class="form-control-sm" id="adv_enter_to"></div>
+            <div></div>
+
+            <div class="field"><label>Created Date (From)</label><input type="date" class="form-control-sm" id="adv_created_from"></div>
+            <div class="field"><label>Created Date (To)</label><input type="date" class="form-control-sm" id="adv_created_to"></div>
+            <div></div>
+
+            <div class="field"><label>Assign Date (From)</label><input type="date" class="form-control-sm" id="adv_assign_from"></div>
+            <div class="field"><label>Assign Date (To)</label><input type="date" class="form-control-sm" id="adv_assign_to"></div>
+            <div></div>
+        </div>
+        <div class="bottom-actions" style="margin-top: 15px; padding-top: 15px; justify-content: flex-end; gap: 12px;">
+            <button class="btn-reset" onclick="resetAdvancedFilters()">Reset Filters</button>
+            <button class="btn-save" onclick="applyAdvancedFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    const form = document.getElementById('leadForm');
+    const sourceSelect = document.getElementById('lead_source');
+    let allLeadsData = [], currentPage = 1, rowsPerPage = 30;
+    let currentSortCol = '', isSortAsc = true, globalLeadSearchTerm = '';
+    let selectedLeadIds = new Set(), activeFilterChip = 'all';
+    let dupCheckTimeout = null, currentDupLead = null, isDupConfirmed = false;
+    let activeAdvFilters = {};
+    const categoryMap = { "Website": ["Toll Free", "Whatsapp", "Email"], "Social Media": ["FB","Instagram","Whatsapp"], "Other": ["Free Quote"] };
+
+    // Helper function for debouncing
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Debounced Search Logic
+    const tableSearchInput = document.getElementById('search-input');
+    if (tableSearchInput) {
+        const performTableSearch = () => {
+            globalLeadSearchTerm = tableSearchInput.value.trim().toLowerCase();
+            currentPage = 1;
+            load(); // Automatically refetches from API with updated parameters
+        };
+        tableSearchInput.addEventListener('input', debounce(performTableSearch, 400));
+        document.getElementById('search-btn').addEventListener('click', performTableSearch);
+    }
+
+    function onProfileChange() {
+        const val = document.getElementById('userProfile').value;
+        document.getElementById('sidebarName').innerText = val;
+        document.getElementById('sidebarAvatar').innerText = val.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+        document.getElementById('sidebarRole').innerText = val === 'Manager' ? 'Admin Access' : 'Limited Access';
+        load();
+    }
+
+    const currentPath = window.location.pathname;
+    const currentApiEndpoint = '/api/master-leads';
+
+    // Global search autocomplete
+    const gsi = document.getElementById('globalLeadSearch');
+    const gsd = document.getElementById('globalSearchDropdown');
+    let globalSearchTimeout;
+    gsi.addEventListener('input', function() {
+        clearTimeout(globalSearchTimeout);
+        const val = this.value.trim();
+        
+        globalSearchTimeout = setTimeout(() => {
+            globalLeadSearchTerm = val.toLowerCase();
+            currentPage = 1;
+            if (val.length < 1) { gsd.style.display='none'; load(); return; }
+            const term = val.toLowerCase(), suggestions = [], seen = new Set();
+            const cu = document.getElementById('userProfile').value;
+            allLeadsData.forEach(l => {
+                if (l.status==='Deleted' && cu!=='Manager') return;
+                const fullName = `${l.first_name||''} ${l.last_name||''}`.trim();
+                [{ val:fullName,type:'Name',icon:'👤'},{ val:l.phone_number,type:'Phone',icon:'📞'},{ val:l.email_id_1,type:'Email',icon:'✉️'},{ val:l.project_number,type:'Project',icon:'📋'},{ val:`${l.unit_number||''} ${l.address||''}`.trim(),type:'Address',icon:'📍'}, { val:l.status, type:'Status', icon:'📌'}].forEach(item => {
+                    if (item.val && item.val.toLowerCase().includes(term) && !seen.has(item.val+item.type)) { seen.add(item.val+item.type); suggestions.push(item); }
+                });
+            });
+            gsd.innerHTML = '';
+            if (!suggestions.length) { gsd.innerHTML=`<li class="ac-empty">No results found</li>`; gsd.style.display='block'; load(); return; }
+            suggestions.slice(0,12).forEach(s => {
+                const li = document.createElement('li');
+                const hl = s.val.replace(new RegExp(`(${escRx(val)})`,'gi'),`<span class="ac-hl">$1</span>`);
+                li.innerHTML = `<span style="font-size:13px;">${s.icon}</span><span>${hl}</span><span class="ac-type-tag">${s.type}</span>`;
+                li.addEventListener('mousedown', e => { e.preventDefault(); gsi.value=s.val; globalLeadSearchTerm=s.val.toLowerCase(); gsd.style.display='none'; currentPage=1; load(); });
+                gsd.appendChild(li);
+            });
+            gsd.style.display='block'; load();
+        }, 400);
+    });
+    gsi.addEventListener('blur', () => setTimeout(()=>{ gsd.style.display='none'; },200));
+    gsi.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); gsd.style.display='none'; load(); }
+    });
+
+    // Referral autocomplete
+    const refI = document.getElementById('referral_project_number');
+    const refD = document.getElementById('referralDropdown');
+    refI.addEventListener('input', function() {
+        const val = this.value.trim();
+        if (val.length<1) { refD.style.display='none'; return; }
+        const term = val.toLowerCase();
+        const matches = allLeadsData.filter(l => l.project_number && l.project_number!=='Pending Approval' && l.project_number!=='Pending Details' && l.project_number.toLowerCase().includes(term) && l.status!=='Deleted');
+        refD.innerHTML='';
+        if (!matches.length) { refD.innerHTML=`<li class="ac-empty">No project found</li>`; refD.style.display='block'; return; }
+        matches.slice(0,10).forEach(l => {
+            const li = document.createElement('li');
+            const name = `${l.first_name||''} ${l.last_name||''}`.trim();
+            const hl = l.project_number.replace(new RegExp(`(${escRx(val)})`,'gi'),`<span class="ac-hl">$1</span>`);
+            li.innerHTML = `<span>📋</span><span>${hl}</span><span style="color:#a0aec0;font-size:11px;margin-left:4px;">— ${name}</span>`;
+            li.addEventListener('mousedown', e => { e.preventDefault(); refI.value=l.project_number; refD.style.display='none'; });
+            refD.appendChild(li);
+        });
+        refD.style.display='block';
+    });
+    refI.addEventListener('blur', () => setTimeout(()=>{ refD.style.display='none'; },200));
+
+    function escRx(str) { return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+    function extractDateString(s) {
+        if(!s||s==='-') return null;
+        const p = s.split(' ')[0].split('-');
+        if(p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`;
+        return null;
+    }
+
+    function applyAdvancedFilters() {
+        activeAdvFilters = {
+            status: document.getElementById('adv_status').value,
+            type: document.getElementById('adv_type').value,
+            property_type: document.getElementById('adv_property_type').value,
+            source: document.getElementById('adv_source').value,
+            subCat: document.getElementById('adv_sub_cat').value,
+            assignTo: document.getElementById('adv_assign_to_user').value,
+            assignBy: document.getElementById('adv_assign_by').value,
+            unassigned: document.getElementById('adv_unassigned').value,
+            area: document.getElementById('adv_area').value,
+            state: document.getElementById('adv_state').value,
+            enterFrom: document.getElementById('adv_enter_from').value,
+            enterTo: document.getElementById('adv_enter_to').value,
+            createdFrom: document.getElementById('adv_created_from').value,
+            createdTo: document.getElementById('adv_created_to').value,
+            assignFrom: document.getElementById('adv_assign_from').value,
+            assignToDate: document.getElementById('adv_assign_to').value
+        };
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        currentPage = 1;
+        load();
+    }
+
+    function resetAdvancedFilters() {
+        document.querySelectorAll('#advancedFilterModal input, #advancedFilterModal select').forEach(el => el.value = '');
+        activeAdvFilters = {};
+        currentPage = 1;
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        load();
+    }
+
+    document.getElementById('type_of_lead').addEventListener('change', function() {
+        if (this.value==='Service') document.querySelector('input[name="service_option"][value="Yes"]').checked=true;
+        else if (this.value!=='') document.querySelector('input[name="service_option"][value="No"]').checked=true;
+    });
+
+    if(sourceSelect) {
+        sourceSelect.addEventListener('change', function() {
+            const sd = document.getElementById('sub_category_div'), rd = document.getElementById('referral_div');
+            const subCat = document.getElementById('lead_sub_category');
+            const refProj = document.getElementById('referral_project_number');
+            if (subCat) subCat.classList.remove('shake-error');
+            if (refProj) refProj.classList.remove('shake-error');
+            if (this.value==='Referral') { sd.style.display='none'; rd.style.display='flex'; }
+            else {
+                sd.style.display='flex'; rd.style.display='none';
+                const subs = categoryMap[this.value]||[];
+                document.getElementById('lead_sub_category').innerHTML = '<option value="">Select</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+            }
+        });
+    }
+    
+    if(form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const req=['type_of_lead','property_type','salutation','first_name','last_name','phone_number','email_id_1','address','suburb','state','postcode','lead_source'];
+            const leadSourceVal = document.getElementById('lead_source')?.value;
+            if (leadSourceVal === 'Referral') {
+                req.push('referral_project_number');
+            } else {
+                const subCatDiv = document.getElementById('sub_category_div');
+                if (subCatDiv && subCatDiv.style.display !== 'none') {
+                    req.push('lead_sub_category');
+                }
+            }
+            let hasError = false;
+            let firstEmptyField = null;
+
+            req.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (!el.dataset.shakeListenerAttached) {
+                        el.addEventListener('input', function() { this.classList.remove('shake-error'); });
+                        el.addEventListener('change', function() { this.classList.remove('shake-error'); });
+                        el.dataset.shakeListenerAttached = 'true';
+                    }
+                    if (!el.value.trim()) {
+                        el.classList.add('shake-error');
+                        hasError = true;
+                        if (!firstEmptyField) firstEmptyField = el;
+                    } else {
+                        el.classList.remove('shake-error');
+                    }
+                }
+            });
+
+            if (!document.querySelector('input[name="service_option"]:checked')) { hasError = true; }
+
+            const propType = document.getElementById('property_type');
+            const abn = document.getElementById('abn_number');
+            if (propType && propType.value === 'Commercial' && abn && !abn.value.trim()) {
+                if (!abn.dataset.shakeListenerAttached) {
+                    abn.addEventListener('input', function() { this.classList.remove('shake-error'); });
+                    abn.dataset.shakeListenerAttached = 'true';
+                }
+                abn.classList.add('shake-error');
+                hasError = true;
+                if (!firstEmptyField) firstEmptyField = abn;
+            }
+
+            if (hasError) {
+                if (firstEmptyField) {
+                    firstEmptyField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstEmptyField.focus();
+                }
+                Swal.fire('Missing Fields', 'Please fill all mandatory fields (marked with *).', 'warning');
+                return;
+            }
+            try {
+                const data={currentUser:document.getElementById('userProfile').value};
+                form.querySelectorAll('input, select, textarea').forEach(el=>{ if(el.type==='checkbox') data[el.id]=el.checked?'Yes':'No'; else if(el.type!=='radio'&&el.id) data[el.id]=el.value; });
+                data.service=document.querySelector('input[name="service_option"]:checked').value;
+                data.area=getAreaType(data.postcode);
+                data.forceNew=document.getElementById('force_new').value==='true';
+                const isEdit=!!data.edit_id;
+                const res=await fetch(isEdit?`/leads/${data.edit_id}`:'/leads',{method:isEdit?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+                if(res.ok) {
+                    const result=await res.json();
+                    let msg = isEdit ? 'Lead updated successfully!' : 'Lead saved successfully!';
+                    if(!isEdit&&result.assigned_to&&result.assigned_to!=='-') msg+=`\nAuto-Assigned to: ${result.assigned_to}`;
+                    document.getElementById('modal').style.display='none';
+                    await load();
+                    Swal.fire(isEdit ? 'Updated!' : 'Saved!', msg, 'success');
+                } else {
+                    const err=await res.json().catch(()=>({}));
+                    Swal.fire('Save Failed', err.error || err.message || `Server returned ${res.status}. Please check console.`, 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'Could not connect to server.', 'error'); }
+        };
+    }
+
+    function initAutocomplete() {
+        const ai = document.getElementById('google_address');
+        if (!ai) return;
+        
+        // Prevent form submission on Enter key
+        ai.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+        
+        const ac = new google.maps.places.Autocomplete(ai,{types:['address'],componentRestrictions:{country:'au'}});
+        ac.addListener('place_changed', function() {
+            const place = ac.getPlace(); if (!place||!place.address_components) return;
+            ['unit_number','address','suburb','state','postcode','street_type','lot_number'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+            let sn='', street='', unit='';
+            place.address_components.forEach(c => {
+                if (c.types.includes('subpremise')) unit=c.long_name;
+                if (c.types.includes('street_number')) { if(c.long_name.includes('/')) { const p=c.long_name.split('/'); unit=p[0]; sn=p[1]; } else sn=c.long_name; }
+                if (c.types.includes('route')) { street=c.long_name; document.getElementById('street_type').value=c.long_name.split(' ').pop(); }
+                if (c.types.includes('locality')) document.getElementById('suburb').value=c.long_name;
+                if (c.types.includes('administrative_area_level_1')) document.getElementById('state').value=c.short_name;
+                if (c.types.includes('postal_code')) document.getElementById('postcode').value=c.long_name;
+            });
+        document.getElementById('unit_number').value=unit;
+        document.getElementById('address').value=`${sn} ${street}`.trim();
+            triggerDupCheck();
+        });
+    }
+
+    ['unit_number','address','suburb'].forEach(fid => {
+        document.getElementById(fid).addEventListener('input', function() {
+            if (isDupConfirmed) return;
+            clearTimeout(dupCheckTimeout);
+            dupCheckTimeout = setTimeout(triggerDupCheck, 600);
+        });
+    });
+
+    document.getElementById('phone_number').addEventListener('input', function() {
+        if (isDupConfirmed) return;
+        clearTimeout(dupCheckTimeout);
+        dupCheckTimeout = setTimeout(() => triggerDupCheckBy('phone', this.value.trim()), 700);
+    });
+
+    document.getElementById('email_id_1').addEventListener('input', function() {
+        if (isDupConfirmed) return;
+        clearTimeout(dupCheckTimeout);
+        dupCheckTimeout = setTimeout(() => triggerDupCheckBy('email', this.value.trim()), 700);
+    });
+
+    async function triggerDupCheckBy(type, value) {
+        if (!value || value.length < 5) return;
+        const body = type === 'phone' ? { phone_number: value } : { email_id_1: value };
+        const editId = document.getElementById('edit_id').value;
+        if (editId) body.exclude_id = editId;
+        try {
+            const res = await fetch('/leads/check-duplicate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const data = await res.json();
+            if (data.duplicate) { currentDupLead = data.lead; showDupBanner(data.lead, type); }
+            else { if (!isDupConfirmed) hideDupBanner(); }
+        } catch(e) {}
+    }
+
+    async function triggerDupCheck() {
+        const address=document.getElementById('address').value.trim(), unit_number=document.getElementById('unit_number').value.trim(), suburb=document.getElementById('suburb').value.trim();
+        if (!address||!suburb) { hideDupBanner(); return; }
+        const editId = document.getElementById('edit_id').value;
+        const body = {address,unit_number,suburb};
+        if (editId) body.exclude_id = editId;
+        try {
+            const res=await fetch('/leads/check-duplicate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+            const data=await res.json();
+            if (data.duplicate) { currentDupLead=data.lead; showDupBanner(data.lead,'address'); }
+            else { currentDupLead=null; hideDupBanner(); }
+        } catch(e) {}
+    }
+
+    function showDupBanner(lead, matchType) {
+        const name=`${lead.first_name||''} ${lead.last_name||''}`.trim();
+        const matchLabel = matchType==='phone' ? 'phone number' : matchType==='email' ? 'email address' : 'address';
+        document.getElementById('dupWarningDetail').innerHTML=`Duplicate found matching same <b>${matchLabel}</b>:<br><br><b>👤 Customer:</b> ${name} &nbsp;|&nbsp; <b>📞 Phone:</b> ${lead.phone_number||'-'} &nbsp;|&nbsp; <b>✉️ Email:</b> ${lead.email_id_1||'-'}<br><br><b>📌 Project Status:</b> <span style="background:#fff; color:#e8681e; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #f9c89a;">${lead.status||'Unknown'}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>📋 Reference:</b> <span style="background:#eef2f8; color:#1c3557; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #c5d3e8;">${lead.project_number||'Pending Details'}</span>`;
+        document.getElementById('dupWarningBanner').classList.add('show');
+        document.getElementById('saveLeadBtn').disabled=true; document.getElementById('saveLeadBtn').style.opacity='0.5';
+    }
+    function hideDupBanner() { document.getElementById('dupWarningBanner').classList.remove('show'); document.getElementById('saveLeadBtn').disabled=false; document.getElementById('saveLeadBtn').style.opacity='1'; }
+    function toggleAbnField() { const pt=document.getElementById('property_type'); const div=document.getElementById('abn_div'); if(pt&&div) div.style.display=pt.value==='Commercial'?'':'none'; }
+    function viewExistingLead() { if (!currentDupLead) return; document.getElementById('modal').style.display='none'; editLead(currentDupLead.id); }
+    function cancelDuplicate() { document.getElementById('modal').style.display='none'; }
+
+    async function takeApproval() {
+        const req=['type_of_lead','property_type','salutation','first_name','last_name','phone_number','email_id_1','address','suburb','state','postcode','lead_source'];
+        const leadSourceVal = document.getElementById('lead_source')?.value;
+        if (leadSourceVal === 'Referral') {
+            req.push('referral_project_number');
+        } else {
+            const subCatDiv = document.getElementById('sub_category_div');
+            if (subCatDiv && subCatDiv.style.display !== 'none') {
+                req.push('lead_sub_category');
+            }
+        }
+        let hasError = false;
+        let firstEmptyField = null;
+
+        req.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (!el.dataset.shakeListenerAttached) {
+                    el.addEventListener('input', function() { this.classList.remove('shake-error'); });
+                    el.addEventListener('change', function() { this.classList.remove('shake-error'); });
+                    el.dataset.shakeListenerAttached = 'true';
+                }
+                if (!el.value.trim()) {
+                    el.classList.add('shake-error');
+                    hasError = true;
+                    if (!firstEmptyField) firstEmptyField = el;
+                } else {
+                    el.classList.remove('shake-error');
+                }
+            }
+        });
+
+        if (!document.querySelector('input[name="service_option"]:checked')) { hasError = true; }
+
+        const propType = document.getElementById('property_type');
+        const abn = document.getElementById('abn_number');
+        if (propType && propType.value === 'Commercial' && abn && !abn.value.trim()) {
+            if (!abn.dataset.shakeListenerAttached) {
+                abn.addEventListener('input', function() { this.classList.remove('shake-error'); });
+                abn.dataset.shakeListenerAttached = 'true';
+            }
+            abn.classList.add('shake-error');
+            hasError = true;
+            if (!firstEmptyField) firstEmptyField = abn;
+        }
+
+        if (hasError) {
+            if (firstEmptyField) {
+                firstEmptyField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstEmptyField.focus();
+            }
+            Swal.fire('Missing Fields', 'Please fill all mandatory fields (marked with *).', 'warning');
+            return;
+        }
+        
+        const userNameNode = document.querySelector('.sb-uname');
+        const data = { currentUser: userNameNode ? userNameNode.innerText : 'System' };
+        data.edit_id = document.getElementById('edit_id').value;
+        const formEl = document.getElementById('leadForm');
+        formEl.querySelectorAll('input, select, textarea').forEach(el => { 
+            if(el.type==='checkbox') data[el.id] = el.checked ? 'Yes' : 'No'; 
+            else if(el.type!=='radio' && el.id) data[el.id] = el.value; 
+        });
+        data.service = document.querySelector('input[name="service_option"]:checked').value;
+        if (typeof getAreaType === 'function') data.area = getAreaType(data.postcode);
+
+        try {
+            const res = await fetch('/api/leads/take-approval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok && result.success) {
+                Swal.fire('Submitted!', 'Lead submitted for duplicate approval successfully.', 'success');
+                hideDupBanner();
+                document.getElementById('modal').style.display = 'none';
+                if (typeof load === 'function') load();
+            } else {
+                Swal.fire('Error', result.error || 'Failed to submit.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
+    }
+
+    function getAgeDays(dateStr) {
+        if (!dateStr||dateStr==='-') return null;
+        try {
+            const p=dateStr.split(' '), dmy=p[0].split('-');
+            const yr = parseInt(dmy[2]) < 100 ? parseInt(dmy[2]) + 2000 : parseInt(dmy[2]);
+            const leadDate = new Date(yr, parseInt(dmy[1])-1, parseInt(dmy[0]));
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            return Math.floor((today - leadDate) / 86400000);
+        } catch(e) { return null; }
+    }
+
+    function getAgeClass(lead) {
+        if (lead.status==='Deleted') return '';
+        const d=getAgeDays(lead.lead_entered_date); if (d===null) return '';
+        if (d<=3) return 'age-green'; if (d<=7) return 'age-yellow'; return 'age-red';
+    }
+    function isToday(ds) { return getAgeDays(ds)===0; }
+
+    function updateStats(leads) {
+        const active=leads.filter(l=>l.status!=='Deleted');
+        document.getElementById('statTotal').innerText=active.length;
+        document.getElementById('statToday').innerText=active.filter(l=>isToday(l.lead_entered_date)).length;
+        document.getElementById('statUnassigned').innerText=active.filter(l=>!l.assign_to||l.assign_to==='-').length;
+        document.getElementById('statOverdue').innerText=active.filter(l=>{ const d=getAgeDays(l.lead_entered_date); return d!==null&&d>7; }).length;
+    }
+
+    function setFilterChip(chip) {
+        activeFilterChip=chip;
+        ['all','today','fresh','follow','overdue','unassigned','pending'].forEach(c=>{ const el=document.getElementById('fc_'+c); if(el) el.classList.toggle('fc-active',c===chip); });
+        currentPage=1; load();
+    }
+
+    function applyAgeFilter(type) {
+        if (type==='today') setFilterChip('today');
+        else if (type==='unassigned') setFilterChip('unassigned');
+        else if (type==='overdue') setFilterChip('overdue');
+        else setFilterChip('all');
+    }
+
+    let totalLeadsCountFromServer = 0;
+
+    async function load() {
+        try {
+            const params = new URLSearchParams();
+            params.append('t', new Date().getTime());
+            params.append('page', currentPage);
+            params.append('limit', rowsPerPage);
+            if (globalLeadSearchTerm) params.append('search', globalLeadSearchTerm);
+            if (activeFilterChip && activeFilterChip !== 'all') params.append('chip', activeFilterChip);
+            if (currentSortCol) {
+                params.append('sort', currentSortCol);
+                params.append('order', isSortAsc ? 'asc' : 'desc');
+            }
+            
+            for (const key in activeAdvFilters) {
+                if (activeAdvFilters[key]) params.append(key, activeAdvFilters[key]);
+            }
+
+            const res=await fetch(currentApiEndpoint + '?' + params.toString(), { cache: 'no-store', headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } });
+            if (!res.ok) { console.error(`GET ${currentApiEndpoint} failed:`, res.status); return; }
+            
+            const resObj = await res.json();
+            allLeadsData = resObj.data || [];
+            totalLeadsCountFromServer = resObj.total || 0;
+
+            if (resObj.stats) {
+                document.getElementById('statTotal').innerText = resObj.stats.total || 0;
+                document.getElementById('statToday').innerText = resObj.stats.today || 0;
+                document.getElementById('statUnassigned').innerText = resObj.stats.unassigned || 0;
+                document.getElementById('statOverdue').innerText = resObj.stats.overdue || 0;
+            }
+
+            selectedLeadIds.clear(); 
+            updateBulkBar();
+            renderTable();
+        } catch(e) { console.error('load() error:', e); }
+    }
+
+    function sortData(column, keepDir=false) {
+        if (!keepDir) { if (currentSortCol===column) isSortAsc=!isSortAsc; else { currentSortCol=column; isSortAsc=true; } }
+        document.querySelectorAll('.sort-arrow').forEach(el=>el.innerText='');
+        const sortArrow = document.getElementById(`sort_${column}`);
+        if (sortArrow) sortArrow.innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage=1; load();
+    }
+
+    function parseDate(s) {
+        if (!s||s==='-') return 0;
+        try {
+            const p=s.split(' '), dmy=p[0].split('-'), t=p[1].replace('(',''), ap=p[2].replace(')',''), tp=t.split(':');
+            let hh=parseInt(tp[0]); const mm=parseInt(tp[1]);
+            if (ap==='PM'&&hh<12) hh+=12; if (ap==='AM'&&hh===12) hh=0;
+            return new Date(dmy[2],dmy[1]-1,dmy[0],hh,mm).getTime();
+        } catch(e) { return 0; }
+    }
+
+    function toggleSelectAll(cb) {
+        const leads=getFilteredLeads(), start=(currentPage-1)*rowsPerPage;
+        leads.slice(start,start+rowsPerPage).forEach(l=>{ if(l.status!=='Deleted') { if(cb.checked) selectedLeadIds.add(l.id); else selectedLeadIds.delete(l.id); } });
+        updateBulkBar(); renderTable();
+    }
+    function toggleRowSelect(id,cb) { if(cb.checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id); updateBulkBar(); }
+    function updateBulkBar() {
+        const n=selectedLeadIds.size;
+        document.getElementById('bulkCountLabel').innerText=`${n} Lead${n!==1?'s':''} Selected`;
+        document.getElementById('bulkBar').classList.toggle('bb-visible',n>0);
+        
+        const cu = document.getElementById('userProfile')?.value || '';
+        const isAuthorized = cu === 'Admin' || cu === 'Manager' || cu.includes('Manager') || cu.includes('Team Leader');
+        
+        const bulkAssignBtn = document.querySelector('button[onclick="openBulkAssign()"]');
+        const bulkDeleteBtn = document.querySelector('button[onclick="bulkDelete()"]');
+        if (bulkAssignBtn) bulkAssignBtn.style.display = isAuthorized ? 'inline-block' : 'none';
+        if (bulkDeleteBtn) bulkDeleteBtn.style.display = isAuthorized ? 'inline-block' : 'none';
+    }
+    function clearSelection() { selectedLeadIds.clear(); document.getElementById('selectAllCb').checked=false; updateBulkBar(); renderTable(); }
+
+    function getFilteredLeads() {
+        return allLeadsData;
+    }
+
+    function getStatusBadge(status) {
+        const map={'Planned':'sb-planned','In Progress':'sb-inprog','New Lead':'sb-new','Closed Won':'sb-won','Closed Lost':'sb-lost','Pending Approval':'sb-pending-a','Pending Deletion':'sb-pending-d','Deleted':'sb-deleted','Follow Up':'sb-follow'};
+        return `<span class="status-badge ${map[status]||'sb-planned'}">${status||'Planned'}</span>`;
+    }
+
+    function syncURL() {
+        const params = new URLSearchParams();
+        if (currentPage > 1) params.append('page', currentPage);
+        if (rowsPerPage !== 30) params.append('limit', rowsPerPage);
+        if (globalLeadSearchTerm) params.append('search', globalLeadSearchTerm);
+        if (currentSortCol) {
+            params.append('sort', currentSortCol);
+            params.append('order', isSortAsc ? 'asc' : 'desc');
+        }
+        if (activeFilterChip && activeFilterChip !== 'all') params.append('chip', activeFilterChip);
+        
+        for (const key in activeAdvFilters) {
+            if (activeAdvFilters[key]) params.append(key, activeAdvFilters[key]);
+        }
+        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+
+    function restoreStateFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page')) || 1;
+        if (urlParams.has('limit')) {
+            rowsPerPage = parseInt(urlParams.get('limit')) || 30;
+            const rp = document.getElementById('rowsPerPage');
+            if (rp) rp.value = rowsPerPage;
+        }
+        if (urlParams.has('search')) {
+            globalLeadSearchTerm = urlParams.get('search');
+            const gs = document.getElementById('globalLeadSearch');
+            if (gs) gs.value = globalLeadSearchTerm;
+        }
+        if (urlParams.has('sort')) currentSortCol = urlParams.get('sort');
+        if (urlParams.has('order')) isSortAsc = urlParams.get('order') === 'asc';
+        
+        if (urlParams.has('chip')) {
+            activeFilterChip = urlParams.get('chip');
+            ['all','today','fresh','follow','overdue','unassigned','pending'].forEach(c => {
+                const el = document.getElementById('fc_' + c);
+                if (el) el.classList.toggle('fc-active', c === activeFilterChip);
+            });
+        }
+
+        const advFields = { status: 'adv_status', type: 'adv_type', property_type: 'adv_property_type', source: 'adv_source', subCat: 'adv_sub_cat', assignTo: 'adv_assign_to_user', assignBy: 'adv_assign_by', unassigned: 'adv_unassigned', area: 'adv_area', state: 'adv_state', enterFrom: 'adv_enter_from', enterTo: 'adv_enter_to', createdFrom: 'adv_created_from', createdTo: 'adv_created_to', assignFrom: 'adv_assign_from', assignToDate: 'adv_assign_to' };
+        for (const [key, elId] of Object.entries(advFields)) {
+            if (urlParams.has(key)) { activeAdvFilters[key] = urlParams.get(key); const el = document.getElementById(elId); if (el) el.value = activeAdvFilters[key]; }
+        }
+        if (currentSortCol) { setTimeout(() => { document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = ''); const sortEl = document.getElementById(`sort_${currentSortCol}`); if (sortEl) sortEl.innerText = isSortAsc ? '⬆️' : '⬇️'; }, 100); }
+    }
+
+    function renderTable() {
+        syncURL();
+        const body=document.getElementById('leadsBody'); body.innerHTML='';
+        const cu=document.getElementById('userProfile').value, leads=getFilteredLeads();
+        const isMgr = cu === 'Admin' || cu === 'Manager' || cu.includes('Manager');
+        const isAuthorized = isMgr || cu.includes('Team Leader');
+        document.getElementById('totalLeadsCount').innerText=totalLeadsCountFromServer;
+        document.getElementById('tableCount').innerText=`${totalLeadsCountFromServer} Lead${totalLeadsCountFromServer!==1?'s':''}`;
+        
+        if (leads.length === 0) {
+            body.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No matching leads found.</td></tr>`;
+            return;
+        }
+
+        const totalPages=Math.ceil(totalLeadsCountFromServer/rowsPerPage)||1;
+        if (currentPage>totalPages) currentPage=totalPages;
+        const start=(currentPage-1)*rowsPerPage, visible=leads;
+        const selAll=document.getElementById('selectAllCb'), nonDel=visible.filter(l=>l.status!=='Deleted');
+        selAll.checked=nonDel.length>0&&nonDel.every(l=>selectedLeadIds.has(l.id));
+
+        let htmlString = '';
+        visible.forEach((l,idx) => {
+            const srNo=start+idx+1, fullName=`${l.first_name||''} ${l.last_name||''}`.trim();
+            const initials=fullName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'?';
+            const mergedAddr=`${l.unit_number||''} ${l.address||''}`.trim();
+            const ageDays=getAgeDays(l.lead_entered_date);
+            let rowClass=getAgeClass(l);
+            if (l.status==='Deleted') rowClass='age-deleted';
+
+            let agePillHtml='-';
+            if (ageDays!==null&&l.status!=='Deleted') {
+                const cls=ageDays<=3?'ap-green':ageDays<=7?'ap-amber':'ap-red';
+                const dotCol=ageDays<=3?'#276749':ageDays<=7?'#92400e':'#9b2c2c';
+                agePillHtml=`<span class="age-pill ${cls}"><span class="age-dot" style="background:${dotCol}"></span>${ageDays}d</span>`;
+            }
+
+            let projHtml=l.project_number;
+            if (projHtml==='Pending Approval') {
+                projHtml=`<span class="proj-pending">⏳ Pending Approval</span>`;
+                if (isMgr) projHtml+=`<br><button style="background:#c05621;color:#fff;border:none;border-radius:4px;font-size:13px;padding:2px 6px;cursor:pointer;margin-top:2px;font-weight:600;" onclick="approveProject(${l.id},'${l.service}')">Approve ✓</button>`;
+            } else if (!projHtml || projHtml==='Pending Details' || projHtml.trim() === '') {
+                projHtml=`<span class="proj-pending" style="color:#d97706;">📋 Pending Details</span>`;
+            } else {
+                projHtml=`<a href="/project_profile.html?id=${l.id}" target="_blank" class="proj-num" style="text-decoration: underline; color: var(--accent); display: inline-block;">${projHtml}</a>`;
+            }
+
+            let assignHtml=l.assign_to&&l.assign_to!=='-'
+                ?`<div class="assignee-cell">${l.assign_to}</div><div class="assign-date">${l.assign_date||''}</div>`
+                :`<span class="unassigned">— Unassigned —</span>`;
+
+            let sourceHtml=l.lead_source||'-';
+            if (l.lead_sub_category) sourceHtml+=`<br><span>${l.lead_sub_category}</span>`;
+
+            let actHtml=`<div class="actions-cell">`;
+            if (l.status!=='Deleted') {
+                actHtml+=`<button class="act-btn" title="Edit" onclick="editLead(${l.id})">✏️</button>`;
+                actHtml+=`<button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
+                
+                if (isAuthorized) {
+                    actHtml+=`<button class="act-btn" title="Assign" onclick="openAssign(${l.id})">👤</button>`;
+                    const assigned=l.assign_to&&l.assign_to!=='-';
+                    const transferClick = assigned ? `openTransfer(${l.id}, '${l.assign_to}')` : '';
+                    actHtml+=`<button class="act-btn" title="${assigned?'Transfer':'Assign first'}" ${!assigned?'disabled':''} onclick="${transferClick}">🔄</button>`;
+                    if (l.status==='Pending Deletion') {
+                        if (isMgr) actHtml+=`<button class="act-btn" title="Approve Delete" onclick="deleteLead(${l.id},'Manager')">✅</button>`;
+                        else actHtml+=`<span style="grid-column: span 2; text-align: center; font-size:13px;color:#c0520f;font-weight:600;padding:2px;border:1px solid #f9c89a;border-radius:4px;background:#fff4ee;display:flex;align-items:center;justify-content:center;">Del Req</span>`;
+                    } else {
+                        actHtml+=`<button class="act-btn act-btn-del" title="Delete" onclick="deleteLead(${l.id},'${cu}')">🗑️</button>`;
+                    }
+                } else {
+                    if (l.status==='Pending Deletion') {
+                        actHtml+=`<span style="grid-column: span 2; text-align: center; font-size:13px;color:#c0520f;font-weight:600;padding:2px;border:1px solid #f9c89a;border-radius:4px;background:#fff4ee;display:flex;align-items:center;justify-content:center;">Del Req</span>`;
+                    }
+                }
+            } else {
+                actHtml+=`<button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
+                actHtml+=`<span style="grid-column: span 2; text-align: center; font-size:13px;color:#6b7a8d;font-weight:600;padding:2px;border:1px solid #dde3ed;border-radius:4px;background:#f4f6f9;display:flex;align-items:center;justify-content:center;">Del</span>`;
+            }
+            actHtml+=`</div>`;
+
+            const isChecked=selectedLeadIds.has(l.id)?'checked':'', cbDis=l.status==='Deleted'?'disabled style="opacity:0.3"':'';
+            htmlString+=`<tr class="${rowClass}">
+                <td class="cb-col"><input type="checkbox" class="row-cb" ${isChecked} ${cbDis} onchange="toggleRowSelect(${l.id},this)"></td>
+                <td>${l.type_of_lead||'-'}</td>
+                <td>${l.lead_entered_date||'-'}<br><span>${l.created_date||'-'}</span></td>
+                <td>${projHtml}</td>
+                <td><a href="javascript:void(0)" onclick="showProjectSnapshot(${l.id})" style="color:var(--primary); font-weight:700; text-decoration:none; border-bottom:1px dashed var(--primary);" title="Click for Quick Preview">${fullName||'-'}</a></td>
+                <td>${l.phone_number||'-'}</td>
+                <td>${l.email_id_1||'-'}</td>
+                <td>${mergedAddr||'-'}</td>
+                <td>${l.suburb||'-'} ${l.state||''}</td>
+                <td>${getStatusBadge(l.status)}</td>
+                <td>${l.area||'-'}</td>
+                <td>${sourceHtml}</td>
+                <td>${assignHtml}</td>
+                <td>${agePillHtml}</td>
+                <td>${actHtml}</td>
+            </tr>`;
+        });
+        body.innerHTML = htmlString;
+        document.getElementById('pageInfo').innerText=`Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled=currentPage===1;
+        document.getElementById('nextBtn').disabled=currentPage===totalPages||totalPages===0;
+    }
+
+    async function calculateSolarMetrics() {
+        const sizeEl = document.getElementById('system_size');
+        if (!sizeEl) return;
+        const size = parseFloat(sizeEl.value);
+        const postcode = document.getElementById('postcode').value.trim();
+        const state = document.getElementById('state').value.trim();
+        const propType = document.getElementById('property_type').value;
+
+        if (!size || size <= 0 || (!postcode && !state)) {
+            const stc = document.getElementById('stc_rebate'); if (stc) stc.value = '';
+            const gen = document.getElementById('annual_generation'); if (gen) gen.value = '';
+            const sav = document.getElementById('annual_savings'); if (sav) sav.value = '';
+            const pay = document.getElementById('payback_period'); if (pay) pay.value = '';
+            const co2 = document.getElementById('co2_reduction'); if (co2) co2.value = '';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/calculator/rates?postcode=${postcode}&state=${state}&propertyType=${propType}`);
+            if (!res.ok) return;
+
+            const data = await res.json();
+            if (!data.success) return;
+
+            const { zone, ratings, deemingPeriod, actualRate } = data;
+
+            // 1. Calculate Government STC Rebate
+            const rebate = Math.floor(size * ratings * deemingPeriod) * actualRate;
+            const stc = document.getElementById('stc_rebate'); if (stc) stc.value = rebate.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
+
+            // 2. Calculate Annual Solar Generation
+            const sunHours = zone === 1 ? 5.5 : zone === 2 ? 4.8 : zone === 3 ? 4.2 : 3.8;
+            const annualGen = size * sunHours * 365 * 0.8;
+            const gen = document.getElementById('annual_generation'); if (gen) gen.value = Math.round(annualGen) + ' kWh';
+
+            // 3. Calculate Est. Annual Savings
+            const annualSavings = annualGen * 0.22;
+            const sav = document.getElementById('annual_savings'); if (sav) sav.value = annualSavings.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
+
+            // 4. Calculate Payback Period
+            const installCost = size * 1200;
+            const outOfPocket = installCost - rebate;
+            const payback = outOfPocket > 0 ? (outOfPocket / annualSavings) : 0;
+            const pay = document.getElementById('payback_period'); if (pay) pay.value = payback > 0 ? payback.toFixed(1) + ' Years' : 'Immediate';
+
+            // 5. Calculate CO2 Offset (0.85 kg per kWh)
+            const co2Offset = (annualGen * 0.85) / 1000;
+            const co2 = document.getElementById('co2_reduction'); if (co2) co2.value = co2Offset.toFixed(2) + ' Tonnes';
+
+        } catch (e) {
+            console.error('Calculator error:', e);
+        }
+    }
+
+    function openAddLeadModal() {
+        const formEl = document.getElementById('leadForm');
+        if (formEl) formEl.reset();
+        document.getElementById('edit_id').value=''; document.getElementById('force_new').value='false';
+        document.getElementById('modalTitle').innerText='Add New Lead';
+        isDupConfirmed=false; currentDupLead=null; hideDupBanner();
+        toggleAbnField();
+        document.getElementById('modal').style.display='flex';
+    }
+
+    function editLead(id) {
+        const l=allLeadsData.find(x=>x.id===id); if(!l) return;
+        const formEl = document.getElementById('leadForm');
+        if (formEl) formEl.reset();
+        document.getElementById('edit_id').value=l.id;
+        document.getElementById('modalTitle').innerText='Edit Lead';
+        isDupConfirmed=false; currentDupLead=null; hideDupBanner();
+        ['type_of_lead','property_type','abn_number','salutation','first_name','last_name','phone_number','phone_number_2','landline_number','email_id_1','email_id_2','lead_source','google_address','street_type','lot_number','unit_number','address','suburb','state','postcode','message','referral_project_number','system_size'].forEach(f=>{ const el=document.getElementById(f); if(el) el.value=l[f]||''; });
+        document.getElementById('lead_source').dispatchEvent(new Event('change'));
+        document.getElementById('lead_sub_category').value=l.lead_sub_category||'';
+        if (l.lead_source==='Referral') { document.getElementById('referral_div').style.display='flex'; document.getElementById('sub_category_div').style.display='none'; }
+        if (l.service==='Yes') document.querySelector('input[name="service_option"][value="Yes"]').checked=true;
+        if (l.service==='No') document.querySelector('input[name="service_option"][value="No"]').checked=true;
+        if (l.quality_lead==='Yes') document.getElementById('quality_lead').checked=true;
+        if (l.dnd==='Yes') document.getElementById('dnd').checked=true;
+        if (l.email_unsubscribe==='Yes') document.getElementById('email_unsubscribe').checked=true;
+        toggleAbnField();
+        calculateSolarMetrics();
+        document.getElementById('modal').style.display='flex';
+    }
+
+    async function viewHistory(id) {
+        const body=document.getElementById('historyBody');
+        body.innerHTML='<li class="history-item"><div class="history-detail">Loading...</div></li>';
+        document.getElementById('historyModal').style.display='flex';
+        try {
+            const res=await fetch(`/leads/${id}/history`);
+            const hist=await res.json();
+            body.innerHTML=hist.map(h=>`<li class="history-item"><div class="history-date">${h.created_at} — ${h.user_name || 'System'}</div><div class="history-action">${h.action}</div><div class="history-detail" style="margin-top:6px;">${h.details}</div></li>`).join('');
+            if(!hist.length) body.innerHTML='<li class="history-item"><div class="history-detail">No history found.</div></li>';
+        } catch(e) { body.innerHTML='<li class="history-item"><div class="history-detail" style="color:#b93a20;">Error loading history.</div></li>'; }
+    }
+
+
+    async function approveProject(id,isService) {
+        const cu=document.getElementById('userProfile').value;
+        const res=await fetch(`/leads/${id}/approve-project`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentUser:cu,isService})});
+        if(res.ok) load();
+    }
+
+    async function deleteLead(id,role) {
+        const cu=document.getElementById('userProfile').value;
+        const isMgr = cu === 'Admin' || cu === 'Manager' || cu.includes('Manager');
+        const { isConfirmed } = await Swal.fire({
+            title: isMgr ? 'Soft Delete this lead?' : 'Request deletion from Manager?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, proceed!'
+        });
+        if (!isConfirmed) return;
+        const res=await fetch(`/api/leads/${id}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentUser:cu,role})});
+        if(res.ok) { Swal.fire('Success', role==='Manager'?'Lead deleted.':'Deletion request sent.', 'success'); load(); }
+    }
+
+    function openAssign(id) { document.getElementById('assign_lead_id').value=id; document.getElementById('assignModal').style.display='flex'; }
+    async function confirmAssign() {
+        const id=document.getElementById('assign_lead_id').value, assign_to=document.getElementById('assign_user').value, cu=document.getElementById('userProfile').value;
+        const res=await fetch(`/leads/${id}/assign`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assign_to,currentUser:cu})});
+        if(res.ok) { document.getElementById('assignModal').style.display='none'; load(); }
+    }
+
+    function openTransfer(id,curr) { document.getElementById('transfer_lead_id').value=id; document.getElementById('existing_assignee').value=curr; document.getElementById('transfer_user').value=''; document.getElementById('transfer_notes').value=''; document.getElementById('transferModal').style.display='flex'; }
+    async function confirmTransfer() {
+        const id=document.getElementById('transfer_lead_id').value, transfer_to=document.getElementById('transfer_user').value, transfer_notes=document.getElementById('transfer_notes').value, cu=document.getElementById('userProfile').value;
+        if(!transfer_to) { Swal.fire('Required', 'Select new sales user.', 'warning'); return; } if(!transfer_notes.trim()) { Swal.fire('Required', 'Notes are mandatory.', 'warning'); return; }
+        const res=await fetch(`/leads/${id}/transfer`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transfer_to,transfer_notes,currentUser:cu})});
+        if(res.ok) { Swal.fire('Transferred', 'Lead transferred successfully.', 'success'); document.getElementById('transferModal').style.display='none'; load(); }
+    }
+
+    function openBulkAssign() { if(!selectedLeadIds.size) { Swal.fire('Selection Required', 'Select at least one lead.', 'warning'); return; } document.getElementById('bulkAssignCount').innerText=`${selectedLeadIds.size} lead(s) will be assigned.`; document.getElementById('bulk_assign_user').value=''; document.getElementById('bulkAssignModal').style.display='flex'; }
+    async function confirmBulkAssign() {
+        const assign_to=document.getElementById('bulk_assign_user').value; if(!assign_to) { Swal.fire('Required', 'Select a user.', 'warning'); return; }
+        const cu=document.getElementById('userProfile').value;
+        const res=await fetch('/leads/bulk-assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selectedLeadIds],assign_to,currentUser:cu})});
+        if(res.ok) { Swal.fire('Assigned', `Assigned to ${assign_to}.`, 'success'); document.getElementById('bulkAssignModal').style.display='none'; clearSelection(); load(); }
+    }
+
+    function openBulkStatus() { if(!selectedLeadIds.size) { Swal.fire('Selection Required', 'Select at least one lead.', 'warning'); return; } document.getElementById('bulkStatusCount').innerText=`${selectedLeadIds.size} lead(s) will be updated.`; document.getElementById('bulk_status_value').value=''; document.getElementById('bulkStatusModal').style.display='flex'; }
+    async function confirmBulkStatus() {
+        const status=document.getElementById('bulk_status_value').value; if(!status) { Swal.fire('Required', 'Select a status.', 'warning'); return; }
+        const cu=document.getElementById('userProfile').value;
+        const res=await fetch('/leads/bulk-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selectedLeadIds],status,currentUser:cu})});
+        if(res.ok) { Swal.fire('Updated', 'Status updated successfully.', 'success'); document.getElementById('bulkStatusModal').style.display='none'; clearSelection(); load(); }
+    }
+
+    async function bulkDelete() {
+        if(!selectedLeadIds.size) { Swal.fire('Selection Required', 'Select at least one lead.', 'warning'); return; }
+        const cu=document.getElementById('userProfile').value;
+        const role = (cu === 'Admin' || cu === 'Manager' || cu.includes('Manager')) ? 'Manager' : 'User';
+        const { isConfirmed } = await Swal.fire({
+            title: `${role==='Manager'?'Delete':'Request deletion for'} ${selectedLeadIds.size} lead(s)?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, proceed!'
+        });
+        if(!isConfirmed) return;
+        const res=await fetch('/api/leads/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selectedLeadIds],role,currentUser:cu})});
+        if(res.ok) { Swal.fire('Success', role==='Manager'?'Bulk deleted.':'Request sent.', 'success'); clearSelection(); load(); }
+    }
+
+    function getAreaType(pc) {
+        const p=parseInt(pc); if(isNaN(p)) return 'Regional';
+        if((p>=2000&&p<=2249)||(p>=3000&&p<=3207)||(p>=4000&&p<=4209)||(p>=5000&&p<=5199)||(p>=6000&&p<=6199)) return 'Metro';
+        return 'Regional';
+    }
+
+    async function testWebsiteLead() {
+        try {
+            const res=await fetch('/leads/website',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({first_name:'Test',last_name:'WebsiteUser',phone_number:'412345678',email_id_1:'test.web@example.com'})});
+            if(res.ok) { const d=await res.json(); Swal.fire('Website Lead Arrived!', `Auto-Assigned to: ${d.assigned_to||'N/A'}`, 'success'); load(); }
+            else { const err=await res.json().catch(()=>({message:'Request failed'})); Swal.fire('Error', err.message||'Failed to simulate lead.', 'error'); }
+        } catch(e) { Swal.fire('Error', 'Could not connect to server.', 'error'); }
+    }
+
+    function exportToExcel() {
+        const params = new URLSearchParams();
+        if (globalLeadSearchTerm) params.append('search', globalLeadSearchTerm);
+        if (activeFilterChip && activeFilterChip !== 'all') params.append('chip', activeFilterChip);
+        for (const key in activeAdvFilters) {
+            if (activeAdvFilters[key]) params.append(key, activeAdvFilters[key]);
+        }
+        window.location.href = `/api/leads/export?` + params.toString();
+    }
+
+    function changeRowsPerPage(){rowsPerPage=parseInt(document.getElementById('rowsPerPage').value);currentPage=1;load();}
+    function prevPage(){if(currentPage>1){currentPage--;load();}}
+    function nextPage(){if(currentPage<Math.ceil(totalLeadsCountFromServer/rowsPerPage)){currentPage++;load();}}
+
+    function showProjectSnapshot(id) {
+        const p = allLeadsData.find(x => x.id === id);
+        if (!p) return;
+        
+        let equipHtml = '<span style="color:var(--text-muted);">No equipment detailed.</span>';
+        let plainEquipText = 'No equipment detailed.';
+        if (p.engineering_details) {
+            try {
+                let eng = typeof p.engineering_details === 'string' ? JSON.parse(p.engineering_details) : p.engineering_details;
+                let eqs = eng.products || [];
+                if (eqs && eqs.length > 0) {
+                    equipHtml = eqs.map(eq => `• <b>${eq.type}:</b> ${eq.qty}x ${eq.name}`).join('<br>');
+                    plainEquipText = eqs.map(eq => `- ${eq.type}: ${eq.qty}x ${eq.name}`).join('\n');
+                }
+            } catch(e) {}
+        }
+        
+        const customerName = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+        const addressText = `${p.unit_number ? p.unit_number + ' ' : ''}${p.address || ''}, ${p.suburb || ''} ${p.state || ''} ${p.postcode || ''}`;
+        
+        const plainTextToCopy = `Project Ref: ${p.project_number || 'Pending'}\nCustomer: ${customerName}\nPhone: ${p.phone_number || '-'}\nEmail: ${p.email_id_1 || '-'}\nAddress: ${addressText}\nType: ${p.type_of_lead || '-'}\nStatus: ${p.status || '-'}\n\nEquipment:\n${plainEquipText}`;
+
+        Swal.fire({
+            title: `Snapshot: ${p.project_number && !p.project_number.includes('Pending') ? p.project_number : 'Lead Info'}`,
+            html: `
+                <div style="position: relative; text-align: left; font-size: 13px; line-height: 1.6; color: var(--text-dark); background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--text-dark); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: flex; align-items: center; gap: 4px;">📋 Copy</button>
+                    
+                    <div style="margin-bottom: 8px; padding-right: 60px;"><b>👤 Customer:</b> ${customerName}</div>
+                    <div style="margin-bottom: 8px;"><b>📞 Phone:</b> ${p.phone_number || '-'}</div>
+                    <div style="margin-bottom: 8px;"><b>✉️ Email:</b> ${p.email_id_1 || '-'}</div>
+                    <div style="margin-bottom: 8px;"><b>📍 Address:</b> ${addressText}</div>
+                    <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                        <span><b>Type:</b> ${p.type_of_lead || '-'}</span>
+                        <span><b>Status:</b> <span style="background:var(--bg); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-weight:600;">${p.status || '-'}</span></span>
+                    </div>
+                    <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+                    <div style="margin-bottom: 4px;"><b>⚙️ Equipment Summary:</b></div>
+                    <div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+                        ${equipHtml}
+                    </div>
+                </div>
+            `,
+            showConfirmButton: true,
+            confirmButtonText: 'Close',
+            confirmButtonColor: '#1c3557',
+            width: '400px'
+        });
+    }
+
+    function copySnapshotText(btn) {
+        const text = decodeURIComponent(btn.getAttribute('data-copytext'));
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            btn.style.background = '#edfaf2';
+            btn.style.color = '#1a6b3c';
+            btn.style.borderColor = '#b3e6cc';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = 'var(--surface)';
+                btn.style.color = 'var(--text-dark)';
+                btn.style.borderColor = 'var(--border)';
+            }, 2000);
+        }).catch(err => {
+            console.error('Could not copy text: ', err);
+            btn.innerHTML = '❌ Failed';
+        });
+    }
+
+    function toggleColumn(colId, isVisible) {
+        let cols = JSON.parse(localStorage.getItem('masterLeadsCols') || '{}');
+        cols[colId] = isVisible;
+        localStorage.setItem('masterLeadsCols', JSON.stringify(cols));
+        applyColumnVisibility();
+    }
+
+    function applyColumnVisibility() {
+        let cols = JSON.parse(localStorage.getItem('masterLeadsCols') || '{}');
+        const styleId = 'dynamic-col-styles';
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+        let css = '';
+        for (const [col, visible] of Object.entries(cols)) {
+            if (!visible) { css += `[data-col="${col}"] { display: none !important; }\n`; }
+            try {
+                const cb = document.querySelector(`input[onchange="toggleColumn('${col}', this.checked)"]`);
+                if (cb) cb.checked = visible;
+            } catch(e) {
+                console.error("Error setting checkbox for col selector:", col, e);
+            }
+        }
+        styleEl.innerHTML = css;
+    }
+
+    // SMART BACKGROUND POLLING FOR NEW LEADS
+    setInterval(async () => {
+        try {
+            const res = await fetch('/api/leads/unnotified');
+            if (res.ok) {
+                const newLeads = await res.json();
+                if (newLeads && newLeads.length > 0) {
+                    const details = newLeads.map(l => `• <a href="javascript:void(0)" onclick="Swal.close(); setTimeout(() => editLead(${l.id}), 200);" style="color:var(--accent); font-weight:700; text-decoration:underline;">${l.project_number && l.project_number !== 'Pending Details' ? l.project_number : 'New Lead'}: ${l.first_name || ''} ${l.last_name || ''}</a>`).join('<br>');
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'New Lead Assigned!',
+                        html: `<div style="text-align:left; font-size:13px; line-height:1.6;">You have been assigned ${newLeads.length} new lead(s). Click to view:<br><div style="margin-top:6px; font-size:12px; color:#1c3557;">${details}</div></div>`,
+                        showConfirmButton: false,
+                        timer: 10000,
+                        timerProgressBar: true
+                    });
+                    // Auto-refresh the leads table seamlessly
+                    if (typeof load === 'function') load();
+                }
+            }
+        } catch(e) {}
+    }, 15000); // Checks silently every 15 seconds
+
+    window.onload = function() { 
+        if(typeof google==='object') initAutocomplete(); 
+        restoreStateFromURL();
+        load(); 
+        applyColumnVisibility();
+    };
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

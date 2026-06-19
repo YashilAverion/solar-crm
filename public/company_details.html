@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Details - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== COMPONENTS & ACTIONS ========== */
+        .cb-col { width: 36px; text-align: center; }
+        input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
+        
+        /* Action Buttons Grid (Max 3 columns to save space) */
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        /* ========== AUTOCOMPLETE ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 240px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 10px; display: none; padding: 6px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary); }
+        .ac-type-tag { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 10px; margin-left: auto; border: 1px solid var(--border); }
+        .ac-hl { color: var(--primary); font-weight: 700; text-decoration: underline; text-decoration-color: #c7d2fe; text-decoration-thickness: 2px; }
+        .ac-empty { padding: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; }
+
+        /* ========== HISTORY & SWEETALERT ========== */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+
+        /* ========== MODALS & FORMS ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 500px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .modal-lg { max-width: 900px !important; }
+        .modal-sm { max-width: 420px !important; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .field { display: flex; flex-direction: column; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; outline: none; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .input-group { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); height: 32px; transition: all 0.2s; }
+        .input-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .country-code { background: #f4f6f9; padding: 0 10px; border-right: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; height: 100%; white-space: nowrap; }
+        .input-group input[type="text"] { border: none !important; box-shadow: none !important; height: 100%; border-radius: 0; flex: 1; padding: 0 10px; font-size: 13px; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: 1 / -1; }
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-bottom: none; border-top: 1px solid var(--border); grid-column: 1 / -1; gap: 8px; }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        
+        .pac-container { z-index: 9999 !important; border-radius: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; font-family: 'Inter', sans-serif !important; }
+
+        /* ========== STRICT GLOBAL UI RULES ========== */
+        /* Resizable Columns, Wrapped Headers, Strict Dark Font Color */
+        table th {
+            position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px);
+            border-bottom: 2px solid var(--border); border-right: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 0.4px;
+            color: #212529 !important; font-weight: 500 !important; font-size: 11px !important;
+            text-align: center !important; vertical-align: middle !important;
+            padding: 4px 8px !important; line-height: 1.3; z-index: 10;
+            resize: horizontal; overflow: auto;
+            white-space: normal !important; word-wrap: break-word; max-width: 150px; min-width: 70px;
+            cursor: pointer; user-select: none;
+        }
+        table th:hover { background: #f1f5f9; }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+    table td { color: #212529 !important; font-weight: 500 !important; text-align: center !important; vertical-align: middle !important; font-size: 13px !important; border-bottom: 1px solid #f1f5f9; padding: 4px 8px !important; background: var(--surface); }
+    table td span:not(.status-badge):not(.proj-pending):not(.proj-num):not(.age-pill), table td div:not(.actions-cell) { text-align: inherit !important; color: inherit; font-weight: inherit; font-size: inherit; }
+        table td .act-btn {
+            color: #212529 !important;
+            font-weight: 700 !important;
+        }
+        table tbody tr:hover td { background: #f8fafc; }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Company Details</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalCompanySearch" placeholder="Search company, trading name, ABN..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDropdown"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="bulkDeleteCompanies()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn btn-add" onclick="openAddCompanyModal()">+ Add Company</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Companies</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">All registered</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Commercial</div>
+            <div class="stat-val" id="statCommercial">0</div>
+            <div class="stat-sub">B2B Clients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Residential</div>
+            <div class="stat-val" id="statResidential">0</div>
+            <div class="stat-sub">B2C Clients</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-col"><input type="checkbox" id="selectAll" onclick="toggleAllCheckboxes(this)"></th>
+                        <th onclick="sortData('comp_type')">Type <span class="sort-arrow" id="sort_comp_type"></span></th>
+                    <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('comp_name')"><div>Company Name /</div><div>Trading Name</div> <span class="sort-arrow" id="sort_comp_name"></span></th>
+                    <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('comp_first_name')">Client Name <span class="sort-arrow" id="sort_comp_first_name"></span></th>
+                    <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('comp_email_1')">Email ID <span class="sort-arrow" id="sort_comp_email_1"></span></th>
+                        <th onclick="sortData('comp_phone')">Phone No. <span class="sort-arrow" id="sort_comp_phone"></span></th>
+                    <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('comp_address')">Billing Address <span class="sort-arrow" id="sort_comp_address"></span></th>
+                        <th onclick="sortData('comp_abn')">ABN <span class="sort-arrow" id="sort_comp_abn"></span></th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="companyBody">
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-footer">
+            <div class="pf-left">
+                <span class="pf-label">Show:</span>
+                <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                    <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                </select>
+                <span class="total-badge">Total: <span id="totalRecordsCount">0</span></span>
+            </div>
+            <div class="pf-right">
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+                <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="addCompanyModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('addCompanyModal').style.display='none'">✕</button>
+        <div class="modal-title">Add New Company</div>
+        <form id="companyForm" onsubmit="saveCompany(event)">
+            <input type="hidden" id="edit_id" value="">
+            <div class="form-grid">
+                <div class="section-divider">Company Details</div>
+                <div class="field"><label>Type</label>
+                    <select id="comp_type"><option>Commercial</option><option>Residential</option></select>
+                </div>
+                <div class="field"><label>Company Name (as per ABN)</label><input type="text" id="comp_name"></div>
+                <div class="field"><label>Trading Name</label><input type="text" id="comp_trading"></div>
+                <div class="field"><label>ABN</label><input type="text" id="comp_abn"></div>
+                <div class="field"><label>ACN</label><input type="text" id="comp_acn"></div>
+                <div class="field"><label>Website</label><input type="text" id="comp_website"></div>
+                <div class="field"><label>First Name</label><input type="text" id="comp_first_name"></div>
+                <div class="field"><label>Last Name</label><input type="text" id="comp_last_name"></div>
+                <div class="field"><label>Email ID 1</label><input type="text" id="comp_email_1"></div>
+                <div class="field"><label>Email ID 2</label><input type="text" id="comp_email_2"></div>
+                <div class="field"><label>Phone Number</label>
+                    <div class="input-group"><span class="country-code">+61</span><input type="text" id="comp_phone" placeholder="4xx xxx xxx"></div>
+                </div>
+                <div></div>
+                
+                <div class="section-divider">Billing Address</div>
+                <div class="field full-width"><label>Billing Address (Google Search)</label><input type="text" id="comp_google_address" placeholder="Type address to auto-fill..."></div>
+                <div class="field"><label>Unit Number</label><input type="text" id="comp_unit_number"></div>
+                <div class="field"><label>Lot Number</label><input type="text" id="comp_lot_number"></div>
+                <div class="field"><label>Street Type</label><input type="text" id="comp_street_type"></div>
+                <div class="field"><label>Address</label><input type="text" id="comp_address"></div>
+                <div class="field"><label>Suburb</label><input type="text" id="comp_suburb"></div>
+                <div class="field"><label>State</label><input type="text" id="comp_state"></div>
+                <div class="field"><label>Postcode</label><input type="text" id="comp_postcode"></div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveCompanyBtn">Save Company</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Company History</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<script>
+    let allCompaniesData = [];
+    let globalCompanySearchTerm = '';
+    let currentSortCol = '';
+    let isSortAsc = true;
+    let currentPage = 1;
+    let rowsPerPage = 30;
+
+    function bindGoogleAutocomplete(inputId, prefix) {
+        const ai = document.getElementById(inputId);
+        if (!ai) return;
+        
+        // Prevent form submission on Enter key
+        ai.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        const ac = new google.maps.places.Autocomplete(ai, {types: ['address'], componentRestrictions: {country: 'au'}});
+        
+        ac.addListener('place_changed', function() {
+            const place = ac.getPlace(); 
+            if (!place || !place.address_components) return;
+            
+            [`${prefix}unit_number`, `${prefix}address`, `${prefix}suburb`, `${prefix}state`, `${prefix}postcode`, `${prefix}street_type`, `${prefix}lot_number`].forEach(id => { 
+                const el = document.getElementById(id); 
+                if(el) el.value = ''; 
+            });
+            
+            let sn = '', street = '', unit = '';
+            place.address_components.forEach(c => {
+                if (c.types.includes('subpremise')) unit = c.long_name;
+                if (c.types.includes('street_number')) { 
+                    if(c.long_name.includes('/')) { 
+                        const p = c.long_name.split('/'); 
+                        unit = p[0]; sn = p[1]; 
+                    } else { sn = c.long_name; }
+                }
+                if (c.types.includes('route')) { street = c.long_name; document.getElementById(`${prefix}street_type`).value = c.long_name.split(' ').pop(); }
+                if (c.types.includes('locality')) document.getElementById(`${prefix}suburb`).value = c.long_name;
+                if (c.types.includes('administrative_area_level_1')) document.getElementById(`${prefix}state`).value = c.short_name;
+                if (c.types.includes('postal_code')) document.getElementById(`${prefix}postcode`).value = c.long_name;
+            });
+        document.getElementById(`${prefix}unit_number`).value = unit;
+        document.getElementById(`${prefix}address`).value = `${sn} ${street}`.trim();
+        });
+    }
+
+    function initAutocomplete() {
+        bindGoogleAutocomplete('comp_google_address', 'comp_');
+    }
+
+    // Dynamic Search & Autocomplete
+    const gsi = document.getElementById('globalCompanySearch');
+    const gsd = document.getElementById('globalSearchDropdown');
+    
+    let globalCompanySearchTimeout;
+    gsi.addEventListener('input', function() {
+        clearTimeout(globalCompanySearchTimeout);
+        const val = this.value.trim();
+        
+        globalCompanySearchTimeout = setTimeout(async () => {
+            globalCompanySearchTerm = val.toLowerCase();
+            currentPage = 1;
+            
+            if (val.length < 1) { gsd.style.display = 'none'; renderTable(); return; }
+            
+            try {
+                const res = await fetch(`/companies/search?q=${encodeURIComponent(val)}`);
+                const suggestions = await res.json();
+                
+                gsd.innerHTML = '';
+                if (!suggestions.length) { 
+                    gsd.innerHTML = `<li class="ac-empty">No results found</li>`; 
+                    gsd.style.display = 'block'; 
+                    loadCompanies(); return; 
+                }
+                
+                suggestions.forEach(s => {
+                    const li = document.createElement('li');
+                    const label = s.comp_name || s.comp_trading || s.comp_phone;
+                    li.innerHTML = `<span>🏢</span><span>${label}</span><span class="ac-type-tag">${s.comp_abn || ''}</span>`;
+                    li.addEventListener('mousedown', e => { 
+                        e.preventDefault(); gsi.value = label; 
+                        globalCompanySearchTerm = label.toLowerCase(); 
+                        gsd.style.display = 'none'; currentPage = 1; loadCompanies(); 
+                    });
+                    gsd.appendChild(li);
+                });
+                gsd.style.display = 'block'; 
+            } catch (e) {}
+        }, 400);
+    });
+
+    gsi.addEventListener('blur', () => setTimeout(() => { gsd.style.display = 'none'; }, 200));
+    gsi.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); gsd.style.display = 'none'; loadCompanies(); } });
+    function escRx(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // Core Data Fetch & Rendering
+    async function loadCompanies() {
+        const params = new URLSearchParams({
+            page: currentPage,
+            limit: rowsPerPage,
+            sort: currentSortCol || 'id',
+            order: isSortAsc ? 'ASC' : 'DESC'
+        });
+        if (globalCompanySearchTerm) params.append('search', globalCompanySearchTerm);
+
+        try {
+            const res = await fetch('/companies?' + params.toString());
+            if (res.ok) {
+                const result = await res.json();
+                if (Array.isArray(result)) {
+                    allCompaniesData = result;
+                    totalRecords = result.length;
+                } else {
+                    allCompaniesData = result.data || [];
+                    totalRecords = result.total || 0;
+                }
+            } else {
+                allCompaniesData = [];
+                totalRecords = 0;
+            }
+        } catch(err) {
+            console.error("Failed to fetch companies:", err);
+            allCompaniesData = [];
+            totalRecords = 0;
+        }
+        updateCompanyDashboard();
+        renderTable();
+    }
+
+    function updateCompanyDashboard() {
+        document.getElementById('statTotal').innerText = totalRecords;
+        // Note: For Server-Side pagination, we rely on the DB to return total count.
+        // The Commercial/Residential split counts can be added later via a dedicated stats endpoint.
+    }
+
+    function sortData(column, keepDir=false) {
+        if (!keepDir) { if (currentSortCol === column) isSortAsc = !isSortAsc; else { currentSortCol = column; isSortAsc = true; } }
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        if (document.getElementById(`sort_${column}`)) document.getElementById(`sort_${column}`).innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1;
+        loadCompanies();
+    }
+
+    function renderTable() {
+        const body = document.getElementById('companyBody');
+        body.innerHTML = '';
+        
+        const visible = allCompaniesData;
+        const totalRecordsEl = document.getElementById('totalRecordsCount');
+        if (totalRecordsEl) totalRecordsEl.innerText = totalRecords;
+
+        const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        
+        let htmlString = '';
+        visible.forEach(c => {
+            const compName = c.comp_name || '-';
+            const mergedName = (c.comp_trading && c.comp_trading.trim() !== '') ? `<div>${compName}</div><div>${c.comp_trading}</div>` : compName;
+            const mergedContact = `${c.comp_first_name || ''} ${c.comp_last_name || ''}`.trim() || '-';
+            const mergedAddress = `${c.comp_unit_number ? c.comp_unit_number + ' ' : ''}${c.comp_address || ''}, ${c.comp_suburb || ''} ${c.comp_state || ''} ${c.comp_postcode || ''}`.trim() || '-';
+            
+            htmlString += `
+                <tr>
+                    <td class="cb-col"><input type="checkbox" class="row-cb" value="${c.id}" onclick="updateBulkDeleteBtn()"></td>
+                    <td>${c.comp_type || 'Commercial'}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${mergedName}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${mergedContact}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${c.comp_email_1 || '-'}</td>
+                    <td>${c.comp_phone || '-'}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${mergedAddress}</td>
+                    <td>${c.comp_abn || '-'}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="act-btn" title="Edit Company" onclick="editCompany(${c.id})">✏️</button>
+                            <button class="act-btn" title="History" onclick="viewHistory(${c.id})">🕒</button>
+                            <button class="act-btn act-btn-del" title="Delete" onclick="deleteCompany(${c.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        body.innerHTML = htmlString;
+        document.getElementById('selectAll').checked = false;
+        updateBulkDeleteBtn();
+
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        if (pageInfo) pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages || totalPages === 0;
+    }
+
+    function changeRowsPerPage() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); currentPage = 1; loadCompanies(); }
+    function prevPage() { if (currentPage > 1) { currentPage--; loadCompanies(); } }
+    function nextPage() { currentPage++; loadCompanies(); }
+
+    // Actions
+    function openAddCompanyModal() {
+        document.getElementById('companyForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.querySelector('.modal-title').innerText = 'Add New Company';
+        document.getElementById('saveCompanyBtn').innerText = 'Save Company';
+        document.getElementById('addCompanyModal').style.display = 'flex';
+    }
+
+    function editCompany(id) {
+        const c = allCompaniesData.find(x => x.id === id);
+        if (!c) return;
+        document.getElementById('companyForm').reset();
+        document.getElementById('edit_id').value = c.id;
+        document.querySelector('.modal-title').innerText = 'Edit Company Details';
+        document.getElementById('saveCompanyBtn').innerText = 'Update Company';
+        
+        ['comp_type', 'comp_name', 'comp_trading', 'comp_abn', 'comp_acn', 'comp_website', 'comp_first_name', 'comp_last_name', 'comp_email_1', 'comp_email_2', 'comp_phone', 'comp_google_address', 'comp_unit_number', 'comp_lot_number', 'comp_street_type', 'comp_address', 'comp_suburb', 'comp_state', 'comp_postcode'].forEach(fid => {
+            const el = document.getElementById(fid);
+            if (el) el.value = c[fid] || '';
+        });
+        
+        document.getElementById('addCompanyModal').style.display = 'flex';
+    }
+
+    async function saveCompany(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('saveCompanyBtn');
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        
+        const editIdVal = document.getElementById('edit_id').value;
+        const isEdit = !!editIdVal;
+        const currentId = parseInt(editIdVal);
+        const abnValue = document.getElementById('comp_abn').value.trim();
+
+        // ABN Duplicate Check Logic
+        if (abnValue) {
+            const isDuplicate = allCompaniesData.some(c => 
+                c.comp_abn && 
+                c.comp_abn.replace(/\s+/g, '') === abnValue.replace(/\s+/g, '') && 
+                (!isEdit || parseInt(c.id) !== currentId)
+            );
+
+            if (isDuplicate) {
+                btn.disabled = false;
+                btn.innerText = isEdit ? 'Update Company' : 'Save Company';
+                Swal.fire('Duplicate ABN', 'A company with this ABN already exists in the system.', 'warning');
+                return;
+            }
+        }
+
+        const url = isEdit ? `/companies/${editIdVal}` : '/companies';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const userNode = document.querySelector('.sb-uname');
+        const data = { currentUser: userNode ? userNode.innerText : 'System' };
+        ['comp_type', 'comp_name', 'comp_trading', 'comp_abn', 'comp_acn', 'comp_website', 'comp_first_name', 'comp_last_name', 'comp_email_1', 'comp_email_2', 'comp_phone', 'comp_google_address', 'comp_unit_number', 'comp_lot_number', 'comp_street_type', 'comp_address', 'comp_suburb', 'comp_state', 'comp_postcode'].forEach(fid => {
+            data[fid] = document.getElementById(fid)?.value || '';
+        });
+        
+        try {
+            const res = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            if (res.ok) {
+                Swal.fire('Saved!', isEdit ? 'Company updated successfully.' : 'Company saved successfully.', 'success');
+                document.getElementById('addCompanyModal').style.display = 'none';
+                loadCompanies();
+            } else {
+                let errorMsg = 'Failed to save company details.';
+                try {
+                    const errData = await res.json();
+                    if (errData.error) errorMsg = errData.error;
+                    else if (res.status === 404) errorMsg = 'Backend route not found. Please restart your Node.js server!';
+                } catch (e) {}
+                
+                Swal.fire('Error', errorMsg, 'error');
+            }
+        } catch (err) {
+            console.error('Error saving company:', err);
+            Swal.fire('Error', 'A network error occurred.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = isEdit ? 'Update Company' : 'Save Company';
+        }
+    }
+
+    async function deleteCompany(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?',
+            text: "This will remove the company from the database.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete it!'
+        });
+        
+        if (!isConfirmed) return;
+        
+        const userNode = document.querySelector('.sb-uname');
+        const currentUser = userNode ? userNode.innerText : 'System';
+        
+        try {
+            const res = await fetch(`/companies/${id}?currentUser=${encodeURIComponent(currentUser)}`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser })
+            });
+            if (res.ok) {
+                Swal.fire('Deleted!', 'Company has been deleted.', 'success');
+                loadCompanies();
+            } else {
+                Swal.fire('Error', 'Failed to delete company.', 'error');
+            }
+        } catch (err) {
+            console.error('Error deleting company:', err);
+            Swal.fire('Error', 'A network error occurred.', 'error');
+        }
+    }
+
+    async function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<li class="history-item"><div class="history-detail">Loading history...</div></li>';
+        document.getElementById('historyModal').style.display = 'flex';
+        
+        try {
+            const res = await fetch(`/companies/${id}/history`);
+            if (res.ok) {
+                const hist = await res.json();
+                body.innerHTML = hist.map(h => `
+                    <li class="history-item">
+                        <div class="history-date">${h.created_at} — ${h.user_name || 'System'}</div>
+                        <div class="history-action">${h.action}</div>
+                        <div class="history-detail">${h.details}</div>
+                    </li>
+                `).join('');
+                if (!hist.length) body.innerHTML = '<li class="history-item"><div class="history-detail">No history found.</div></li>';
+            } else {
+                body.innerHTML = '<li class="history-item"><div class="history-detail">Failed to load history.</div></li>';
+            }
+        } catch (err) {
+            body.innerHTML = '<li class="history-item"><div class="history-detail">Network error loading history.</div></li>';
+        }
+    }
+
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-cb');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-cb:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        const selCount = document.getElementById('selCount');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            selCount.innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const totalCount = document.querySelectorAll('.row-cb').length;
+        const master = document.getElementById('selectAll');
+        if (master) master.checked = totalCount > 0 && checkedCount === totalCount;
+    }
+
+    async function bulkDeleteCompanies() {
+        const checkedBoxes = document.querySelectorAll('.row-cb:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        const { isConfirmed } = await Swal.fire({ title: 'Are you sure?', text: `This will permanently delete ${checkedBoxes.length} selected companies.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#c53030', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete them!' });
+        if (!isConfirmed) return;
+        
+        const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+        const userNode = document.querySelector('.sb-uname');
+        const currentUser = userNode ? userNode.innerText : 'System';
+        try {
+            const res = await fetch('/companies/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: idsToDelete, currentUser }) });
+            if (res.ok) { document.getElementById('selectAll').checked = false; updateBulkDeleteBtn(); Swal.fire('Deleted!', 'Selected companies removed.', 'success'); loadCompanies(); }
+            else { const err = await res.json(); Swal.fire('Error', err.error || 'Failed to delete companies.', 'error'); }
+        } catch (e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    window.onload = function() {
+        loadCompanies();
+        if (typeof google === 'object' && typeof google.maps === 'object') {
+            initAutocomplete();
+        }
+    };
+
+    function toggleNav(event, element) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const subMenu = element.nextElementSibling;
+        if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+        
+        const icon = element.querySelector('.toggle-icon');
+        const isCurrentlyOpen = subMenu.style.display === 'block';
+
+        // Close all sibling sub-menus
+        const parent = element.parentElement;
+        const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+        const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+        
+        siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+        siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+        // Toggle current
+        if (!isCurrentlyOpen) {
+            subMenu.style.display = 'block';
+            if (icon) icon.innerText = '▲';
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname;
+        
+        document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+            const href = el.getAttribute('href');
+            if (!href || href === '#') return;
+            
+            const target = el.getAttribute('data-target') || href;
+            let isMatch = false;
+            
+            // Exact check: This matches the URL and opens the correct dropdown automatically
+            if ((target === 'company-details' || href === '/company_details.html') && currentPath.includes('company_details.html')) {
+                isMatch = true;
+            } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+                isMatch = true;
+            }
+
+            if (isMatch) {
+                el.classList.add('active-menu');
+                let parentSub = el.closest('.sub-menu');
+                
+                // Loop through parent elements to open them automatically
+                while (parentSub) {
+                    parentSub.style.display = 'block';
+                    const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                    if (toggleIcon) toggleIcon.innerText = '▲';
+                    parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+                }
+            }
+            
+            // Standard Link Navigation
+            el.addEventListener('click', function(e) {
+                if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                    e.preventDefault();
+                    return;
+                }
+                e.preventDefault();
+                const targetHref = this.getAttribute('href');
+                const isSamePage = window.location.pathname === targetHref;
+                if (isSamePage) {
+                    window.location.reload();
+                } else {
+                    window.location.href = targetHref;
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+<script src="/australian-timezones.js"></script>
+</body>
+</html>

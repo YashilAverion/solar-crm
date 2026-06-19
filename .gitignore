@@ -1,0 +1,4 @@
+node_modules/
+*.db
+solar_crm.db
+.env

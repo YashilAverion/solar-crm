@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Combo Master - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ========== TOPBAR ========== */
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); transition: all 0.2s; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== CONTENT AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 10px 16px; display: flex; flex-direction: column; min-height: 0; }
+
+        /* ========== TABLE & LISTS ========== */
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        thead th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 8px 12px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-align: left; vertical-align: middle; z-index: 10; height: 36px; }
+        tbody tr { transition: all 0.15s; }
+        tbody tr td { border-bottom: 1px solid #f1f5f9; padding: 10px 12px; font-size: 13px; font-weight: 600; color: var(--text-dark); vertical-align: top; }
+        tbody tr:hover td { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: none; }
+        
+        .stock-code { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--primary); background: #eef2f8; padding: 2px 6px; border-radius: 4px; border: 1px solid #c5d3e8; display: inline-block; }
+        
+        /* Nesting for variants */
+        .variants-nest-table { width: 100%; margin-top: 6px; border: 1px solid var(--border); border-radius: 6px; border-spacing: 0; border-collapse: separate; background: #fafbfc; }
+        .variants-nest-table th { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); background: #f1f5f9; border-right: 1px solid var(--border); text-align: center; }
+        .variants-nest-table th:last-child { border-right: none; }
+        .variants-nest-table td { padding: 4px 8px !important; font-size: 11px !important; text-align: center !important; font-weight: 600 !important; border-bottom: 1px solid #e2e8f0 !important; border-right: 1px solid #e2e8f0; }
+        .variants-nest-table td:last-child { border-right: none; }
+        .variants-nest-table tr:last-child td { border-bottom: none !important; }
+
+        /* ========== ACTION BUTTONS ========== */
+        .actions-cell { display: flex; gap: 6px; justify-content: flex-start; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; height: 26px; width: 26px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; transition: all 0.2s; color: var(--text-muted); }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        /* ========== MODAL ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 950px; border-radius: 12px; position: relative; max-height: 92vh; overflow-y: auto; margin: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px; margin-bottom: 8px; }
+        .field { display: flex; flex-direction: column; position: relative; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .required-star::after { content: " *"; color: #b93a20; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 12px 0 6px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: span 3; display: flex; align-items: center; }
+
+        /* ========== AUTOCOMPLETE DROPDOWN ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 200px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; display: none; padding: 4px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 12px; color: var(--text-dark); transition: background 0.15s; border-bottom: 1px solid #f1f5f9; }
+        .ac-drop li:last-child { border-bottom: none; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary); }
+        .ac-drop li.ac-highlighted { background: #eef2f8; color: var(--primary); font-weight: 700; }
+
+        /* ========== BUNDLED VARIANTS BUILDER ========== */
+        .variants-builder-section { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 8px; }
+        .vb-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .vb-row { display: grid; grid-template-columns: 2fr 1.8fr 1fr 1fr 1fr 1.2fr 1.2fr 36px; gap: 8px; margin-bottom: 8px; align-items: end; }
+        .vb-header { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: grid; grid-template-columns: 2fr 1.8fr 1fr 1fr 1fr 1.2fr 1.2fr 36px; gap: 8px; padding: 0 4px; }
+        .vb-row input { padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 12px; }
+        .vb-row input:focus { border-color: var(--primary); outline: none; }
+        .vb-row input[readonly] { background: #f1f5f9; color: var(--text-muted); border-style: dashed; }
+        .remove-btn { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; border-radius: 6px; height: 32px; width: 100%; cursor: pointer; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .remove-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .add-row-btn { background: var(--surface); color: var(--primary); border: 1px dashed var(--primary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-top: 4px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .add-row-btn:hover { background: #eef2ff; }
+
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: flex; align-items: center; gap: 6px; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Combo Master</div>
+        <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="Search combo groups..." oninput="filterCombosTable()">
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn btn-add" onclick="openComboModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Combo Group
+        </button>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table id="combosTable">
+                <thead>
+                    <tr>
+                        <th style="width: 250px;">Combo Name</th>
+                        <th>Description</th>
+                        <th>Panel Component</th>
+                        <th>Inverter Component</th>
+                        <th>Battery Component</th>
+                        <th style="width: 450px;">Configured Pricing Variants</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="combosTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading combos data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit Combo Modal -->
+<div id="comboModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeComboModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="modal-title" id="modalTitle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Product Combo Builder</span>
+        </div>
+        <form id="comboForm" onsubmit="saveCombo(event)">
+            <input type="hidden" id="combo_group_id">
+            
+            <div class="form-grid">
+                <div class="section-divider" style="display: flex; justify-content: space-between; align-items: center; grid-column: span 3;">
+                    <span>Combo Group Definition</span>
+                    <div class="combo-type-ticks" style="display: flex; gap: 16px; align-items: center;">
+                        <label class="tick-label" title="Panel + Inverter Combo" style="cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                            <input type="checkbox" id="is_panel_inverter" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);">
+                            <svg class="tick-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
+                                <rect x="2" y="2" width="8" height="12" rx="1"></rect>
+                                <line x1="2" y1="6" x2="10" y2="6"></line>
+                                <line x1="2" y1="10" x2="10" y2="10"></line>
+                                <line x1="6" y1="2" x2="6" y2="14"></line>
+                                <rect x="14" y="6" width="8" height="12" rx="1"></rect>
+                                <path d="M16 12h4"></path>
+                                <path d="M17 10v4"></path>
+                                <path d="M11 8h2" stroke-width="1.5"></path>
+                            </svg>
+                        </label>
+                        <label class="tick-label" title="Inverter + Battery Combo" style="cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                            <input type="checkbox" id="is_inverter_battery" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);">
+                            <svg class="tick-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
+                                <rect x="2" y="6" width="8" height="12" rx="1"></rect>
+                                <path d="M4 12h4"></path>
+                                <rect x="14" y="3" width="8" height="16" rx="1.5"></rect>
+                                <line x1="16" y1="2" x2="20" y2="2"></line>
+                                <line x1="14" y1="8" x2="22" y2="8"></line>
+                                <line x1="14" y1="14" x2="22" y2="14"></line>
+                                <path d="M11 11h2" stroke-width="1.5"></path>
+                            </svg>
+                        </label>
+                        <label class="tick-label" title="Panel + Inverter + Battery Combo" style="cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                            <input type="checkbox" id="is_panel_inverter_battery" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);">
+                            <svg class="tick-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
+                                <rect x="2" y="2" width="7" height="9" rx="0.5"></rect>
+                                <line x1="2" y1="5" x2="9" y2="5"></line>
+                                <line x1="2" y1="8" x2="9" y2="8"></line>
+                                <line x1="5.5" y1="2" x2="5.5" y2="11"></line>
+                                <rect x="14" y="2" width="8" height="9" rx="0.5"></rect>
+                                <path d="M16 6.5h4"></path>
+                                <rect x="8" y="14" width="8" height="9" rx="1"></rect>
+                                <line x1="10" y1="13" x2="14" y2="13"></line>
+                                <line x1="8" y1="17" x2="16" y2="17"></line>
+                                <line x1="8" y1="20" x2="16" y2="20"></line>
+                            </svg>
+                        </label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="required-star">Combo Name</label>
+                    <input type="text" id="group_name" placeholder="e.g. Starter Pack 6.6kW" required>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Description / Notes</label>
+                    <input type="text" id="description" placeholder="Brief description of the package bundle">
+                </div>
+                
+                <div class="section-divider">Base Components Selector (From Product Master)</div>
+                <div class="field">
+                    <label>Solar Panel Component</label>
+                    <div class="ac-wrap">
+                        <input type="text" id="comp_panel_display" placeholder="Search panel in Product Master...">
+                        <input type="hidden" id="comp_panel_code">
+                        <ul class="ac-drop" id="panel_ac_drop"></ul>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Inverter Type</label>
+                    <select id="inverter_type_filter" onchange="onInverterFilterChange()">
+                        <option value="">Any Type</option>
+                        <option value="Grid Inverter">Grid Inverter</option>
+                        <option value="Hybrid Inverter">Hybrid Inverter</option>
+                        <option value="Battery Inverter">Battery Inverter</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Inverter Phase</label>
+                    <select id="inverter_phase_filter" onchange="onInverterFilterChange()">
+                        <option value="">Any Phase</option>
+                        <option value="Single Phase">Single Phase</option>
+                        <option value="Three Phase">Three Phase</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Inverter Component</label>
+                    <div class="ac-wrap">
+                        <input type="text" id="comp_inverter_display" placeholder="Search inverter in Product Master...">
+                        <input type="hidden" id="comp_inverter_code">
+                        <ul class="ac-drop" id="inverter_ac_drop"></ul>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Battery Component (Optional)</label>
+                    <div class="ac-wrap">
+                        <input type="text" id="comp_battery_display" placeholder="Search battery (optional)...">
+                        <input type="hidden" id="comp_battery_code">
+                        <ul class="ac-drop" id="battery_ac_drop"></ul>
+                    </div>
+                </div>
+                <div class="field">
+                    <!-- empty spacer -->
+                </div>
+            </div>
+
+            <div class="variants-builder-section">
+                <div class="vb-title">Pricing & Quantity Combo Variants</div>
+                <div class="vb-header">
+                    <span>Variant Name (label)</span>
+                    <span>Stock Code (must be unique)</span>
+                    <span>Panel Qty</span>
+                    <span>Inverter Qty</span>
+                    <span>Battery Qty</span>
+                    <span>Price (Inc GST)</span>
+                    <span>Price (Ex GST)</span>
+                    <span></span>
+                </div>
+                <div id="variantsContainer"></div>
+                <button type="button" class="add-row-btn" onclick="addVariantRow()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Row
+                </button>
+            </div>
+
+            <div class="form-footer">
+                <button type="submit" class="btn-save">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Save Combo Configuration
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/crm-autosave-toast.js"></script>
+<script>
+    let allProducts = [];
+    let allCombos = [];
+    let nextStockCodeNum = 1001;
+
+    // --- NAVIGATION CONTROL ---
+    function toggleNav(event, element) {
+        event.preventDefault();
+        event.stopPropagation();
+        const subMenu = element.nextElementSibling;
+        if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+        const icon = element.querySelector('.toggle-icon');
+        const isCurrentlyOpen = subMenu.style.display === 'block';
+
+        const parent = element.parentElement;
+        parent.querySelectorAll('.sub-menu').forEach(menu => { menu.style.display = 'none'; });
+        parent.querySelectorAll('.menu-item .toggle-icon').forEach(i => i.innerText = '▼');
+
+        if (!isCurrentlyOpen) {
+            subMenu.style.display = 'block';
+            if (icon) icon.innerText = '▲';
+        }
+    }
+
+    // --- ON INITIAL LOAD ---
+    window.addEventListener('load', async () => {
+        if (window.showAresLoader) window.showAresLoader(null, 'Initializing Combo Master...');
+        await fetchSidebarUserInfo();
+        await fetchActiveProducts();
+        await loadCombosData();
+        if (window.hideAresLoader) window.hideAresLoader();
+    });
+
+    // --- SIDEBAR USER INFO ---
+    async function fetchSidebarUserInfo() {
+        try {
+            const res = await fetch("/api/me");
+            if (res.ok) {
+                const user = await res.json();
+                const nameEl   = document.getElementById("sidebarName");
+                const roleEl   = document.getElementById("sidebarRole");
+                const avatarEl = document.getElementById("sidebarAvatar");
+                if (nameEl)   nameEl.innerText  = user.full_name || user.username;
+                if (roleEl)   roleEl.innerText  = user.role === "Manager" ? "Admin Access" : user.role;
+                if (avatarEl) avatarEl.innerText = (user.full_name || user.username).split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+            }
+        } catch(e) {}
+    }
+
+    // --- FETCH PRODUCTS & SETUP AUTOCOMPLETE ---
+    async function fetchActiveProducts() {
+        try {
+            const res = await fetch('/products');
+            if (res.ok) {
+                allProducts = await res.json();
+                setupAutocomplete('comp_panel_display', 'comp_panel_code', 'Panel', 'panel_ac_drop');
+                setupAutocomplete('comp_inverter_display', 'comp_inverter_code', 'Inverter', 'inverter_ac_drop');
+                setupAutocomplete('comp_battery_display', 'comp_battery_code', 'Battery', 'battery_ac_drop');
+            }
+        } catch (err) {
+            console.error('Error loading products for autocomplete:', err);
+        }
+    }
+
+    // Custom autocomplete builder
+    function setupAutocomplete(displayId, codeId, category, dropId) {
+        const input = document.getElementById(displayId);
+        const codeInput = document.getElementById(codeId);
+        const drop = document.getElementById(dropId);
+
+        if (!input || !drop) return;
+
+        function filterList() {
+            const val = input.value.trim().toLowerCase();
+            const filtered = allProducts.filter(p => {
+                if (p.product_category !== category) return false;
+                if (p.product_status === 'Deleted') return false;
+
+                // Add dynamic Inverter filters if category is Inverter
+                if (category === 'Inverter') {
+                    const typeFilter = document.getElementById('inverter_type_filter').value;
+                    const phaseFilter = document.getElementById('inverter_phase_filter').value;
+                    if (typeFilter && p.type_of_inverter !== typeFilter) return false;
+                    if (phaseFilter && p.no_of_phase !== phaseFilter) return false;
+                }
+
+                if (!val) return true;
+                return (p.prod_name || '').toLowerCase().includes(val) || 
+                       (p.model_number || '').toLowerCase().includes(val) || 
+                       (p.stock_code || '').toLowerCase().includes(val);
+            });
+
+            drop.innerHTML = '';
+            if (filtered.length === 0) {
+                drop.innerHTML = `<li class="ac-empty">No matching ${category}s found</li>`;
+            } else {
+                filtered.slice(0, 10).forEach((p, idx) => {
+                    const li = document.createElement('li');
+                    li.innerText = `[${p.stock_code}] ${p.prod_name} - ${p.model_number}`;
+                    li.onclick = () => {
+                        input.value = `[${p.stock_code}] ${p.prod_name} - ${p.model_number}`;
+                        codeInput.value = p.stock_code;
+                        drop.style.display = 'none';
+                        
+                        // Auto populate default variant rows if panel/inverter is selected
+                        updateVariantDefaultQtys();
+                    };
+                    drop.appendChild(li);
+                });
+            }
+            drop.style.display = 'block';
+        }
+
+        input.addEventListener('focus', filterList);
+        input.addEventListener('input', () => {
+            codeInput.value = ''; // Reset code if user types manually
+            filterList();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest(`#${displayId}`) && !e.target.closest(`#${dropId}`)) {
+                drop.style.display = 'none';
+                if (!codeInput.value) {
+                    input.value = '';
+                }
+            }
+        });
+    }
+
+    function onInverterFilterChange() {
+        // Clear current inverter inputs when filters change
+        document.getElementById('comp_inverter_display').value = '';
+        document.getElementById('comp_inverter_code').value = '';
+        
+        // Trigger a refresh/show of the autocomplete dropdown by focusing
+        const inverterInput = document.getElementById('comp_inverter_display');
+        inverterInput.focus();
+    }
+
+    function updateVariantDefaultQtys() {
+        const panelCode = document.getElementById('comp_panel_code').value;
+        const inverterCode = document.getElementById('comp_inverter_code').value;
+        const batteryCode = document.getElementById('comp_battery_code').value;
+
+        document.querySelectorAll('#variantsContainer .vb-row').forEach(row => {
+            const panelInput = row.querySelector('.var-panel-qty');
+            const inverterInput = row.querySelector('.var-inverter-qty');
+            const batteryInput = row.querySelector('.var-battery-qty');
+
+            if (panelInput && !panelInput.value) panelInput.value = panelCode ? "15" : "0";
+            if (inverterInput && !inverterInput.value) inverterInput.value = inverterCode ? "1" : "0";
+            if (batteryInput && !batteryInput.value) {
+                batteryInput.value = batteryCode ? "1" : "0";
+                if (!batteryCode) {
+                    batteryInput.readOnly = true;
+                } else {
+                    batteryInput.readOnly = false;
+                }
+            }
+        });
+    }
+
+    // --- FETCH NEXT STOCK CODE ---
+    async function fetchNextStockCode() {
+        try {
+            const res = await fetch('/api/combos/next-stock-code');
+            if (res.ok) {
+                const data = await res.json();
+                nextStockCodeNum = data.nextNum;
+            }
+        } catch (err) {
+            console.error('Error fetching next stock code:', err);
+        }
+    }
+
+    // --- LOAD COMBOS DATA ---
+    async function loadCombosData() {
+        try {
+            const res = await fetch('/combos');
+            if (res.ok) {
+                allCombos = await res.json();
+                renderCombosTable();
+            }
+        } catch (err) {
+            console.error('Error fetching combos list:', err);
+        }
+    }
+
+    function getProductDisplayName(stockCode) {
+        if (!stockCode) return '-';
+        const p = allProducts.find(prod => prod.stock_code === stockCode);
+        if (p) return `[${p.stock_code}] ${p.prod_name}`;
+        return stockCode;
+    }
+
+    function renderCombosTable() {
+        const tbody = document.getElementById('combosTableBody');
+        tbody.innerHTML = '';
+
+        if (allCombos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">No configured combos found. Click "+ Add Combo Group" to build your first pricing combo bundle.</td></tr>`;
+            return;
+        }
+
+        allCombos.forEach(g => {
+            // Generate nested table for variants
+            let variantsHtml = '';
+            if (g.variants && g.variants.length > 0) {
+                variantsHtml = `
+                    <table class="variants-nest-table">
+                        <thead>
+                            <tr>
+                                <th>Variant Name</th>
+                                <th>Stock Code</th>
+                                <th>Panel Qty</th>
+                                <th>Inverter Qty</th>
+                                <th>Battery Qty</th>
+                                <th>Price (Inc GST)</th>
+                                <th>Price (Ex GST)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${g.variants.map(v => `
+                                <tr>
+                                     <td>${v.variant_name}</td>
+                                     <td><span class="stock-code">${v.stock_code}</span></td>
+                                     <td>${v.panel_qty}</td>
+                                     <td>${v.inverter_qty}</td>
+                                     <td>${v.battery_qty}</td>
+                                     <td style="color: var(--accent); font-weight:700;">$${parseFloat(v.purchase_price).toFixed(2)}</td>
+                                     <td style="color: var(--text-muted);">$${parseFloat(v.purchase_price_ex_gst).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                variantsHtml = `<div style="font-size:11px; font-style:italic; color:var(--text-muted); margin-top:4px;">No configured variants</div>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 700; color: var(--primary); font-size: 14px;">${g.group_name}</div>
+                </td>
+                <td style="white-space: normal; word-break: break-word; font-weight: 500; font-size:12px; color: var(--text-muted); max-width: 250px;">
+                    ${g.description || '-'}
+                </td>
+                <td style="font-size:12px;">${getProductDisplayName(g.panel_stock_code)}</td>
+                <td style="font-size:12px;">${getProductDisplayName(g.inverter_stock_code)}</td>
+                <td style="font-size:12px;">${getProductDisplayName(g.battery_stock_code)}</td>
+                <td>${variantsHtml}</td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="act-btn" onclick="editCombo(${g.id})" title="Edit Combo Group"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                        <button class="act-btn act-btn-del" onclick="deleteCombo(${g.id})" title="Delete Combo Group"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterCombosTable() {
+        const val = document.getElementById('searchInput').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#combosTableBody > tr');
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(val)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // --- MODAL & VARIANTS CONTROLS ---
+    async function openComboModal(title = "Product Combo Builder") {
+        document.getElementById('modalTitle').querySelector('span').innerText = title;
+        document.getElementById('comboModal').style.display = 'flex';
+        document.getElementById('comboForm').reset();
+        document.getElementById('combo_group_id').value = '';
+        document.getElementById('is_panel_inverter').checked = false;
+        document.getElementById('is_inverter_battery').checked = false;
+        document.getElementById('is_panel_inverter_battery').checked = false;
+        document.getElementById('comp_panel_code').value = '';
+        document.getElementById('comp_panel_display').value = '';
+        document.getElementById('comp_inverter_code').value = '';
+        document.getElementById('comp_inverter_display').value = '';
+        document.getElementById('comp_battery_code').value = '';
+        document.getElementById('comp_battery_display').value = '';
+        document.getElementById('inverter_type_filter').value = '';
+        document.getElementById('inverter_phase_filter').value = '';
+
+        await fetchNextStockCode();
+
+        document.getElementById('variantsContainer').innerHTML = '';
+        addVariantRow(); // Add first default row
+    }
+
+    function closeComboModal() {
+        document.getElementById('comboModal').style.display = 'none';
+    }
+
+    function addVariantRow(v = null) {
+        const container = document.getElementById('variantsContainer');
+        const row = document.createElement('div');
+        row.className = 'vb-row';
+
+        const panelCode = document.getElementById('comp_panel_code').value;
+        const inverterCode = document.getElementById('comp_inverter_code').value;
+        const batteryCode = document.getElementById('comp_battery_code').value;
+
+        const pQty = v ? v.panel_qty : (panelCode ? "15" : "0");
+        const iQty = v ? v.inverter_qty : (inverterCode ? "1" : "0");
+        const bQty = v ? v.battery_qty : (batteryCode ? "1" : "0");
+        const priceInc = v ? parseFloat(v.purchase_price).toFixed(2) : "";
+        const priceEx = v ? parseFloat(v.purchase_price_ex_gst).toFixed(2) : "";
+        const varName = v ? v.variant_name : "";
+        const varCode = v ? v.stock_code : `CBO-${nextStockCodeNum++}`;
+
+        const batteryReadOnly = !batteryCode && !bQty ? "readonly" : "";
+
+        row.innerHTML = `
+            <div><input type="text" class="var-name" placeholder="Variant Label (e.g. Standard 6.6kW)" value="${varName}" required></div>
+            <div><input type="text" class="var-code" placeholder="Stock Code (e.g. CBO-001)" value="${varCode}" readonly required></div>
+            <div><input type="number" class="var-panel-qty" placeholder="Panel Qty" value="${pQty}" min="0" required></div>
+            <div><input type="number" class="var-inverter-qty" placeholder="Inv Qty" value="${iQty}" min="0" required></div>
+            <div><input type="number" class="var-battery-qty" placeholder="Bat Qty" value="${bQty}" min="0" ${batteryReadOnly} required></div>
+            <div><input type="number" class="var-price-inc" placeholder="Inc GST ($)" step="0.01" value="${priceInc}" oninput="calcExGst(this)" required></div>
+            <div><input type="number" class="var-price-ex" placeholder="Ex GST ($)" step="0.01" value="${priceEx}" oninput="calcIncGst(this)" required></div>
+            <div><button type="button" class="remove-btn" onclick="removeVariantRow(this)" title="Delete Row">&times;</button></div>
+        `;
+        container.appendChild(row);
+    }
+
+    function removeVariantRow(btn) {
+        const rows = document.querySelectorAll('#variantsContainer .vb-row');
+        if (rows.length <= 1) {
+            Swal.fire('Warning', 'At least one pricing variant is required.', 'warning');
+            return;
+        }
+        btn.closest('.vb-row').remove();
+    }
+
+    function calcExGst(input) {
+        const row = input.closest('.vb-row');
+        const exInput = row.querySelector('.var-price-ex');
+        const val = parseFloat(input.value) || 0;
+        if (val > 0) {
+            exInput.value = (val / 1.1).toFixed(2);
+        } else {
+            exInput.value = '';
+        }
+    }
+
+    function calcIncGst(input) {
+        const row = input.closest('.vb-row');
+        const incInput = row.querySelector('.var-price-inc');
+        const val = parseFloat(input.value) || 0;
+        if (val > 0) {
+            incInput.value = (val * 1.1).toFixed(2);
+        } else {
+            incInput.value = '';
+        }
+    }
+
+    // --- SAVE COMBO GROUP & VARIANTS ---
+    async function saveCombo(e) {
+        e.preventDefault();
+        
+        const groupId = document.getElementById('combo_group_id').value;
+        const group_name = document.getElementById('group_name').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const panel_stock_code = document.getElementById('comp_panel_code').value;
+        const inverter_stock_code = document.getElementById('comp_inverter_code').value;
+        const battery_stock_code = document.getElementById('comp_battery_code').value;
+        const is_panel_inverter = document.getElementById('is_panel_inverter').checked ? 1 : 0;
+        const is_inverter_battery = document.getElementById('is_inverter_battery').checked ? 1 : 0;
+        const is_panel_inverter_battery = document.getElementById('is_panel_inverter_battery').checked ? 1 : 0;
+
+        // Gather variant row items
+        const variants = [];
+        const variantRows = document.querySelectorAll('#variantsContainer .vb-row');
+        let codesSet = new Set();
+        let codeDuplicate = false;
+
+        for (let row of variantRows) {
+            const name = row.querySelector('.var-name').value.trim();
+            const code = row.querySelector('.var-code').value.trim();
+            const pQty = parseInt(row.querySelector('.var-panel-qty').value) || 0;
+            const iQty = parseInt(row.querySelector('.var-inverter-qty').value) || 0;
+            const bQty = parseInt(row.querySelector('.var-battery-qty').value) || 0;
+            const priceInc = parseFloat(row.querySelector('.var-price-inc').value) || 0;
+            const priceEx = parseFloat(row.querySelector('.var-price-ex').value) || 0;
+
+            if (codesSet.has(code)) {
+                codeDuplicate = true;
+            }
+            codesSet.add(code);
+
+            variants.push({
+                variant_name: name,
+                stock_code: code,
+                panel_qty: pQty,
+                inverter_qty: iQty,
+                battery_qty: bQty,
+                purchase_price: priceInc,
+                purchase_price_ex_gst: priceEx
+            });
+        }
+
+        if (codeDuplicate) {
+            Swal.fire('Validation Error', 'Variant stock codes must be unique.', 'error');
+            return;
+        }
+
+        const payload = { 
+            group_name, 
+            description, 
+            panel_stock_code, 
+            inverter_stock_code, 
+            battery_stock_code, 
+            variants,
+            is_panel_inverter,
+            is_inverter_battery,
+            is_panel_inverter_battery
+        };
+
+        if (window.showAresLoader) window.showAresLoader(null, 'Saving Combo configuration...');
+
+        try {
+            const url = groupId ? `/combos/${groupId}` : '/combos';
+            const method = groupId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (window.hideAresLoader) window.hideAresLoader();
+
+            if (res.ok) {
+                closeComboModal();
+                Swal.fire('Success', 'Combo configuration saved successfully and synced to Product Master!', 'success');
+                loadCombosData();
+            } else {
+                const data = await res.json();
+                Swal.fire('Error', data.error || 'Failed to save combo configuration.', 'error');
+            }
+        } catch (err) {
+            if (window.hideAresLoader) window.hideAresLoader();
+            Swal.fire('Error', err.message || 'Network error occurred.', 'error');
+        }
+    }
+
+    // --- EDIT COMBO ---
+    async function editCombo(id) {
+        const combo = allCombos.find(c => c.id === id);
+        if (!combo) return;
+
+        await openComboModal("Edit Combo Configuration");
+        document.getElementById('combo_group_id').value = combo.id;
+        document.getElementById('group_name').value = combo.group_name;
+        document.getElementById('description').value = combo.description || '';
+        
+        document.getElementById('is_panel_inverter').checked = combo.is_panel_inverter === 1;
+        document.getElementById('is_inverter_battery').checked = combo.is_inverter_battery === 1;
+        document.getElementById('is_panel_inverter_battery').checked = combo.is_panel_inverter_battery === 1;
+
+        // base components autocompletes
+        document.getElementById('comp_panel_code').value = combo.panel_stock_code || '';
+        document.getElementById('comp_panel_display').value = combo.panel_stock_code ? getProductDisplayName(combo.panel_stock_code) : '';
+
+        document.getElementById('comp_inverter_code').value = combo.inverter_stock_code || '';
+        document.getElementById('comp_inverter_display').value = combo.inverter_stock_code ? getProductDisplayName(combo.inverter_stock_code) : '';
+
+        document.getElementById('comp_battery_code').value = combo.battery_stock_code || '';
+        document.getElementById('comp_battery_display').value = combo.battery_stock_code ? getProductDisplayName(combo.battery_stock_code) : '';
+
+        // Populate variants
+        const container = document.getElementById('variantsContainer');
+        container.innerHTML = '';
+
+        if (combo.variants && combo.variants.length > 0) {
+            combo.variants.forEach(v => {
+                addVariantRow(v);
+            });
+        } else {
+            addVariantRow();
+        }
+    }
+
+    // --- DELETE COMBO ---
+    async function deleteCombo(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Delete Combo Group?',
+            text: "This will permanently delete the group and remove all synced combo items from the Product Master list.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#b93a20',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (isConfirmed) {
+            if (window.showAresLoader) window.showAresLoader(null, 'Deleting combo group...');
+            try {
+                const res = await fetch(`/combos/${id}`, { method: 'DELETE' });
+                if (window.hideAresLoader) window.hideAresLoader();
+                if (res.ok) {
+                    Swal.fire('Deleted!', 'Combo group has been successfully deleted.', 'success');
+                    loadCombosData();
+                } else {
+                    const data = await res.json();
+                    Swal.fire('Error', data.error || 'Failed to delete combo group.', 'error');
+                }
+            } catch (err) {
+                if (window.hideAresLoader) window.hideAresLoader();
+                Swal.fire('Error', err.message || 'Network error occurred.', 'error');
+            }
+        }
+    }
+</script>
+    <script src="/australian-timezones.js"></script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})()
+</script>
+</body>
+</html>

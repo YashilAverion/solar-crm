@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice - Ares Energy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1c3557;
+            --accent: #e8681e;
+            --text: #1c2b3a;
+            --muted: #6b7a8d;
+            --border: #dde3ed;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f9; color: var(--text); padding: 20px; font-size: 13px; line-height: 1.5; }
+        
+        .action-bar { max-width: 210mm; margin: 0 auto 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn:hover { background: #d05a14; }
+        .btn-secondary { background: var(--muted); }
+        .btn-secondary:hover { background: #475569; }
+        
+        .invoice-page { 
+            width: 210mm; 
+            min-height: 100vh; 
+            margin: 0 auto; 
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            color: #1e293b;
+            position: relative;
+            display: block;
+        }
+        
+        /* Premium Geometric Accents */
+        .top-accent { height: 12px; background: var(--primary); width: 100%; }
+        .header-bg { background: #f8fafc; padding: 30px 40px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); }
+        
+        .brand-col h1 { color: var(--primary); font-size: 22px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 15px; }
+        .brand-col p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+        .brand-col strong { color: var(--text); }
+
+        .title-col { text-align: right; }
+        .invoice-title { color: var(--accent); font-size: 32px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 15px; text-transform: uppercase; }
+
+        .meta-data { border-collapse: collapse; margin-left: auto; }
+        .meta-data th { text-align: left; padding: 4px 15px 4px 0; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .meta-data td { text-align: right; padding: 4px 0; font-size: 12px; font-weight: 700; color: var(--text); }
+        
+        .split-section { display: flex; justify-content: space-between; padding: 30px 40px 10px 40px; gap: 40px; }
+        .address-block { flex: 1; }
+        .address-block h3 { font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 4px; display: inline-block; }
+        .address-block p { font-size: 13px; margin-bottom: 6px; line-height: 1.5; color: var(--text); }
+        .address-block strong { color: var(--primary); font-weight: 700; }
+        
+        .invoice-body { padding: 20px 40px; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+        .invoice-table th { background: var(--primary); color: #fff; padding: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
+        .invoice-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); vertical-align: top; word-wrap: break-word; }
+        .invoice-table tr { page-break-inside: avoid; }
+        .invoice-table .text-right { text-align: right; }
+        .invoice-table .rebate-row td { color: #10b981; font-weight: 600; background: #f8fafc; }
+        
+        .footer-section { display: flex; justify-content: space-between; padding: 10px 40px 40px 40px; page-break-inside: avoid; gap: 40px; }
+        .banking-info { flex: 1; background: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary); }
+        .banking-info h3 { font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; font-weight: 800; }
+        .banking-info p { font-size: 12px; margin-bottom: 5px; color: #475569; }
+        .banking-info p strong { color: var(--text); display: inline-block; width: 115px; }
+        
+        .totals-block { flex: 0 0 300px; }
+        .totals-table { width: 100%; border-collapse: collapse; }
+        .totals-table th, .totals-table td { padding: 10px; font-size: 13px; }
+        .totals-table th { text-align: left; color: var(--muted); font-weight: 600; }
+        .totals-table td { text-align: right; font-weight: 700; color: var(--text); }
+        .grand-total { background: var(--primary); }
+        .grand-total th, .grand-total td { color: #fff !important; font-size: 16px; padding: 12px 10px; }
+        
+        .thank-you { text-align: center; color: var(--accent); font-weight: 800; font-size: 16px; letter-spacing: 1px; padding: 30px 0; page-break-inside: avoid; }
+        
+        @media print {
+            body { background: #fff; padding: 0; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 0mm; }
+            .action-bar { display: none !important; }
+            .invoice-page { box-shadow: none; margin: 0; width: 210mm; display: block; }
+            .invoice-table th { background: var(--primary) !important; color: #fff !important; }
+            .top-accent { background: var(--primary) !important; }
+            .header-bg { background: #f8fafc !important; }
+            .grand-total { background: var(--primary) !important; }
+            .grand-total th, .grand-total td { color: #fff !important; }
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+    <div class="action-bar">
+        <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+        <button class="btn btn-secondary" onclick="window.close()">✕ Close</button>
+    </div>
+    
+    <div class="invoice-page" id="invoiceContent">
+        <div style="text-align:center; padding:50px;">
+            <div style="display:inline-block; border:4px solid #f3f3f3; border-top:4px solid var(--primary); border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite;"></div>
+            <p style="margin-top:15px; color:var(--muted);">Compiling Metadata & Calculating Rebates...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            if (!id) {
+                document.getElementById('invoiceContent').innerHTML = `<h3 style="color:#b93a20; text-align:center;">Error: Invalid Installation ID provided in URL.</h3>`;
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/invoice/${id}`);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    document.getElementById('invoiceContent').innerHTML = `<h3 style="color:#b93a20; text-align:center;">Error: ${data.error}</h3>`;
+                    return;
+                }
+
+                renderInvoice(data);
+            } catch (e) {
+                document.getElementById('invoiceContent').innerHTML = `<h3 style="color:#b93a20; text-align:center;">Network Error loading invoice.</h3>`;
+            }
+        });
+
+        function formatDateSafe(dateString) {
+            if (!dateString) return '-';
+            const parts = dateString.split('T')[0].split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
+        }
+
+        function renderInvoice(data) {
+            const p = data.installation || {};
+            
+            // Allow backend flexibility (charges vs lineItems)
+            const allCharges = data.charges || data.lineItems || [];
+            
+            const items = [];
+            const rebates = [];
+            let calcSubTotalExGst = 0;
+            let calcTotalGst = 0;
+            let calcTotalRebates = 0;
+            let calcGrandTotal = 0;
+
+            allCharges.forEach(c => {
+                let ex = parseFloat(c.amount_ex_gst || 0);
+                let gst = parseFloat(c.gst_amount || 0);
+                let inc = parseFloat(c.amount_inc_gst || 0);
+                let rate = parseFloat(c.rate || 0);
+
+                // Normalize rebates based on negative value or name
+                if (ex < 0 || inc < 0 || (c.charge_name && c.charge_name.toLowerCase().includes('rebate'))) {
+                    if (inc > 0) { ex = -ex; gst = -gst; inc = -inc; rate = -rate; }
+                    rebates.push({...c, rate, amount_ex_gst: ex, gst_amount: gst, amount_inc_gst: inc});
+                    calcTotalRebates += Math.abs(inc);
+                } else {
+                    items.push({...c, rate, amount_ex_gst: ex, gst_amount: gst, amount_inc_gst: inc});
+                    calcSubTotalExGst += ex;
+                    calcTotalGst += gst;
+                }
+                calcGrandTotal += inc; 
+            });
+
+            // In case backend sends rebates separately
+            if (data.rebates && Array.isArray(data.rebates)) {
+                data.rebates.forEach(r => {
+                    let ex = parseFloat(r.amount_ex_gst || 0);
+                    let inc = parseFloat(r.amount_inc_gst || 0);
+                    let rate = parseFloat(r.rate || 0);
+                    if (inc > 0) { inc = -inc; ex = -ex; rate = -rate; }
+                    rebates.push({...r, rate, amount_ex_gst: ex, amount_inc_gst: inc});
+                    calcTotalRebates += Math.abs(inc);
+                    calcGrandTotal += inc;
+                });
+            }
+
+            const subTotalExGst = calcSubTotalExGst.toFixed(2);
+            const totalGst = calcTotalGst.toFixed(2);
+            const totalRebates = calcTotalRebates.toFixed(2);
+            const grandTotal = Math.max(0, calcGrandTotal).toFixed(2);
+
+            const customerName = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+            const addrParts = [];
+            if (p.unit_number) addrParts.push(`Unit ${p.unit_number}`);
+            if (p.lot_number) addrParts.push(`Lot ${p.lot_number}`);
+            if (p.address) addrParts.push(p.address);
+            const streetLine = addrParts.join(', ');
+            const subLine = `${p.suburb || ''} ${p.state || ''} ${p.postcode || ''}`.trim();
+
+            const compAddrParts = [];
+            if (p.comp_address) compAddrParts.push(p.comp_address);
+            const compStreetLine = compAddrParts.join(', ');
+            const compSubLine = `${p.comp_suburb || ''} ${p.comp_state || ''} ${p.comp_postcode || ''}`.trim();
+
+            const invDate = formatDateSafe(p.invoice_date);
+            
+            let dueDateStr = p.due_date;
+            if (!dueDateStr && p.invoice_date) {
+                const parts = p.invoice_date.split('T')[0].split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    d.setDate(d.getDate() + 7);
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getFullYear();
+                    dueDateStr = `${yyyy}-${mm}-${dd}`;
+                }
+            } else if (!dueDateStr && !p.invoice_date) {
+                const d = new Date();
+                d.setDate(d.getDate() + 7);
+                dueDateStr = d.toISOString().split('T')[0];
+            }
+            const dueDate = formatDateSafe(dueDateStr);
+            const invNum = p.invoice_number || `INV-${p.project_number || p.id}`;
+
+            let itemsHtml = items.length === 0 
+                ? `<tr><td colspan="4" style="text-align:center; color:var(--muted);">No line items recorded.</td></tr>`
+                : items.map(item => `
+                    <tr>
+                        <td><strong>${item.charge_name || '-'}</strong></td>
+                        <td class="text-right">$${parseFloat(item.rate || 0).toFixed(2)}</td>
+                        <td class="text-right">${parseFloat(item.qty || 0).toString()}</td>
+                        <td class="text-right">$${parseFloat(item.amount_ex_gst || 0).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+
+            let rebatesHtml = '';
+            if (rebates.length > 0) {
+                rebatesHtml = rebates.map(r => `
+                    <tr class="rebate-row">
+                        <td>${r.charge_name || '-'}</td>
+                        <td class="text-right">-$${Math.abs(parseFloat(r.rate || 0)).toFixed(2)}</td>
+                        <td class="text-right">${parseFloat(r.qty || 0).toString()}</td>
+                        <td class="text-right">-$${Math.abs(parseFloat(r.amount_ex_gst || 0)).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }    
+
+            document.getElementById('invoiceContent').innerHTML = `
+                <div class="top-accent"></div>
+                <div class="header-bg">
+                    <div class="brand-col">
+                        <h1>ARES ENERGY & ELECTRICALS</h1>
+                        <p><strong>Invoice From:</strong></p>
+                        <p>Ares Energy Pty Ltd</p>
+                        <p>276 Kargotich Rd, Oakford WA 6121</p>
+                        <p>info@aresenergy.com.au</p>
+                    </div>
+
+                    <div class="title-col">
+                        <div class="invoice-title">TAX INVOICE</div>
+                        <table class="meta-data">
+                            <tr><th>Invoice #:</th><td>${invNum}</td></tr>
+                            <tr><th>Invoice Date:</th><td>${invDate === '-' ? formatDateSafe(new Date().toISOString().split('T')[0]) : invDate}</td></tr>
+                            <tr><th>Due Date:</th><td>${dueDate === '-' ? formatDateSafe(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]) : dueDate}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="split-section">
+                    <div class="address-block">
+                        <h3>INVOICE TO</h3>
+                        <p><strong>${p.comp_name || p.company || 'Customer'}</strong></p>
+                        ${compStreetLine ? `<p>${compStreetLine}</p>` : ''}
+                        ${compSubLine ? `<p>${compSubLine}</p>` : ''}
+                        ${p.comp_abn ? `<p>ABN: ${p.comp_abn}</p>` : ''}
+                    </div>
+                    <div class="address-block">
+                        <h3>SITE DETAILS</h3>
+                        <p>Customer Name: <strong>${customerName}</strong></p>
+                        <p>Address: <strong>${streetLine || '-'}, ${subLine || '-'}</strong></p>
+                        <p>Contact Number: <strong>${p.phone || '-'}</strong></p>
+                    </div>
+                </div>
+
+                <div class="invoice-body">
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">DESCRIPTION</th>
+                                <th class="text-right" style="width: 15%;">RATE</th>
+                                <th class="text-right" style="width: 15%;">QTY</th>
+                                <th class="text-right" style="width: 20%;">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                            ${rebatesHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="footer-section">
+                    <div class="banking-info">
+                        <h3>Payment Details</h3>
+                        <p><strong>Account Name:</strong> Ares Energy Pty Ltd</p>
+                        <p><strong>Account Number:</strong> 95 879 4865</p>
+                        <p><strong>BSB:</strong> 086 116</p>
+                        <p><strong>Bank Name:</strong> National Australian Bank</p>
+                        <p><strong>ABN:</strong> 78 631734506</p>
+                        <br>
+                        <p>1300 717 583</p>
+                        <p>www.aresenergy.com.au</p>
+                        <p>276 Kargotich Rd, Oakford WA 6121</p>
+                    </div>
+                    <div class="totals-block">
+                        <table class="totals-table">
+                            <tr><th>Sub-total:</th><td>$${subTotalExGst}</td></tr>
+                            <tr><th>Tax (10%):</th><td>$${totalGst}</td></tr>
+                            ${parseFloat(totalRebates) > 0 ? `<tr><th>Less Rebates:</th><td style="color:#10b981;">-$${totalRebates}</td></tr>` : ''}
+                            <tr class="grand-total"><th>Total:</th><td>$${grandTotal}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="thank-you">THANK YOU FOR YOUR BUSINESS</div>
+            `;
+        }
+    </script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

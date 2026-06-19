@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Installation Charges - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+        
+        /* ========== AUTOCOMPLETE ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 240px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border-radius: 10px; display: none; padding: 6px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary); }
+        .ac-type-tag { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 10px; margin-left: auto; border: 1px solid var(--border); }
+        .ac-hl { color: var(--primary); font-weight: 700; text-decoration: underline; text-decoration-color: #c7d2fe; text-decoration-thickness: 2px; }
+        .ac-empty { padding: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; }
+        
+        /* ========== ADVANCED FILTERS ========== */
+        .adv-filter-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 12px; }
+        .adv-filter-grid .field label { font-size: 11px; margin-bottom: 4px; }
+        .form-control-sm { height: 32px !important; padding: 5px 10px !important; font-size: 13px !important; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dark); width: 100%; background: var(--surface); outline: none; transition: all 0.2s; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .btn-secondary { background: var(--surface); color: var(--text-dark); padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; box-shadow: none; }
+        .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        
+        /* EXACT REQUESTED STYLING FOR TABLE */
+        table th, table td {
+            padding: 4px 8px !important;
+            color: #212529 !important;
+            font-weight: 500 !important;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: center;
+            vertical-align: middle;
+        }
+        table th {
+            position: sticky; top: 0; 
+            background: rgba(248, 250, 252, 0.95); 
+            backdrop-filter: blur(8px);
+            border-bottom: 2px solid var(--border); 
+            border-right: 1px solid var(--border);
+            text-transform: uppercase; 
+            letter-spacing: 0.4px;
+            font-size: 11px !important;
+            z-index: 10;
+            resize: horizontal;
+            overflow: auto;
+            white-space: nowrap;
+        }
+        table tbody tr:hover td { background: #f8fafc; }
+        table tbody tr:last-child td { border-bottom: none; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== ACTION BUTTONS ========== */
+        .actions-cell { display: flex; gap: 4px; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        /* ========== MODALS ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 500px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); animation: slideUp 0.3s ease; max-height: 92vh; display: flex; flex-direction: column; }
+        @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+        .modal-lg { max-width: 800px; }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .field { display: flex; flex-direction: column; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .required::after { content: " *"; color: #b93a20; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; outline: none; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); grid-column: 1 / -1; gap: 8px; }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        /* ========== HISTORY OVERRIDES ========== */
+        .audit-table th { background: #f1f5f9; position: sticky; top: 0; }
+        .audit-table td { white-space: normal; line-height: 1.4; }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<!-- Main Layout -->
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Installation Charges Master</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="searchCharges" placeholder="Search charges..." autocomplete="off">
+            <ul class="ac-drop" id="searchChargesDrop"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="deleteSelectedRows()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn" style="border-radius: 20px; margin-right: 8px;" onclick="document.getElementById('advancedFilterModal').style.display='flex'">⚙️ More Filters</button>
+<button class="tb-btn btn-add" onclick="openAddChargeModal()">+ Add Charge</button>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table id="chargesTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                        <th style="width: 40px;">Sr</th>
+                        <th>Charge Name</th>
+                        <th>Calculation Type</th>
+                        <th>Rate/Charge ($)</th>
+                        <th>State</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="chargesBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filters Modal -->
+<div id="advancedFilterModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
+        <div class="modal-title">More Filters</div>
+        <div class="adv-filter-grid">
+            <div class="field"><label>State</label>
+                <select id="flt_state" class="form-control-sm"><option value="">All States</option><option>NSW</option><option>VIC</option><option>QLD</option><option>WA</option><option>SA</option><option>TAS</option><option>ACT</option><option>NT</option></select>
+            </div>
+            <div class="field"><label>Calculation Type</label>
+                <select id="flt_type" class="form-control-sm">
+                    <option value="">All Types</option>
+                    <option value="fixed">Fixed Price</option>
+                    <option value="per_watt">Per Watt</option>
+                    <option value="battery_base">Battery Base</option>
+                    <option value="battery_per_kwh">Battery Per kWh</option>
+                    <option value="per_km_travel">Per Km Travel</option>
+                    <option value="per_meter">Per Meter</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn-secondary" onclick="resetFilters()">Reset Filters</button>
+            <button class="btn-save" onclick="applyFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Charge Modal -->
+<div id="addChargeModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('addChargeModal').style.display='none'">✕</button>
+        <div class="modal-title">Add New Charge</div>
+        <form id="chargeForm" onsubmit="saveCharge(event)">
+            <input type="hidden" id="edit_id" value="">
+            <div class="form-grid">
+                <div class="field full-width">
+                    <label class="required">Charge Name</label>
+                    <input type="text" id="charge_name" required placeholder="e.g. Export Control Device">
+                </div>
+                <div class="field">
+                    <label class="required">Calculation Type</label>
+                    <select id="charge_type" required>
+                        <option value="">Select Type</option>
+                        <option value="fixed">Fixed Price</option>
+                        <option value="per_watt">Per Watt</option>
+                        <option value="battery_base">Battery Base</option>
+                        <option value="battery_per_kwh">Battery Per kWh</option>
+                        <option value="per_km_travel">Per Km Travel</option>
+                        <option value="per_meter">Per Meter</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="required">Rate/Charge ($)</label>
+                    <input type="number" id="charge_rate" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <div class="field">
+                    <label class="required">State</label>
+                    <select id="charge_state" required>
+                        <option value="All">All States</option>
+                        <option value="NSW">NSW</option><option value="VIC">VIC</option><option value="QLD">QLD</option><option value="WA" selected>WA</option><option value="SA">SA</option><option value="TAS">TAS</option>
+                        <option value="ACT">ACT</option><option value="NT">NT</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveChargeBtn">Save Charge</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Charge History Logs</div>
+        <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+            <table class="audit-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
+                        <th style="padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
+                        <th style="padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);">User Name</th>
+                        <th style="padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);">Previous Value</th>
+                        <th style="padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);">Updated Value</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allChargesData = [];
+    
+    let globalSearchTerm = '';
+    let activeFilters = {};
+
+    // Change 4: Helper to properly format the database value calculation types
+    function formatCalcType(type) {
+        const map = {
+            'per_watt': 'Per Watt',
+            'battery_base': 'Battery Base',
+            'battery_per_kwh': 'Battery Per kWh',
+            'per_km_travel': 'Per Km Travel',
+            'fixed': 'Fixed Price',
+            'per_meter': 'Per Meter'
+        };
+        return map[type] || type || '-';
+    }
+
+    window.onload = function() {
+        loadCharges();
+    };
+
+    async function loadCharges() {
+        try {
+            const res = await fetch('/api/masters/installation-charges/items');
+            if (res.ok) {
+                allChargesData = await res.json();
+            }
+        } catch(e) { console.log('Backend not available yet, using UI dummy data fallback'); }
+        renderTable();
+    }
+
+    // Change 4: Smart Search Autocomplete Logic
+    const searchInput = document.getElementById('searchCharges');
+    const searchDrop = document.getElementById('searchChargesDrop');
+    let globalSearchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(globalSearchTimeout);
+        const val = this.value.trim().toLowerCase();
+        
+        globalSearchTimeout = setTimeout(() => {
+            globalSearchTerm = val;
+            searchDrop.innerHTML = '';
+            
+            if (val.length < 1) { searchDrop.style.display = 'none'; renderTable(); return; }
+    
+            let suggestions = [];
+            let seen = new Set();
+    
+            allChargesData.forEach(c => {
+                [{val: c.charge_name, type: 'Name'}, {val: c.state, type: 'State'}].forEach(item => {
+                    if (item.val && item.val.toLowerCase().includes(val) && !seen.has(item.val + item.type)) {
+                        seen.add(item.val + item.type);
+                        suggestions.push(item);
+                    }
+                });
+            });
+    
+            if (!suggestions.length) {
+                searchDrop.innerHTML = `<li class="ac-empty">No results found</li>`;
+                searchDrop.style.display = 'block';
+                renderTable(); return;
+            }
+    
+            suggestions.slice(0, 8).forEach(s => {
+                const li = document.createElement('li');
+                const regex = new RegExp(`(${val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                const hl = s.val.replace(regex, `<span class="ac-hl">$1</span>`);
+                li.innerHTML = `<span>${hl}</span><span class="ac-type-tag">${s.type}</span>`;
+                li.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    searchInput.value = s.val;
+                    globalSearchTerm = s.val.toLowerCase();
+                    searchDrop.style.display = 'none';
+                    renderTable();
+                });
+                searchDrop.appendChild(li);
+            });
+            searchDrop.style.display = 'block';
+            renderTable();
+        }, 400);
+    });
+
+    searchInput.addEventListener('blur', () => setTimeout(() => searchDrop.style.display = 'none', 200));
+    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchDrop.style.display = 'none'; renderTable(); } });
+
+    // Advanced Filters Logic (Change 8)
+    function applyFilters() {
+        activeFilters = {
+            state: document.getElementById('flt_state').value,
+            type: document.getElementById('flt_type').value
+        };
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        renderTable();
+    }
+
+    function resetFilters() {
+        document.getElementById('flt_state').value = '';
+        document.getElementById('flt_type').value = '';
+        activeFilters = {};
+        document.getElementById('advancedFilterModal').style.display = 'none';
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('chargesBody');
+        tbody.innerHTML = '';
+
+        let filtered = allChargesData;
+
+        if (globalSearchTerm) {
+            filtered = filtered.filter(c => 
+                (c.charge_name && c.charge_name.toLowerCase().includes(globalSearchTerm)) ||
+                (c.state && c.state.toLowerCase().includes(globalSearchTerm))
+            );
+        }
+
+        if (activeFilters.state) filtered = filtered.filter(c => c.state === activeFilters.state);
+        if (activeFilters.type) filtered = filtered.filter(c => c.charge_type === activeFilters.type);
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 15px !important; color: var(--text-muted);">No charges found.</td></tr>';
+            return;
+        }
+
+        let htmlString = '';
+        filtered.forEach((c, index) => {
+            htmlString += `
+                <tr>
+                    <td><input type="checkbox" class="row-checkbox" value="${c.id}" onclick="updateBulkDeleteBtn()" style="cursor: pointer; width: 14px; height: 14px;"></td>
+                    <td>${index + 1}</td>
+                    <td>${c.charge_name || '-'}</td>
+                    <td>${formatCalcType(c.charge_type)}</td>
+                    <td>$${parseFloat(c.rate || 0).toFixed(2)}</td>
+                    <td>${c.state || 'WA'}</td>
+                    <td>
+                        <div class="actions-cell" style="justify-content: center;">
+                            <button class="act-btn" title="Edit" onclick="editCharge(${c.id})">✏️</button>
+                            <button class="act-btn" title="History Logs" onclick="viewHistory(${c.id})">🕒</button>
+                            <button class="act-btn act-btn-del" title="Delete" onclick="deleteCharge(${c.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = htmlString;
+        
+        document.getElementById('selectAllCheckbox').checked = false;
+        updateBulkDeleteBtn();
+    }
+
+    // --- Bulk Delete Logic ---
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        const selCount = document.getElementById('selCount');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            selCount.innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const totalCount = document.querySelectorAll('.row-checkbox').length;
+        const master = document.getElementById('selectAllCheckbox');
+        if (master) master.checked = totalCount > 0 && checkedCount === totalCount;
+    }
+
+    async function deleteSelectedRows() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        const { isConfirmed } = await Swal.fire({ title: 'Are you sure?', text: `This will permanently delete ${checkedBoxes.length} selected charges.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#c53030', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete them!' });
+        if (!isConfirmed) return;
+        
+        const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+        try {
+            const res = await fetch('/api/masters/installation-charges/items/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: idsToDelete, currentUser: document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System' }) });
+            if (res.ok) { document.getElementById('selectAllCheckbox').checked = false; updateBulkDeleteBtn(); Swal.fire('Deleted!', 'Selected records removed.', 'success'); loadCharges(); }
+            else { const err = await res.json(); Swal.fire('Error', err.error || 'Failed to delete records.', 'error'); }
+        } catch (e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    // Open Add Modal
+    function openAddChargeModal() {
+        document.getElementById('chargeForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.querySelector('.modal-title').innerText = 'Add New Charge';
+        document.getElementById('saveChargeBtn').innerText = 'Save Charge';
+        document.getElementById('charge_state').value = 'WA';
+        document.getElementById('addChargeModal').style.display = 'flex';
+    }
+
+    // Change 2: Edit Functionality
+    function editCharge(id) {
+        const c = allChargesData.find(x => x.id === id);
+        if (!c) return;
+        
+        document.getElementById('chargeForm').reset();
+        document.getElementById('edit_id').value = c.id;
+        document.getElementById('charge_name').value = c.charge_name || '';
+        document.getElementById('charge_type').value = c.charge_type || '';
+        document.getElementById('charge_rate').value = c.rate || '';
+        document.getElementById('charge_state').value = c.state || 'WA';
+
+        document.querySelector('#addChargeModal .modal-title').innerText = 'Edit Charge Details';
+        document.getElementById('saveChargeBtn').innerText = 'Update Charge';
+        
+        document.getElementById('addChargeModal').style.display = 'flex';
+    }
+
+    // Handle Save / Update Submit
+    function saveCharge(event) {
+        event.preventDefault();
+        const btn = document.getElementById('saveChargeBtn');
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        
+        const editId = document.getElementById('edit_id').value;
+        const isEdit = !!editId;
+
+        const payload = {
+            charge_name: document.getElementById('charge_name').value,
+            charge_type: document.getElementById('charge_type').value,
+            rate: parseFloat(document.getElementById('charge_rate').value).toFixed(2),
+            state: document.getElementById('charge_state').value,
+            currentUser: document.getElementById('sidebarName') ? document.getElementById('sidebarName').innerText : 'System'
+        };
+        
+        const url = isEdit ? `/api/masters/installation-charges/items/${editId}` : '/api/masters/installation-charges/items';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (res.ok) {
+                Swal.fire(isEdit ? 'Updated!' : 'Saved!', `Charge has been ${isEdit ? 'updated' : 'added'} successfully.`, 'success');
+                document.getElementById('addChargeModal').style.display = 'none';
+                loadCharges();
+            } else {
+                res.json().then(err => Swal.fire('Error', err.error || 'Failed to save charge.', 'error'));
+            }
+        })
+        .catch(e => {
+            Swal.fire('Error', 'Network Error: Failed to connect to server.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = isEdit ? 'Update Charge' : 'Save Charge';
+        });
+    }
+
+    // Change 5: Delete Functionality
+    function deleteCharge(id) {
+        Swal.fire({
+            title: 'Delete Charge?',
+            text: "This will remove the charge from the master configuration.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/masters/installation-charges/items/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            Swal.fire('Deleted!', 'Charge deleted successfully.', 'success');
+                            loadCharges();
+                        } else {
+                            res.json().then(err => Swal.fire('Error', err.error || 'Failed to delete charge.', 'error'));
+                        }
+                    })
+                    .catch(e => {
+                        Swal.fire('Error', 'Network error during deletion.', 'error');
+                    });
+            }
+        });
+    }
+
+    // Change 3: History Logs Modal Logic
+    function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px;">Loading history...</td></tr>';
+        document.getElementById('historyModal').style.display = 'flex';
+        
+        fetch(`/api/masters/installation-charges/items/${id}/history`)
+        .then(res => {
+            if (res.ok) {
+                res.json().then(hist => {
+                    body.innerHTML = hist.map(h => {
+                        const dparts = (h.created_at || '').split(' '); // Expected Split: Date Time AM/PM
+                        const datePart = dparts[0] || '-';
+                        const timePart = dparts[1] ? `${dparts[1]} ${dparts[2] || ''}` : '-';
+                        return `
+                            <tr>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-dark);">${datePart}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-dark);">${timePart}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--primary);">${h.user_name || 'System'}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">${h.previous_value || '-'}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-dark);">${h.updated_value || '-'}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    if (!hist.length) {
+                        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color: var(--text-muted);">No history logs found for this charge.</td></tr>';
+                    }
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#b93a20;">Failed to load history (Endpoint not found).</td></tr>';
+            }
+        })
+        .catch(e => {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#b93a20;">Network error while fetching history.</td></tr>';
+        });
+    }
+
+    // Load Default Charges
+    async function loadDefaultCharges() {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Load Default Charges?',
+            text: 'This will add all 30 standard charges (skipping any that already exist by name).',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, Load Them!'
+        });
+        if (!isConfirmed) return;
+
+        try {
+            const res = await fetch('/api/masters/installation-charges/items/seed-defaults', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser: document.getElementById('sidebarName')?.innerText || 'System' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Done!', `${data.added} new charge(s) added. ${data.skipped} already existed.`, 'success');
+                loadCharges();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to seed charges.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
+    }
+
+    // Sidebar User Integration
+    (async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

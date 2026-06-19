@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Management - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 16px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        table th { position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px); border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.4px; color: #212529; font-weight: 700; font-size: 10px; text-align: center; padding: 6px 12px; z-index: 10; }
+        table th:last-child { border-right: none; }
+        table td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid var(--border); padding: 8px 12px; background: var(--surface); color: #212529; font-weight: 500; font-size: 12px; text-align: center; vertical-align: middle; }
+        table td:last-child { border-right: none; }
+        table tbody tr:hover td { background: #f8fafc; }
+        
+        .status-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); }
+        .sb-active { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
+        .sb-inactive { background: #fef0ee; color: #b93a20; border-color: #f5c4bb; }
+
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; font-weight: 700 !important; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+        table td .act-btn { color: #212529 !important; font-weight: 700 !important; }
+
+        /* ========== MODAL ========== */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 24px; width: 100%; max-width: 450px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); box-sizing: border-box; }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; box-sizing: border-box; }
+        .field { display: flex; flex-direction: column; justify-content: center; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .required::after { content: " *"; color: #b93a20; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--text-dark); outline: none; transition: all 0.2s; box-sizing: border-box; width: 100%; max-width: 100%; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-save:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+
+        /* ========== PERMISSION MATRIX ========== */
+        .perm-section { background: var(--surface); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; flex-shrink: 0; }
+        .perm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .perm-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .perm-matrix { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .perm-matrix th, .perm-matrix td { border: 1px solid var(--border); padding: 6px 10px; text-align: center; }
+        .perm-matrix th { background: #f8fafc; font-weight: 600; text-transform: uppercase; color: var(--text-muted); font-size: 10px; }
+        .perm-matrix td:first-child { text-align: left; font-weight: 600; background: #f8fafc; color: var(--text-dark); width: 40%; }
+        .perm-matrix tr.feature-row td { background: var(--surface); color: var(--text-muted); font-weight: 500; font-size: 11px; padding-left: 24px; }
+        .perm-table-wrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+        
+        /* iOS Toggle Switch */
+        .ios-switch { position: relative; display: inline-block; width: 34px; height: 20px; margin: 0; }
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .ios-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e5e5ea; transition: .3s; border-radius: 20px; }
+        .ios-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input:checked + .ios-slider { background-color: var(--accent); }
+        input:checked + .ios-slider:before { transform: translateX(14px); }
+        input:disabled + .ios-slider { opacity: 0.5; cursor: not-allowed; }
+
+        /* ========== TABS ========== */
+        .admin-tab-bar { display: flex; gap: 8px; margin: 10px 0; border-bottom: 2px solid var(--border); padding-bottom: 4px; flex-shrink: 0; }
+        .tab-chip { background: var(--surface); color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px 6px 0 0; cursor: pointer; border: 1px solid transparent; border-bottom: none; transition: all 0.2s; outline: none; }
+        .tab-chip:hover { color: var(--primary); background: #f8fafc; }
+        .tab-chip.active-chip { color: var(--primary); background: var(--surface); border-color: var(--border); border-bottom-color: var(--surface); margin-bottom: -6px; padding-bottom: 8px; z-index: 1; }
+
+        /* ========== PAGINATION ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left { display: flex; align-items: center; gap: 8px; }
+        .pf-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; color: var(--text-dark); background: var(--surface); outline: none; cursor: pointer; }
+        .rows-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .pf-right { display: flex; align-items: center; gap: 8px; }
+        .page-info { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg); }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">User Management</div>
+        <div style="margin-left:12px; font-size:11px; color:var(--text-muted); background:var(--bg); padding:4px 10px; border-radius:20px; border:1px solid var(--border); display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;" title="System Backup Status">
+            <span>&#128190; Last Backup:</span>
+            <strong id="lastBackupTime" style="color:var(--primary);">Loading...</strong>
+        </div>
+        <input type="text" id="userSearch" placeholder="Search name, username..." oninput="filterUsers()" style="margin-left:12px; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:13px; outline:none; width:200px;">
+        <select id="roleFilter" onchange="filterUsers()" style="margin-left:6px; height:30px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; font-weight:600; background:var(--bg); color:var(--text-muted); outline:none; cursor:pointer;">
+            <option value="">All Roles</option>
+            <option value="Admin">Admin</option>
+            <optgroup label="Manager">
+                <option value="Sales Manager">Sales Manager</option>
+                <option value="Procurement Manager">Procurement Manager</option>
+                <option value="Accounts Manager">Accounts Manager</option>
+                <option value="Installation Manager">Installation Manager</option>
+                <option value="Admin Manager">Admin Manager</option>
+                <option value="Service Manager">Service Manager</option>
+            </optgroup>
+            <optgroup label="Team Leader">
+                <option value="Sales Team Leader">Sales Team Leader</option>
+                <option value="Procurement Team Leader">Procurement Team Leader</option>
+                <option value="Accounts Team Leader">Accounts Team Leader</option>
+                <option value="Installation Team Leader">Installation Team Leader</option>
+                <option value="Admin Team Leader">Admin Team Leader</option>
+                <option value="Service Team Leader">Service Team Leader</option>
+            </optgroup>
+            <optgroup label="Executive">
+                <option value="Sales Executive">Sales Executive</option>
+                <option value="Procurement Executive">Procurement Executive</option>
+                <option value="Account Executive">Account Executive</option>
+                <option value="Installation Executive">Installation Executive</option>
+                <option value="Admin Executive">Admin Executive</option>
+                <option value="Service Executive">Service Executive</option>
+            </optgroup>
+        </select>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()">&#128190; Restore from Backup</button>
+        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()">&#128190; Backup Now</button>
+        <button class="tb-btn btn-add" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">Registered accounts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Management Roles</div>
+            <div class="stat-val" id="statManagers">0</div>
+            <div class="stat-sub">Managers & Admins</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-val" id="statActive">0</div>
+            <div class="stat-sub">Currently active</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="admin-tab-bar">
+            <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')">👤 User Accounts List</button>
+            <button class="tab-chip" id="tab-permissions-grid" onclick="switchAdminSection('permissions-grid')">🔐 Role Permission Control Center</button>
+        </div>
+
+        <div id="section-permissions-grid" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
+            <div class="perm-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
+                <div class="perm-header">
+                    <div class="perm-title">🔒 Permission Control Center</div>
+                    <button class="btn-save" id="savePermBtn" onclick="savePermissions()">Save Permissions</button>
+                </div>
+                <div class="perm-table-wrapper" style="flex: 1; overflow: auto;">
+                    <table class="perm-matrix">
+                        <thead id="permMatrixHead">
+                            <!-- Dynamically populated -->
+                        </thead>
+                        <tbody id="permMatrixBody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+        <div class="pagination-footer">
+            <div class="pf-left">
+                <span class="pf-label">Show:</span>
+                <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                    <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                </select>
+                <span class="total-badge">Total: <span id="totalUsersCount">0</span></span>
+            </div>
+            <div class="pf-right">
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+                <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <div id="section-users-list" style="display:flex; flex: 1; overflow: hidden; flex-direction: column;">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Avatar</th>
+                            <th style="text-align: left; padding-left: 20px;">Full Name</th>
+                            <th>Username Login ID</th>
+                            <th>Employee Email</th>
+                            <th>Designated System Role</th>
+                            <th>Current Status Switch</th>
+                            <th>Action Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Modal -->
+<div id="restoreModal" class="modal">
+    <div class="modal-content" style="max-width:760px;">
+        <button class="modal-close" onclick="document.getElementById('restoreModal').style.display='none'">&#10005;</button>
+        <div class="modal-title">&#128190; Restore System from Backup</div>
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:24px;">
+            <div>
+                <h3 style="font-size:13px; color:var(--text-dark); margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:8px;">Available Backups</h3>
+                <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Click a backup to download it.</p>
+                <ul id="backupList" style="list-style:none; padding:0; max-height:360px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);"></ul>
+            </div>
+            <div>
+                <h3 style="font-size:13px; color:var(--text-dark); margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:8px;">&#128680; Recovery Instructions</h3>
+                <ol style="padding-left:18px; font-size:12px; line-height:1.9; color:var(--text-dark);">
+                    <li><strong>Stop the Server:</strong> Press <code style="background:#e2e8f0; padding:2px 5px; border-radius:4px;">Ctrl + C</code> in the terminal.</li>
+                    <li><strong>Download &amp; Extract:</strong> Download latest backup and unzip into Solar CRM folder, overwriting everything.</li>
+                    <li><strong>Re-install Packages:</strong> Run <code style="background:#e2e8f0; padding:2px 5px; border-radius:4px;">npm install</code></li>
+                    <li><strong>Restart Server:</strong> Run <code style="background:#e2e8f0; padding:2px 5px; border-radius:4px;">node server.js</code></li>
+                    <li>CRM will be restored to that backup's state.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Add/Edit Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" type="button" onclick="document.getElementById('userModal').style.display='none'">✕</button>
+        <div class="modal-title" id="userModalTitle">Add New User</div>
+        <form id="userForm" onsubmit="saveUser(event)">
+            <input type="hidden" id="edit_user_id" value="">
+            <div class="form-grid">
+                <div class="field full-width"><label class="required">Full Name</label><input type="text" id="u_full_name" required></div>
+                <div class="field"><label class="required">Username</label><input type="text" id="u_username" required></div>
+                <div class="field"><label class="required">Email Address</label><input type="email" id="u_email" placeholder="user@example.com" required></div>
+                <div class="field">
+                    <label class="required" id="u_pass_label">Password</label>
+                    <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
+                        <input type="password" id="u_password" class="form-control" placeholder="***" style="width: 100%; padding-right: 35px !important;">
+                        <span id="passwordToggleIcon" style="position: absolute; right: 10px; cursor: pointer; user-select: none; font-size: 14px;" onclick="togglePasswordDisplay()">👁️</span>
+                    </div>
+                    <div id="password-strength-meter" style="margin-top: 6px; display: none;">
+                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;"><div id="strength-bar" style="width: 0%; height: 100%; background: #ef4444; transition: width 0.3s, background-color 0.3s;"></div></div>
+                        <span id="strength-text" style="font-size: 11px; font-weight: 600; margin-top: 4px; display: block; text-align: right;"></span>
+                    </div>
+                </div>
+                <div class="field"><label class="required">Role</label>
+                    <select id="u_role" required>
+                        <option value="">Select Role</option>
+                        <option value="Admin">Admin</option>
+                        <optgroup label="Manager">
+                            <option value="Sales Manager">Sales Manager</option>
+                            <option value="Procurement Manager">Procurement Manager</option>
+                            <option value="Accounts Manager">Accounts Manager</option>
+                            <option value="Installation Manager">Installation Manager</option>
+                            <option value="Admin Manager">Admin Manager</option>
+                            <option value="Service Manager">Service Manager</option>
+                        </optgroup>
+                        <optgroup label="Team Leader">
+                            <option value="Sales Team Leader">Sales Team Leader</option>
+                            <option value="Procurement Team Leader">Procurement Team Leader</option>
+                            <option value="Accounts Team Leader">Accounts Team Leader</option>
+                            <option value="Installation Team Leader">Installation Team Leader</option>
+                            <option value="Admin Team Leader">Admin Team Leader</option>
+                            <option value="Service Team Leader">Service Team Leader</option>
+                        </optgroup>
+                        <optgroup label="Executive">
+                            <option value="Sales Executive">Sales Executive</option>
+                            <option value="Procurement Executive">Procurement Executive</option>
+                            <option value="Account Executive">Account Executive</option>
+                            <option value="Installation Executive">Installation Executive</option>
+                            <option value="Admin Executive">Admin Executive</option>
+                            <option value="Service Executive">Service Executive</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="field"><label>Status</label><select id="u_status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+                <div class="field"><label>Can Edit</label><select id="u_can_edit"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                <div class="field"><label>Can Delete</label><select id="u_can_delete"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+            </div>
+                <div class="section-divider" style="margin-top: 16px; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 6px; justify-content: space-between;">
+                    <span>Module Access Preview</span>
+                    <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 24px; font-size: 11px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc;" onclick="resetToRoleDefaults()">🔄 Restore Role Defaults</button>
+                </div>
+                <div id="roleAccessPreview" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-top: 8px; max-height: 160px; overflow-y: auto; font-size: 12px; color: var(--text-muted); box-sizing: border-box; width: 100%;">
+                Select a role to see granted permissions.
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn-save" id="saveUserBtn">Save User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allUsersData = [];
+    let currentPage = 1;
+    let rowsPerPage = 30;
+    const PERM_ROLES = [
+        'Admin',
+        'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
+        'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader',
+        'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
+    ];
+    const PERM_SCHEMA = {
+        'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'View Revenue', 'Edit Address'],
+        'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
+        'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
+        'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
+        'Attendance & Payroll': ['Access Module', 'Employees', 'Leave', 'Timesheets', 'Pay Employee', 'Superannuation']
+    };
+
+    function applyUIPermissions(matrix) {
+        const check = (href, mod, feat) => {
+            if (!matrix[mod] || !matrix[mod][feat]) {
+                const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                if (el) el.style.display = 'none';
+            }
+        };
+        check('/products.html', 'Masters', 'Manage Products');
+        check('/combo_master.html', 'Masters', 'Manage Products');
+        check('/stc_master.html', 'Masters', 'Manage STC');
+        check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+        check('/margin_master.html', 'Masters', 'Manage Margins');
+        check('/installation_charges.html', 'Masters', 'Manage Charges');
+        check('/installations.html', 'Ares Installation Outside', 'Installations');
+        check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+        check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+        check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+        check('/admin.html', 'Settings', 'Manage Users');
+        check('/project_leads.html', 'Projects', 'Leads');
+        
+        // Dynamic permission check for Attendance & Payroll links
+        check('/attendance.html', 'Attendance & Payroll', 'Employees');
+        check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+        check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+        check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+        check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+
+        document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+            const links = Array.from(sub.querySelectorAll('a.menu-item'));
+            if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) {
+                    sub.previousElementSibling.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    function switchAdminSection(target) {
+        document.getElementById('section-users-list').style.display = target === 'users-list' ? 'flex' : 'none';
+        document.getElementById('section-permissions-grid').style.display = target === 'permissions-grid' ? 'flex' : 'none';
+        document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
+        document.getElementById('tab-permissions-grid').classList.toggle('active-chip', target === 'permissions-grid');
+    }
+
+    function togglePasswordDisplay() {
+        const pwd = document.getElementById('u_password');
+        const icon = document.getElementById('passwordToggleIcon');
+        if (pwd.type === 'password') {
+            pwd.type = 'text';
+            icon.innerText = '🙈';
+        } else {
+            pwd.type = 'password';
+            icon.innerText = '👁️';
+        }
+    }
+
+    function updatePasswordStrength() {
+        const pwdInput = document.getElementById('u_password');
+        const password = pwdInput ? pwdInput.value : '';
+        const meter = document.getElementById('password-strength-meter');
+        const bar = document.getElementById('strength-bar');
+        const text = document.getElementById('strength-text');
+
+        if (!password) {
+            meter.style.display = 'none';
+            return;
+        }
+        meter.style.display = 'block';
+
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[!@#$%^&*]/.test(password)) score++;
+
+        let width = (score / 5) * 100;
+        let color = '#ef4444'; // Red
+        let strengthText = 'Very Weak';
+
+        switch (score) {
+            case 1: strengthText = 'Weak'; color = '#ef4444'; break;
+            case 2: strengthText = 'Weak'; color = '#f59e0b'; break;
+            case 3: strengthText = 'Medium'; color = '#f59e0b'; break;
+            case 4: strengthText = 'Strong'; color = '#10b981'; break;
+            case 5: strengthText = 'Very Strong'; color = '#10b981'; break;
+        }
+        bar.style.width = width + '%';
+        bar.style.backgroundColor = color;
+        text.innerText = `Strength: ${strengthText}`;
+        text.style.color = color;
+    }
+
+    async function loadUsers() {
+        const tbody = document.getElementById('usersBody');
+        tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; color: var(--text-muted);">Loading users...</td></tr>';
+        try {
+            const res = await fetch('/admin/users');
+            if (res.status === 401) { window.location.href = '/login.html'; return; }
+            if (res.ok) {
+                allUsersData = await res.json();
+                renderUsers();
+                updateStats();
+            } else throw new Error('Failed to load');
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; color: #b93a20;">Error loading users.</td></tr>';
+        }
+    }
+
+    let searchTimeout;
+    function filterUsers() { 
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1; 
+            renderUsers(); 
+        }, 400);
+    }
+
+    function renderUsers() {
+        const tbody = document.getElementById('usersBody');
+        tbody.innerHTML = '';
+        const term = (document.getElementById('userSearch')?.value || '').toLowerCase();
+        const roleVal = document.getElementById('roleFilter')?.value || '';
+        const filtered = allUsersData.filter(u => {
+            const matchSearch = !term || (u.full_name||'').toLowerCase().includes(term) || (u.username||'').toLowerCase().includes(term);
+            const matchRole = !roleVal || u.role === roleVal;
+            return matchSearch && matchRole;
+        });
+        
+        const totalRecords = filtered.length;
+        const totalUsersEl = document.getElementById('totalUsersCount');
+        if (totalUsersEl) totalUsersEl.innerText = totalRecords;
+        
+        const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        const visible = filtered.slice(start, start + rowsPerPage);
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: var(--text-muted);">No users found.</td></tr>`;
+            updatePaginationUI(totalPages);
+            return;
+        }
+
+        let htmlString = '';
+        visible.forEach(u => {
+            const statusBadge = u.status === 'Active' ? 'sb-active' : 'sb-inactive';
+            const initial = (u.full_name || u.username || '?').charAt(0).toUpperCase();
+            htmlString += `
+                <tr>
+                    <td><div style="width:28px; height:28px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; margin:0 auto; font-size:12px;">${initial}</div></td>
+                    <td style="text-align: left; padding-left: 20px;"><strong>${u.full_name || '-'}</strong></td>
+                    <td>${u.username || '-'}</td>
+                    <td>${u.email || '-'}</td>
+                    <td><span style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-weight:600;">${u.role || 'Standard'}</span></td>
+                    <td><span class="status-badge ${statusBadge}">${u.status || 'Active'}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="act-btn" title="Edit Account" onclick="editUser(${u.id})">✏️</button>
+                            <button class="act-btn" title="Clear/Reset Password" onclick="resetPassword(${u.id})">🔑</button>
+                            <button class="act-btn act-btn-del" title="Delete Account" onclick="deleteUser(${u.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = htmlString;
+        updatePaginationUI(totalPages);
+    }
+
+    function updatePaginationUI(totalPages) {
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        if (pageInfo) pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages || totalPages === 0;
+    }
+
+    function changeRowsPerPage() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); currentPage = 1; renderUsers(); }
+    function prevPage() { if (currentPage > 1) { currentPage--; renderUsers(); } }
+    function nextPage() { currentPage++; renderUsers(); }
+
+    function updateStats() {
+        document.getElementById('statTotal').innerText = allUsersData.length;
+        document.getElementById('statManagers').innerText = allUsersData.filter(u => u.role === 'Admin' || (u.role && u.role.includes('Manager'))).length;
+        document.getElementById('statActive').innerText = allUsersData.filter(u => u.status !== 'Inactive').length;
+    }
+
+    function openAddUserModal() {
+        document.getElementById('userForm').reset();
+        document.getElementById('edit_user_id').value = '';
+        document.getElementById('userModalTitle').innerText = 'Add New User';
+        document.getElementById('saveUserBtn').innerText = 'Create User';
+        document.getElementById('password-strength-meter').style.display = 'none';
+        
+        document.getElementById('u_password').required = true;
+        document.getElementById('u_pass_label').innerText = 'Password';
+        document.getElementById('u_pass_label').classList.add('required');
+        document.getElementById('roleAccessPreview').innerHTML = 'Select a role to see granted permissions.';
+        
+        document.getElementById('userModal').style.display = 'flex';
+    }
+
+    function editUser(id) {
+        const u = allUsersData.find(x => x.id === id);
+        if (!u) return;
+        document.getElementById('userForm').reset();
+        document.getElementById('edit_user_id').value = u.id;
+        document.getElementById('userModalTitle').innerText = 'Edit User Details';
+        document.getElementById('saveUserBtn').innerText = 'Update User';
+        document.getElementById('password-strength-meter').style.display = 'none';
+        
+        document.getElementById('u_full_name').value = u.full_name || '';
+        document.getElementById('u_username').value = u.username || '';
+        document.getElementById('u_email').value = u.email || '';
+        document.getElementById('u_role').value = u.role || 'Standard';
+        document.getElementById('u_can_edit').value = u.can_edit || 'No';
+        document.getElementById('u_can_delete').value = u.can_delete || 'No';
+        document.getElementById('u_status').value = u.status || 'Active';
+        document.getElementById('u_password').value = ''; // SECURITY FIX: Never show hashed password
+        
+        // Form Security: Blank out password on edit, remove strict requirement
+        document.getElementById('u_password').required = false;
+        document.getElementById('u_pass_label').innerText = 'Password (Leave blank to keep)';
+        document.getElementById('u_pass_label').classList.remove('required');
+        document.getElementById('u_role').dispatchEvent(new Event('change'));
+        
+        document.getElementById('userModal').style.display = 'flex';
+    }
+
+    function resetToRoleDefaults() {
+        const role = document.getElementById('u_role').value;
+        if (!role) {
+            Swal.fire('Notice', 'Please select a role first.', 'info');
+            return;
+        }
+        updateModalPermissionsTree(role, null);
+    }
+
+    document.getElementById('u_role').addEventListener('change', function() {
+        const userId = document.getElementById('edit_user_id').value;
+        updateModalPermissionsTree(this.value, userId);
+    });
+
+    async function updateModalPermissionsTree(role, userId) {
+        const preview = document.getElementById('roleAccessPreview');
+        if (!role) { preview.innerHTML = 'Select a role to see granted permissions.'; return; }
+        preview.innerHTML = 'Loading permissions...';
+        try {
+            const res = await fetch(`/api/role-permissions/${role}`);
+            const matrix = await res.json();
+            
+            let userOverrides = [];
+            if (userId) {
+                const uRes = await fetch(`/admin/users/${userId}/permissions`);
+                if (uRes.ok) userOverrides = await uRes.json();
+            }
+
+            let html = '<ul style="list-style: none; padding: 0;">';
+            for (const [mod, feats] of Object.entries(matrix)) {
+                if (feats['Access Module'] !== undefined) {
+                    const isModRoleEnabled = !!feats['Access Module'];
+                    const overrideMod = userOverrides.find(o => o.module_name === mod && o.feature_name === 'Access Module');
+                    const isModEnabled = overrideMod ? overrideMod.is_enabled === 1 : isModRoleEnabled;
+                    const modChecked = isModEnabled ? 'checked' : '';
+                    const modIndicator = overrideMod ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
+                    
+                    html += `<li style="margin-bottom: 6px;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="Access Module" data-role-value="${isModRoleEnabled}" ${modChecked}>
+                            <strong style="color:var(--text-dark);">📁 ${mod}</strong> ${modIndicator}
+                        </label>
+                        <ul style="padding-left: 24px; margin-top: 4px; color: var(--text-muted); list-style: none;">`;
+                    for (const [f, enabled] of Object.entries(feats)) {
+                        if (f !== 'Access Module') {
+                            const featChecked = enabled ? 'checked' : '';
+                            
+                            html += `<li style="margin-bottom: 4px;">
+                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                                    <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="${f}" ${featChecked}>
+                                    <span>${f}</span>
+                                </label>
+                            </li>`;
+                        }
+                    }
+                    html += `</ul></li>`;
+                }
+            }
+            html += '</ul>';
+            if (html === '<ul style="list-style: none; padding: 0;"></ul>') html = 'No access granted for this role.';
+            preview.innerHTML = html;
+        } catch (e) {
+            preview.innerHTML = 'Failed to load permissions.';
+        }
+    }
+
+    async function saveUser(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('saveUserBtn');
+        const id = document.getElementById('edit_user_id').value;
+        const isEdit = !!id;
+        
+        if (!isEdit && !document.getElementById('u_password').value.trim()) {
+            Swal.fire('Required', 'Password is required for new users.', 'warning');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        
+        const customPerms = {};
+        document.querySelectorAll('.perm-module-check').forEach(chk => {
+            const mod = chk.getAttribute('data-module');
+            const feat = chk.getAttribute('data-permission');
+            if (!mod || !feat) return;
+
+            if (!customPerms[mod]) {
+                customPerms[mod] = {};
+            }
+            customPerms[mod][feat] = chk.checked;
+        });
+
+        const payload = {
+            full_name: document.getElementById('u_full_name').value.trim(),
+            username: document.getElementById('u_username').value.trim(),
+            email: document.getElementById('u_email').value.trim(),
+            password: document.getElementById('u_password').value, // Allow blank if isEdit
+            role: document.getElementById('u_role').value,
+            can_edit: document.getElementById('u_can_edit').value,
+            can_delete: document.getElementById('u_can_delete').value,
+            status: document.getElementById('u_status').value,
+            custom_permissions: customPerms
+        };
+
+        const url = isEdit ? `/admin/users/${id}` : '/admin/users';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                Swal.fire('Success!', `User successfully ${isEdit ? 'updated' : 'created'}.`, 'success');
+                document.getElementById('userModal').style.display = 'none';
+                loadUsers();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to save user.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network error. Could not connect to server.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = isEdit ? 'Update User' : 'Create User';
+        }
+    }
+
+    async function deleteUser(id) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This will permanently delete the user from the system.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete!'
+        });
+
+        if (isConfirmed) {
+            try {
+                const res = await fetch(`/admin/users/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Swal.fire('Deleted!', 'User has been removed.', 'success');
+                    loadUsers();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to delete user.', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Network error.', 'error');
+            }
+        }
+    }
+
+    async function resetPassword(id) {
+        const { value: newPassword } = await Swal.fire({
+            title: 'Reset Password',
+            input: 'password',
+            inputLabel: 'Enter new password for the user',
+            inputPlaceholder: 'New password',
+            showCancelButton: true,
+            inputValidator: (value) => {
+                if (!value) return 'Password is required!'
+            }
+        });
+        
+        if (newPassword) {
+            const u = allUsersData.find(x => x.id === id);
+            if (!u) return;
+            const payload = { full_name: u.full_name, username: u.username, email: u.email, password: newPassword, role: u.role, can_edit: u.can_edit, can_delete: u.can_delete, status: u.status };
+            try {
+                const res = await fetch(`/admin/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) Swal.fire('Success', 'Password has been reset.', 'success');
+                else Swal.fire('Error', (await res.json()).error || 'Failed to reset password.', 'error');
+            } catch (e) { Swal.fire('Error', 'Network error.', 'error'); }
+        }
+    }
+
+    async function fetchLastBackup() {
+        try {
+            const res = await fetch('/api/last-backup');
+            const data = await res.json();
+            document.getElementById('lastBackupTime').innerText = data.lastBackup || 'None';
+        } catch(e) { document.getElementById('lastBackupTime').innerText = 'Unknown'; }
+    }
+
+    async function openRestoreModal() {
+        const list = document.getElementById('backupList');
+        list.innerHTML = '<li style="padding:12px; text-align:center; color:var(--text-muted);">Loading backups...</li>';
+        document.getElementById('restoreModal').style.display = 'flex';
+        try {
+            const res = await fetch('/api/backups');
+            if (!res.ok) throw new Error('Failed');
+            const backups = await res.json();
+            if (backups.length === 0) { list.innerHTML = '<li style="padding:12px; text-align:center; color:var(--text-muted);">No backups found.</li>'; return; }
+            list.innerHTML = backups.map((b, i) => {
+                const d = new Date(b.date);
+                const fmt = d.toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
+                const badge = i === 0 ? '<span style="background:#10b981; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700; margin-left:auto;">LATEST</span>' : '';
+                return `<li style="display:flex; align-items:center; padding:8px 12px; border-bottom:1px solid var(--border); cursor:pointer;" onclick="window.location.href='/api/backups/download/${b.name}'" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                    <span style="font-weight:600; color:var(--primary);">&#128190; ${b.name}</span>
+                    <span style="margin-left:10px; font-size:11px; color:var(--text-muted);">${fmt} (${b.size} MB)</span>${badge}</li>`;
+            }).join('');
+        } catch(e) { list.innerHTML = '<li style="padding:12px; text-align:center; color:#b93a20;">Error loading backups.</li>'; }
+    }
+
+    async function loadPermissions() {
+        try {
+            const res = await fetch('/api/get-permissions');
+            const data = await res.json();
+            renderPermissionsMatrix(data);
+        } catch (e) {
+            console.error('Failed to load permissions:', e);
+        }
+    }
+
+    function renderPermissionsMatrix(data) {
+        const thead = document.getElementById('permMatrixHead');
+        if (thead && thead.innerHTML.trim() === '') {
+            thead.innerHTML = '<tr><th>Modules</th>' + PERM_ROLES.map(r => `<th style="min-width: 90px;">${r.replace(' ', '<br>')}</th>`).join('') + '</tr>';
+        }
+        const tbody = document.getElementById('permMatrixBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        let htmlString = '';
+        Object.keys(PERM_SCHEMA).forEach(mod => {
+            let row = `<tr style="background: #f1f5f9;"><td style="text-align: left; min-width: 180px;">📁 ${mod}</td>`;
+            PERM_ROLES.forEach(role => {
+                const perm = data.find(p => p.role_name === role && p.module_name === mod && p.feature_name === 'Access Module');
+                const isChecked = perm && perm.is_enabled === 1 ? 'checked' : '';
+                const isDisabled = role === 'Admin' ? 'disabled checked' : '';
+                row += `<td><label class="ios-switch"><input type="checkbox" class="perm-checkbox" data-role="${role}" data-module="${mod}" data-feature="Access Module" ${isChecked} ${isDisabled}><span class="ios-slider"></span></label></td>`;
+            });
+            row += `</tr>`;
+            htmlString += row;
+            
+            PERM_SCHEMA[mod].forEach(feat => {
+                if (feat === 'Access Module') return;
+                let featRow = `<tr class="feature-row"><td>↳ ${feat}</td>`;
+                PERM_ROLES.forEach(role => {
+                    const perm = data.find(p => p.role_name === role && p.module_name === mod && p.feature_name === feat);
+                    const isChecked = perm && perm.is_enabled === 1 ? 'checked' : '';
+                    const isDisabled = role === 'Admin' ? 'disabled checked' : '';
+                    featRow += `<td><label class="ios-switch"><input type="checkbox" class="perm-checkbox" data-role="${role}" data-module="${mod}" data-feature="${feat}" ${isChecked} ${isDisabled}><span class="ios-slider"></span></label></td>`;
+                });
+                featRow += `</tr>`;
+                htmlString += featRow;
+            });
+        });
+        tbody.innerHTML = htmlString;
+    }
+
+    async function savePermissions() {
+        const btn = document.getElementById('savePermBtn');
+        btn.disabled = true; 
+        btn.innerText = 'Saving...';
+        const checkboxes = document.querySelectorAll('.perm-checkbox');
+        const permissions = Array.from(checkboxes).map(cb => ({
+            role_name: cb.getAttribute('data-role'), 
+            module_name: cb.getAttribute('data-module'), 
+            feature_name: cb.getAttribute('data-feature'),
+            is_enabled: cb.checked ? 1 : 0
+        }));
+        try {
+            const res = await fetch('/api/save-permissions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permissions }) });
+            if (res.ok) Swal.fire('Saved!', 'Permission matrix updated successfully.', 'success');
+            else throw new Error('Failed');
+        } catch (e) {
+            Swal.fire('Error', 'Could not save permissions.', 'error');
+        } finally {
+            btn.disabled = false; btn.innerText = 'Save Permissions'; loadPermissions();
+        }
+    }
+
+    async function startManualBackup() {
+        try {
+            const res = await fetch('/api/backup/start', { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to start backup');
+            Swal.fire({
+                title: 'Creating Backup...',
+                html: `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Compressing system files... Please wait.</div>
+                    <div style="font-weight:700; font-size:16px; color:var(--text-dark); margin-bottom:8px;" id="backup-text">0%</div>
+                    <div style="width:100%; background:#e2e8f0; border-radius:10px; height:12px; overflow:hidden;"><div id="backup-pb" style="width:0%; background:#10b981; height:100%; transition:width 0.3s ease;"></div></div>`,
+                allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false,
+                didOpen: () => {
+                    const pb = document.getElementById('backup-pb'), pbt = document.getElementById('backup-text');
+                    const iv = setInterval(async () => {
+                        try {
+                            const s = await (await fetch('/api/backup/status')).json();
+                            pb.style.width = s.progress + '%'; pbt.innerText = s.progress + '%';
+                            if (s.error) { clearInterval(iv); Swal.fire('Error', s.error, 'error'); }
+                            else if (!s.isRunning && s.progress === 100) { clearInterval(iv); Swal.fire('Success!', 'Backup completed!', 'success').then(() => { window.location.reload(); }); }
+                            else if (!s.isRunning && s.progress !== 100) { clearInterval(iv); Swal.fire('Warning', 'Backup stopped unexpectedly.', 'warning'); }
+                        } catch(e) { clearInterval(iv); Swal.fire('Error', 'Failed to get backup status.', 'error'); }
+                    }, 500);
+                }
+            });
+        } catch(e) { Swal.fire('Error', e.message, 'error'); }
+    }
+
+    window.onload = () => { 
+        loadUsers(); 
+        fetchLastBackup(); 
+        loadPermissions(); 
+        const pwdInput = document.getElementById('u_password');
+        if (pwdInput) pwdInput.addEventListener('input', updatePasswordStrength);
+    };
+
+    (async function loadSidebarUser() {
+        try {
+            const res = await fetch("/api/me");
+            if (res.status === 401) { window.location.href = "/login"; return; }
+            const user = await res.json();
+            const nameEl = document.getElementById("sidebarName");
+            const roleEl = document.getElementById("sidebarRole");
+            const avatarEl = document.getElementById("sidebarAvatar");
+            const isMgr = user.role === 'Admin' || user.role === 'Manager' || (user.role && user.role.includes('Manager'));
+            if (nameEl) nameEl.innerText = user.full_name || user.username;
+            if (roleEl) roleEl.innerText = isMgr ? "Admin Access" : user.role;
+            if (avatarEl) avatarEl.innerText = (user.full_name || user.username).split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+            if (user.role !== 'Admin') {
+                try {
+                    const pRes = await fetch(`/api/my-permissions`); // This now correctly merges user overrides
+                    if (pRes.ok) {
+                        const matrix = await pRes.json();
+                        const check = (href, mod, feat) => {
+                            if (!matrix[mod] || !matrix[mod][feat]) {
+                                const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                                if (el) el.style.display = 'none';
+                            }
+                        };
+                        check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                        check('/stc_master.html', 'Masters', 'Manage STC');
+                        check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                        check('/margin_master.html', 'Masters', 'Manage Margins');
+                        check('/installation_charges.html', 'Masters', 'Manage Charges');
+                        check('/installations.html', 'Ares Installation Outside', 'Installations');
+                        check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                        check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                        check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                        check('/admin.html', 'Settings', 'Manage Users');
+                        
+                        document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                            const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                            if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                                if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                            }
+                        });
+                    }
+                } catch(err) {}
+            }
+        } catch(e) { window.location.href = "/login"; }
+    })();
+</script>
+<script src="/crm-autosave-toast.js?v=2"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

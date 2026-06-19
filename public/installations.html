@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Installations - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places,geometry"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button, textarea { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== MAIN LAYOUT & TOPBAR ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+        .btn-add { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.25); font-size: 13px; }
+        .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        
+        /* Status Badges */
+        .status-badge { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); }
+        .sb-planned { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
+        .sb-active { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
+        .proj-num { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 700; color: var(--primary); background: #eef2f8; padding: 2px 6px; border-radius: 4px; border: 1px solid #c5d3e8; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ========== COMPONENTS & MODALS ========== */
+        .cb-col { width: 36px; text-align: center; }
+        input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
+        .actions-cell { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 22px; width: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--text-muted); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: var(--text-dark); transform: translateY(-1px); }
+        .act-btn-del:hover { background: #fef0ee; border-color: #f5c4bb; color: #b93a20; }
+
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: var(--surface); padding: 20px 24px 16px; width: 100%; max-width: 500px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); animation: slideUp 0.3s ease; max-height: 92vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .modal-lg { max-width: 900px !important; }
+        .modal-md { max-width: 600px !important; }
+        .modal-xl { max-width: 1140px !important; }
+        .modal-sm { max-width: 420px !important; }
+
+        /* ========== HISTORY ========== */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
+        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+
+        /* ========== FORM & FILTERS ========== */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .field { display: flex; flex-direction: column; justify-content: center; }
+        .field.full-width { grid-column: span 2; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .required::after { content: " *"; color: #b93a20; }
+        .field input, .field select { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; outline: none; transition: all 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .input-group { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); height: 32px; transition: all 0.2s; }
+        .input-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .country-code { background: #f4f6f9; padding: 0 10px; border-right: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; height: 100%; white-space: nowrap; }
+        .input-group input[type="text"] { border: none !important; box-shadow: none !important; height: 100%; border-radius: 0; flex: 1; padding: 0 10px; font-size: 13px; }
+        .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: 1 / -1; }
+        .form-footer { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-bottom: none; border-top: 1px solid var(--border); grid-column: 1 / -1; gap: 8px; }
+        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-save:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .adv-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px; }
+        .adv-filter-grid .field label { font-size: 11px; margin-bottom: 2px; }
+        .form-control-sm { height: 26px !important; padding: 5px 8px !important; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; background: var(--surface); outline: none; box-shadow: none; transition: all 0.2s; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+
+        /* ========== AUTOCOMPLETE DROPDOWNS ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 180px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 6px; display: none; padding: 4px 0; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; transition: background 0.15s; }
+        .ac-drop li:hover { background: #f1f5f9; color: var(--primary) !important; }
+        .ac-drop li.ac-active { background: #f1f5f9; color: var(--primary) !important; border-left: 3px solid var(--primary); }
+        .ac-empty { padding: 10px; font-size: 11px !important; color: var(--text-muted) !important; font-style: italic; text-align: center; }
+        
+        /* ========== FILTER TAGS (MULTIPLE SELECTION) ========== */
+        .filter-tag { display: inline-flex; align-items: center; background: var(--primary); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px; gap: 6px; }
+        .filter-tag span { cursor: pointer; font-weight: bold; color: #cbd5e1; transition: 0.2s; }
+        .filter-tag span:hover { color: #fff; }
+
+        .pac-container { z-index: 9999 !important; border-radius: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; font-family: 'Inter', sans-serif !important; }
+
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+
+        /* ========== COLUMN ALIGNMENTS ========== */
+        .col-center { text-align: center !important; vertical-align: middle !important; }
+        .stacked-text { display: flex !important; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* ========== COMPACT DYNAMIC TABLES ========== */
+        .compact-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .compact-table th { background: #f8fafc; font-size: 11px !important; font-weight: 700 !important; color: #212529 !important; text-transform: uppercase; padding: 4px 6px !important; border: 1px solid var(--border); text-align: center; }
+        .compact-table td { padding: 4px !important; border: 1px solid var(--border); vertical-align: middle; text-align: center; }
+        .compact-table input, .compact-table select { height: 26px !important; padding: 2px 6px !important; font-size: 11px !important; font-weight: 500 !important; color: #212529 !important; border: 1px solid var(--border); border-radius: 4px; width: 100%; box-sizing: border-box; outline: none; background: #fff; box-shadow: none; }
+        .compact-table input:focus, .compact-table select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .compact-table input[readonly] { background: #f1f5f9; color: #212529 !important; cursor: not-allowed; font-weight: 700 !important; border-style: dashed; }
+        .btn-add-row { background: transparent; border: 1px dashed var(--primary); color: var(--primary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-add-row:hover { background: #eef2f8; }
+        .btn-del-row { background: #fef0ee; color: #b93a20; border: 1px solid #f5c4bb; border-radius: 4px; width: 24px; height: 24px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-del-row:hover { background: #b93a20; color: #fff; }
+        .qty-wrap { display: flex; align-items: center; gap: 4px; }
+
+        /* ========== PAGINATION ========== */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left { display: flex; align-items: center; gap: 8px; }
+        .pf-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; color: var(--text-dark); background: var(--surface); outline: none; cursor: pointer; }
+        .rows-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .pf-right { display: flex; align-items: center; gap: 8px; }
+        .page-info { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dark); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg); }
+
+        /* ========== STRICT GLOBAL UI RULES ========== */
+        table th {
+            position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px);
+            border-bottom: 2px solid var(--border); border-right: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 0.4px;
+            color: #212529 !important; font-weight: 700 !important; font-size: 10px !important;
+            text-align: center !important; vertical-align: middle !important;
+            padding: 4px 8px !important; line-height: 1.3; z-index: 10;
+            resize: horizontal; overflow: hidden;
+            white-space: normal !important; word-wrap: break-word; max-width: 140px; min-width: 60px;
+            cursor: pointer; user-select: none;
+        }
+        table th:last-child {
+            right: 0;
+            z-index: 11;
+        }
+        table th:hover { background: #f1f5f9; }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        table td, table td span:not(.status-badge):not(.proj-pending):not(.proj-num):not(.age-pill), table td div:not(.actions-cell) {
+            color: #212529 !important; font-weight: 500 !important; text-align: center !important; vertical-align: middle !important; font-size: 11px !important;
+        }
+        table td { border-bottom: 1px solid #f1f5f9; padding: 2px 6px !important; background: var(--surface); }
+    
+    /* Product Modal specific styles */
+    .required-star::after { content: " *"; color: #b93a20; }
+    .child-row { display: grid; grid-template-columns: 3fr 2fr 100px 32px; gap: 8px; margin-bottom: 8px; align-items: end; }
+    .child-row input { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 13px; transition: all 0.2s; box-shadow: none; }
+    .child-row input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        table td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 9;
+            border-left: 1px solid var(--border);
+        }
+        table td .act-btn { color: #212529 !important; font-weight: 700 !important; }
+        table tbody tr:hover td { background: #f8fafc !important; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        .shake-error {
+            animation: shake 0.4s ease-in-out;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div id="globalProgressBar" style="display:none; position:fixed; top:20px; right:20px; width:250px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+    <div style="font-size:11px; font-weight:700; margin-bottom:6px;">Uploading... <span id="progressText">0%</span></div>
+    <div style="width:100%; height:6px; background:#eef2f8; border-radius:3px; overflow:hidden;">
+        <div id="progressFill" style="width:0%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Installations</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalSearch" placeholder="Search company, reference, customer..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDrop"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn act-btn-del" id="bulkDeleteBtn" style="display:none; background:#fef0ee; border-color:#f5c4bb; color:#b93a20; border-radius: 20px; margin-right: 8px;" onclick="deleteSelectedRows()">🗑️ Delete Selected (<span id="selCount">0</span>)</button>
+        <button class="tb-btn" style="border-radius: 20px; margin-right: 8px;" onclick="document.getElementById('columnVisibilityModal').style.display='flex'">👁️ Columns</button>
+        <button class="tb-btn" style="border-radius: 20px;" onclick="document.getElementById('advancedFilterModal').style.display='flex'">⚙️ More Filters</button>
+        <button class="tb-btn btn-add" onclick="openAddProjectModal()">+ Add Project</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Installations</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-sub">All records</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-val" id="statPending">0</div>
+            <div class="stat-sub">Installations in progress</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Completed</div>
+            <div class="stat-val" id="statCompleted">0</div>
+            <div class="stat-sub">Successfully installed</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-col"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)"></th>
+                        <th data-col="col_type" onclick="sortData('type')">Type <span class="sort-arrow" id="sort_type"></span></th>
+                        <th data-col="col_company" class="col-center" onclick="sortData('company')" style="min-width: 160px;"><div class="stacked-text" style="display:inline-flex !important;"><div>Company Name /</div><div>Trading Name</div></div> <span class="sort-arrow" id="sort_company"></span></th>
+                        <th data-col="col_date" onclick="sortData('created_date')">Project Created / Completed Date <span class="sort-arrow" id="sort_created_date"></span></th>
+                        <th data-col="col_ref" onclick="sortData('project_number')">Reference <span class="sort-arrow" id="sort_project_number"></span></th>
+                        <th data-col="col_customer" onclick="sortData('first_name')">Customer <span class="sort-arrow" id="sort_first_name"></span></th>
+                        <th data-col="col_phone" onclick="sortData('phone')">Phone <span class="sort-arrow" id="sort_phone"></span></th>
+                        <th data-col="col_email" onclick="sortData('email')">Email <span class="sort-arrow" id="sort_email"></span></th>
+                        <th data-col="col_address" onclick="sortData('address')" style="min-width: 160px;"><div class="stacked-text" style="display:inline-flex !important;"><div>Address /</div><div>Suburb & State</div></div> <span class="sort-arrow" id="sort_address"></span></th>
+                        <th data-col="col_area" onclick="sortData('area')">Area <span class="sort-arrow" id="sort_area"></span></th>
+                        <th data-col="col_pv" onclick="sortData('panel_model')">PV Qty / Battery <span class="sort-arrow" id="sort_panel_model"></span></th>
+                        <th data-col="col_inv" onclick="sortData('inverter_model')">Inverter Model <span class="sort-arrow" id="sort_inverter_model"></span></th>
+                        <th data-col="col_invoice" style="text-align: right !important; padding-right: 16px !important;" onclick="sortData('invoice_amount')">Invoice $ <span class="sort-arrow" id="sort_invoice_amount"></span></th>
+                        <th data-col="col_mode" onclick="sortData('payment_mode')">$ Mode <span class="sort-arrow" id="sort_payment_mode"></span></th>
+                        <th data-col="col_status" onclick="sortData('status')">$ Status <span class="sort-arrow" id="sort_status"></span></th>
+                        <th data-col="col_cert" onclick="sortData('cert_status')">Certificate Status <span class="sort-arrow" id="sort_cert_status"></span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="installationsBody">
+                    </tbody>
+            </table>
+        </div>
+        <div class="pagination-footer" id="paginationFooter">
+            <div class="pf-left">
+                <span class="pf-label">Show:</span>
+                <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                    <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                </select>
+                <span class="total-badge">Total: <span id="totalRecordsCount">0</span></span>
+            </div>
+            <div class="pf-right">
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+                <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="columnVisibilityModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('columnVisibilityModal').style.display='none'">✕</button>
+        <div class="modal-title">Toggle Columns</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding: 10px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_type', this.checked)"> Type</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_company', this.checked)"> Company Name</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_date', this.checked)"> Date</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_ref', this.checked)"> Reference</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_customer', this.checked)"> Customer</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_phone', this.checked)"> Phone</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_email', this.checked)"> Email</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_address', this.checked)"> Address</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_area', this.checked)"> Area</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_pv', this.checked)"> PV Qty / Battery</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_inv', this.checked)"> Inverter</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_invoice', this.checked)"> Invoice $</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_mode', this.checked)"> $ Mode</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_status', this.checked)"> $ Status</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_cert', this.checked)"> Certificate</label>
+        </div>
+    </div>
+</div>
+
+<div id="advancedFilterModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
+        <div class="modal-title">More Filters</div>
+        <div class="adv-filter-grid">
+            <div class="field"><label>Type</label><select class="form-control-sm" id="adv_type"><option value="">All</option><option>PV</option><option>Battery</option><option>PV + Battery</option><option>Domestic</option><option>Service</option><option>Other</option></select></div>
+            <div class="field ac-wrap"><label>Company</label><input type="text" class="form-control-sm" id="flt_company" autocomplete="off" placeholder="Search Company..."><ul class="ac-drop" id="flt_company_drop"></ul></div>
+            <div class="field"><label>Area</label><select class="form-control-sm" id="adv_area"><option value="">All</option><option>Metro</option><option>Regional</option></select></div>
+            
+            <div class="section-divider">Location</div>
+            <div class="field ac-wrap"><label>Suburb</label><div id="flt_suburb_tags" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px;"></div><input type="text" class="form-control-sm" id="flt_suburb" autocomplete="off" placeholder="Search Suburb..."><ul class="ac-drop" id="flt_suburb_drop"></ul></div>
+            <div class="field ac-wrap"><label>State</label><input type="text" class="form-control-sm" id="flt_state" autocomplete="off" placeholder="Search State..."><ul class="ac-drop" id="flt_state_drop"></ul></div>
+            <div></div>
+
+            <div class="section-divider">Dates</div>
+            <div class="section-divider">DATE RANGES</div>
+            <div class="field"><label>Project Created (Start)</label><input type="date" class="form-control-sm" id="adv_created_from"></div>
+            <div class="field"><label>Project Created (End)</label><input type="date" class="form-control-sm" id="adv_created_to"></div>
+            <div></div>
+            <div class="field"><label>Completed Date (Start)</label><input type="date" class="form-control-sm" id="adv_completed_from"></div>
+            <div class="field"><label>Completed Date (End)</label><input type="date" class="form-control-sm" id="adv_completed_to"></div>
+            <div></div>
+
+            <div class="section-divider">Equipment</div>
+            <div class="field ac-wrap"><label>PV Model</label><input type="text" class="form-control-sm" id="flt_panel" autocomplete="off" placeholder="Search PV..."><ul class="ac-drop" id="flt_panel_drop"></ul></div>
+            <div class="field ac-wrap"><label>Battery Model</label><input type="text" class="form-control-sm" id="flt_battery" autocomplete="off" placeholder="Search Battery..."><ul class="ac-drop" id="flt_battery_drop"></ul></div>
+            <div class="field ac-wrap"><label>Inverter Model</label><input type="text" class="form-control-sm" id="flt_inverter" autocomplete="off" placeholder="Search Inverter..."><ul class="ac-drop" id="flt_inverter_drop"></ul></div>
+
+            <div class="section-divider">Finance & Status</div>
+            <div class="field"><label>Payment Mode</label><select class="form-control-sm" id="adv_pay_mode"><option value="">All</option><option>Cash</option><option>Online</option></select></div>
+            <div class="field"><label>Payment Status</label><select class="form-control-sm" id="adv_pay_status"><option value="">All</option><option>Pending</option><option>Paid</option></select></div>
+            <div class="field"><label>Certificate Status</label><select class="form-control-sm" id="adv_cert_status"><option value="">All</option><option>Yes</option><option>No</option></select></div>
+        </div>
+        <div class="form-footer">
+            <button class="btn-save" style="background: var(--text-muted);" onclick="resetAdvancedFilters()">Reset</button>
+            <button class="btn-reset" onclick="resetAdvancedFilters()">Reset Filters</button>
+            <button class="btn-save" onclick="applyAdvancedFilters()">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<div id="addProjectModal" class="modal">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" onclick="document.getElementById('addProjectModal').style.display='none'">✕</button>
+        <div class="modal-title">Add New Project</div>
+        <form id="projectForm" onsubmit="saveProject(event)">
+            <input type="hidden" id="edit_id" value="">
+            <div class="form-grid">
+                <div class="section-divider">Basic Details</div>
+                <div class="field"><label class="required">Type Of Project</label><select id="proj_type"><option>PV</option><option>Battery</option><option>PV + Battery</option><option>Domestic</option><option>Service</option><option>Other</option></select></div>
+                <div class="field ac-wrap"><label class="required">Company</label><input type="text" id="proj_company" autocomplete="off" placeholder="Type to search..."><ul class="ac-drop" id="proj_company_drop"></ul></div>
+                <div class="field"><label class="required">First Name</label><input type="text" id="proj_first_name"></div>
+                <div class="field"><label class="required">Last Name</label><input type="text" id="proj_last_name"></div>
+                <div class="field"><label class="required">Phone Number</label><div class="input-group"><span class="country-code">+61</span><input type="text" id="proj_phone" placeholder="4xx xxx xxx"></div></div>
+                <div class="field"><label>Email ID</label><input type="text" id="proj_email"></div>
+                
+                <div class="section-divider">Address Details</div>
+                <div class="field full-width"><label class="required">Google Search</label><input type="text" id="google_address" placeholder="Type address to auto-fill..."></div>
+                <div class="field"><label>Unit Number</label><input type="text" id="unit_number"></div>
+                <div class="field"><label>Lot Number</label><input type="text" id="lot_number"></div>
+                <div class="field"><label>Street Type</label><input type="text" id="street_type"></div>
+                <div class="field"><label>Address</label><input type="text" id="address"></div>
+                <div class="field"><label>Suburb</label><input type="text" id="suburb"></div>
+                <div class="field"><label>State</label><input type="text" id="state"></div>
+                <div class="field"><label>Postcode</label><input type="text" id="postcode"></div>
+            </div>
+            <div class="form-footer"><button type="submit" class="btn-save" id="saveProjectBtn">Save Project</button></div>
+        </form>
+    </div>
+</div>
+
+<div id="addEquipmentModal" class="modal">
+    <div class="modal-content modal-xl">
+        <button class="modal-close" onclick="document.getElementById('addEquipmentModal').style.display='none'">✕</button>
+        <div class="modal-title">Add Equipment & Charges</div>
+        <form id="equipmentForm">
+            <input type="hidden" id="equip_install_id" value="">
+            <input type="hidden" id="eq_proj_type" value="">
+            
+            <div class="section-divider" style="margin-top: 0;">1. Equipments</div>
+            <table class="compact-table" id="eqTable">
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Equipment Type</th><th style="width: 25%">Product Name</th><th style="width: 20%">Model Number</th>
+                        <th style="width: 15%; text-align: center;">Qty / Modules</th><th style="width: 12%; text-align: center;">Watt / kWh</th><th style="width: 12%">Size (kW / kWh)</th><th style="width: 4%"></th>
+                    </tr>
+                </thead>
+                <tbody id="equipTableBody"></tbody>
+            </table>
+
+            <div class="section-divider">2. Other Details</div>
+
+            <!-- Professional Table Layout - Image 2 Style -->
+            <table class="compact-table" id="meterCertTable" style="width: 100%; margin-bottom: 12px;">
+                <thead>
+                    <tr>
+                        <th style="width: 20%; text-align: left;">Meter Number</th>
+                        <th style="width: 20%; text-align: left;">Electricity Phase</th>
+                        <th style="width: 20%; text-align: left;">Certificate Type</th>
+                        <th style="width: 15%; text-align: left;">Certificate No.</th>
+                        <th style="width: 25%; text-align: left;">Upload / View / +</th>
+                    </tr>
+                </thead>
+                <tbody id="certTableBody">
+                    <!-- Dynamically populated by addCertRow(true) in addEquipment() -->
+                </tbody>
+            </table>
+
+            <!-- Additional Certificates Container (for extra rows) -->
+            <div id="extraCertsContainer"></div>
+
+            <!-- Help Text for File Formats -->
+            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px; color: #92400e;">
+                <strong>Accepted formats:</strong> PDF, JPG, JPEG, PNG (Max 5 MB per file)
+            </div>
+
+
+            <div class="section-divider">3. Installation Charges</div>
+
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+                <span style="font-size:12px; font-weight:700; color:var(--text-muted);">SITE DISTANCE FROM PIARA WATERS WA 6112:</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="number" id="travel_km" min="0" placeholder="0" style="width:80px; height:28px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:13px; font-weight:700; text-align:center;" oninput="evaluateTravelChargeLocally(); evaluateSmartCharges();">
+                    <span style="font-size:12px; font-weight:600; color:var(--text-muted);">Billable km</span>
+                </div>
+                <div id="travel_calc_info" style="font-size:11px; color:#10b981; font-weight:600;"></div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Additional Charge:</label>
+                <div style="flex:1;">
+                    <button type="button" class="btn-save" style="text-align:left; background:var(--primary); width: 100%;" onclick="document.getElementById('chargesSelectionModal').style.display='flex'">+ Click to Select Charges...</button>
+                </div>
+            </div>
+
+            <table class="compact-table" id="chargesTable">
+                <thead>
+                    <tr>
+                        <th style="width:35%; text-align: left; padding-left: 8px !important;">Charge Name</th>
+                        <th style="width:10%; text-align: center;">Qty</th>
+                        <th style="width:12%; text-align: center;">Rate ($)</th>
+                        <th style="width:12%; text-align: center;">Ex. GST ($)</th>
+                        <th style="width:12%; text-align: center;">GST ($)</th>
+                        <th style="width:14%; text-align: center;">Inc. GST ($)</th>
+                        <th style="width:5%; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="chargesTableBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" style="text-align:right; padding-right:12px !important; color:var(--primary);">TOTAL:</th>
+                        <th id="tot_ex_gst" style="color:var(--primary); font-size:13px; text-align:center;">0.00</th>
+                        <th id="tot_gst" style="color:var(--primary); font-size:13px; text-align:center;">0.00</th>
+                        <th id="tot_inc_gst" style="color:#10b981; font-size:14px; text-align:center;">0.00</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="form-footer" style="margin-top:16px; justify-content:space-between;">
+                <div style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                    <span>Select additional charges from the dropdown. Quantities and Rates can be edited.</span>
+                </div>
+                <div style="display:flex; gap:8px; flex: 1; justify-content: flex-end;">
+                    <button type="button" class="btn-save" style="min-width: 200px; justify-content: center; font-size: 14px;" onclick="saveAllInstallationDetails()">Save Update</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="chargesSelectionModal" class="modal" style="z-index: 3500;">
+    <div class="modal-content modal-md">
+        <button class="modal-close" type="button" onclick="document.getElementById('chargesSelectionModal').style.display='none'">✕</button>
+        <div class="modal-title">Select Additional Charges</div>
+        <div id="chargesCheckboxList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px; max-height: 60vh; overflow-y: auto; padding: 8px;"></div>
+        <div class="form-footer" style="margin-top:12px; padding-top:12px;">
+            <button type="button" class="btn-save" style="width:100%; text-align:center;" onclick="addSelectedCharges()">Add Selected</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Master Modal -->
+<div id="addProductMasterModal" class="modal" style="z-index: 5000;">
+    <div class="modal-content" style="max-width: 1100px; padding: 20px 24px 16px; max-height: 92vh; overflow-y: auto;">
+        <button class="modal-close" type="button" onclick="document.getElementById('addProductMasterModal').style.display='none'">✕</button>
+        <div class="modal-title">Add New Product</div>
+        <form id="newProductForm" onsubmit="submitNewProduct(event)">
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px 12px;">
+                <div class="section-divider" style="grid-column: span 4;">Basic Details</div>
+                <div class="field"><label id="ap_lbl_product_category" class="required-star">Product Category</label>
+                    <select name="product_category" id="ap_product_category" required onchange="apUpdateMandatoryFields()">
+                        <option value="">Select</option><option>Panel</option><option>Inverter</option><option>Battery</option><option>Wi-Fi & Control Devices</option><option>Electrical Components</option><option>Mounting Components</option><option>Battery Accessories</option>
+                    </select>
+                </div>
+                <div class="field"><label id="ap_lbl_prod_name">Product Name</label><input type="text" name="prod_name" id="ap_prod_name"></div>
+                <div class="field"><label id="ap_lbl_manufacturer_name">Manufacturer Name</label><input type="text" name="manufacturer_name" id="ap_manufacturer_name"></div>
+                <div class="field"><label id="ap_lbl_brand_name">Brand Name</label><input type="text" name="brand_name" id="ap_brand_name"></div>
+                <div class="field"><label id="ap_lbl_model_number">Model Number</label><input type="text" name="model_number" id="ap_model_number"></div>
+                <div class="field"><label>Stock Code</label><input type="text" name="stock_code" id="ap_stock_code" placeholder="Auto-generated" readonly style="background:#f8fafc; border-style:dashed;"></div>
+                <div class="field">
+                    <label id="ap_lbl_pro_approved_date">Approved Date</label>
+                    <div class="date-input-container" style="display: flex; align-items: center; position: relative;">
+                        <input type="text" id="ap_pro_approved_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px;" oninput="apFormatAndSyncDateText('ap_pro_approved_date')" onblur="apFormatAndSyncDateText('ap_pro_approved_date', true)">
+                        <button type="button" class="date-picker-trigger" onclick="document.getElementById('ap_pro_approved_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                        <input type="date" name="pro_approved_date" id="ap_pro_approved_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="apSyncDateToText('ap_pro_approved_date')">
+                    </div>
+                </div>
+                <div class="field">
+                    <label id="ap_lbl_pro_expiry_date">Expiry Date</label>
+                    <div class="date-input-container" style="display: flex; align-items: center; position: relative;">
+                        <input type="text" id="ap_pro_expiry_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px;" oninput="apFormatAndSyncDateText('ap_pro_expiry_date')" onblur="apFormatAndSyncDateText('ap_pro_expiry_date', true)">
+                        <button type="button" class="date-picker-trigger" onclick="document.getElementById('ap_pro_expiry_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                        <input type="date" name="pro_expiry_date" id="ap_pro_expiry_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="apSyncDateToText('ap_pro_expiry_date')">
+                    </div>
+                </div>
+                <div class="field"><label id="ap_lbl_product_series">Product Series</label><input type="text" name="product_series" id="ap_product_series"></div>
+                <div class="field"><label id="ap_lbl_no_of_phase">Number of Phase</label><select name="no_of_phase" id="ap_no_of_phase"><option value="">Select</option><option>Single Phase</option><option>Three Phase</option></select></div>
+                <div class="field"><label id="ap_lbl_type_of_inverter">Type of Inverter</label>
+                    <select name="type_of_inverter" id="ap_type_of_inverter">
+                        <option value="">Select</option>
+                        <option>Grid Inverter</option>
+                        <option>Hybrid Inverter</option>
+                        <option>Battery Inverter</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px 12px; margin-top: 10px;">
+                <div class="section-divider" style="grid-column: span 4;">Technical Specifications & Pricing</div>
+                <div class="field"><label id="ap_lbl_panels_capacity_w">Panels Capacity (W)</label><input type="number" step="any" name="panels_capacity_w" id="ap_panels_capacity_w"></div>
+                <div class="field"><label id="ap_lbl_inv_rt_ac_out_w">Inv. Rated AC Output (W)</label><input type="number" step="any" name="inv_rt_ac_out_w" id="ap_inv_rt_ac_out_w"></div>
+                <div class="field"><label id="ap_lbl_inv_rt_dc_power_kw">Inv. Rated DC Power (kW)</label><input type="number" step="any" name="inv_rt_dc_power_kw" id="ap_inv_rt_dc_power_kw"></div>
+                <div class="field"><label id="ap_lbl_inv_mppt">Inv. MPPT</label><input type="text" name="inv_mppt" id="ap_inv_mppt"></div>
+                <div class="field"><label id="ap_lbl_nominal_battery_capacity_kwh">Nominal Battery (kWh)</label><input type="number" step="any" name="nominal_battery_capacity_kwh" id="ap_nominal_battery_capacity_kwh"></div>
+                <div class="field"><label id="ap_lbl_usable_battery_kwh">Usable Battery (kWh)</label><input type="number" step="any" name="usable_battery_kwh" id="ap_usable_battery_kwh"></div>
+                <div class="field"><label id="ap_lbl_no_of_battery_modules">No. of Battery Modules</label><input type="number" name="no_of_battery_modules" id="ap_no_of_battery_modules" min="1"></div>
+                <div class="field"><label id="ap_lbl_pro_warranty_years">Product Warranty (Yrs)</label><input type="number" step="any" name="pro_warranty_years" id="ap_pro_warranty_years"></div>
+                <div class="field"><label id="ap_lbl_panels_linear_warranty_years">Panel Linear Warranty (Yrs)</label><input type="number" step="any" name="panels_linear_warranty_years" id="ap_panels_linear_warranty_years"></div>
+                <div class="field"><label id="ap_lbl_purchase_price">Purchase Price (Inc. GST $)</label><input type="number" step="any" name="purchase_price" id="ap_purchase_price" oninput="apCalculateExGST()"></div>
+                <div class="field"><label>Purchase Price (Ex. GST $)</label><input type="number" step="any" name="purchase_price_ex_gst" id="ap_purchase_price_ex_gst" oninput="apCalculateIncGST()"></div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px 12px; margin-top: 10px;">
+                <div class="section-divider" style="grid-column: span 3;">Product Settings</div>
+                <div class="field"><label>Product Status</label>
+                    <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="product_status" value="Active" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> Active</label>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="product_status" value="Inactive" style="width: 14px; height: 14px; accent-color: var(--primary);"> Inactive</label>
+                    </div>
+                </div>
+                <div class="field"><label>Show in Quotation</label>
+                    <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_quotation" value="Yes" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> Yes</label>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_quotation" value="No" style="width: 14px; height: 14px; accent-color: var(--primary);"> No</label>
+                    </div>
+                </div>
+                <div class="field"><label>Show in Reports</label>
+                    <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_detailed_reports" value="Yes" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> Yes</label>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_detailed_reports" value="No" style="width: 14px; height: 14px; accent-color: var(--primary);"> No</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:14px;">
+                <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin: 4px 0;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Child Products (Combo Building)</div>
+                    <div style="display: grid; grid-template-columns: 3fr 2fr 100px 32px; gap: 8px; margin-bottom: 6px; padding: 0 4px;">
+                        <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Product Name — Model</span>
+                        <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Stock Code</span>
+                        <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Qty</span>
+                        <span></span>
+                    </div>
+                    <div id="apChildProductsContainer"></div>
+                    <button type="button" style="background: var(--surface); color: var(--primary); border: 1px dashed var(--primary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-top: 4px;" onclick="apAddChildRow()">+ Add Child Product</button>
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 14px; grid-template-columns: 1fr;">
+                <div class="section-divider" style="grid-column: 1 / -1;">Dynamic Documents</div>
+                <div id="apDynamicDocumentsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <div style="margin-top: 8px;">
+                    <button type="button" style="background: var(--surface); color: var(--primary); border: 1px dashed var(--primary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-top: 4px;" onclick="apAddDocumentRow()">+ Add Document</button>
+                </div>
+            </div>
+
+            <div class="form-footer" style="margin-top:16px;">
+                <button type="submit" class="btn-save" id="ap_saveBtn">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Email Invoice Modal -->
+<div id="emailInvoiceModal" class="modal" style="z-index: 3600;">
+    <div class="modal-content modal-md">
+        <button class="modal-close" type="button" onclick="document.getElementById('emailInvoiceModal').style.display='none'">✕</button>
+        <div class="modal-title">Send Invoice Email</div>
+        <form id="emailInvoiceForm">
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+                <div class="field"><label>To (Customer Email)</label>
+                    <input type="email" id="ei_to" required></div>
+                <div class="field"><label>Email Template</label>
+                    <select id="ei_template" onchange="applyEmailTemplate()">
+                        <option value="standard">Standard Invoice</option>
+                        <option value="overdue">Overdue Reminder</option>
+                        <option value="custom">Custom Message</option>
+                    </select></div>
+                <div class="field"><label>Subject</label><input type="text" id="ei_subject" required></div>
+                <div class="field"><label>Message</label><textarea id="ei_message" style="height: 120px;" required></textarea></div>
+            </div>
+            <div class="form-footer" style="display:flex; justify-content:space-between; align-items: center; margin-top: 15px;">
+                <button type="button" class="btn-secondary" style="background:#f8fafc; border:1px solid #cbd5e1; height: 36px; padding: 0 16px; border-radius: 6px; font-weight: 600;" onclick="previewInvoicePDF()">Preview PDF</button>
+                <button type="button" class="btn-save" id="ei_send_btn" style="height: 36px;" onclick="sendInvoiceEmail()">Send Email</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content modal-sm">
+        <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+        <div class="modal-title">Project History</div>
+        <ul class="history-list" id="historyBody"></ul>
+    </div>
+</div>
+
+<div id="documentModal" class="modal" style="z-index: 4000;">
+    <div class="modal-content modal-lg">
+        <button class="modal-close" type="button" onclick="document.getElementById('documentModal').style.display='none'">✕</button>
+        <div class="modal-title">Document Management</div>
+        <input type="hidden" id="doc_install_id">
+        <table class="compact-table" id="docTable">
+            <thead>
+                <tr>
+                    <th style="width:35%">Type of Document</th>
+                    <th style="width:20%">Upload File</th>
+                    <th style="width:10%">View</th>
+                    <th style="width:15%">User</th>
+                    <th style="width:15%">Date and Time</th>
+                    <th style="width:5%">Action</th>
+                </tr>
+            </thead>
+            <tbody id="docTableBody"></tbody>
+        </table>
+        <div style="margin-top: 8px;">
+            <button type="button" class="btn-add-row" onclick="addDocumentRow('Other', true)">+ Add Row</button>
+        </div>
+        <div class="form-footer" style="margin-top:16px;">
+            <button type="button" class="btn-save" onclick="saveDocuments()">Save Documents</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Global Variables ---
+    let allChargeItems = []; 
+    let listCompany = [], listSuburb = [], listState = [], listPanel = [], listBattery = [], listInverter = [];
+    let dbCompanyNames = [];
+    let allInstallationsData = [];
+    let currentSortCol = '';
+    let isSortAsc = true;
+    let selectedSuburbs = [];
+    let globalSearchTerm = '';
+    let allMasterProducts = [];
+    let activeAdvFilters = {};
+    let currentPage = 1;
+    let rowsPerPage = 30;
+    let totalRecords = 0;
+    let totalPages = 1;
+    window.syncedDocuments = {};
+    window.hasSavedCharges = false;
+
+    // --- Google Maps Autocomplete ---
+    function bindGoogleAutocomplete(inputId, prefix) {
+        const ai = document.getElementById(inputId);
+        if (!ai) return;
+        ai.addEventListener('keydown', function(e) { if (e.key === 'Enter') e.preventDefault(); });
+        const ac = new google.maps.places.Autocomplete(ai, {types: ['address'], componentRestrictions: {country: 'au'}});
+        ac.addListener('place_changed', function() {
+            const place = ac.getPlace(); 
+            if (!place || !place.address_components) return;
+            [`${prefix}unit_number`, `${prefix}address`, `${prefix}suburb`, `${prefix}state`, `${prefix}postcode`, `${prefix}street_type`, `${prefix}lot_number`].forEach(id => { 
+                const el = document.getElementById(id); if(el) el.value = ''; 
+            });
+            let sn = '', street = '', unit = '';
+            place.address_components.forEach(c => {
+                if (c.types.includes('subpremise')) unit = c.long_name;
+                if (c.types.includes('street_number')) { 
+                    if(c.long_name.includes('/')) { const p = c.long_name.split('/'); unit = p[0]; sn = p[1]; } 
+                    else { sn = c.long_name; }
+                }
+                if (c.types.includes('route')) { street = c.long_name; document.getElementById(`${prefix}street_type`).value = c.long_name.split(' ').pop(); }
+                if (c.types.includes('locality')) document.getElementById(`${prefix}suburb`).value = c.long_name;
+                if (c.types.includes('administrative_area_level_1')) document.getElementById(`${prefix}state`).value = c.short_name;
+                if (c.types.includes('postal_code')) document.getElementById(`${prefix}postcode`).value = c.long_name;
+            });
+        document.getElementById(`${prefix}unit_number`).value = unit;
+        document.getElementById(`${prefix}address`).value = `${sn} ${street}`.trim();
+        });
+    }
+
+    function initAutocomplete() {
+        bindGoogleAutocomplete('google_address', '');
+    }
+
+    // --- Auto Calculate Travel Distance via Google Maps (frontend DistanceMatrixService) ---
+    function fetchAndSetTravelDistance(destinationAddress) {
+        if (!destinationAddress || typeof google === 'undefined' || !google.maps) return;
+        const infoDiv = document.getElementById('travel_calc_info');
+        if (infoDiv) { infoDiv.innerHTML = '⏳ Calculating distance...'; infoDiv.style.color = '#64748b'; }
+
+        const service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+            origins: ['Piara Waters WA 6112, Australia'],
+            destinations: [destinationAddress],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.METRIC
+        }, function(response, status) {
+            if (status === 'OK' && response.rows[0] && response.rows[0].elements[0] && response.rows[0].elements[0].status === 'OK') {
+                const oneWayKm = response.rows[0].elements[0].distance.value / 1000;
+                const roundTripKm = oneWayKm * 2;
+                const billableKm = Math.max(0, roundTripKm - 50);
+                document.getElementById('travel_km').value = billableKm.toFixed(1);
+                if (infoDiv) {
+                    if (billableKm > 0) {
+                        infoDiv.innerHTML = `✅ One way: ${oneWayKm.toFixed(1)}km × 2 − 50km = <strong>${billableKm.toFixed(1)}km billable</strong>`;
+                        infoDiv.style.color = '#10b981';
+                    } else {
+                        infoDiv.innerHTML = `ℹ️ Round trip: ${roundTripKm.toFixed(1)}km — within 50km free zone. No travel charge.`;
+                        infoDiv.style.color = '#f59e0b';
+                    }
+                }
+                updateTravelChargeRow(billableKm);
+                updateGrandTotal();
+                evaluateSmartCharges();
+            } else {
+                console.error('DistanceMatrix error:', status, response);
+                if (infoDiv) { infoDiv.innerHTML = '⚠️ Distance auto-calculation failed. Enter billable km manually.'; infoDiv.style.color = '#ef4444'; }
+            }
+        });
+    }
+
+    // --- Shared helper: add/update/remove travel charge row ---
+    function updateTravelChargeRow(billableKm) {
+        const travelItem = allChargeItems.find(c => c.charge_type === 'per_km_travel') || allChargeItems.find(c => c.charge_name.toLowerCase().includes('travel'));
+        const tbody = document.getElementById('chargesTableBody');
+        if (!travelItem) return;
+        if (billableKm > 0) {
+            const existingRow = tbody.querySelector(`tr[data-charge-id="${travelItem.id}"]`) ||
+                Array.from(tbody.querySelectorAll('.charge-row')).find(r => (r.querySelector('.ch-name-hidden')?.value || '').toLowerCase().includes('travel'));
+            if (existingRow) {
+                existingRow.querySelector('.ch-qty').value = billableKm.toFixed(1);
+                calcChargeRow(existingRow);
+            } else {
+                addChargeRow(travelItem.id, travelItem.charge_name, billableKm.toFixed(1), travelItem.rate, true);
+            }
+        } else {
+            Array.from(tbody.querySelectorAll('.charge-row')).forEach(row => {
+                if ((row.querySelector('.ch-name-hidden')?.value || '').toLowerCase().includes('travel')) row.remove();
+            });
+        }
+    }
+
+    // --- Manual edit of Billable km field ---
+    function evaluateTravelChargeLocally() {
+        const billableKm = parseFloat(document.getElementById('travel_km').value) || 0;
+        const infoDiv = document.getElementById('travel_calc_info');
+        if (billableKm > 0) {
+            if (infoDiv) { infoDiv.innerHTML = `✅ <strong>${billableKm.toFixed(1)}km billable</strong>`; infoDiv.style.color = '#10b981'; }
+        } else {
+            if (infoDiv) { infoDiv.innerHTML = ''; }
+        }
+        updateTravelChargeRow(billableKm);
+        updateGrandTotal();
+    }
+
+    // --- Modals ---
+    function openAddProjectModal() {
+        document.getElementById('projectForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.querySelector('#addProjectModal .modal-title').innerText = 'Add New Project';
+        document.getElementById('saveProjectBtn').innerText = 'Save Project';
+        document.getElementById('addProjectModal').style.display = 'flex';
+    }
+
+    function editInstallation(id) {
+        const p = allInstallationsData.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('projectForm').reset();
+        document.getElementById('edit_id').value = p.id;
+        document.querySelector('#addProjectModal .modal-title').innerText = 'Edit Project Details';
+        document.getElementById('saveProjectBtn').innerText = 'Update Project';
+        document.getElementById('proj_type').value = p.type || '';
+        document.getElementById('proj_company').value = p.company || '';
+        document.getElementById('proj_first_name').value = p.first_name || '';
+        document.getElementById('proj_last_name').value = p.last_name || '';
+        document.getElementById('proj_phone').value = p.phone || '';
+        document.getElementById('proj_email').value = p.email || '';
+        document.getElementById('unit_number').value = p.unit_number || '';
+        document.getElementById('lot_number').value = p.lot_number || '';
+        document.getElementById('street_type').value = p.street_type || '';
+        document.getElementById('address').value = p.address || '';
+        document.getElementById('suburb').value = p.suburb || '';
+        document.getElementById('state').value = p.state || '';
+        document.getElementById('postcode').value = p.postcode || '';
+        
+        const fullAddr = `${p.unit_number ? p.unit_number + ' ' : ''}${p.address || ''}, ${p.suburb || ''}, ${p.state || ''}`.trim();
+        const gaEl = document.getElementById('google_address');
+        if (fullAddr.length > 4 && gaEl) { gaEl.value = fullAddr; }
+        document.getElementById('addProjectModal').style.display = 'flex';
+    }
+
+    async function viewHistory(id) {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<li class="history-item"><div class="history-detail">Loading...</div></li>';
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const res = await fetch(`/installations/${id}/history`);
+            const hist = await res.json();
+            if (hist.length) body.innerHTML = hist.map(h => `<li class="history-item"><div class="history-date">${h.created_at} — ${h.user_name || 'System'}</div><div class="history-action">${h.action}</div><div class="history-detail">${h.details}</div></li>`).join('');
+            else body.innerHTML = '<li class="history-item"><div class="history-detail">No history found.</div></li>';
+        } catch(e) { body.innerHTML = '<li class="history-item"><div class="history-detail">Error loading history.</div></li>'; }
+    }
+
+    async function deleteInstallation(id) {
+        const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
+        const role = document.querySelector('.sb-urole')?.innerText.includes('Admin') ? 'Manager' : 'User';
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?',
+            text: `This will ${role === 'Manager' ? 'permanently delete' : 'request deletion for'} the installation record.`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#e8681e', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, proceed!'
+        });
+        if (isConfirmed) {
+            try {
+                const res = await fetch(`/installations/${id}/delete-action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentUser: currentUser, role: role })
+                });
+                if (res.ok) { Swal.fire('Success!', 'Action completed.', 'success'); loadInstallations(); }
+                else { const err = await res.json(); Swal.fire('Error', err.error || 'Failed to process request.', 'error'); }
+            } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+        }
+    }
+
+    async function addEquipment(id) {
+        const p = allInstallationsData.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('equip_install_id').value = p.id;
+        document.getElementById('eq_proj_type').value = p.type || '';
+        
+        initEquipTable(p);
+
+        // Reset cert table with a proper dynamic first row (contains eq_meter_no and eq_phase)
+        document.getElementById('certTableBody').innerHTML = '';
+        addCertRow(true);
+
+        const ecc = document.getElementById('extraCertsContainer');
+        if(ecc) ecc.innerHTML = '';
+
+        // Dynamic row uses classes not IDs for cert fields
+        const certEl = document.querySelector('#certTableBody .eq_cert');
+        if (certEl) certEl.value = '';
+        const certNoEl = document.querySelector('#certTableBody .eq_cert_no');
+        if (certNoEl) certNoEl.value = '';
+
+        document.getElementById('eq_meter_no').value = p.meter_number || '';
+        document.getElementById('eq_phase').value = p.electricity_phase || '';
+        
+        calcEquip();
+        
+        // BUG FIX: Strictly scope and reset distance variables to prevent cross-modal leakage
+        document.getElementById('travel_km').value = p.travel_distance_km !== null && p.travel_distance_km !== undefined ? p.travel_distance_km : '';
+        const infoDiv = document.getElementById('travel_calc_info');
+        if (infoDiv) {
+            infoDiv.innerHTML = '';
+            const savedBillable = parseFloat(p.travel_distance_km) || 0;
+            if (savedBillable > 0) {
+                infoDiv.innerHTML = `✅ <strong>${savedBillable.toFixed(1)}km billable</strong>`;
+                infoDiv.style.color = '#10b981';
+            }
+        }
+        
+        await loadChargeItems();
+        populateChargeDropdown();
+        
+        // Priority Loading of Saved Charges
+        window.hasSavedCharges = false;
+        // BUG FIX: Prevent ghost charges by marking true if user previously saved this modal
+        window.hasSavedCharges = p.charges_configured === 'Yes' ? true : false;
+        document.getElementById('chargesTableBody').innerHTML = '';
+        updateGrandTotal();
+
+        try {
+            const res = await fetch(`/installations/${id}/charges`);
+            if (res.ok) {
+                const savedCharges = await res.json();
+                if (savedCharges && savedCharges.length > 0) {
+                    window.hasSavedCharges = true;
+                    savedCharges.forEach(charge => { addChargeRow(charge.charge_item_id, charge.charge_name, charge.qty, charge.rate, false); });
+                    updateGrandTotal();
+                }
+            }
+        } catch(e) { console.error('Error fetching charges', e); }
+
+        if (!window.hasSavedCharges) {
+            evaluateSmartCharges();
+
+            // Auto-fetch distance only if there are no previously saved user charges
+            const fullAddr = p.google_address || `${p.unit_number ? p.unit_number + ' ' : ''}${p.address || ''}, ${p.suburb || ''}, ${p.state || ''} ${p.postcode || ''}`.replace(/,\s*,/g, ',').trim();
+            if (fullAddr.length > 5) {
+                fetchAndSetTravelDistance(fullAddr);
+            }
+        }
+
+        document.getElementById('addEquipmentModal').style.display = 'flex';
+    }
+
+    // New helper function to render a single certificate row
+    function renderCertRow(certData = {}, isFirstRow = false) {
+        const certId = certData.id || 'cert_' + Date.now(); // Use existing ID or generate new
+        const type = certData.type || '';
+        const number = certData.number || '';
+        const fileUrl = certData.fileUrl || '';
+
+        const tr = document.createElement('tr');
+        tr.className = 'cert-row';
+        tr.dataset.certId = certId;
+        tr.style.borderTop = isFirstRow ? 'none' : '1px solid var(--border)';
+
+        const meterNoHtml = isFirstRow ? `<input type="text" id="eq_meter_no" class="form-control-sm" placeholder="e.g., 123456789" style="width: 100%; height: 34px;">` : '-';
+        const phaseHtml = isFirstRow ? `<select id="eq_phase" class="form-control-sm" style="width: 100%; height: 34px;" onchange="evaluateSmartCharges()"><option value="">Select Phase</option><option value="Single Phase">Single Phase</option><option value="Three Phase">Three Phase</option></select>` : '-';
+
+        let fileInputHtml = '';
+        let viewButtonHtml = '';
+        if (fileUrl) {
+            fileInputHtml = `<span class="uploaded-cert-name" style="font-size:11px; color:var(--primary); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; display:inline-block;" title="Uploaded File">📄 Uploaded</span><input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="display: none;">`;
+            viewButtonHtml = `<button type="button" class="cert-view-btn" style="background:white; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:4px; color:#2c3e50; width:28px; height:28px; display:flex; align-items:center; justify-content:center;" title="View" onclick="window.open('${fileUrl}', '_blank')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>`;
+        } else {
+            fileInputHtml = `<span class="uploaded-cert-name" style="font-size:11px; color:var(--primary); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; display:none;"></span><input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="flex: 1; max-width: 140px; height: 34px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer;">`;
+            viewButtonHtml = `<button type="button" class="cert-view-btn" style="display:none; background:white; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:4px; color:#2c3e50; width:28px; height:28px; align-items:center; justify-content:center;" title="View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>`;
+        }
+
+        const deleteBtnHtml = isFirstRow ? '' : `<button type="button" class="btn-del-row" style="background:none; border:none; cursor:pointer; font-size:13px; padding:0; color:#b93a20;" onclick="this.closest('.cert-row').remove()" title="Delete">🗑️</button>`;
+        const addBtnHtml = `<button type="button" class="cert-add-btn" style="background:none; border:none; cursor:pointer; font-size:13px; padding:0; color:#2c3e50;" onclick="addCertRow()" title="Add Certificate">➕</button>`;
+
+        tr.innerHTML = `
+            <td style="padding: 10px 8px;">${meterNoHtml}</td>
+            <td style="padding: 10px 8px;">${phaseHtml}</td>
+            <td style="padding: 10px 8px;">
+                <select class="form-control-sm eq_cert" style="width: 100%; height: 34px;">
+                    <option value="">Select Certificate</option>
+                    <option value="ESC">ESC</option>
+                    <option value="NOC">NOC</option>
+                    <option value="Other">Other</option>
+                </select>
+            </td>
+            <td style="padding: 10px 8px;">
+                <input type="text" class="form-control-sm eq_cert_no" placeholder="No." style="width: 100%; height: 34px;" value="${number}">
+            </td>
+            <td style="padding: 10px 8px;">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    ${fileInputHtml}
+                    ${viewButtonHtml}
+                    ${addBtnHtml}
+                    ${deleteBtnHtml}
+                    <input type="hidden" class="cert-file-url" value="${fileUrl}">
+                </div>
+            </td>
+        `;
+        tr.querySelector('.eq_cert').value = type;
+        return tr;
+    }
+
+    // Modified addCertRow to use renderCertRow
+    function addCertRow(isFirstRow = false) {
+        const tbody = document.getElementById('certTableBody');
+        tbody.appendChild(renderCertRow({}, isFirstRow));
+    }
+
+    function resizeImage(file, maxBytes, callback) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1920;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                let quality = 0.8;
+                function compress() {
+                    canvas.toBlob(function(blob) {
+                        if (blob.size <= maxBytes || quality < 0.2) {
+                            callback(null, blob);
+                        } else {
+                            quality -= 0.1;
+                            compress();
+                        }
+                    }, 'image/jpeg', quality);
+                }
+                compress();
+            };
+            img.onerror = function() { callback(new Error("Failed to load image")); };
+        };
+        reader.onerror = function() { callback(new Error("Failed to read file")); };
+    }
+
+    // Modified handleCertUpload to actually upload the file
+    async function handleCertUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            if (file.type.startsWith('image/')) {
+                if (window.showAresLoader) window.showAresLoader(null, 'Resizing image...');
+                resizeImage(file, maxBytes, function(err, compressedBlob) {
+                    if (window.hideAresLoader) window.hideAresLoader();
+                    if (err) {
+                        Swal.fire('Error', 'Image resizing failed.', 'error');
+                        input.value = ''; return;
+                    }
+                    const newFileName = file.name.substring(0, file.name.lastIndexOf('.')) + '.jpg';
+                    const compressedFile = new File([compressedBlob], newFileName, { type: 'image/jpeg' });
+                    performCertUpload(input, compressedFile);
+                });
+                return;
+            } else {
+                Swal.fire('File Size Should Not be more than 5 MB', 'Only images can be automatically compressed/resized.', 'error');
+                input.value = ''; return;
+            }
+        }
+        performCertUpload(input, file);
+    }
+
+    async function performCertUpload(input, file) {
+        const installId = document.getElementById('equip_install_id').value;
+        const docType = input.closest('.cert-row').querySelector('.eq_cert').value || 'Other Certificate';
+
+        const progressBar = document.getElementById('globalProgressBar');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const viewBtn = input.closest('.cert-row').querySelector('.cert-view-btn');
+        const hiddenUrlInput = input.closest('.cert-row').querySelector('.cert-file-url');
+
+        progressBar.style.display = 'block';
+        progressText.innerText = '0%';
+        progressFill.style.width = '0%';
+
+        const formData = new FormData();
+        formData.append('certificate', file); // 'certificate' must match the field name in multer setup
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/installations/${installId}/upload-document`, true);
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progressText.innerText = percent + '%';
+                    progressFill.style.width = percent + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                progressBar.style.display = 'none';
+                if (xhr.status === 200) {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.success) {
+                        const persistentFileUrl = res.fileUrl;
+                        
+                        viewBtn.style.display = 'inline-flex';
+                        viewBtn.onclick = () => window.open(persistentFileUrl, '_blank');
+                        input.style.display = 'none';
+                        hiddenUrlInput.value = persistentFileUrl; // Store the URL in hidden input
+
+                        const nameSpan = input.closest('.cert-row').querySelector('.uploaded-cert-name');
+                        if (nameSpan) {
+                            nameSpan.innerHTML = `📄 ${file.name}`;
+                            nameSpan.title = file.name;
+                            nameSpan.style.display = 'inline-block';
+                        }
+
+                        Swal.fire('Uploaded!', 'Certificate uploaded successfully.', 'success');
+                    } else {
+                        Swal.fire('Error', res.error || 'File upload failed.', 'error');
+                        input.value = ''; // Clear the input
+                    }
+                } else {
+                    const errorRes = JSON.parse(xhr.responseText);
+                    Swal.fire('Error', errorRes.error || 'File upload failed.', 'error');
+                    input.value = ''; // Clear the input
+                }
+            };
+
+            xhr.onerror = function() {
+                progressBar.style.display = 'none';
+                Swal.fire('Error', 'Network error during upload.', 'error');
+                input.value = ''; // Clear the input
+            };
+            xhr.send(formData);
+
+        } catch (e) {
+            console.error('Error during file upload:', e);
+            progressBar.style.display = 'none';
+            Swal.fire('Error', 'An unexpected error occurred during upload.', 'error');
+            input.value = ''; // Clear the input
+        }
+    }
+
+    async function saveProject(event) {
+        event.preventDefault();
+        const requiredFields = ['proj_type', 'proj_company', 'proj_first_name', 'proj_last_name', 'proj_phone', 'google_address'];
+        let firstEmptyField = null;
+        let hasError = false;
+
+        for (let id of requiredFields) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (!el.dataset.shakeListenerAttached) {
+                    el.addEventListener('input', function() { this.classList.remove('shake-error'); });
+                    el.addEventListener('change', function() { this.classList.remove('shake-error'); });
+                    el.dataset.shakeListenerAttached = 'true';
+                }
+
+                const val = el.value || '';
+                if (!val.trim()) {
+                    el.classList.add('shake-error');
+                    hasError = true;
+                    if (!firstEmptyField) firstEmptyField = el;
+                } else {
+                    el.classList.remove('shake-error');
+                }
+            }
+        }
+        
+        if (hasError) {
+            if (firstEmptyField) {
+                firstEmptyField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstEmptyField.focus();
+            }
+            Swal.fire('Required Fields', 'Please fill all mandatory fields marked with an asterisk (*).', 'warning');
+            return;
+        }
+        
+        const btn = document.getElementById('saveProjectBtn');
+        btn.disabled = true; btn.innerText = 'Saving...';
+        
+        const editId = document.getElementById('edit_id').value;
+        const isEdit = !!editId;
+        const userNode = document.querySelector('.sb-uname');
+        const currentUser = userNode ? userNode.innerText : 'System';
+        
+        const formData = {
+            type: document.getElementById('proj_type').value,
+            company: document.getElementById('proj_company').value,
+            first_name: document.getElementById('proj_first_name').value,
+            last_name: document.getElementById('proj_last_name').value,
+            phone: document.getElementById('proj_phone').value,
+            email: document.getElementById('proj_email').value,
+            google_address: document.getElementById('google_address').value,
+            unit_number: document.getElementById('unit_number').value,
+            lot_number: document.getElementById('lot_number').value,
+            street_type: document.getElementById('street_type').value,
+            address: document.getElementById('address').value,
+            suburb: document.getElementById('suburb').value,
+            state: document.getElementById('state').value,
+            postcode: document.getElementById('postcode').value,
+            currentUser: currentUser
+        };
+
+        const url = isEdit ? `/installations/${editId}` : '/installations';
+        const method = isEdit ? 'PUT' : 'POST';
+        try {
+            const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(formData) });
+            if (res.ok) {
+                const responseData = await res.json();
+                const refMsg = responseData.project_number && !isEdit ? `<br><br><strong>Reference ID:</strong> ${responseData.project_number}` : '';
+                Swal.fire(isEdit ? 'Updated!' : 'Saved!', `Project saved successfully.${refMsg}`, 'success');
+                document.getElementById('addProjectModal').style.display = 'none'; // Close the modal
+                loadInstallations();
+            } else { Swal.fire('Error', 'Failed to save project.', 'error'); }
+        } catch (e) { Swal.fire('Error', 'Network error while saving.', 'error'); } 
+        finally { btn.disabled = false; btn.innerText = isEdit ? 'Update Project' : 'Save Project'; }
+    }
+
+    // --- Add Equipment Dynamic Tables ---
+    function addEquipRow(type = 'Panel', existingData = {}) {
+        const tbody = document.getElementById('equipTableBody');
+        const tr = document.createElement('tr');
+        tr.className = 'equip-row';
+        tr.dataset.type = type;
+
+        let typeHtml = `
+            <select class="eq-type form-control-sm" style="font-weight:700 !important; color:#212529 !important; height:28px;" onchange="this.closest('tr').dataset.type = this.value; calcEquip(); evaluateSmartCharges();">
+                <option value="Panel" ${type === 'Panel' || type === 'PV' ? 'selected' : ''}>PV</option>
+                <option value="Inverter" ${type === 'Inverter' ? 'selected' : ''}>Inverter</option>
+                <option value="Battery" ${type === 'Battery' ? 'selected' : ''}>Battery</option>
+            </select>
+        `;
+
+                // BUG FIX: Product Name Data Loss - Fallback to product_name and escape quotes, removing duplicate const
+                const name = existingData.product_name || existingData.name || '';
+        const model = existingData.model || '';
+        const qty = existingData.qty || '';
+        const watt = existingData.watt || '';
+        const size = existingData.size || '';
+
+        tr.innerHTML = `
+            <td>${typeHtml}</td>
+            <td><div class="ac-wrap"><input type="text" class="eq-prod" placeholder="Product Name" autocomplete="off" value="${name.replace(/"/g, '&quot;')}"><ul class="ac-drop eq-prod-drop"></ul></div></td>
+            <td><input type="text" class="eq-model" placeholder="Model Number" value="${model}"></td>
+            <td><input type="number" class="eq-qty" min="1" placeholder="Qty" value="${qty}" style="text-align: center;"></td>
+            <td><input type="number" class="eq-watt" step="0.01" placeholder="Watt/kWh" value="${watt}" style="text-align: center;"></td>
+            <td><input type="text" class="eq-size" readonly placeholder="Size" value="${size}"></td>
+            <td>
+                <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                    <button type="button" class="btn-add-row" onclick="addEquipRow('Panel')" title="Add Equipment Row" style="margin:0; padding:2px 6px; font-size:12px;">➕</button>
+                    <button type="button" class="btn-del-row" onclick="if(document.querySelectorAll('.equip-row').length > 1) { this.closest('tr').remove(); calcEquip(); evaluateSmartCharges(); } else { Swal.fire('Warning', 'At least one equipment row is required.', 'warning'); }" style="margin:0; font-size:12px;">🗑️</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        
+        const prodInput = tr.querySelector('.eq-prod');
+        const prodDrop = tr.querySelector('.eq-prod-drop');
+        const modelInput = tr.querySelector('.eq-model');
+        const qtyInput = tr.querySelector('.eq-qty');
+        const wattInput = tr.querySelector('.eq-watt');
+
+        prodInput.addEventListener('input', function() {
+            const currentType = tr.querySelector('.eq-type').value;
+            const val = this.value.trim().toLowerCase();
+            prodDrop.innerHTML = '';
+            if (val.length < 1) { prodDrop.style.display = 'none'; return; }
+            const matches = allMasterProducts.filter(p => p.product_category === currentType && p.product_status === 'Active' && (p.prod_name && p.prod_name.toLowerCase().includes(val)));
+            if (matches.length === 0) { 
+                prodDrop.innerHTML = `<li class="ac-empty" style="display:flex; flex-direction:column; gap:6px; padding:10px;">No products found <a href="javascript:void(0)" onclick="openAddProductMasterModal('${currentType}', '${val.replace(/'/g, "\\'")}')" style="background:var(--primary); color:#fff; text-decoration:none; padding:6px 12px; border-radius:4px; font-weight:600; font-size:11px; text-align:center; display:inline-block; margin-top:4px; transition:0.2s;">+ Add Product</a></li>`; 
+                prodDrop.style.display = 'block'; 
+                return; 
+            }
+            
+            matches.slice(0, 15).forEach(m => {
+                const li = document.createElement('li');
+                li.innerText = `${m.prod_name} (${m.model_number || '-'})`;
+                li.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    prodInput.value = m.prod_name;
+                    modelInput.value = m.model_number || '';
+                    if (currentType === 'Battery') { qtyInput.value = m.no_of_battery_modules || 1; wattInput.value = m.usable_battery_kwh || ''; } 
+                    else if (currentType === 'Panel') { wattInput.value = m.panels_capacity_w || ''; } 
+                    else if (currentType === 'Inverter') { 
+                        wattInput.value = m.inv_rt_ac_out_w || m.inv_rt_dc_power_kw || ''; 
+                        const phaseSelect = document.getElementById('eq_phase');
+                        if (phaseSelect && m.no_of_phase) {
+                            let pVal = m.no_of_phase.toString().toLowerCase();
+                            if (pVal === '1' || pVal.includes('single')) phaseSelect.value = 'Single Phase';
+                            else if (pVal === '3' || pVal.includes('three')) phaseSelect.value = 'Three Phase';
+                            else phaseSelect.value = m.no_of_phase;
+                        }
+                    }
+                    if (currentType === 'Inverter' && (!qtyInput.value || parseFloat(qtyInput.value) === 0)) {
+                        qtyInput.value = 1;
+                    }
+                    prodDrop.style.display = 'none';
+                    calcEquip();
+                    evaluateSmartCharges();
+                });
+                prodDrop.appendChild(li);
+            });
+            prodDrop.style.display = 'block';
+        });
+        prodInput.addEventListener('blur', () => setTimeout(() => prodDrop.style.display = 'none', 200));
+    }
+
+    function openAddProductMasterModal(category = '', name = '') {
+        document.getElementById('newProductForm').reset();
+        document.getElementById('ap_stock_code').value = '';
+        if (category) {
+            document.getElementById('ap_product_category').value = category === 'PV' ? 'Panel' : category;
+            apUpdateMandatoryFields();
+        }
+        if (name) {
+            document.getElementById('ap_prod_name').value = name;
+        }
+        apSyncDateToText('ap_pro_approved_date');
+        apSyncDateToText('ap_pro_expiry_date');
+        document.getElementById('addProductMasterModal').style.display = 'flex';
+    }
+
+    let apActiveMandatory = [];
+    function apUpdateMandatoryFields() {
+        document.querySelectorAll('#newProductForm .required-star').forEach(el=>el.classList.remove('required-star'));
+        document.querySelectorAll('#newProductForm input, #newProductForm select').forEach(el=>el.removeAttribute('required'));
+        document.getElementById('ap_product_category').setAttribute('required','true');
+        document.getElementById('ap_lbl_product_category').classList.add('required-star');
+        const cat=document.getElementById('ap_product_category').value;
+        const mandatoryRules = {
+            'Panel':['ap_prod_name','ap_manufacturer_name','ap_model_number','ap_pro_approved_date','ap_pro_expiry_date','ap_panels_capacity_w','ap_pro_warranty_years','ap_panels_linear_warranty_years','ap_purchase_price'],
+            'Inverter':['ap_prod_name','ap_manufacturer_name','ap_brand_name','ap_model_number','ap_pro_approved_date','ap_pro_expiry_date','ap_product_series','ap_no_of_phase','ap_type_of_inverter','ap_inv_rt_ac_out_w','ap_inv_rt_dc_power_kw','ap_inv_mppt','ap_pro_warranty_years','ap_purchase_price'],
+            'Battery':['ap_prod_name','ap_manufacturer_name','ap_brand_name','ap_model_number','ap_pro_approved_date','ap_pro_expiry_date','ap_product_series','ap_nominal_battery_capacity_kwh','ap_usable_battery_kwh','ap_no_of_battery_modules','ap_pro_warranty_years','ap_purchase_price']
+        };
+        if (!cat) {
+            apActiveMandatory = [];
+        } else {
+            apActiveMandatory = mandatoryRules[cat]||['ap_prod_name','ap_manufacturer_name','ap_model_number'];
+        }
+        apActiveMandatory.forEach(fid=>{const el=document.getElementById(fid),lbl=document.getElementById(fid.replace('ap_','ap_lbl_'));if(el)el.setAttribute('required','true');if(lbl)lbl.classList.add('required-star');});
+        apCheckAutoStockCode();
+    }
+
+    async function apCheckAutoStockCode() {
+        const cat = document.getElementById('ap_product_category').value;
+        const sc = document.getElementById('ap_stock_code');
+        if (!cat || !apActiveMandatory.length || sc.value) return;
+        const allFilled = apActiveMandatory.every(fid => document.getElementById(fid)?.value?.trim());
+        if (allFilled) {
+            try {
+                const res = await fetch('/products/next-stock-code');
+                if(res.ok) { const data = await res.json(); sc.value = data.nextCode; }
+            } catch(e){}
+        }
+    }
+
+    function apCalculateExGST() {
+        const inc = parseFloat(document.getElementById('ap_purchase_price').value);
+        document.getElementById('ap_purchase_price_ex_gst').value = !isNaN(inc) ? (inc / 1.1).toFixed(2) : '';
+        apCheckAutoStockCode();
+    }
+
+    function apCalculateIncGST() {
+        const ex = parseFloat(document.getElementById('ap_purchase_price_ex_gst').value);
+        document.getElementById('ap_purchase_price').value = !isNaN(ex) ? (ex * 1.1).toFixed(2) : '';
+        apCheckAutoStockCode();
+    }
+
+    function apFormatAndSyncDateText(id, isBlur = false) {
+        const textInput = document.getElementById(id + '_text');
+        const dateInput = document.getElementById(id);
+        if (!textInput || !dateInput) return;
+
+        let val = textInput.value.trim();
+        if (!val) {
+            dateInput.value = '';
+            dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+        }
+
+        // Try to split by separators (-, /, ., space)
+        let parts = val.split(/[-/\.\s]+/);
+        let dd = '', mm = '', yyyy = '';
+
+        if (parts.length === 3) {
+            dd = parts[0];
+            mm = parts[1];
+            yyyy = parts[2];
+        } else {
+            // Try to parse raw digits
+            let clean = val.replace(/[^0-9]/g, '');
+            if (clean.length === 8) {
+                dd = clean.substring(0, 2);
+                mm = clean.substring(2, 4);
+                yyyy = clean.substring(4, 8);
+            } else if (clean.length === 6) {
+                dd = clean.substring(0, 2);
+                mm = clean.substring(2, 4);
+                yyyy = '20' + clean.substring(4, 6);
+            }
+        }
+
+        if (dd && mm && yyyy) {
+            dd = dd.padStart(2, '0');
+            mm = mm.padStart(2, '0');
+            if (yyyy.length === 2) {
+                yyyy = '20' + yyyy;
+            }
+
+            const d = parseInt(dd, 10);
+            const m = parseInt(mm, 10);
+            const y = parseInt(yyyy, 10);
+
+            if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 1000 && y <= 9999) {
+                const formattedDate = `${yyyy}-${mm}-${dd}`;
+                dateInput.value = formattedDate;
+                
+                if (isBlur) {
+                    textInput.value = `${dd}-${mm}-${yyyy}`;
+                }
+                
+                dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                return;
+            }
+        }
+
+        if (isBlur) {
+            dateInput.value = '';
+            textInput.value = '';
+            dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+            dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function apSyncDateToText(id) {
+        const dateInput = document.getElementById(id);
+        const textInput = document.getElementById(id + '_text');
+        if (!dateInput || !textInput) return;
+        
+        const val = dateInput.value;
+        if (val && val.includes('-')) {
+            const parts = val.split('-');
+            if (parts.length === 3) {
+                textInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                return;
+            }
+        }
+        textInput.value = '';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('#newProductForm input, #newProductForm select').forEach(el => {
+            el.addEventListener('input', apCheckAutoStockCode);
+            el.addEventListener('change', apCheckAutoStockCode);
+        });
+    });
+
+    async function submitNewProduct(e) {
+        e.preventDefault();
+        const cat = document.getElementById('ap_product_category').value;
+        const batMods = document.getElementById('ap_no_of_battery_modules')?.value;
+        if (cat === 'Battery' && (!batMods || !batMods.trim())) {
+            Swal.fire('Missing Details', 'Please enter the Number of Battery Modules.', 'warning');
+            return;
+        }
+        if(!document.getElementById('ap_stock_code').value){
+            Swal.fire('Missing Details', 'Stock code not generated yet. Fill all mandatory fields.', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('ap_saveBtn');
+        btn.disabled = true; btn.innerText = 'Saving...';
+        const formData = new FormData(document.getElementById('newProductForm'));
+        
+        const childProducts = [];
+        document.querySelectorAll('#apChildProductsContainer .child-row').forEach(row => {
+            const name = row.querySelector('.cp-name')?.value || '';
+            const code = row.querySelector('.cp-code')?.value || '';
+            const qty = row.querySelector('.cp-qty')?.value || '1';
+            if (name || code) childProducts.push({name, code, qty});
+        });
+        
+        const dynamic_documents = [];
+        document.querySelectorAll('#apDynamicDocumentsList .doc-row').forEach(row => {
+            const type = row.querySelector('.doc-type').value;
+            const url = row.querySelector('.doc-url')?.value || '';
+            const name = row.querySelector('.doc-name')?.value || '';
+            if (type && url) dynamic_documents.push({ type, url, name });
+        });
+
+        formData.append('child_products', JSON.stringify(childProducts));
+        formData.append('dynamic_documents', JSON.stringify(dynamic_documents));
+        formData.append('last_updated_by', document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System');
+        try {
+            const res = await fetch('/products', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) { Swal.fire('Success', 'Product added successfully!', 'success'); document.getElementById('addProductMasterModal').style.display = 'none'; await fetchMasterProducts(); } 
+            else { Swal.fire('Error', data.error || 'Failed to add product.', 'error'); }
+        } catch (err) { Swal.fire('Error', 'Server error.', 'error'); } 
+        finally { btn.disabled = false; btn.innerText = 'Save Product'; }
+    }
+
+    function initEquipTable(p) {
+        const tbody = document.getElementById('equipTableBody');
+        tbody.innerHTML = '';
+        
+        let equipments = [];
+        if (p && p.equipment_details) {
+            equipments = typeof p.equipment_details === 'string' ? JSON.parse(p.equipment_details) : p.equipment_details;
+        }
+
+        if (equipments && equipments.length > 0) {
+            equipments.forEach(eq => { addEquipRow(eq.type, eq); });
+        } else {
+            const projType = p ? p.type : '';
+            if (projType === 'PV') {
+                addEquipRow('Panel'); addEquipRow('Inverter');
+            } else if (projType === 'Battery') {
+                addEquipRow('Inverter'); addEquipRow('Battery');
+            } else if (projType === 'PV + Battery') {
+                addEquipRow('Panel'); addEquipRow('Inverter'); addEquipRow('Battery');
+            } else {
+                addEquipRow('Panel'); addEquipRow('Inverter'); addEquipRow('Battery');
+            }
+        }
+    }
+
+    function calcEquip() {
+        document.querySelectorAll('.equip-row').forEach(row => {
+            const type = row.dataset.type, qty = parseFloat(row.querySelector('.eq-qty').value) || 0, watt = parseFloat(row.querySelector('.eq-watt').value) || 0;
+            let size = qty * watt;
+            if (type === 'Panel' || type === 'Inverter') size = size / 1000;
+            row.querySelector('.eq-size').value = size > 0 ? size.toFixed(2) : '';
+        });
+    }
+    document.getElementById('equipTableBody').addEventListener('input', e => { if (e.target.classList.contains('eq-qty') || e.target.classList.contains('eq-watt')) { calcEquip(); evaluateSmartCharges(); } });
+    // --- Smart Charges ---
+    async function loadChargeItems() {
+        try {
+            const res = await fetch('/api/masters/installation-charges/items');
+            if (res.ok) allChargeItems = await res.json();
+        } catch(e) { }
+    }
+
+    function initChargesTable() {
+        const tbody = document.getElementById('chargesTableBody');
+        if (tbody) tbody.innerHTML = '';
+        populateChargeDropdown();
+        if (!window.hasSavedCharges) {
+            evaluateSmartCharges(); 
+        }
+    }
+
+    function populateChargeDropdown() {
+        const list = document.getElementById('chargesCheckboxList');
+        if (!list) return;
+        list.innerHTML = '';
+        const validCharges = allChargeItems.filter(c => !c.state || c.state === 'WA' || c.state === 'All');
+        validCharges.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'form-check'; div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '8px';
+            div.innerHTML = `
+                <input class="form-check-input extra-charge-cb" type="checkbox" value="${c.id}" data-name="${c.charge_name}" data-rate="${c.rate || 0}" id="cb_charge_${c.id}" style="margin:0; width:14px; height:14px; cursor:pointer;">
+                <label class="form-check-label" for="cb_charge_${c.id}" style="margin:0; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; line-height:1.2;">
+                    ${c.charge_name} ($${parseFloat(c.rate || 0).toFixed(2)})
+                </label>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function filterChargesList() {
+        const input = document.getElementById('chargeSearchBox').value.toLowerCase();
+        const list = document.getElementById('chargesCheckboxList');
+        const items = list.getElementsByClassName('form-check');
+        for (let i = 0; i < items.length; i++) {
+            const label = items[i].innerText.toLowerCase();
+            items[i].style.display = label.includes(input) ? 'flex' : 'none';
+        }
+    }
+
+    function evaluateSmartCharges() {
+        if (window.hasSavedCharges) return; // Prevent overwriting manually loaded DB data
+
+        const tbody = document.getElementById('chargesTableBody');
+        if (!tbody) return;
+
+        const projType = document.getElementById('eq_proj_type') ? document.getElementById('eq_proj_type').value : '';
+        const phase = document.getElementById('eq_phase') ? document.getElementById('eq_phase').value : '';
+
+        let totalPanelWatt = 0, totalBatteryKwh = 0, totalEquipCount = 0;
+        document.querySelectorAll('.equip-row').forEach(row => {
+            const type = row.querySelector('.eq-type').value;
+            const prodName = row.querySelector('.eq-prod').value.trim();
+            const qty = parseFloat(row.querySelector('.eq-qty')?.value) || 0;
+            const watt = parseFloat(row.querySelector('.eq-watt')?.value) || 0;
+            
+            if (prodName || qty > 0 || watt > 0) {
+                totalEquipCount++;
+                if (type === 'Panel' || type === 'PV') totalPanelWatt += (qty * watt);
+                if (type === 'Battery') totalBatteryKwh += (qty * watt);
+            }
+        });
+
+        const autoQty = {};
+
+        if (totalEquipCount > 0) {
+            if (projType === 'PV') {
+                if (totalPanelWatt > 0) autoQty['Installed Solar PV System with 1 X Inverter'] = totalPanelWatt;
+                autoQty['Main Switch 1P / 3P'] = 1;
+            } else if (projType === 'PV + Battery') {
+                if (totalPanelWatt > 0) autoQty['Installed Solar PV System with 1 X Inverter'] = totalPanelWatt;
+                autoQty['Main Switch 1P / 3P'] = 1;
+                if (phase === 'Single Phase') autoQty['Export Control Device 1 Phase / Smart Meter'] = 1;
+                else if (phase === 'Three Phase') autoQty['Export Control Device 3 Phase / Smart Meter'] = 1;
+                if (totalBatteryKwh > 0 && totalBatteryKwh <= 20) autoQty['Battery Installation (Upto 20 kWh)'] = 1;
+                else if (totalBatteryKwh > 20) autoQty['Battery Installation (Above 20 kWh)'] = 1;
+            } else if (projType === 'Battery') {
+                autoQty['Main Switch 1P / 3P'] = 1;
+                if (phase === 'Single Phase') autoQty['Export Control Device 1 Phase / Smart Meter'] = 1;
+                else if (phase === 'Three Phase') autoQty['Export Control Device 3 Phase / Smart Meter'] = 1;
+                autoQty['Inverter Replacement'] = 1;
+                if (totalBatteryKwh > 0 && totalBatteryKwh <= 20) autoQty['Battery Installation (Upto 20 kWh)'] = 1;
+                else if (totalBatteryKwh > 20) autoQty['Battery Installation (Above 20 kWh)'] = 1;
+            }
+        }
+
+        const managedNames = [
+            'Installed Solar PV System with 1 X Inverter',
+            'Battery Installation (Upto 20 kWh)',
+            'Battery Installation (Above 20 kWh)',
+            'Main Switch 1P / 3P',
+            'Export Control Device 1 Phase / Smart Meter',
+            'Export Control Device 3 Phase / Smart Meter',
+            'Inverter Replacement'
+        ];
+
+        managedNames.forEach(cName => {
+            const itemDef = allChargeItems.find(c => c.charge_name === cName);
+            if (!itemDef) return;
+            const targetQty = autoQty[cName] || 0;
+            const existingRow = tbody.querySelector(`tr[data-charge-id="${itemDef.id}"]`);
+            
+            if (targetQty > 0) {
+                if (existingRow) { existingRow.querySelector('.ch-qty').value = targetQty; calcChargeRow(existingRow); } 
+                else { addChargeRow(itemDef.id, itemDef.charge_name, targetQty, itemDef.rate, true); }
+            } else { if (existingRow) existingRow.remove(); }
+        });
+
+        updateGrandTotal();
+    }
+
+    function addSelectedCharges() {
+        const checkboxes = document.querySelectorAll('.extra-charge-cb:checked');
+        const tbody = document.getElementById('chargesTableBody');
+        checkboxes.forEach(cb => {
+            const existing = tbody.querySelector(`tr[data-charge-id="${cb.value}"]`);
+            if (existing) {
+                const qtyInput = existing.querySelector('.ch-qty');
+                qtyInput.value = (parseFloat(qtyInput.value) || 0) + 1;
+                calcChargeRow(existing);
+            } else { addChargeRow(cb.value, cb.dataset.name, 1, parseFloat(cb.dataset.rate), false); }
+            cb.checked = false; 
+        });
+        document.getElementById('chargesSelectionModal').style.display = 'none';
+        updateGrandTotal();
+    }
+
+    function addChargeRow(chargeId, chargeName, qty, rate, isAutoCalc = false) {
+        const tbody = document.getElementById('chargesTableBody');
+        if (isAutoCalc) {
+            const existing = tbody.querySelector(`tr[data-charge-id="${chargeId}"]`);
+            if (existing) { existing.querySelector('.ch-qty').value = qty; existing.querySelector('.ch-rate').value = rate; calcChargeRow(existing); return; }
+        }
+        const exGst = qty * rate, gst = exGst * 0.10, incGst = exGst + gst;
+        const tr = document.createElement('tr'); tr.className = 'charge-row'; tr.dataset.chargeId = chargeId;
+        tr.innerHTML = `
+            <td style="text-align:left; padding-left:8px; font-weight:600; color:#212529; font-size:12px;">${chargeName}<input type="hidden" class="ch-name-hidden" value="${chargeName}"></td>
+            <td><input type="number" class="ch-qty" value="${qty}" min="0" step="any" style="text-align: center;"></td>
+            <td><input type="number" class="ch-rate" value="${rate}" step="0.01" style="text-align: center;"></td>
+            <td><input type="text" class="ch-ex" value="${exGst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; text-align: center;"></td>
+            <td><input type="text" class="ch-gst" value="${gst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; text-align: center;"></td>
+            <td><input type="text" class="ch-inc" value="${incGst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; color:#10b981; text-align: center;"></td>
+            <td style="text-align: center;"><button type="button" class="btn-del-row" title="Delete Charge">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    document.getElementById('chargesTableBody').addEventListener('input', function(e) {
+        if (e.target.classList.contains('ch-qty') || e.target.classList.contains('ch-rate')) { calcChargeRow(e.target.closest('tr')); updateGrandTotal(); }
+    });
+    document.getElementById('chargesTableBody').addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-del-row')) { e.target.closest('tr').remove(); updateGrandTotal(); }
+    });
+
+    function calcChargeRow(tr) {
+        const qty = parseFloat(tr.querySelector('.ch-qty').value) || 0, rate = parseFloat(tr.querySelector('.ch-rate').value) || 0;
+        const exGst = qty * rate, gst = exGst * 0.10, incGst = exGst + gst;
+        tr.querySelector('.ch-ex').value = exGst > 0 ? exGst.toFixed(2) : '0.00';
+        tr.querySelector('.ch-gst').value = gst > 0 ? gst.toFixed(2) : '0.00';
+        tr.querySelector('.ch-inc').value = incGst > 0 ? incGst.toFixed(2) : '0.00';
+        tr.querySelector('.ch-inc').style.color = incGst > 0 ? '#10b981' : '#aaa';
+    }
+
+    function updateGrandTotal() {
+        let totEx = 0, totGst = 0, totInc = 0;
+        document.querySelectorAll('.charge-row').forEach(row => {
+            totEx += parseFloat(row.querySelector('.ch-ex').value) || 0;
+            totGst += parseFloat(row.querySelector('.ch-gst').value) || 0;
+            totInc += parseFloat(row.querySelector('.ch-inc').value) || 0;
+        });
+        document.getElementById('tot_ex_gst').innerText = totEx.toFixed(2);
+        document.getElementById('tot_gst').innerText = totGst.toFixed(2);
+        document.getElementById('tot_inc_gst').innerText = totInc.toFixed(2);
+    }
+
+    // --- Working Save Buttons (Simulated Backend) ---
+    async function saveAllInstallationDetails() {
+        const btn = document.querySelector('[onclick="saveAllInstallationDetails()"]');
+        const installId = document.getElementById('equip_install_id').value;
+        if (!installId) { Swal.fire('Error', 'No installation selected.', 'error'); return; }
+        
+        btn.disabled = true; btn.innerText = 'Saving...';
+        
+        const meter_number = document.getElementById('eq_meter_no').value;
+        const electricity_phase = document.getElementById('eq_phase').value;
+        
+        // Ensures an empty input does not leak string literals
+        const travelKmInput = document.getElementById('travel_km').value;
+        const travel_distance_km = travelKmInput !== '' ? parseFloat(travelKmInput) : 0;
+        
+        // 1. Gather Equipment Data
+        const equipments = [];
+        document.querySelectorAll('.equip-row').forEach(row => {
+            const type = row.querySelector('.eq-type').value;
+            const prodName = row.querySelector('.eq-prod').value;
+            const modelNumber = row.querySelector('.eq-model').value;
+            const qty = parseFloat(row.querySelector('.eq-qty')?.value) || 0;
+            const watt = parseFloat(row.querySelector('.eq-watt')?.value) || 0;
+            const size = parseFloat(row.querySelector('.eq-size')?.value) || 0;
+
+            // Critical Fix: Ensures entirely deleted/empty rows are stripped entirely and not persisted falsely.
+            if (prodName.trim() !== '' || modelNumber.trim() !== '' || qty > 0 || watt > 0 || size > 0) {
+                equipments.push({
+                    type: type,
+                    name: prodName,
+                    product_name: prodName, // BUG FIX: Ensure exact mapping saves
+                    model: modelNumber,
+                    qty: qty,
+                    watt: watt,
+                    size: size
+                });
+            }
+        });
+
+        // 2. Gather Other Details (Meter number, Phase, Certs)
+        // meter_number, electricity_phase, travel_distance_km are already gathered
+
+        const certificates = [];
+        document.querySelectorAll('.cert-row').forEach(row => {
+            const certType = row.querySelector('.eq_cert')?.value;
+            const certNo = row.querySelector('.eq_cert_no')?.value;
+            const fileUrl = row.querySelector('.cert-file-url')?.value || ''; // Get URL from hidden input
+            
+            // Only add if there's actual data
+            if (certType || certNo || fileUrl) {
+                certificates.push({
+                    type: certType,
+                    number: certNo,
+                    fileUrl: fileUrl
+                });
+            }
+        });
+
+        // 3. Gather Installation Charges
+        const charges = [];
+        let travel_charge_amount = 0;
+        document.querySelectorAll('.charge-row').forEach(row => {
+            const exVal = parseFloat(row.querySelector('.ch-ex').value) || 0;
+            
+            const chargeName = row.querySelector('.ch-name-hidden') ? row.querySelector('.ch-name-hidden').value : row.children[0].innerText.split('\n')[0].trim();
+            if (chargeName.toLowerCase().includes('travel')) {
+                travel_charge_amount = exVal;
+            }
+
+            if (exVal > 0 || parseFloat(row.querySelector('.ch-qty').value) > 0) {
+                charges.push({
+                    charge_item_id: row.dataset.chargeId === 'travel_auto_fallback' ? null : parseInt(row.dataset.chargeId), // Ensure ID is int or null
+                    charge_name: chargeName, // Get clean name
+                    qty: parseFloat(row.querySelector('.ch-qty').value) || 0,
+                    rate: parseFloat(row.querySelector('.ch-rate').value) || 0,
+                    amount_ex_gst: exVal,
+                    gst_amount: parseFloat(row.querySelector('.ch-gst').value) || 0,
+                    amount_inc_gst: parseFloat(row.querySelector('.ch-inc').value) || 0,
+                    notes: '' // Assuming no notes field in UI for now
+                });
+            }
+        });
+
+        const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
+
+        const payload = {
+            equipment_details: JSON.stringify(equipments), // Store as JSON string
+            meter_number: meter_number,
+            electricity_phase: electricity_phase,
+            travel_distance_km: travel_distance_km,
+            travel_charge_amount: travel_charge_amount, // NEW FIELD
+            certificate_details: JSON.stringify(certificates), // Store as JSON string
+            installation_charges: charges, // This will be handled separately in backend
+            currentUser: currentUser
+        };
+
+        try {
+            const res = await fetch(`/installations/${installId}/details`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) { Swal.fire('Saved!', 'Equipment updated successfully.', 'success'); document.getElementById('addEquipmentModal').style.display = 'none'; loadInstallations(); }
+            else { Swal.fire('Error', 'Failed to save equipment.', 'error'); }
+        } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+        finally { btn.disabled = false; btn.innerText = 'Save Update'; }
+    }
+
+    // --- Bulk Delete Logic ---
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.row-cb');
+        checkboxes.forEach(cb => {
+            if (!cb.disabled) cb.checked = masterCheckbox.checked;
+        });
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-cb:checked').length;
+        const btn = document.getElementById('bulkDeleteBtn');
+        const selCount = document.getElementById('selCount');
+        
+        if (checkedCount > 0) {
+            btn.style.display = 'inline-flex';
+            selCount.innerText = checkedCount;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        const totalCount = document.querySelectorAll('.row-cb:not(:disabled)').length;
+        const master = document.getElementById('selectAllCheckbox');
+        if (master) master.checked = totalCount > 0 && checkedCount === totalCount;
+    }
+
+    async function deleteSelectedRows() {
+        const checkedBoxes = document.querySelectorAll('.row-cb:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
+        const role = document.querySelector('.sb-urole')?.innerText.includes('Admin') ? 'Manager' : 'User';
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Are you sure?',
+            text: `This will ${role === 'Manager' ? 'permanently delete' : 'request deletion for'} ${checkedBoxes.length} selected installations.`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#c53030', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, proceed!'
+        });
+        if (!isConfirmed) return;
+        
+        const idsToDelete = Array.from(checkedBoxes).map(cb => Number(cb.value));
+        try {
+            const res = await fetch('/installations/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: idsToDelete, role: role, currentUser: currentUser }) });
+            if (res.ok) { document.getElementById('selectAllCheckbox').checked = false; updateBulkDeleteBtn(); Swal.fire('Success!', 'Action completed for selected records.', 'success'); loadInstallations(); }
+            else { const err = await res.json(); Swal.fire('Error', err.error || 'Failed to process request.', 'error'); }
+        } catch (e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    // --- Document Management Modal ---
+    async function openDocumentModal(id) {
+        document.getElementById('doc_install_id').value = id;
+        const tbody = document.getElementById('docTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">Loading documents...</td></tr>';
+        document.getElementById('documentModal').style.display = 'flex';
+        
+        try {
+            const res = await fetch(`/installations/${id}/documents`);
+            if (!res.ok) throw new Error('Failed to load documents');
+            const docs = await res.json();
+            
+            tbody.innerHTML = '';
+            const defaultTypes = ['Certificate of Electrical Safety (COES/CCEW)', 'Notice of Completion', 'Pictures'];
+            const docMap = {};
+            docs.forEach(d => { if (!docMap[d.doc_type]) docMap[d.doc_type] = []; docMap[d.doc_type].push(d); });
+            
+            defaultTypes.forEach(dt => {
+                if (docMap[dt] && docMap[dt].length > 0) { docMap[dt].forEach(d => addDocumentRow(dt, false, mapDoc(d))); } 
+                else { addDocumentRow(dt, false, null); }
+            });
+            
+            docs.forEach(d => { if (!defaultTypes.includes(d.doc_type)) { addDocumentRow(d.doc_type, true, mapDoc(d)); } });
+            addDocumentRow('Other', true);
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: #b93a20;">Error loading documents.</td></tr>';
+        }
+    }
+
+    function mapDoc(d) {
+        return { docId: d.id, fileName: d.file_name, fileSize: d.file_size, fileUrl: d.file_url, user: d.user_name, datetime: '-' };
+    }
+
+    function addDocumentRow(type, allowDelete = true, existingData = null) {
+        const tbody = document.getElementById('docTableBody');
+        const tr = document.createElement('tr');
+        if (existingData && existingData.docId) tr.dataset.docId = existingData.docId;
+        
+        const typeHtml = type === 'Other' ? `<input type="text" class="form-control-sm doc-type" placeholder="Enter Document Type" value="Other">` : `<input type="text" class="form-control-sm doc-type" value="${type}" readonly>`;
+        let delBtn = allowDelete ? `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this)">🗑️</button>` : ``;
+        if (!allowDelete && existingData && existingData.docId) {
+            delBtn = `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this, true)" title="Clear File" style="font-size: 10px;">🧹</button>`;
+        }
+
+        let uploadHtml = `<input type="file" class="doc-file" style="width: 180px; font-size: 11px;" onchange="handleDocUpload(this)">`;
+        let viewHtml = `<span style="color:var(--text-muted); font-size: 11px;">Not Uploaded</span>`;
+        let userHtml = `-`;
+        let dateHtml = `-`;
+
+        if (existingData) {
+            uploadHtml = `<span style="font-size:11px; color:var(--text-dark); font-weight:600;">${existingData.fileName} (${existingData.fileSize})</span>`;
+            viewHtml = `<button type="button" class="act-btn" style="height:26px; width:26px;" title="View" onclick="window.open('${existingData.fileUrl}', '_blank')">👁️</button>`;
+            userHtml = existingData.user || '-';
+            dateHtml = existingData.datetime || '-';
+        }
+
+        tr.innerHTML = `
+            <td>${typeHtml}</td>
+            <td>${uploadHtml}</td>
+            <td>${viewHtml}</td>
+            <td><span style="font-size:11px;">${userHtml}</span></td>
+            <td><span style="font-size:11px;">${dateHtml}</span></td>
+            <td>${delBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function handleDocUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            if (file.type.startsWith('image/')) {
+                if (window.showAresLoader) window.showAresLoader(null, 'Resizing image...');
+                resizeImage(file, maxBytes, function(err, compressedBlob) {
+                    if (window.hideAresLoader) window.hideAresLoader();
+                    if (err) {
+                        Swal.fire('Error', 'Image resizing failed.', 'error');
+                        input.value = ''; return;
+                    }
+                    const newFileName = file.name.substring(0, file.name.lastIndexOf('.')) + '.jpg';
+                    const compressedFile = new File([compressedBlob], newFileName, { type: 'image/jpeg' });
+                    performDocUpload(input, compressedFile);
+                });
+                return;
+            } else {
+                Swal.fire('File Size Should Not be more than 5 MB', 'Only images can be automatically compressed/resized.', 'error');
+                input.value = ''; return;
+            }
+        }
+        performDocUpload(input, file);
+    }
+
+    function performDocUpload(input, file) {
+        const installId = document.getElementById('doc_install_id').value;
+        const tr = input.closest('tr');
+        const typeInput = tr.querySelector('.doc-type');
+        const docType = typeInput ? typeInput.value.trim() : 'Other';
+        
+        const progressBar = document.getElementById('globalProgressBar');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        progressBar.style.display = 'block';
+        progressText.innerText = '0%';
+        progressFill.style.width = '0%';
+        
+        const formData = new FormData();
+        formData.append('certificate', file);
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/installations/${installId}/upload-document`, true);
+        
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressText.innerText = percent + '%';
+                progressFill.style.width = percent + '%';
+            }
+        };
+        
+        xhr.onload = function() {
+            progressBar.style.display = 'none';
+            if (xhr.status === 200) {
+                const res = JSON.parse(xhr.responseText);
+                if (res.success) {
+                    const persistentFileUrl = res.fileUrl;
+                    const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+
+                    tr.children[1].innerHTML = `<span style="font-size:11px; font-weight:600;">${file.name}</span>`;
+                    tr.children[2].innerHTML = `<button type="button" class="act-btn" style="height:26px; width:26px;" title="View" onclick="window.open('${persistentFileUrl}', '_blank')">👁️</button>`;
+                    tr.children[3].innerHTML = `<span style="font-size:11px;">${currentUser}</span>`;
+                    tr.children[4].innerHTML = `<span style="font-size:11px;">${dateStr}</span>`;
+                    
+                    let newDelBtn = typeInput && typeInput.readOnly ? `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this, true)" title="Clear File" style="font-size: 10px;">🧹</button>` : `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this)">🗑️</button>`;
+                    tr.children[5].innerHTML = newDelBtn;
+
+                    fetch(`/installations/${installId}/documents`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            doc_type: docType,
+                            file_name: file.name,
+                            file_size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                            file_url: persistentFileUrl,
+                            user_name: currentUser
+                        })
+                    }).then(r => r.json()).then(data => {
+                        if (data.success) {
+                            tr.dataset.docId = data.id;
+                        }
+                    }).catch(err => console.error('Error saving document to backend:', err));
+                    
+                } else {
+                    Swal.fire('Error', res.error || 'File upload failed.', 'error');
+                    input.value = '';
+                }
+            } else {
+                Swal.fire('Error', 'File upload failed.', 'error');
+                input.value = '';
+            }
+        };
+        
+        xhr.onerror = function() {
+            progressBar.style.display = 'none';
+            Swal.fire('Error', 'Network error during upload.', 'error');
+            input.value = '';
+        };
+        
+        xhr.send(formData);
+    }
+
+    async function deleteDocumentRow(btn, keepRow = false) {
+        const tr = btn.closest('tr');
+        const docId = tr.dataset.docId;
+        const installId = document.getElementById('doc_install_id').value;
+
+        if (docId) {
+            const { isConfirmed } = await Swal.fire({
+                title: 'Delete Document?', text: "This will permanently delete the file.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#b93a20', cancelButtonColor: '#6b7a8d', confirmButtonText: 'Yes, delete!'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const res = await fetch(`/installations/${installId}/documents/${docId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Deleted!', 'Document removed.', 'success');
+                        if (keepRow) {
+                            delete tr.dataset.docId;
+                            tr.children[1].innerHTML = `<input type="file" class="doc-file" style="width: 180px; font-size: 11px;" onchange="handleDocUpload(this)">`;
+                            tr.children[2].innerHTML = `<span style="color:var(--text-muted); font-size: 11px;">Not Uploaded</span>`;
+                            tr.children[3].innerHTML = `<span style="font-size:11px;">-</span>`;
+                            tr.children[4].innerHTML = `<span style="font-size:11px;">-</span>`;
+                            tr.children[5].innerHTML = ``;
+                        } else { tr.remove(); }
+                    } else {
+                        const err = await res.json();
+                        Swal.fire('Error', err.error || 'Failed to delete.', 'error');
+                    }
+                } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+            }
+        } else {
+            if (!keepRow) tr.remove();
+        }
+    }
+
+    function saveDocuments() {
+        const saveBtn = document.querySelector('#documentModal .btn-save');
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = 'Saving...'; }
+
+        setTimeout(() => {
+            Swal.fire('Saved!', 'Documents are synced with the server.', 'success');
+            document.getElementById('documentModal').style.display = 'none';
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = 'Save Documents'; }
+        }, 800);
+    }
+
+    // --- Route to Premium A4 Invoice Template ---
+    function generateInvoice(id) {
+        if (!id) {
+            Swal.fire('Error', 'Invalid Installation ID.', 'error');
+            return;
+        }
+        
+        const p = allInstallationsData.find(x => x.id === id);
+        window.currentInstallId = id;
+        window.currentInvoiceProjNo = p ? (p.project_number || p.id) : id;
+        window.currentCustomerName = p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Customer' : 'Customer';
+        
+        document.getElementById('ei_to').value = p && p.email && p.email !== '-' ? p.email : '';
+        document.getElementById('ei_template').value = 'standard';
+        applyEmailTemplate();
+        
+        document.getElementById('emailInvoiceModal').style.display = 'flex';
+    }
+    
+    // --- Email Template & Sending Logic ---
+    function applyEmailTemplate() {
+        const template = document.getElementById('ei_template').value;
+        const name = window.currentCustomerName || 'Customer';
+        const projNo = window.currentInvoiceProjNo || '';
+        let subject = ''; let message = '';
+
+        if (template === 'standard') {
+            subject = `Tax Invoice - Ares Energy (Ref: ${projNo})`;
+            message = `Dear ${name},\n\nPlease find attached your tax invoice for your solar installation project (Ref: ${projNo}).\n\nIf you have any questions, feel free to reply to this email.\n\nThank you for choosing Ares Energy.\n\nBest Regards,\nAres Energy Team`;
+        } else if (template === 'overdue') {
+            subject = `OVERDUE: Tax Invoice - Ares Energy (Ref: ${projNo})`;
+            message = `Dear ${name},\n\nThis is a gentle reminder that your tax invoice for project ${projNo} is currently overdue.\n\nPlease find the invoice attached and arrange payment at your earliest convenience.\n\nBest Regards,\nAres Energy Team`;
+        } else {
+            subject = `Invoice - Ares Energy (Ref: ${projNo})`;
+            message = `Dear ${name},\n\n\n\nBest Regards,\nAres Energy Team`;
+        }
+        document.getElementById('ei_subject').value = subject;
+        document.getElementById('ei_message').value = message;
+    }
+
+    function previewInvoicePDF() {
+        if (window.currentInstallId) { window.open(`/invoice.html?id=${window.currentInstallId}`, '_blank'); }
+    }
+
+    async function sendInvoiceEmail() {
+        const to = document.getElementById('ei_to').value.trim();
+        const subject = document.getElementById('ei_subject').value.trim();
+        const message = document.getElementById('ei_message').value.trim();
+
+        if (!to || !subject || !message) { Swal.fire('Required Fields', 'Please fill the To email, Subject, and Message.', 'warning'); return; }
+
+        const btn = document.getElementById('ei_send_btn');
+        btn.disabled = true; btn.innerText = 'Sending...';
+        try {
+            const res = await fetch(`/installations/${window.currentInstallId}/email-invoice`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: to, subject: subject, text: message, projectNumber: window.currentInvoiceProjNo })
+            });
+            if (res.ok) { Swal.fire('Sent!', 'Invoice emailed successfully to the client.', 'success'); document.getElementById('emailInvoiceModal').style.display = 'none'; } 
+            else { const data = await res.json(); Swal.fire('Error', data.error || 'Failed to send email.', 'error'); }
+        } catch (e) { Swal.fire('Error', 'Network error. Could not send email.', 'error'); } 
+        finally { btn.disabled = false; btn.innerText = '📤 Send Email'; }
+    }
+
+    // --- Main Table & Filters ---
+    async function fetchCompaniesForDropdown() {
+        try {
+            const res = await fetch('/companies');
+            if (res.ok) {
+                const data = await res.json();
+                dbCompanyNames = data.map(c => {
+                    const name = c.comp_name || ''; const trading = c.comp_trading || '';
+                    if (name && trading) return `${name} (${trading})`; return name || trading;
+                }).filter(Boolean);
+            }
+        } catch (e) { }
+    }
+
+    async function fetchMasterProducts() {
+        try { const res = await fetch('/products'); if (res.ok) allMasterProducts = await res.json(); } catch (e) { }
+    }
+
+    async function loadInstallations() {
+        try {
+            const res = await fetch('/installations', { cache: 'no-store' });
+            if (res.ok) {
+                allInstallationsData = await res.json();
+            } else {
+                throw new Error('Failed to fetch data');
+            }
+        } catch(e) {
+            console.error("Failed to load installations:", e);
+            document.getElementById('installationsBody').innerHTML = `<tr><td colspan="18" style="text-align:center; padding: 20px !important; color: #b93a20;">Failed to load data from server.</td></tr>`;
+            allInstallationsData = [];
+        }
+        updateStats();
+        populateFilterArrays(); renderTable();
+    }
+
+    function sortData(column, keepDir=false) {
+        if (!keepDir) { if (currentSortCol === column) isSortAsc = !isSortAsc; else { currentSortCol = column; isSortAsc = true; } }
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        if (document.getElementById(`sort_${column}`)) document.getElementById(`sort_${column}`).innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1;
+        loadInstallations();
+    }
+
+    function updateStats() {
+        const active = allInstallationsData.filter(p => p.status !== 'Deleted');
+        document.getElementById('statTotal').innerText = active.length;
+        document.getElementById('statPending').innerText = active.filter(p => p.status !== 'Completed').length;
+        document.getElementById('statCompleted').innerText = active.filter(p => p.status === 'Completed').length;
+    }
+
+    function setupAC(inputId, dropId, getArr, onSelect) {
+        const inp = document.getElementById(inputId), drop = document.getElementById(dropId);
+        if(!inp || !drop) return;
+        const showDropdown = () => {
+            const val = inp.value.trim(); drop.innerHTML = '';
+            if (val.length === 0) { drop.style.display = 'none'; return; }
+            let matches = getArr().filter(x => x && x.toString().toLowerCase().includes(val.toLowerCase()));
+            if(!matches.length) { drop.innerHTML = `<li class="ac-empty">No match</li>`; drop.style.display = 'block'; return; }
+            matches.slice(0, 15).forEach(m => {
+                const li = document.createElement('li'); li.innerText = m;
+                li.addEventListener('mousedown', e => { e.preventDefault(); if (onSelect) onSelect(m, inp); else inp.value = m; drop.style.display = 'none'; });
+                drop.appendChild(li);
+            });
+            drop.style.display = 'block';
+        };
+        inp.addEventListener('focus', showDropdown); inp.addEventListener('input', showDropdown); inp.addEventListener('blur', () => setTimeout(() => { drop.style.display = 'none'; }, 200));
+    }
+
+    function renderSuburbTags() {
+        const container = document.getElementById('flt_suburb_tags');
+        if (!container) return;
+        container.innerHTML = selectedSuburbs.map(s => `<div class="filter-tag">${s} <span onclick="removeSuburb('${s.replace(/'/g, "\\'")}')">✕</span></div>`).join('');
+    }
+
+    function removeSuburb(s) { selectedSuburbs = selectedSuburbs.filter(x => x !== s); renderSuburbTags(); }
+
+    function applyAdvancedFilters() {
+        activeAdvFilters = {
+            type: document.getElementById('adv_type').value, company: document.getElementById('flt_company').value.toLowerCase(),
+            area: document.getElementById('adv_area').value, manualSuburb: document.getElementById('flt_suburb').value.toLowerCase().trim(),
+            suburbs: [...selectedSuburbs], state: document.getElementById('flt_state').value.toLowerCase(),
+            createdFrom: document.getElementById('adv_created_from').value, createdTo: document.getElementById('adv_created_to').value,
+            completedFrom: document.getElementById('adv_completed_from').value, completedTo: document.getElementById('adv_completed_to').value,
+            panel: document.getElementById('flt_panel').value.toLowerCase(), battery: document.getElementById('flt_battery').value.toLowerCase(),
+            inverter: document.getElementById('flt_inverter').value.toLowerCase(), payMode: document.getElementById('adv_pay_mode').value,
+            payStatus: document.getElementById('adv_pay_status').value, certStatus: document.getElementById('adv_cert_status').value
+        };
+        document.getElementById('advancedFilterModal').style.display = 'none'; 
+        currentPage = 1;
+        loadInstallations();
+    }
+
+    function resetAdvancedFilters() {
+        document.querySelectorAll('#advancedFilterModal input, #advancedFilterModal select').forEach(el => el.value = '');
+        selectedSuburbs = []; renderSuburbTags(); activeAdvFilters = {}; document.getElementById('advancedFilterModal').style.display = 'none'; 
+        currentPage = 1;
+        loadInstallations();
+    }
+
+    function extractDateString(s) {
+        if (!s || s === '-') return null; const p = s.split(' ')[0].split('-');
+        if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`; return null;
+    }
+
+    function populateFilterArrays() {
+        const companies = new Set(), suburbs = new Set(), states = new Set(), panels = new Set(), batteries = new Set(), inverters = new Set();
+        allInstallationsData.forEach(item => {
+            if(item.company) companies.add(item.company); if(item.suburb) suburbs.add(item.suburb); if(item.state) states.add(item.state);
+            if(item.panel_model) panels.add(item.panel_model); if(item.battery_model) batteries.add(item.battery_model); if(item.inverter_model) inverters.add(item.inverter_model);
+        });
+        listCompany = [...companies]; listSuburb = [...suburbs]; listState = [...states]; listPanel = [...panels]; listBattery = [...batteries]; listInverter = [...inverters];
+        setupAC('flt_company', 'flt_company_drop', () => [...new Set([...listCompany, ...dbCompanyNames])]);
+        setupAC('proj_company', 'proj_company_drop', () => dbCompanyNames);
+        setupAC('flt_suburb', 'flt_suburb_drop', () => listSuburb, (m, inp) => { if(!selectedSuburbs.includes(m)) { selectedSuburbs.push(m); renderSuburbTags(); } inp.value = ''; });
+        setupAC('flt_state', 'flt_state_drop', () => listState); setupAC('flt_panel', 'flt_panel_drop', () => listPanel); setupAC('flt_battery', 'flt_battery_drop', () => listBattery); setupAC('flt_inverter', 'flt_inverter_drop', () => listInverter);
+    }
+
+function toggleColumn(colId, isVisible) {
+    let cols = JSON.parse(localStorage.getItem('installationsCols') || '{}');
+    cols[colId] = isVisible;
+    localStorage.setItem('installationsCols', JSON.stringify(cols));
+    applyColumnVisibility();
+}
+
+function applyColumnVisibility() {
+    let cols = JSON.parse(localStorage.getItem('installationsCols') || '{}');
+    const styleId = 'dynamic-col-styles';
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+    let css = '';
+    for (const [col, visible] of Object.entries(cols)) {
+        if (!visible) { css += `[data-col="${col}"] { display: none !important; }\n`; }
+        try {
+            const cb = document.querySelector(`input[onchange="toggleColumn('${col}', this.checked)"]`);
+            if (cb) cb.checked = visible;
+        } catch(e) {
+            console.error("Error setting checkbox for col selector:", col, e);
+        }
+    }
+    styleEl.innerHTML = css;
+}
+
+    let searchTimeout;
+    let currentSearchFocus = -1;
+    const gsi = document.getElementById('globalSearch');
+    const gsd = document.getElementById('globalSearchDrop');
+    gsi.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        globalSearchTerm = this.value.trim();
+        currentSearchFocus = -1;
+        if (!globalSearchTerm) {
+            gsd.style.display = 'none';
+            currentPage = 1;
+            loadInstallations();
+            return;
+        }
+        searchTimeout = setTimeout(async () => {
+                // Instantly update the main table to reflect the search term
+                currentPage = 1;
+                loadInstallations();
+                
+            try {
+                const res = await fetch(`/installations/search-suggestions?q=${encodeURIComponent(globalSearchTerm)}`);
+                const suggestions = await res.json();
+                gsd.innerHTML = '';
+                if (suggestions.length === 0) {
+                        gsd.innerHTML = '<li class="ac-empty">No matching records found</li>';
+                } else {
+                    suggestions.forEach((s, idx) => {
+                        const li = document.createElement('li');
+                            li.style.display = 'flex';
+                            li.style.flexDirection = 'column';
+                            li.style.alignItems = 'flex-start';
+                            li.style.padding = '8px 12px';
+                            li.style.gap = '4px';
+                            li.style.borderBottom = '1px solid #f1f5f9';
+                            
+                            const name = `${s.first_name || ''} ${s.last_name || ''}`.trim();
+                            const subInfo = [s.company, s.phone, s.email].filter(Boolean).join(' | ');
+                            const addrInfo = [s.address, s.suburb, s.state].filter(Boolean).join(', ');
+                            
+                            // Highlighting logic
+                            const regex = new RegExp(`(${globalSearchTerm.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})`, 'gi');
+                            const hl = (str) => str ? str.replace(regex, `<span style="color:var(--accent);font-weight:800;">$1</span>`) : '';
+                            
+                            li.innerHTML = `
+                                <div style="font-size:13px; font-weight:700; color:var(--text-dark);">
+                                    📋 ${hl(s.project_number)} - ${hl(name)}
+                                </div>
+                                <div style="font-size:11px; color:var(--text-muted); line-height:1.4;">
+                                    ${subInfo ? `📞 ${hl(subInfo)}<br>` : ''}
+                                    ${addrInfo ? `📍 ${hl(addrInfo)}` : ''}
+                                </div>
+                            `;
+                            
+                        li.dataset.index = idx;
+                        li.dataset.val = s.project_number || s.company || s.first_name;
+                        li.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            gsi.value = li.dataset.val;
+                            gsd.style.display = 'none';
+                            globalSearchTerm = li.dataset.val;
+                            currentPage = 1;
+                            loadInstallations();
+                        });
+                        gsd.appendChild(li);
+                    });
+                }
+                gsd.style.display = 'block';
+            } catch(e) { console.error(e); }
+        }, 300);
+    });
+    gsi.addEventListener('keydown', function(e) {
+        const items = gsd.querySelectorAll('li:not(.ac-empty)');
+        if (e.key === 'ArrowDown') { e.preventDefault(); currentSearchFocus++; addSearchActive(items); } 
+        else if (e.key === 'ArrowUp') { e.preventDefault(); currentSearchFocus--; addSearchActive(items); } 
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentSearchFocus > -1 && items[currentSearchFocus]) {
+                items[currentSearchFocus].dispatchEvent(new MouseEvent('mousedown'));
+            } else {
+                gsd.style.display = 'none';
+                globalSearchTerm = this.value.trim();
+                currentPage = 1;
+                loadInstallations();
+            }
+        }
+    });
+
+    function addSearchActive(items) {
+        if (!items || items.length === 0) return;
+        items.forEach(item => item.classList.remove('ac-active'));
+        if (currentSearchFocus >= items.length) currentSearchFocus = 0;
+        if (currentSearchFocus < 0) currentSearchFocus = items.length - 1;
+        items[currentSearchFocus].classList.add('ac-active');
+        items[currentSearchFocus].scrollIntoView({ block: 'nearest' });
+    }
+
+    function renderTable() {
+        const body = document.getElementById('installationsBody');
+        body.innerHTML = '';
+        let filtered = allInstallationsData;
+
+        if (filtered.length === 0) { body.innerHTML = `<tr><td colspan="18" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No matching installations found.</td></tr>`; return; }
+        
+        let htmlString = '';
+        filtered.forEach(p => {
+            const customerName = `${p.first_name || ''} ${p.last_name || ''}`.trim() || '-';
+            const pc = parseInt(p.postcode); let area = 'Regional';
+            if(!isNaN(pc) && ((pc>=2000&&pc<=2249)||(pc>=3000&&pc<=3207)||(pc>=4000&&pc<=4209)||(pc>=5000&&pc<=5199)||(pc>=6000&&pc<=6199))) area = 'Metro';
+            
+            const addrParts = []; if (p.unit_number) addrParts.push(`Unit ${p.unit_number}`); if (p.lot_number) addrParts.push(`Lot ${p.lot_number}`); if (p.address) addrParts.push(p.address);
+            const dispAddress = addrParts.length > 0 ? addrParts.join(', ') : '-';
+            const fullLocationHtml = `<div class="stacked-text"><div style="white-space: normal; line-height: 1.4;">${dispAddress}</div><div style="font-size:10px; color:var(--text-muted); margin-top: 2px;">${p.suburb || '-'} ${p.state || ''}</div></div>`;
+            
+            let companyHtml = p.company || '-';
+            if (companyHtml !== '-' && companyHtml.includes('(') && companyHtml.endsWith(')')) {
+                const lastOpenBracket = companyHtml.lastIndexOf('('); const cName = companyHtml.substring(0, lastOpenBracket).trim(); const tName = companyHtml.substring(lastOpenBracket + 1, companyHtml.length - 1).trim();
+                companyHtml = `<div class="stacked-text"><div style="white-space: normal; line-height: 1.4;">${cName}</div><div style="font-size:10px; color:var(--text-muted); margin-top: 2px;">${tName}</div></div>`;
+            } else { companyHtml = `<div class="stacked-text"><div style="white-space: normal; line-height: 1.4;">${companyHtml}</div></div>`; }
+
+            const panelHtml = p.panel_model ? `${p.panel_qty || '-'} x ${p.panel_model}` : '-';
+            const batteryHtml = p.battery_model ? `${p.battery_qty || '-'} x ${p.battery_model}` : '-';
+            const equipmentHtml = `<div class="stacked-text"><div>${panelHtml}</div><div>${batteryHtml}</div></div>`;
+            const inverterHtml = p.inverter_model || '-';
+
+            htmlString += `
+                <tr>
+                    <td class="cb-col"><input type="checkbox" class="row-cb" value="${p.id}" onclick="updateBulkDeleteBtn()"></td>
+                <td data-col="col_type">${p.type || '-'}</td>
+                <td data-col="col_company" class="col-center">${companyHtml}</td>
+                <td data-col="col_date">${p.created_date || '-'}<br><span>-</span></td>
+                <td data-col="col_ref">${p.project_number && p.project_number !== 'Pending' ? `<a href="/invoice.html?id=${p.id}" target="_blank" class="proj-num" style="text-decoration: none;" title="Click to view invoice">${p.project_number}</a>` : `<span class="proj-num">${p.project_number || 'Pending'}</span>`}</td>
+                <td data-col="col_customer"><a href="javascript:void(0)" onclick="showProjectSnapshot(${p.id})" style="color:var(--primary); font-weight:700; text-decoration:none; border-bottom:1px dashed var(--primary);" title="Click for Quick Preview">${customerName}</a></td>
+                <td data-col="col_phone">${p.phone || '-'}</td>
+                <td data-col="col_email">${p.email || '-'}</td>
+                <td data-col="col_address">${fullLocationHtml}</td>
+                <td data-col="col_area">${area}</td>
+                <td data-col="col_pv" class="col-center">${equipmentHtml}</td>
+                <td data-col="col_inv">${inverterHtml}</td>
+                <td data-col="col_invoice" style="text-align: right !important; padding-right: 16px !important; font-weight:700 !important; color:#b45309 !important;">${p.invoice_amount ? '$' + parseFloat(p.invoice_amount).toFixed(2) : '-'}</td>
+                <td data-col="col_mode">${p.payment_mode || '-'}</td>
+                <td data-col="col_status"><span class="status-badge sb-planned">${p.status}</span></td>
+                <td data-col="col_cert"><span class="status-badge sb-inactive">${p.cert_status}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="act-btn" title="Edit Project Details" onclick="editInstallation(${p.id})">✏️</button>
+                            <button class="act-btn" title="Add Equipment" onclick="addEquipment(${p.id})">➕</button>
+                            <button class="act-btn" title="Documents" onclick="openDocumentModal(${p.id})">📄</button>
+                            <button class="act-btn" title="Generate Invoice" onclick="generateInvoice(${p.id})">🧾</button>
+                            <button class="act-btn" title="History" onclick="viewHistory(${p.id})">🕒</button>
+                            <button class="act-btn act-btn-del" title="Delete" onclick="deleteInstallation(${p.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        body.innerHTML = htmlString;
+        document.getElementById('selectAllCheckbox').checked = false;
+        updateBulkDeleteBtn();
+
+        // Update Pagination Info UI
+        document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages || totalPages === 0;
+    }
+
+    function changeRowsPerPage() {
+        rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+        currentPage = 1;
+        loadInstallations();
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadInstallations();
+        }
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadInstallations();
+        }
+    }
+
+    // OVERRIDE OLD `loadInstallations` to hit Server-Side Pagination
+    loadInstallations = async function() {
+        const tbody = document.getElementById('installationsBody');
+        tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; padding: 40px !important; color: var(--text-muted);"><div style="display: inline-block; border: 3px solid #e2e8f0; border-top: 3px solid var(--accent); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 10px;"></div> Loading Installations...</td></tr>`;
+        
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: rowsPerPage,
+                search: globalSearchTerm,
+                sort: currentSortCol || 'id',
+                order: isSortAsc ? 'asc' : 'desc'
+            });
+
+            for (const [key, value] of Object.entries(activeAdvFilters)) {
+                if (value) {
+                    if (Array.isArray(value)) params.append(key, JSON.stringify(value));
+                    else params.append(key, value);
+                }
+            }
+
+            // Sync URL with current filters, search, and pagination instantly
+            window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+
+            const res = await fetch(`/installations?${params.toString()}`, { cache: 'no-store' });
+            if (res.ok) {
+                const responseData = await res.json();
+                
+                // Defensive Error-Proofing: Handle both Paginated Object AND Flat Array responses
+                if (Array.isArray(responseData)) {
+                    allInstallationsData = responseData;
+                    totalRecords = responseData.length;
+                    totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+                    updateStats(); // Fallback to calculate manually
+                } else {
+                    allInstallationsData = responseData.data || [];
+                    totalRecords = responseData.total || 0;
+                    totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+                    
+                    if (responseData.stats) {
+                        document.getElementById('statTotal').innerText = responseData.stats.total || 0;
+                        document.getElementById('statPending').innerText = responseData.stats.pending || 0;
+                        document.getElementById('statCompleted').innerText = responseData.stats.completed || 0;
+                    } else {
+                        updateStats();
+                    }
+                }
+                document.getElementById('totalRecordsCount').innerText = totalRecords;
+                renderTable();
+            } else throw new Error('Failed to fetch data');
+        } catch(e) {
+            console.error("Failed to load installations:", e);
+            tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; padding: 20px !important; color: #b93a20;">Failed to load data from server.</td></tr>`;
+            allInstallationsData = [];
+        }
+        populateFilterArrays();
+    };
+
+    function showProjectSnapshot(id) {
+        const p = allInstallationsData.find(x => x.id === id);
+        if (!p) return;
+        
+        let equipHtml = '<span style="color:var(--text-muted);">No equipment detailed.</span>';
+        let plainEquipText = 'No equipment detailed.';
+        if (p.equipment_details) {
+            try {
+                let eqs = typeof p.equipment_details === 'string' ? JSON.parse(p.equipment_details) : p.equipment_details;
+                if (eqs && eqs.length > 0) {
+                    equipHtml = eqs.map(eq => `• <b>${eq.type}:</b> ${eq.qty}x ${eq.name}`).join('<br>');
+                    plainEquipText = eqs.map(eq => `- ${eq.type}: ${eq.qty}x ${eq.name}`).join('\n');
+                }
+            } catch(e) {}
+        }
+        
+        const customerName = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+        const addressText = `${p.unit_number ? p.unit_number + ' ' : ''}${p.address || ''}, ${p.suburb || ''} ${p.state || ''} ${p.postcode || ''}`;
+        
+        // Formatted plain text for clipboard
+        const plainTextToCopy = `Project Ref: ${p.project_number || 'Pending'}\nCustomer: ${customerName}\nCompany: ${p.company || '-'}\nPhone: ${p.phone || '-'}\nEmail: ${p.email || '-'}\nAddress: ${addressText}\nType: ${p.type || '-'}\nStatus: ${p.status || '-'}\nInvoice: $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})\n\nEquipment:\n${plainEquipText}`;
+
+        Swal.fire({
+            title: `Snapshot: ${p.project_number || 'Pending'}`,
+            html: `
+                <div style="position: relative; text-align: left; font-size: 13px; line-height: 1.6; color: var(--text-dark); background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--text-dark); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: flex; align-items: center; gap: 4px;">📋 Copy</button>
+                    
+                    <div style="margin-bottom: 8px; padding-right: 60px;"><b>👤 Customer:</b> ${customerName}</div>
+                    <div style="margin-bottom: 8px;"><b>🏢 Company:</b> ${p.company || '-'}</div>
+                    <div style="margin-bottom: 8px;"><b>📞 Phone:</b> ${p.phone || '-'}</div>
+                    <div style="margin-bottom: 8px;"><b>✉️ Email:</b> ${p.email || '-'}</div>
+                    <div style="margin-bottom: 8px;"><b>📍 Address:</b> ${addressText}</div>
+                    <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                        <span><b>Type:</b> ${p.type || '-'}</span>
+                        <span><b>Status:</b> <span style="background:var(--bg); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-weight:600;">${p.status || '-'}</span></span>
+                    </div>
+                    <div style="margin-bottom: 8px;"><b>💰 Invoice:</b> $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})</div>
+                    <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+                    <div style="margin-bottom: 4px;"><b>⚙️ Equipment Summary:</b></div>
+                    <div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+                        ${equipHtml}
+                    </div>
+                </div>
+            `,
+            showConfirmButton: true,
+            confirmButtonText: 'Close',
+            confirmButtonColor: '#1c3557',
+            width: '400px'
+        });
+    }
+
+    function copySnapshotText(btn) {
+        const text = decodeURIComponent(btn.getAttribute('data-copytext'));
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            btn.style.background = '#edfaf2';
+            btn.style.color = '#1a6b3c';
+            btn.style.borderColor = '#b3e6cc';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = 'var(--surface)';
+                btn.style.color = 'var(--text-dark)';
+                btn.style.borderColor = 'var(--border)';
+            }, 2000);
+        }).catch(err => {
+            console.error('Could not copy text: ', err);
+            btn.innerHTML = '❌ Failed';
+        });
+    }
+
+    function restoreStateFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.has('page')) currentPage = parseInt(urlParams.get('page')) || 1;
+        if (urlParams.has('limit')) {
+            rowsPerPage = parseInt(urlParams.get('limit')) || 30;
+            if (document.getElementById('rowsPerPage')) document.getElementById('rowsPerPage').value = rowsPerPage;
+        }
+        if (urlParams.has('search')) {
+            globalSearchTerm = urlParams.get('search');
+            if (document.getElementById('globalSearch')) document.getElementById('globalSearch').value = globalSearchTerm;
+        }
+        if (urlParams.has('sort')) currentSortCol = urlParams.get('sort');
+        if (urlParams.has('order')) isSortAsc = urlParams.get('order') === 'asc';
+
+        if (currentSortCol) {
+            setTimeout(() => {
+                document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+                const sortEl = document.getElementById(`sort_${currentSortCol}`);
+                if (sortEl) sortEl.innerText = isSortAsc ? '⬆️' : '⬇️';
+            }, 100);
+        }
+
+        const fieldMap = {
+            type: 'adv_type', company: 'flt_company', area: 'adv_area',
+            manualSuburb: 'flt_suburb', state: 'flt_state', createdFrom: 'adv_created_from',
+            createdTo: 'adv_created_to', completedFrom: 'adv_completed_from', completedTo: 'adv_completed_to',
+            panel: 'flt_panel', battery: 'flt_battery', inverter: 'flt_inverter',
+            payMode: 'adv_pay_mode', payStatus: 'adv_pay_status', certStatus: 'adv_cert_status'
+        };
+
+        for (const [key, elId] of Object.entries(fieldMap)) {
+            if (urlParams.has(key)) {
+                activeAdvFilters[key] = urlParams.get(key);
+                const el = document.getElementById(elId);
+                if (el) el.value = activeAdvFilters[key];
+            }
+        }
+
+        if (urlParams.has('suburbs')) {
+            try {
+                const parsed = JSON.parse(urlParams.get('suburbs'));
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    selectedSuburbs = parsed;
+                    activeAdvFilters['suburbs'] = selectedSuburbs;
+                    setTimeout(() => renderSuburbTags(), 100);
+                }
+            } catch(e) { }
+        }
+    }
+
+    window.onload = async function() {
+        await loadChargeItems();
+        await fetchCompaniesForDropdown();
+        await fetchMasterProducts();
+        
+        restoreStateFromURL();
+        
+        loadInstallations();
+        initAutocomplete(); 
+        applyColumnVisibility();
+    };
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js?v=2"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ares Energy Solar CRM - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .login-logo-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        .login-logo-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .login-card {
+            background: #1e293b;
+            border-radius: 14px;
+            padding: 30px;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .login-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            height: 42px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 0 14px;
+            font-size: 14px;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, sans-serif;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: #e8681e;
+            box-shadow: 0 0 0 3px rgba(232,104,30,0.15);
+        }
+        .form-input::placeholder {
+            color: #475569;
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 44px;
+            background: #e8681e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', system-ui, sans-serif;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-login:hover {
+            background: #d05a14;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(232,104,30,0.4);
+        }
+        .btn-login:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-msg {
+            display: none;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fca5a5;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 14px;
+        }
+        .error-msg.visible {
+            display: block;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="login-wrap">
+    <div class="login-logo">
+        <img src="/ares_energy_logo.png" alt="Ares Energy Logo" style="height: 80px; width: auto; margin-bottom: 12px;">
+        <div class="login-logo-name">Ares Energy Solar CRM</div>
+    </div>
+
+    <div class="login-card">
+        <div class="login-title">Welcome Back</div>
+
+        <form id="loginForm" onsubmit="doLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input" placeholder="Enter username" autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter password" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                Login
+            </button>
+        </form>
+
+        <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="login-footer">
+        Ares Solar 2026 · All rights reserved
+    </div>
+</div>
+
+<script>
+    async function doLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const btn      = document.getElementById('loginBtn');
+        const errDiv   = document.getElementById('errorMsg');
+
+        errDiv.classList.remove('visible');
+
+        if (!username || !password) {
+            errDiv.innerText = '⚠️ Both username and password are required.';
+            errDiv.classList.add('visible');
+            return;
+        }
+
+        btn.disabled    = true;
+        btn.innerHTML   = '<span class="spinner"></span>Logging in...';
+
+        try {
+            const res  = await fetch('/login', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                btn.innerHTML = 'Success!';
+                window.location.href = '/home.html'; // Redirect to Home
+            } else {
+                errDiv.innerText = '❌ ' + (data.error || 'Login failed.');
+                errDiv.classList.add('visible');
+                btn.disabled  = false;
+                btn.innerHTML = 'Login';
+            }
+        } catch (e) {
+            errDiv.innerText = '❌ Unable to connect to the server. Is the server running?';
+            errDiv.classList.add('visible');
+            btn.disabled  = false;
+            btn.innerHTML = 'Login';
+        }
+    }
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>

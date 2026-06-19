@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true
+  },
+  "exclude": [
+    "node_modules",
+    "SYSTEM_BACKUPS",
+    "scratch",
+    "public/**/*.html",
+    "server-vishrutipatel.js",
+    "scratch_update_sidebars.js"
+  ]
+}

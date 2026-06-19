@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Outstanding Payments - Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --accent-hover: #d05a14;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #dde3ed;
+            --text-dark: #1c2b3a;
+            --text-muted: #6b7a8d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        input, select, button { font-family: inherit; font-size: 13px; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
+        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
+        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
+        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
+        .menu-item:hover { color: #f8fafc; background: #1e293b; }
+        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
+        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
+        .sb-user { display: flex; align-items: center; gap: 10px; }
+        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .sb-uinfo { flex: 1; min-width: 0; }
+        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
+
+        /* ========== AUTOCOMPLETE ========== */
+        .ac-wrap { position: relative; }
+        .ac-drop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 240px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 10px; display: none; padding: 6px 0; }
+        .ac-drop li { cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f1f5f9; }
+        .ac-drop li:last-child { border-bottom: none; }
+        .ac-drop li:hover { background: #f1f5f9; }
+        .ac-empty { padding: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
+        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); outline: none; }
+        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(28,53,87,0.1); }
+        .tb-spacer { flex: 1; }
+        .tb-btn { height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--surface); color: var(--text-dark); display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-btn:hover { background: var(--bg); border-color: #cbd5e1; }
+
+        /* ========== STATS ROW ========== */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #f59e0b; }
+        .stat-card:nth-child(3)::before { background: #ef4444; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
+        .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+        /* ========== TABLE AREA ========== */
+        .content-area { flex: 1; overflow: hidden; padding: 0 16px 10px; display: flex; flex-direction: column; min-height: 0; }
+        .table-wrap { flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); min-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        
+        /* ========== STRICT GLOBAL UI RULES ========== */
+        table th {
+            position: sticky; top: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px);
+            border-bottom: 2px solid var(--border); border-right: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 0.4px;
+            color: #212529 !important; font-weight: 700 !important; font-size: 10px !important;
+            text-align: center !important; vertical-align: middle !important;
+            padding: 4px 8px !important; line-height: 1.3; z-index: 10;
+            resize: horizontal; overflow: hidden;
+            white-space: normal !important; word-wrap: break-word; max-width: 140px; min-width: 60px;
+            cursor: pointer; user-select: none;
+        }
+        table th:last-child { right: 0; z-index: 11; }
+        table th:hover { background: #f1f5f9; }
+        .sort-arrow { font-size: 0.75rem; margin-left: 6px; color: var(--primary); }
+        table td { color: #212529 !important; font-weight: 500 !important; text-align: center !important; vertical-align: middle !important; font-size: 11px !important; border-bottom: 1px solid #f1f5f9; padding: 4px 8px !important; background: var(--surface); }
+        table td span:not(.status-badge):not(.proj-pending):not(.proj-num):not(.age-pill), table td div:not(.actions-cell) { text-align: inherit !important; color: inherit; font-weight: inherit; font-size: inherit; }
+        table td:last-child { position: sticky; right: 0; z-index: 9; border-left: 1px solid var(--border); }
+        table td .act-btn { color: #212529 !important; font-weight: 700 !important; }
+        table tbody tr:hover td { background: #f8fafc !important; }
+
+        .status-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); }
+        .sb-pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .proj-num { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 700; color: var(--primary); background: #eef2f8; padding: 2px 6px; border-radius: 4px; border: 1px solid #c5d3e8; }
+
+        /* Action Buttons */
+        .actions-cell { display: flex; gap: 4px; justify-content: center; }
+        .act-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; height: 24px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text-dark); transition: all 0.2s; }
+        .act-btn:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+        .act-btn-primary { background: #eef2f8; color: var(--primary); border-color: #c5d3e8; }
+        .act-btn-primary:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Pagination */
+        .pagination-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .pf-left, .pf-right { display: flex; align-items: center; gap: 8px; }
+        .rows-select { height: 28px; border: 1px solid var(--border); border-radius: 5px; padding: 0 8px; font-size: 12px; font-weight: 500; outline: none; }
+        .total-badge { background: #f1f5f9; color: var(--text-dark); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .page-btn { background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--surface); padding: 20px 24px; width: 100%; max-width: 400px; border-radius: 12px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.12); border: 1px solid var(--border); }
+        .modal-close { position: absolute; right: 16px; top: 16px; background: #f4f6f9; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .modal-close:hover { background: #fde8e3; color: #b93a20; }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        
+        .field { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .field label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
+        .field select, .field input { padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; height: 34px; width: 100%; background: var(--surface); font-size: 13px; outline: none; }
+        .field select:focus, .field input:focus { border-color: var(--primary); }
+        .btn-save { background: var(--accent); color: #fff; padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; width: 100%; margin-top: 10px; }
+        .btn-save:hover { background: var(--accent-hover); }
+    </style>
+    <link rel="icon" type="image/png" href="/ares_energy_logo.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
+            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
+        </div>
+    </div>
+    <div class="sb-menu">
+        <div class="sb-section">CRM Navigation</div>
+        
+        <a href="/home.html" class="menu-item" data-target="home">
+            <span>Home</span>
+        </a>
+        
+        <!-- Dashboard -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Dashboard</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
+            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
+            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
+            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
+        </div>
+
+        <!-- Lead Master -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Lead Master</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
+            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
+            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
+            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
+        </div>
+
+        <!-- Projects -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Projects</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
+        </div>
+
+        <!-- Masters -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Masters</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
+            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
+            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
+            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
+        </div>
+
+        <!-- Ares Installation Outside -->
+        <div class="menu-item" onclick="toggleNav(event, this)">
+            <span>Ares Installation Outside</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payment Status</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
+                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
+            </div>
+            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
+        </div>
+        
+        <!-- User Management (Isolated) -->
+        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
+            <span>User Management</span>
+        </a>
+
+        <!-- Attendance & Payroll (Compliance Module) -->
+        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
+            <span>Attendance & Payroll</span>
+            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+        </div>
+        <div class="sub-menu" style="display: none;">
+            <!-- Employees Management -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Employees Management</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
+                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
+                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
+                <span>Payroll Processing</span>
+                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            </div>
+            <div class="sub-menu" style="display: none;">
+                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
+                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+            </div>
+        </div>
+    </div>
+    <div class="sb-footer">
+        <div class="sb-user">
+            <div class="sb-avatar" id="sidebarAvatar">U</div>
+            <div class="sb-uinfo">
+                <div class="sb-uname" id="sidebarName">Loading...</div>
+                <div class="sb-urole" id="sidebarRole">...</div>
+            </div>
+            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR CONTROLLER JS (CLEAN & RELIABLE) -->
+<script>
+function toggleNav(event, element) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const subMenu = element.nextElementSibling;
+    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+    
+    const icon = element.querySelector('.toggle-icon');
+    const isCurrentlyOpen = subMenu.style.display === 'block';
+
+    // Close all sibling sub-menus
+    const parent = element.parentElement;
+    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+    
+    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+    // Toggle current
+    if (!isCurrentlyOpen) {
+        subMenu.style.display = 'block';
+        if (icon) icon.innerText = '▲';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        if (!href || href === '#') return;
+        
+        const target = el.getAttribute('data-target') || href;
+        let isMatch = false;
+        
+        if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+            isMatch = true;
+        } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            el.classList.add('active-menu');
+            let parentSub = el.closest('.sub-menu');
+            
+            while (parentSub) {
+                parentSub.style.display = 'block';
+                const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                if (toggleIcon) toggleIcon.innerText = '▲';
+                parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+            }
+        }
+        
+        el.addEventListener('click', function(e) {
+            if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            const targetHref = this.getAttribute('href');
+            const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+            if (isSamePage) {
+                window.location.reload();
+            } else {
+                window.location.href = targetHref;
+            }
+        });
+    });
+});
+</script>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="topbar-title">Outstanding Payments</div>
+        <div class="search-wrap ac-wrap">
+            <input type="text" id="globalSearch" placeholder="Search project no, customer, company..." autocomplete="off">
+            <ul class="ac-drop" id="globalSearchDrop"></ul>
+        </div>
+        <div class="tb-spacer"></div>
+        <button class="tb-btn" onclick="exportToExcel()">Export</button>
+        <input type="hidden" id="userProfile" value="">
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Pending Invoices</div>
+            <div class="stat-val" id="statCount">0</div>
+            <div class="stat-sub">Installations awaiting payment</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Outstanding ($)</div>
+            <div class="stat-val" id="statAmount">$0.00</div>
+            <div class="stat-sub">Sum of all pending invoices</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Overdue Invoices</div>
+            <div class="stat-val" style="color: #ef4444;" id="statOverdue">0</div>
+            <div class="stat-sub">Past due date</div>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortData('project_number')">Project No. <span class="sort-arrow" id="sort_project_number"></span></th>
+                        <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('first_name')">Customer <span class="sort-arrow" id="sort_first_name"></span></th>
+                        <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('company')">Company <span class="sort-arrow" id="sort_company"></span></th>
+                        <th onclick="sortData('type')">Type <span class="sort-arrow" id="sort_type"></span></th>
+                        <th style="text-align: left !important; padding-left: 16px !important;" onclick="sortData('address')">Site Address <span class="sort-arrow" id="sort_address"></span></th>
+                        <th style="text-align: right !important; padding-right: 16px !important;" onclick="sortData('invoice_amount')">Invoice ($) <span class="sort-arrow" id="sort_invoice_amount"></span></th>
+                        <th onclick="sortData('payment_status')">Payment Status <span class="sort-arrow" id="sort_payment_status"></span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-footer">
+        <div class="pf-left">
+            <span class="pf-label">Show:</span>
+            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+            </select>
+            <span class="total-badge">Total: <span id="totalRecordsCount">0</span></span>
+        </div>
+        <div class="pf-right">
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+            <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Update Payment Status Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('paymentModal').style.display='none'">✕</button>
+        <div class="modal-title">Update Payment Status</div>
+        <form id="paymentForm" onsubmit="savePayment(event)">
+            <input type="hidden" id="edit_id" value="">
+            
+            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 14px;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Project Ref: <span id="disp_proj" style="color: var(--primary);"></span></div>
+                <div style="font-size: 16px; font-weight: 700; color: #10b981; margin-top: 4px;">Amount Due: $<span id="disp_amt">0.00</span></div>
+            </div>
+
+            <div class="field">
+                <label>Payment Status</label>
+                <select id="pay_status" required>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                </select>
+            </div>
+            <div class="field" id="pay_mode_div" style="display: none;">
+                <label>Payment Mode</label>
+                <select id="pay_mode">
+                    <option value="">Select Mode</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Cheque">Cheque</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-save" id="saveBtn">Confirm Payment</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allData = [], currentPage = 1, rowsPerPage = 30;
+    let currentSortCol = '', isSortAsc = true, globalSearchTerm = '';
+    const apiEndpoint = '/installations/outstanding-payments';
+
+    // Search Listener
+    let searchTimeout;
+    let currentSearchFocus = -1;
+    const gsi = document.getElementById('globalSearch');
+    const gsd = document.getElementById('globalSearchDrop');
+    
+    gsi.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        globalSearchTerm = this.value.trim();
+        currentSearchFocus = -1;
+        
+        if (!globalSearchTerm) {
+            gsd.style.display = 'none';
+            currentPage = 1;
+            loadData();
+            return;
+        }
+        
+        searchTimeout = setTimeout(async () => {
+            // Live-update the table as they type
+            currentPage = 1;
+            loadData();
+            
+            try {
+                const res = await fetch(`/installations/search-suggestions?q=${encodeURIComponent(globalSearchTerm)}`);
+                const suggestions = await res.json();
+                gsd.innerHTML = '';
+                
+                if (suggestions.length === 0) {
+                    gsd.innerHTML = '<li class="ac-empty">No matching records found</li>';
+                } else {
+                    suggestions.forEach((s, idx) => {
+                        const li = document.createElement('li');
+                        li.style.display = 'flex';
+                        li.style.flexDirection = 'column';
+                        li.style.alignItems = 'flex-start';
+                        li.style.padding = '8px 12px';
+                        li.style.gap = '4px';
+                        li.style.borderBottom = '1px solid #f1f5f9';
+                        
+                        const name = `${s.first_name || ''} ${s.last_name || ''}`.trim();
+                        const subInfo = [s.company, s.phone, s.email].filter(Boolean).join(' | ');
+                        const addrInfo = [s.address, s.suburb, s.state].filter(Boolean).join(', ');
+                        
+                        const regex = new RegExp(`(${globalSearchTerm.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})`, 'gi');
+                        const hl = (str) => str ? str.replace(regex, `<span style="color:var(--accent);font-weight:800;">$1</span>`) : '';
+                        
+                        li.innerHTML = `
+                            <div style="font-size:13px; font-weight:700; color:var(--text-dark);">
+                                📋 ${hl(s.project_number)} - ${hl(name)}
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted); line-height:1.4;">
+                                ${subInfo ? `📞 ${hl(subInfo)}<br>` : ''}
+                                ${addrInfo ? `📍 ${hl(addrInfo)}` : ''}
+                            </div>
+                        `;
+                        
+                        li.dataset.val = s.project_number || s.company || s.first_name;
+                        li.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            gsi.value = li.dataset.val;
+                            gsd.style.display = 'none';
+                            globalSearchTerm = li.dataset.val;
+                            currentPage = 1;
+                            loadData();
+                        });
+                        gsd.appendChild(li);
+                    });
+                }
+                gsd.style.display = 'block';
+            } catch(e) { console.error('Autocomplete Error:', e); }
+        }, 350);
+    });
+
+    gsi.addEventListener('blur', () => setTimeout(() => gsd.style.display = 'none', 200));
+    gsi.addEventListener('keydown', function(e) {
+        const items = gsd.querySelectorAll('li:not(.ac-empty)');
+        if (e.key === 'ArrowDown') { e.preventDefault(); currentSearchFocus++; addSearchActive(items); } 
+        else if (e.key === 'ArrowUp') { e.preventDefault(); currentSearchFocus--; addSearchActive(items); } 
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentSearchFocus > -1 && items[currentSearchFocus]) {
+                items[currentSearchFocus].dispatchEvent(new MouseEvent('mousedown'));
+            } else {
+                gsd.style.display = 'none';
+                globalSearchTerm = this.value.trim();
+                currentPage = 1;
+                loadData();
+            }
+        }
+    });
+
+    function addSearchActive(items) {
+        if (!items || items.length === 0) return;
+        items.forEach(item => item.style.background = 'transparent');
+        if (currentSearchFocus >= items.length) currentSearchFocus = 0;
+        if (currentSearchFocus < 0) currentSearchFocus = items.length - 1;
+        items[currentSearchFocus].style.background = '#f1f5f9';
+        items[currentSearchFocus].scrollIntoView({ block: 'nearest' });
+    }
+
+    // Modal Logic
+    document.getElementById('pay_status').addEventListener('change', function() {
+        document.getElementById('pay_mode_div').style.display = this.value === 'Paid' ? 'flex' : 'none';
+        document.getElementById('pay_mode').required = this.value === 'Paid';
+    });
+
+    async function loadData() {
+        const tbody = document.getElementById('dataTableBody');
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">Loading data...</td></tr>`;
+        
+        try {
+            const params = new URLSearchParams({ page: currentPage, limit: rowsPerPage, search: globalSearchTerm, sort: currentSortCol || 'id', order: isSortAsc ? 'asc' : 'desc' });
+            const res = await fetch(`${apiEndpoint}?${params.toString()}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error('Network response was not ok');
+            
+            const response = await res.json();
+            allData = response.data || [];
+            const totalRecords = response.total || 0;
+            
+            // Calculate Stats
+            let totalAmt = 0;
+            allData.forEach(p => totalAmt += parseFloat(p.invoice_amount || 0));
+            document.getElementById('statCount').innerText = totalRecords;
+            document.getElementById('statAmount').innerText = `$${totalAmt.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalRecordsCount').innerText = totalRecords;
+            
+            renderTable(totalRecords);
+        } catch(e) {
+            console.error(e);
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: #b93a20;">Failed to load data.</td></tr>`;
+        }
+    }
+
+    function sortData(column) {
+        if (currentSortCol === column) isSortAsc = !isSortAsc;
+        else { currentSortCol = column; isSortAsc = true; }
+        document.querySelectorAll('.sort-arrow').forEach(el => el.innerText = '');
+        document.getElementById(`sort_${column}`).innerText = isSortAsc ? '⬆️' : '⬇️';
+        currentPage = 1;
+        loadData();
+    }
+
+    function renderTable(totalRecords) {
+        const body = document.getElementById('dataTableBody');
+        body.innerHTML = '';
+
+        if (allData.length === 0) {
+            body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">No outstanding payments found.</td></tr>`;
+            return;
+        }
+
+        const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+        
+        let htmlString = '';
+        allData.forEach(p => {
+            const customer = `${p.first_name || ''} ${p.last_name || ''}`.trim() || '-';
+            const addr = `${p.unit_number ? p.unit_number+' ' : ''}${p.address || ''}, ${p.suburb || ''}`.trim() || '-';
+            const amount = parseFloat(p.invoice_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+            
+            let compHtml = p.company || '-';
+            if (compHtml.includes('(')) {
+                const parts = compHtml.split('(');
+                compHtml = `<strong>${parts[0].trim()}</strong><br><span style="font-size:10px;color:var(--text-muted)">(${parts[1]}</span>`;
+            } else { compHtml = `<strong>${compHtml}</strong>`; }
+            
+            htmlString += `
+                <tr>
+                    <td>${p.project_number && p.project_number !== 'Pending' ? `<a href="/invoice.html?id=${p.id}" target="_blank" class="proj-num" style="text-decoration: none;" title="Click to view invoice">${p.project_number}</a>` : `<span class="proj-num">${p.project_number || 'Pending'}</span>`}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${customer}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important; line-height:1.4;">${compHtml}</td>
+                    <td>${p.type || '-'}</td>
+                    <td style="text-align: left !important; padding-left: 16px !important;">${addr}</td>
+                    <td style="text-align: right !important; padding-right: 16px !important; font-weight:700 !important; color:#b45309 !important;">$${amount}</td>
+                    <td><span class="status-badge sb-pending">${p.payment_status || 'Pending'}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="act-btn act-btn-primary" onclick="openPaymentModal(${p.id}, '${p.project_number}', '${amount}')">Mark Paid</button>
+                            <button class="act-btn" onclick="window.open('/invoice.html?id=${p.id}', '_blank')" title="View Invoice">📄</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        body.innerHTML = htmlString;
+        
+        document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages || totalPages === 0;
+    }
+
+    function openPaymentModal(id, projNo, amount) {
+        document.getElementById('paymentForm').reset();
+        document.getElementById('edit_id').value = id;
+        document.getElementById('disp_proj').innerText = projNo || 'Pending';
+        document.getElementById('disp_amt').innerText = amount;
+        document.getElementById('pay_mode_div').style.display = 'none';
+        document.getElementById('pay_mode').required = false;
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    async function savePayment(e) {
+        e.preventDefault();
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.innerText = 'Processing...';
+        
+        const id = document.getElementById('edit_id').value;
+        const payload = {
+            payment_status: document.getElementById('pay_status').value,
+            payment_mode: document.getElementById('pay_mode').value,
+            currentUser: document.getElementById('userProfile').value || 'System'
+        };
+        
+        try {
+            const res = await fetch(`/installations/${id}/payment-status`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                Swal.fire('Updated!', 'Payment status updated successfully.', 'success');
+                document.getElementById('paymentModal').style.display = 'none';
+                loadData();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to update payment status.', 'error');
+            }
+        } catch(err) { Swal.fire('Error', 'Network connection failed.', 'error'); }
+        finally { btn.disabled = false; btn.innerText = 'Confirm Payment'; }
+    }
+
+    function exportToExcel() {
+        if (!allData.length) { Swal.fire('No Data', 'No records to export.', 'warning'); return; }
+        const rows = allData.map(p => ({
+            'Project No': p.project_number || '',
+            'Customer': `${p.first_name || ''} ${p.last_name || ''}`.trim(),
+            'Company': p.company || '',
+            'Type': p.type || '',
+            'Address': `${p.unit_number ? p.unit_number+' ' : ''}${p.address || ''}, ${p.suburb || ''} ${p.state || ''}`.trim(),
+            'Invoice Amount': p.invoice_amount || 0,
+            'Payment Status': p.payment_status || 'Pending'
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Outstanding_Payments');
+        XLSX.writeFile(wb, `Outstanding_Payments_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function changeRowsPerPage() { rowsPerPage = parseInt(document.getElementById('rowsPerPage').value); currentPage = 1; loadData(); }
+    function prevPage() { if (currentPage > 1) { currentPage--; loadData(); } }
+    function nextPage() { currentPage++; loadData(); }
+
+    window.onload = loadData;
+</script>
+<script>
+(async function loadSidebarUser() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        const user = await res.json();
+        
+        window.loggedInUser = user.full_name || user.username || 'System';
+        window.loggedInRole = user.role || 'Standard';
+        
+        const nameEl   = document.getElementById("sidebarName");
+        const roleEl   = document.getElementById("sidebarRole");
+        const avatarEl = document.getElementById("sidebarAvatar");
+        const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+        if (nameEl)   nameEl.innerText  = window.loggedInUser;
+        if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
+        if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        const upEl = document.getElementById("userProfile");
+        if (upEl) upEl.value = window.loggedInRole;
+
+        if (window.loggedInRole !== 'Admin') {
+            try {
+                const pRes = await fetch(`/api/role-permissions/${window.loggedInRole}`);
+                if (pRes.ok) {
+                    const matrix = await pRes.json();
+                    const check = (href, mod, feat) => {
+                        if (!matrix[mod] || !matrix[mod][feat]) {
+                            const el = document.querySelector(`.sidebar a[href="${href}"]`);
+                            if (el) el.style.display = 'none';
+                        }
+                    };
+                    check('/products.html', 'Masters', 'Manage Products');
+                    check('/combo_master.html', 'Masters', 'Manage Products');
+                    check('/stc_master.html', 'Masters', 'Manage STC');
+                    check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
+                    check('/margin_master.html', 'Masters', 'Manage Margins');
+                    check('/installation_charges.html', 'Masters', 'Manage Charges');
+                    check('/installations.html', 'Ares Installation Outside', 'Installations');
+                    check('/outstanding_payments.html', 'Ares Installation Outside', 'Outstanding Payments');
+                    check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
+                    check('/company_details.html', 'Ares Installation Outside', 'Company Details');
+                    check('/admin.html', 'Settings', 'Manage Users');
+                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
+                    check('/attendance.html', 'Attendance & Payroll', 'Employees');
+                    check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
+                    check('/attendance.html#timesheets', 'Attendance & Payroll', 'Timesheets');
+                    check('/attendance.html#pay', 'Attendance & Payroll', 'Pay Employee');
+                    check('/attendance.html#super', 'Attendance & Payroll', 'Superannuation');
+                    
+                    document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+                        const links = Array.from(sub.querySelectorAll('a.menu-item'));
+                        if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                            if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) { sub.previousElementSibling.style.display = 'none'; }
+                        }
+                    });
+                }
+            } catch(err) {}
+        }
+    } catch(e) { window.location.href = "/login"; }
+})();
+</script>
+<script src="/crm-autosave-toast.js"></script>
+    <script src="/australian-timezones.js"></script>
+</body>
+</html>
