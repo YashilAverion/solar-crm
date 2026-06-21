@@ -102,9 +102,7 @@ app.use(helmet({
 }));
 
 // ── SESSION SETUP ──────────────────────────────────────────
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // Essential if hosting behind Nginx/Cloudflare for secure cookies
-}
+app.set('trust proxy', 1); // Essential if hosting behind Nginx/Cloudflare for secure cookies
 
 // Ensure database directory exists before initializing session store to prevent fatal boot crashes
 const dbDir = path.join(__dirname, 'database');

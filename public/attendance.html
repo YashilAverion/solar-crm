@@ -995,6 +995,103 @@
         .super-modal-btn-add:hover {
             background: #005f9e;
         }
+
+        /* Gross Pay Hover Tooltip styles */
+        .gross-pay-cell {
+            position: relative;
+            cursor: help;
+        }
+        .gross-pay-cell:hover {
+            text-decoration: underline dotted var(--accent);
+        }
+        .btn-copy-calc {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            margin-top: 8px;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-copy-calc:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Professional Period Selector Card */
+        .period-select-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-dark);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            height: 32px;
+        }
+
+        .period-select-card:hover {
+            background: #f8fafc;
+            border-color: var(--text-muted);
+        }
+
+        .period-select-card input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            outline: none;
+        }
+
+        .period-select-card input[type="checkbox"]:focus {
+            box-shadow: 0 0 0 2px rgba(28, 53, 87, 0.15);
+        }
+
+        .period-select-card input[type="checkbox"]:checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .period-select-card input[type="checkbox"]:checked::after {
+            content: "";
+            display: block;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) translate(-0.5px, -0.5px);
+            margin-bottom: 2px;
+        }
+
+        .period-select-card:has(input[type="checkbox"]:checked) {
+            background: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -1389,13 +1486,26 @@
 
             <!-- Xero-Style Filters Box (only shown for Admin/Manager roles) -->
             <div id="tsFilterBlock" class="xero-filters-card" style="display: none;">
-                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: start;">
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; align-items: start;">
                     <div>
                         <div class="xero-label">Timesheet Filter</div>
                         <select id="filterStatus" class="xero-select">
                             <option value="all">(all)</option>
                             <option value="Pending">Draft</option>
                             <option value="Approved">Processed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="xero-label">Date Range</div>
+                        <select id="filterDateShortcut" class="xero-select" onchange="applyDateShortcutFilter()">
+                            <option value="custom" selected>Custom</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="current_fortnight">Current Month Fortnight</option>
+                            <option value="last_week">Last Week</option>
+                            <option value="last_fortnight">Last Fortnight</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="prev_month">Previous Month</option>
                         </select>
                     </div>
                     <div>
@@ -1414,7 +1524,9 @@
                     </div>
                     <div>
                         <div class="xero-label">Employee/s</div>
-                        <input type="text" id="filterEmployee" class="xero-input" placeholder="" value="">
+                        <select id="filterEmployee" class="xero-select">
+                            <option value="all">(all)</option>
+                        </select>
                     </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
@@ -1551,21 +1663,67 @@
                 <div class="panel-body">
                     <!-- Period calculation generator -->
                     <div class="supervisor-header">
-                        <div class="payslip-generator" style="width:100%; border:none; padding:0; background:transparent;">
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div class="payslip-generator" style="width:100%; border:none; padding:0; background:transparent; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px;">
                                 <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Employee</label>
                                 <select class="filter-select" id="payrollEmployeeSelect" onchange="loadPayrollModuleData()" style="height:32px;">
                                     <option value="">-- Select Employee --</option>
                                 </select>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Period Start</label>
-                                <input type="text" class="filter-select" id="payrollStart" style="height: 32px; padding: 0 10px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 95px;">
+                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Month</label>
+                                <select class="filter-select" id="payrollMonth" onchange="updatePayPeriodSelection()" style="height:32px;">
+                                    <option value="0">January</option>
+                                    <option value="1">February</option>
+                                    <option value="2">March</option>
+                                    <option value="3">April</option>
+                                    <option value="4">May</option>
+                                    <option value="5">June</option>
+                                    <option value="6">July</option>
+                                    <option value="7">August</option>
+                                    <option value="8">September</option>
+                                    <option value="9">October</option>
+                                    <option value="10">November</option>
+                                    <option value="11">December</option>
+                                </select>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Period End</label>
-                                <input type="text" class="filter-select" id="payrollEnd" style="height: 32px; padding: 0 10px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 80px;">
+                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Year</label>
+                                <select class="filter-select" id="payrollYear" onchange="updatePayPeriodSelection()" style="height:32px;">
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                </select>
                             </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 110px;">
+                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Pay Cycle</label>
+                                <select class="filter-select" id="payrollCycle" onchange="updatePayPeriodSelection()" style="height:32px;">
+                                    <option value="Fortnightly" selected>Fortnightly</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Custom">Custom</option>
+                                </select>
+                            </div>
+                            
+                            <div id="payrollSubCycleContainer" style="display: flex; flex-direction: column; gap: 4px; min-width: 140px; flex-grow: 1;">
+                                <label id="payrollSubCycleLabel" style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Select Period</label>
+                                <div id="payrollSubCycleList" style="display: flex; gap: 8px; align-items: center; height: 32px; flex-wrap: wrap;">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                            </div>
+                            
+                            <div id="payrollCustomDates" style="display: none; gap: 12px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Period Start</label>
+                                    <input type="text" class="filter-select" id="payrollStart" style="height: 32px; padding: 0 10px; width: 100px;">
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Period End</label>
+                                    <input type="text" class="filter-select" id="payrollEnd" style="height: 32px; padding: 0 10px; width: 100px;">
+                                </div>
+                            </div>
+                            
                             <button class="btn-calc" onclick="calculatePayroll()">
                                 Calculate & Register Payslip
                             </button>
@@ -1636,11 +1794,12 @@
                                     <th>Super (12%)</th>
                                     <th>Net Payable</th>
                                     <th>Generated On</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="payrollHistoryBody">
                                 <tr>
-                                    <td colspan="8" class="no-data">Select an employee to view processed payroll history ledger.</td>
+                                    <td colspan="9" class="no-data">Select an employee to view processed payroll history ledger.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1948,12 +2107,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize keyboard-friendly date inputs
     setupDateInput('filterStartDate', 'filterEndDate');
     setupDateInput('filterEndDate');
+
+    const fStart = document.getElementById('filterStartDate');
+    const fEnd = document.getElementById('filterEndDate');
+    if (fStart) {
+        fStart.addEventListener('change', () => {
+            const shortcut = document.getElementById('filterDateShortcut');
+            if (shortcut) shortcut.value = 'custom';
+        });
+    }
+    if (fEnd) {
+        fEnd.addEventListener('change', () => {
+            const shortcut = document.getElementById('filterDateShortcut');
+            if (shortcut) shortcut.value = 'custom';
+        });
+    }
     setupDateInput('tsSheetStart', 'tsSheetEnd');
     setupDateInput('tsSheetEnd');
     setupDateInput('payrollStart', 'payrollEnd');
     setupDateInput('payrollEnd');
     setupDateInput('leaveStart', 'leaveEnd');
     setupDateInput('leaveEnd');
+
+    // Initialize Payroll month/year selectors with today's values
+    const today = new Date();
+    const payMonthSelect = document.getElementById('payrollMonth');
+    if (payMonthSelect) {
+        payMonthSelect.value = today.getMonth();
+        const payYearSelect = document.getElementById('payrollYear');
+        if (payYearSelect) {
+            payYearSelect.value = today.getFullYear();
+        }
+        updatePayPeriodSelection();
+    }
     
     // Break Hours Limit formatter
     const breakLimitInput = document.getElementById('emp_break_hours_limit');
@@ -2629,21 +2815,28 @@ function loadManagerDropdowns() {
     const tsSelect = document.getElementById('tsEmployeeSelect');
     const paySelect = document.getElementById('payrollEmployeeSelect');
     const superSelect = document.getElementById('superEmployeeSelect');
+    const filterEmployeeSelect = document.getElementById('filterEmployee');
     
     fetch('/api/attendance/workers')
         .then(res => res.json())
         .then(users => {
             const optionsHtml = ['<option value="">-- Select Employee --</option>'];
+            const filterOptionsHtml = ['<option value="all">(all)</option>'];
+            
             users.forEach(u => {
                 if (u.status === 'Active') {
                     optionsHtml.push(`<option value="${u.id}">${u.full_name} (${u.role})</option>`);
+                    filterOptionsHtml.push(`<option value="${u.id}">${u.full_name}</option>`);
                 }
             });
             
             const rawOptions = optionsHtml.join('');
+            const rawFilterOptions = filterOptionsHtml.join('');
+            
             if (tsSelect) tsSelect.innerHTML = rawOptions;
             if (paySelect) paySelect.innerHTML = rawOptions;
             if (superSelect) superSelect.innerHTML = rawOptions;
+            if (filterEmployeeSelect) filterEmployeeSelect.innerHTML = rawFilterOptions;
         })
         .catch(err => console.error(err));
 }
@@ -2943,7 +3136,7 @@ function applyTimesheetFilters() {
         const startDate = document.getElementById('filterStartDate').value;
         const endDate = document.getElementById('filterEndDate').value;
         const group = document.getElementById('filterGroup').value;
-        const empSearch = (document.getElementById('filterEmployee').value || '').trim().toLowerCase();
+        const empSearch = document.getElementById('filterEmployee').value;
         
         filteredTimesheetsData = allTimesheetsData.filter(row => {
             // Filter by selected company brand tab
@@ -2954,9 +3147,8 @@ function applyTimesheetFilters() {
             if (startDate && row.work_date < startDate) return false;
             if (endDate && row.work_date > endDate) return false;
             if (group !== 'all' && row.user_role !== group) return false;
-            if (empSearch) {
-                const fullName = (row.full_name || (row.first_name + ' ' + row.surname)).toLowerCase();
-                if (!fullName.includes(empSearch)) return false;
+            if (empSearch && empSearch !== 'all') {
+                if (row.user_id != empSearch) return false;
             }
             return true;
         });
@@ -2983,7 +3175,97 @@ function resetTimesheetFilters() {
     document.getElementById('filterStartDate').value = '';
     document.getElementById('filterEndDate').value = '';
     document.getElementById('filterGroup').value = 'all';
-    document.getElementById('filterEmployee').value = '';
+    document.getElementById('filterEmployee').value = 'all';
+    const shortcut = document.getElementById('filterDateShortcut');
+    if (shortcut) shortcut.value = 'custom';
+    applyTimesheetFilters();
+}
+
+function applyDateShortcutFilter() {
+    const val = document.getElementById('filterDateShortcut').value;
+    const startInput = document.getElementById('filterStartDate');
+    const endInput = document.getElementById('filterEndDate');
+    
+    if (val === 'custom') {
+        return;
+    }
+    
+    const today = new Date();
+    let startDateVal = '';
+    let endDateVal = '';
+    
+    switch (val) {
+        case 'today': {
+            startDateVal = formatDateISO(today);
+            endDateVal = formatDateISO(today);
+            break;
+        }
+        case 'yesterday': {
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            startDateVal = formatDateISO(yesterday);
+            endDateVal = formatDateISO(yesterday);
+            break;
+        }
+        case 'current_fortnight': {
+            const day = today.getDate();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            if (day <= 15) {
+                startDateVal = formatDateISO(new Date(year, month, 1));
+                endDateVal = formatDateISO(new Date(year, month, 15));
+            } else {
+                startDateVal = formatDateISO(new Date(year, month, 16));
+                const lastDay = new Date(year, month + 1, 0);
+                endDateVal = formatDateISO(lastDay);
+            }
+            break;
+        }
+        case 'last_week': {
+            const day = today.getDay();
+            const diffToMonday = (day === 0 ? 6 : day - 1) + 7;
+            const lastMonday = new Date(today);
+            lastMonday.setDate(today.getDate() - diffToMonday);
+            const lastSunday = new Date(lastMonday);
+            lastSunday.setDate(lastMonday.getDate() + 6);
+            
+            startDateVal = formatDateISO(lastMonday);
+            endDateVal = formatDateISO(lastSunday);
+            break;
+        }
+        case 'last_fortnight': {
+            const day = today.getDate();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            if (day <= 15) {
+                startDateVal = formatDateISO(new Date(year, month - 1, 16));
+                const lastDay = new Date(year, month, 0);
+                endDateVal = formatDateISO(lastDay);
+            } else {
+                startDateVal = formatDateISO(new Date(year, month, 1));
+                endDateVal = formatDateISO(new Date(year, month, 15));
+            }
+            break;
+        }
+        case 'last_month': {
+            const last30 = new Date(today);
+            last30.setDate(today.getDate() - 30);
+            startDateVal = formatDateISO(last30);
+            endDateVal = formatDateISO(today);
+            break;
+        }
+        case 'prev_month': {
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            startDateVal = formatDateISO(new Date(year, month - 1, 1));
+            const lastDay = new Date(year, month, 0);
+            endDateVal = formatDateISO(lastDay);
+            break;
+        }
+    }
+    
+    startInput.value = startDateVal;
+    endInput.value = endDateVal;
     applyTimesheetFilters();
 }
 
@@ -4093,55 +4375,7 @@ async function autosaveTsRow(ri) {
 
 // ==================== 4. PAYROLL PROCESSING COMPLIANCE LOGIC ====================
 
-function loadPayrollModuleData() {
-    const employeeId = document.getElementById('payrollEmployeeSelect').value;
-    const historyBody = document.getElementById('payrollHistoryBody');
-    const summaryBox = document.getElementById('payrollSummaryBox');
-    
-    summaryBox.classList.remove('visible');
-    
-    // Set default fortnight boundaries if empty
-    if (!document.getElementById('payrollEnd').value) {
-        const today = new Date();
-        const pastFortnight = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-        document.getElementById('payrollEnd').value = today.toISOString().split('T')[0];
-        document.getElementById('payrollStart').value = pastFortnight.toISOString().split('T')[0];
-    }
-    
-    const targetUserId = employeeId || (currentUser ? currentUser.id : null);
-    if (!targetUserId) return;
-    
-    historyBody.innerHTML = '<tr><td colspan="8" class="no-data">Loading processed payslips ledger...</td></tr>';
-    
-    // Fetch employee processed payslips
-    fetch(`/api/payroll/history/${targetUserId}`)
-        .then(res => res.json())
-        .then(rows => {
-            historyBody.innerHTML = '';
-            if (rows.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="8" class="no-data">No payroll records logged for this employee.</td></tr>';
-                return;
-            }
-            
-            rows.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</td>
-                    <td>${r.ordinary_hours.toFixed(2)} hrs</td>
-                    <td>${r.overtime_hours.toFixed(2)} hrs</td>
-                    <td style="font-weight: 600;">$${r.gross_pay.toFixed(2)}</td>
-                    <td style="color:var(--danger)">-$${r.tax_withheld.toFixed(2)}</td>
-                    <td style="color:var(--primary)">$${r.super_contribution.toFixed(2)}</td>
-                    <td style="font-weight: 700; color:var(--success)">$${r.net_pay.toFixed(2)}</td>
-                    <td style="font-size:10px; color:var(--text-muted);">${r.created_at}</td>
-                `;
-                historyBody.appendChild(tr);
-            });
-        })
-        .catch(err => {
-            historyBody.innerHTML = '<tr><td colspan="8" class="no-data" style="color:var(--danger)">Failed to load processed payslips.</td></tr>';
-        });
-}
+
 
 // Calculate and submit period payroll
 function calculatePayroll() {
@@ -4177,7 +4411,8 @@ function calculatePayroll() {
     .then(data => {
         // Populate payslip layout
         document.getElementById('payrollDateRangeLabel').textContent = `${start} to ${end}`;
-        document.getElementById('payrollBaseRate').textContent = `$${data.base_rate.toFixed(2)} / hr`;
+        const isTemplate = data.calculation_metadata && data.calculation_metadata.has_template_rate;
+        document.getElementById('payrollBaseRate').textContent = `$${data.base_rate.toFixed(2)} / hr${isTemplate ? ' (Template Rate)' : ''}`;
         document.getElementById('payrollOrdHours').textContent = `${data.ordinary_hours.toFixed(2)} hrs`;
         document.getElementById('payrollOtHours').textContent = `${data.overtime_hours.toFixed(2)} hrs`;
         
@@ -4761,7 +4996,15 @@ function viewEmployeeLogs(name) {
     setTimeout(() => {
         const filterInput = document.getElementById('filterEmployee');
         if (filterInput) {
-            filterInput.value = name;
+            const normalized = name.toLowerCase().trim();
+            let foundVal = 'all';
+            for (let opt of filterInput.options) {
+                if (opt.text.toLowerCase().trim().includes(normalized)) {
+                    foundVal = opt.value;
+                    break;
+                }
+            }
+            filterInput.value = foundVal;
             applyTimesheetFilters();
         }
     }, 100);
@@ -5414,6 +5657,466 @@ function deleteUploadedWorkerDoc() {
     
     // Dispatch input event on hidden field to trigger autosave
     document.getElementById('emp_visa_document_path').dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function loadPayrollModuleData() {
+    const employeeId = document.getElementById('payrollEmployeeSelect').value;
+    const historyBody = document.getElementById('payrollHistoryBody');
+    const summaryBox = document.getElementById('payrollSummaryBox');
+    
+    summaryBox.classList.remove('visible');
+    
+    const targetUserId = employeeId || (currentUser ? currentUser.id : null);
+    if (!targetUserId) return;
+    
+    historyBody.innerHTML = '<tr><td colspan="9" class="no-data">Loading processed payslips ledger...</td></tr>';
+    
+    // Fetch employee processed payslips
+    fetch(`/api/payroll/history/${targetUserId}`)
+        .then(res => res.json())
+        .then(rows => {
+            historyBody.innerHTML = '';
+            if (rows.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="9" class="no-data">No payroll records logged for this employee.</td></tr>';
+                return;
+            }
+            
+            rows.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</td>
+                    <td>${r.ordinary_hours.toFixed(2)} hrs</td>
+                    <td>${r.overtime_hours.toFixed(2)} hrs</td>
+                    <td style="font-weight: 600; position: relative;" class="gross-pay-cell" onmouseenter="showGrossPayTooltip(event, this)" onmouseleave="hideGrossPayTooltip()" data-calc="${encodeURIComponent(JSON.stringify(r))}">
+                        $${r.gross_pay.toFixed(2)}
+                    </td>
+                    <td style="color:var(--danger)">-$${r.tax_withheld.toFixed(2)}</td>
+                    <td style="color:var(--primary)">$${r.super_contribution.toFixed(2)}</td>
+                    <td style="font-weight: 700; color:var(--success)">$${r.net_pay.toFixed(2)}</td>
+                    <td style="font-size:10px; color:var(--text-muted);">${formatGeneratedOn(r.created_at, r.generated_by)}</td>
+                    <td>
+                        <button class="btn-table-action-icon" onclick="editPayrollRecord(${r.id}, ${JSON.stringify(r).replace(/"/g, '&quot;')})" style="margin-right:6px;" title="Edit Payslip">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-table-action-icon btn-reject" onclick="deletePayrollRecord(${r.id})" title="Delete Payslip">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                historyBody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            historyBody.innerHTML = '<tr><td colspan="9" class="no-data" style="color:var(--danger)">Failed to load processed payslips.</td></tr>';
+        });
+}
+
+function formatGeneratedOn(createdAtStr, generatedBy) {
+    if (!createdAtStr) return '-';
+    const parts = createdAtStr.split(/[- :T]/);
+    if (parts.length < 5) return createdAtStr;
+    const year = parts[0].slice(-2); // YY
+    const month = parts[1]; // MM
+    const day = parts[2]; // DD
+    let hour = parseInt(parts[3], 10);
+    const minute = parts[4]; // MM
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    const displayHour = String(hour).padStart(2, '0');
+    const formattedDate = `${day}-${month}-${year} ${displayHour}:${minute} ${ampm}`;
+    return `${formattedDate} ${generatedBy || 'System'}`;
+}
+
+function getCalculationDetailsText(r) {
+    let meta = null;
+    if (r.calculation_metadata) {
+        try {
+            meta = typeof r.calculation_metadata === 'string' ? JSON.parse(r.calculation_metadata) : r.calculation_metadata;
+        } catch (e) {
+            meta = null;
+        }
+    }
+    
+    const gross = r.gross_pay || 0;
+    const tax = r.tax_withheld || 0;
+    const superAmt = r.super_contribution || 0;
+    const ordHours = r.ordinary_hours || 0;
+    const otHours = r.overtime_hours || 0;
+    const net = r.net_pay || 0;
+    
+    let text = '';
+    text += `=== PAYROLL CALCULATION DETAILS ===\n`;
+    text += `Pay Period: ${r.pay_period_start} to ${r.pay_period_end}\n`;
+    
+    if (meta && meta.weeks) {
+        if (meta.has_template_rate) {
+            text += `Calculation Type: Pay Template Flat Rate\n`;
+            text += `Template Rate (Inc Tax): $${meta.base_rate.toFixed(2)}/hr\n`;
+            if (meta.weekly_hours_limit) {
+                text += `Weekly Hours Limit: ${meta.weekly_hours_limit.toFixed(2)} hrs\n`;
+            }
+            text += `\n--- Weekly Breakdown ---\n`;
+            Object.keys(meta.weeks).forEach(wNum => {
+                const w = meta.weeks[wNum];
+                text += `Week ${wNum}:\n`;
+                if (w.limitApplied) {
+                    text += `  - Actual Worked Hours: ${w.rawHours.toFixed(2)} hrs\n`;
+                    text += `  - Capped Hours: ${w.ordHours.toFixed(2)} hrs (Weekly Limit of ${w.limitApplied.toFixed(2)} applied)\n`;
+                } else {
+                    text += `  - Worked Hours: ${w.ordHours.toFixed(2)} hrs\n`;
+                }
+                text += `  - Earnings: ${w.ordHours.toFixed(2)} hrs x $${meta.base_rate.toFixed(2)} = $${w.ordEarnings.toFixed(2)}\n`;
+            });
+        } else {
+            text += `Employment Type: ${meta.employment_type || 'Casual'}\n`;
+            text += `Base Rate: $${(meta.base_rate || (gross / (ordHours + otHours * 1.5 || 1))).toFixed(2)}/hr\n\n`;
+            text += `--- Weekly Breakdown ---\n`;
+            Object.keys(meta.weeks).forEach(wNum => {
+                const w = meta.weeks[wNum];
+                text += `Week ${wNum}:\n`;
+                text += `  - Ordinary Hours: ${w.ordHours.toFixed(2)} hrs ($${w.ordEarnings.toFixed(2)})\n`;
+                text += `  - Overtime Hours: ${w.otHours.toFixed(2)} hrs ($${w.otEarnings.toFixed(2)})\n`;
+                text += `  - Weekly Earnings: $${(w.ordEarnings + w.otEarnings).toFixed(2)}\n`;
+            });
+        }
+    } else {
+        const estBaseRate = ordHours > 0 ? (gross / (ordHours + otHours * 1.5 || 1)) : 25.0;
+        text += `Base Rate (Est.): $${estBaseRate.toFixed(2)}/hr\n\n`;
+        text += `--- Total Hours Breakdown ---\n`;
+        text += `- Ordinary Hours: ${ordHours.toFixed(2)} hrs ($${(ordHours * estBaseRate).toFixed(2)})\n`;
+        text += `- Overtime Hours: ${otHours.toFixed(2)} hrs ($${(otHours * estBaseRate * 1.5).toFixed(2)} [Est.])\n`;
+    }
+    
+    text += `\n--- Financial Totals ---\n`;
+    text += `Gross Pay: $${gross.toFixed(2)}\n`;
+    text += `Tax Withheld: -$${tax.toFixed(2)}\n`;
+    text += `  (Formula: ${gross > 1000 ? '$97.50 + 25% of amount over $1000' : (gross > 350 ? '15% of amount over $350' : 'Nil (Gross under $350)')})\n`;
+    text += `Superannuation (12% SG): $${superAmt.toFixed(2)}\n`;
+    text += `  (Calculation: 12% of Ordinary Earnings)\n`;
+    text += `------------------------------------\n`;
+    text += `Net Payable: $${net.toFixed(2)}\n`;
+    text += `====================================`;
+    return text;
+}
+
+let activeTooltipElement = null;
+
+function showGrossPayTooltip(event, cell) {
+    const recordDataStr = cell.getAttribute('data-calc');
+    if (!recordDataStr) return;
+    const r = JSON.parse(decodeURIComponent(recordDataStr));
+    
+    if (!activeTooltipElement) {
+        activeTooltipElement = document.createElement('div');
+        activeTooltipElement.className = 'calc-tooltip-card';
+        Object.assign(activeTooltipElement.style, {
+            position: 'absolute',
+            background: '#ffffff',
+            border: '1px solid #cbd5e1',
+            borderRadius: '8px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            padding: '12px',
+            zIndex: '99999',
+            width: '330px',
+            color: '#1e293b',
+            fontSize: '11px',
+            fontWeight: 'normal',
+            textAlign: 'left',
+            whiteSpace: 'pre-wrap',
+            pointerEvents: 'auto'
+        });
+        
+        activeTooltipElement.addEventListener('mouseenter', () => {
+            clearTimeout(activeTooltipElement.hideTimeout);
+        });
+        activeTooltipElement.addEventListener('mouseleave', () => {
+            hideGrossPayTooltip();
+        });
+        
+        document.body.appendChild(activeTooltipElement);
+    }
+    
+    const calcText = getCalculationDetailsText(r);
+    
+    activeTooltipElement.innerHTML = `
+        <div style="font-family: inherit;">
+            <div style="max-height: 250px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${calcText}</div>
+            <button class="btn-copy-calc" onclick="copyToClipboard(this)" data-text="${encodeURIComponent(calcText)}">
+                Copy Calculation Details
+            </button>
+        </div>
+    `;
+    
+    const rect = cell.getBoundingClientRect();
+    const tooltipHeight = 280;
+    
+    let top = rect.top + window.scrollY - tooltipHeight - 8;
+    if (top < window.scrollY + 10) {
+        top = rect.bottom + window.scrollY + 8;
+    }
+    
+    let left = rect.left + window.scrollX + (rect.width / 2) - (330 / 2);
+    if (left < 10) left = 10;
+    if (left + 330 > window.innerWidth - 10) {
+        left = window.innerWidth - 340;
+    }
+    
+    activeTooltipElement.style.top = `${top}px`;
+    activeTooltipElement.style.left = `${left}px`;
+    activeTooltipElement.style.display = 'block';
+    
+    clearTimeout(activeTooltipElement.hideTimeout);
+}
+
+function hideGrossPayTooltip() {
+    if (activeTooltipElement) {
+        activeTooltipElement.hideTimeout = setTimeout(() => {
+            activeTooltipElement.style.display = 'none';
+        }, 150);
+    }
+}
+
+function copyToClipboard(btn) {
+    const text = decodeURIComponent(btn.dataset.text);
+    navigator.clipboard.writeText(text).then(() => {
+        showXeroToast('Calculation details copied to clipboard!', 'success');
+    }).catch(err => {
+        showXeroToast('Failed to copy details: ' + err.message, 'error');
+    });
+}
+
+function editPayrollRecord(id, record) {
+    Swal.fire({
+        title: 'Edit Processed Payslip',
+        html: `
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Ordinary Hours</label>
+                    <input id="edit_ord_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.ordinary_hours}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Overtime Hours</label>
+                    <input id="edit_ot_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.overtime_hours}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Gross Pay ($)</label>
+                    <input id="edit_gross_pay" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.gross_pay}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Tax Withheld ($)</label>
+                    <input id="edit_tax_withheld" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.tax_withheld}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Super Contribution ($)</label>
+                    <input id="edit_super" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.super_contribution}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Net Pay ($)</label>
+                    <input id="edit_net_pay" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.net_pay}">
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Save Changes',
+        preConfirm: () => {
+            return {
+                ordinary_hours: parseFloat(document.getElementById('edit_ord_hours').value) || 0,
+                overtime_hours: parseFloat(document.getElementById('edit_ot_hours').value) || 0,
+                gross_pay: parseFloat(document.getElementById('edit_gross_pay').value) || 0,
+                tax_withheld: parseFloat(document.getElementById('edit_tax_withheld').value) || 0,
+                super_contribution: parseFloat(document.getElementById('edit_super').value) || 0,
+                net_pay: parseFloat(document.getElementById('edit_net_pay').value) || 0
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/payroll/history/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result.value)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showXeroToast(data.error, 'error');
+                } else {
+                    showXeroToast('Payslip record updated successfully.', 'success');
+                    loadPayrollModuleData();
+                }
+            })
+            .catch(err => {
+                showXeroToast('Failed to update payslip: ' + err.message, 'error');
+            });
+        }
+    });
+}
+
+function deletePayrollRecord(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to delete this processed payslip record permanently?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/payroll/history/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showXeroToast(data.error, 'error');
+                } else {
+                    showXeroToast('Payslip record deleted successfully.', 'success');
+                    loadPayrollModuleData();
+                }
+            })
+            .catch(err => {
+                showXeroToast('Failed to delete payslip: ' + err.message, 'error');
+            });
+        }
+    });
+}
+
+function formatDateISO(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatDateString(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${dd}-${mm}-${yyyy}`;
+}
+
+function updatePayPeriodSelection() {
+    const monthSelect = document.getElementById('payrollMonth');
+    const yearSelect = document.getElementById('payrollYear');
+    const cycleSelect = document.getElementById('payrollCycle');
+    
+    if (!monthSelect || !yearSelect || !cycleSelect) return;
+    
+    const month = parseInt(monthSelect.value, 10);
+    const year = parseInt(yearSelect.value, 10);
+    const cycle = cycleSelect.value;
+    
+    const subContainer = document.getElementById('payrollSubCycleContainer');
+    const subList = document.getElementById('payrollSubCycleList');
+    const customDates = document.getElementById('payrollCustomDates');
+    
+    if (!subContainer || !subList || !customDates) return;
+    
+    subList.innerHTML = '';
+    
+    if (cycle === 'Custom') {
+        subContainer.style.display = 'none';
+        customDates.style.display = 'flex';
+        return;
+    }
+    
+    subContainer.style.display = 'flex';
+    customDates.style.display = 'none';
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const totalDays = lastDay.getDate();
+    
+    if (cycle === 'Monthly') {
+        subList.innerHTML = `<span style="font-size:12px; font-weight:600; color:var(--text-dark);">${formatDateString(firstDay)} to ${formatDateString(lastDay)}</span>`;
+        document.getElementById('payrollStart').value = formatDateISO(firstDay);
+        document.getElementById('payrollEnd').value = formatDateISO(lastDay);
+    } 
+    else if (cycle === 'Weekly') {
+        const weeks = [];
+        let dayTracker = 1;
+        let weekNum = 1;
+        while (dayTracker <= totalDays) {
+            const start = new Date(year, month, dayTracker);
+            const endDay = Math.min(dayTracker + 6, totalDays);
+            const end = new Date(year, month, endDay);
+            weeks.push({
+                num: weekNum,
+                start: formatDateISO(start),
+                end: formatDateISO(end)
+            });
+            dayTracker += 7;
+            weekNum++;
+        }
+        
+        let html = '';
+        weeks.forEach((w, idx) => {
+            html += `
+                <label class="period-select-card">
+                    <input type="checkbox" name="payrollWeeks" class="week-checkbox" value="${w.start}_${w.end}" onchange="updateSelectedWeeksOrFortnights()" style="cursor:pointer;" ${idx === 0 ? 'checked' : ''}>
+                    Week ${w.num}
+                </label>
+            `;
+        });
+        subList.innerHTML = html;
+        updateSelectedWeeksOrFortnights();
+    } 
+    else if (cycle === 'Fortnightly') {
+        const fortnights = [
+            {
+                num: 1,
+                start: formatDateISO(new Date(year, month, 1)),
+                end: formatDateISO(new Date(year, month, 15))
+            },
+            {
+                num: 2,
+                start: formatDateISO(new Date(year, month, 16)),
+                end: formatDateISO(new Date(year, month + 1, 0))
+            }
+        ];
+        
+        let html = '';
+        fortnights.forEach((f, idx) => {
+            html += `
+                <label class="period-select-card">
+                    <input type="checkbox" name="payrollFortnights" class="fortnight-checkbox" value="${f.start}_${f.end}" onchange="updateSelectedWeeksOrFortnights()" style="cursor:pointer;" ${idx === 0 ? 'checked' : ''}>
+                    Fortnight ${f.num}
+                </label>
+            `;
+        });
+        subList.innerHTML = html;
+        updateSelectedWeeksOrFortnights();
+    }
+}
+
+function updateSelectedWeeksOrFortnights() {
+    const checkboxes = document.querySelectorAll('.week-checkbox:checked, .fortnight-checkbox:checked');
+    if (checkboxes.length === 0) {
+        document.getElementById('payrollStart').value = '';
+        document.getElementById('payrollEnd').value = '';
+        return;
+    }
+    
+    let minDate = null;
+    let maxDate = null;
+    
+    checkboxes.forEach(cb => {
+        const [start, end] = cb.value.split('_');
+        if (!minDate || start < minDate) minDate = start;
+        if (!maxDate || end > maxDate) maxDate = end;
+    });
+    
+    document.getElementById('payrollStart').value = minDate;
+    document.getElementById('payrollEnd').value = maxDate;
 }
 </script>
 

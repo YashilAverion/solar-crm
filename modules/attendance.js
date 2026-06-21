@@ -515,6 +515,7 @@ router.post('/workers', requireAuth, (req, res) => {
         visa_type, visa_expiry_date,
         is_contractor, income_type, start_date, award_classification,
         employee_group, holiday_group, include_holidays_in_payslips,
+        ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
         company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit
     } = req.body;
     
@@ -534,7 +535,7 @@ router.post('/workers', requireAuth, (req, res) => {
             employee_group, holiday_group, include_holidays_in_payslips,
             ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
             company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit
-         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             first_name.trim(), last_name ? last_name.trim() : '', email ? email.trim() : '', phone || '', role || 'Worker', pay_frequency || 'Fortnightly',
             title || '', middle_name || '', dob || '', job_title || '', gender || '', google_address || '',
