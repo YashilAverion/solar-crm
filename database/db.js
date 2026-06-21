@@ -3,8 +3,10 @@ const path = require('path');
 const fs = require('fs');
 const config = require('../config');
 
-// Resolve database path from configuration
-const dbPath = path.resolve(config.database.path);
+// Resolve database path relative to project root directory
+const dbPath = path.isAbsolute(config.database.path)
+    ? config.database.path
+    : path.resolve(__dirname, '..', config.database.path);
 
 // Ensure database directory exists
 const dbDir = path.dirname(dbPath);

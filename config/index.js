@@ -17,7 +17,7 @@ module.exports = {
     },
 
     database: {
-        path: process.env.DB_PATH || './database/solar_crm.db'
+        path: process.env.DB_PATH || './database/solar_v2.db'
     },
 
     googleMaps: {
