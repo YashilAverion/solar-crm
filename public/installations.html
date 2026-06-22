@@ -845,7 +845,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="modal-content modal-md">
         <button class="modal-close" type="button" onclick="document.getElementById('emailInvoiceModal').style.display='none'">✕</button>
         <div class="modal-title">Send Invoice Email</div>
-        <form id="emailInvoiceForm">
+        <form id="emailInvoiceForm" onsubmit="event.preventDefault(); sendInvoiceEmail();">
             <div class="form-grid" style="grid-template-columns: 1fr;">
                 <div class="field"><label>To (Customer Email)</label>
                     <input type="email" id="ei_to" required></div>
@@ -860,7 +860,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <div class="form-footer" style="display:flex; justify-content:space-between; align-items: center; margin-top: 15px;">
                 <button type="button" class="btn-secondary" style="background:#f8fafc; border:1px solid #cbd5e1; height: 36px; padding: 0 16px; border-radius: 6px; font-weight: 600;" onclick="previewInvoicePDF()">Preview PDF</button>
-                <button type="button" class="btn-save" id="ei_send_btn" style="height: 36px;" onclick="sendInvoiceEmail()">Send Email</button>
+                <button type="submit" class="btn-save" id="ei_send_btn" style="height: 36px;">Send Email</button>
             </div>
         </form>
     </div>
@@ -2369,12 +2369,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     async function sendInvoiceEmail() {
+        if (window.isSendingInvoiceEmail) { return; }
+
         const to = document.getElementById('ei_to').value.trim();
         const subject = document.getElementById('ei_subject').value.trim();
         const message = document.getElementById('ei_message').value.trim();
 
         if (!to || !subject || !message) { Swal.fire('Required Fields', 'Please fill the To email, Subject, and Message.', 'warning'); return; }
 
+        window.isSendingInvoiceEmail = true;
         const btn = document.getElementById('ei_send_btn');
         btn.disabled = true; btn.innerText = 'Sending...';
         try {
@@ -2385,7 +2388,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (res.ok) { Swal.fire('Sent!', 'Invoice emailed successfully to the client.', 'success'); document.getElementById('emailInvoiceModal').style.display = 'none'; } 
             else { const data = await res.json(); Swal.fire('Error', data.error || 'Failed to send email.', 'error'); }
         } catch (e) { Swal.fire('Error', 'Network error. Could not send email.', 'error'); } 
-        finally { btn.disabled = false; btn.innerText = '📤 Send Email'; }
+        finally { btn.disabled = false; btn.innerText = '📤 Send Email'; window.isSendingInvoiceEmail = false; }
     }
 
     // --- Main Table & Filters ---
