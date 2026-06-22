@@ -581,23 +581,22 @@ router.post('/:id/email-invoice', async (req, res) => {
         // 1. Launch Puppeteer (Server-side rendering)
         browser = await puppeteer.launch({ 
             headless: true, 
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
         });
         const page = await browser.newPage();
 
-        // 2. Construct the local URL to access the invoice template
-        const protocol = req.protocol || 'http';
-        const host = req.get('host') || 'localhost:3000';
-        const invoiceUrl = `${protocol}://${host}/invoice.html?id=${req.params.id}`;
-
-        // 3. Pass session cookie so Puppeteer can bypass the API login barrier
-        if (req.headers.cookie) {
-            const cookies = req.headers.cookie.split(';').map(cookie => {
-                const [name, ...rest] = cookie.trim().split('=');
-                return { name, value: rest.join('='), url: invoiceUrl }; // Bind cookie directly to target URL
+        // 1.5. Enable request interception to inject secret auth bypass header
+        await page.setRequestInterception(true);
+        page.on('request', interceptedRequest => {
+            const headers = Object.assign({}, interceptedRequest.headers(), {
+                'x-pdf-render-secret': process.env.SESSION_SECRET || 'solar-crm-secret-key-2024'
             });
-            await page.setCookie(...cookies);
-        }
+            interceptedRequest.continue({ headers });
+        });
+
+        // 2. Construct the local URL to access the invoice template
+        // Force HTTP localhost to bypass loopback networking issues on HTTPS/SSL
+        const invoiceUrl = `http://localhost:3000/invoice.html?id=${req.params.id}`;
 
         // 4. Wait for all network calls (APIs/DOM renders) to finish loading completely
         await page.goto(invoiceUrl, { waitUntil: 'networkidle0', timeout: 30000 });
@@ -648,7 +647,7 @@ router.post('/:id/email-invoice', async (req, res) => {
                             subject: subject || `Tax Invoice - Ares Energy (Ref: ${projectNumber})`,
                             body: {
                                 contentType: 'HTML',
-                                content: text || 'Please find your invoice attached.'
+                                content: (text || 'Please find your invoice attached.').replace(/\n/g, '<br>')
                             },
                             toRecipients: toRecipients,
                             attachments: [
@@ -705,6 +704,7 @@ router.post('/:id/email-invoice', async (req, res) => {
                 to: email, 
                 subject: subject || `Tax Invoice - Ares Energy (Ref: ${projectNumber})`, 
                 text: text || 'Please find your invoice attached.', 
+                html: (text || 'Please find your invoice attached.').replace(/\n/g, '<br>'),
                 attachments: [{ filename: `Ares_Invoice_${projectNumber}.pdf`, content: pdfBuffer }] 
             };
             

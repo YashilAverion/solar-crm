@@ -485,6 +485,13 @@ function requireLogin(req, res, next) {
         return next();
     }
 
+    // Secure bypass for Puppeteer rendering PDF invoices locally
+    const pdfSecret = req.headers['x-pdf-render-secret'];
+    const localSecret = process.env.SESSION_SECRET || 'solar-crm-secret-key-2024';
+    if (pdfSecret && pdfSecret === localSecret) {
+        return next();
+    }
+
     // Distinguish between browser HTML navigation and API fetch calls
     const isHtmlRequest = req.path.endsWith('.html') || req.path === '/' || (req.accepts('html') && !req.xhr && !req.path.startsWith('/api'));
 
