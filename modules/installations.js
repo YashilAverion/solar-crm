@@ -638,7 +638,7 @@ router.post('/:id/email-invoice', async (req, res) => {
             try {
                 const accessToken = await getOrRefreshOutlookTokenLocal(userId);
                 if (accessToken) {
-                    const pdfBase64 = pdfBuffer.toString('base64');
+                    const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
                     const toRecipients = email.split(/[,;]/).map(e => ({
                         emailAddress: { address: e.trim() }
                     })).filter(r => r.emailAddress.address);
