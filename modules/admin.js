@@ -16,10 +16,20 @@ router.get('/users', requireManager, (req, res) => {
 router.get('/users/:id/custom-permissions', requireManager, (req, res) => {
     db.get("SELECT custom_permissions_json FROM users WHERE id = ?", [req.params.id], (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
-        if (!row || !row.custom_permissions_json) return res.json(null); // Return null if no custom perms
+        if (!row || !row.custom_permissions_json) return res.json({});
         try {
             res.json(JSON.parse(row.custom_permissions_json));
-        } catch (e) { res.json(null); } // Return null on parse error
+        } catch (e) { res.json({}); }
+    });
+});
+
+router.get('/users/:id/permissions', requireManager, (req, res) => {
+    db.get("SELECT custom_permissions_json FROM users WHERE id = ?", [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row || !row.custom_permissions_json) return res.json({});
+        try {
+            res.json(JSON.parse(row.custom_permissions_json));
+        } catch (e) { res.json({}); }
     });
 });
 

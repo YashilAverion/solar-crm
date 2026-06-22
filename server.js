@@ -33,6 +33,7 @@
 
 require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
 const bcrypt = require('bcrypt');
@@ -477,6 +478,239 @@ function requireLogin(req, res, next) {
 
 // ── APPLY AUTH MIDDLEWARE ──────────────────────────────────
 app.use(requireLogin);
+
+// ── MICROSOFT OAUTH 2.0 ROUTES ──────────────────────────────
+app.get('/auth/microsoft', (req, res) => {
+    // Check if the user role is Admin (case-insensitive)
+    if (!req.session.user || !req.session.user.role || req.session.user.role.toLowerCase() !== 'admin') {
+        return res.status(403).send('Unauthorized: Only Admins can initiate Outlook linking.');
+    }
+
+    const targetUserId = req.query.target_user_id;
+    if (!targetUserId) {
+        return res.status(400).send('Bad Request: target_user_id parameter is required.');
+    }
+
+    // Save target user ID temporarily in session
+    req.session.linking_user_id = targetUserId;
+
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const redirectUri = process.env.MICROSOFT_REDIRECT_URI;
+
+    if (!clientId || !redirectUri) {
+        return res.status(500).send('Configuration Error: Microsoft Client ID or Redirect URI is missing.');
+    }
+
+    const scope = encodeURIComponent('openid profile offline_access Mail.Send Mail.ReadWrite');
+    const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${scope}&state=${targetUserId}`;
+
+    res.redirect(authUrl);
+});
+
+app.get('/auth/microsoft/callback', async (req, res) => {
+    const code = req.query.code;
+    if (!code) {
+        return res.status(400).send('Bad Request: Authorization code is missing.');
+    }
+
+    const linkingUserId = req.session.linking_user_id;
+    if (!linkingUserId) {
+        return res.status(400).send('Session Expired: target_user_id not found in session.');
+    }
+
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const redirectUri = process.env.MICROSOFT_REDIRECT_URI;
+
+    if (!clientId || !clientSecret || !redirectUri) {
+        return res.status(500).send('Configuration Error: Microsoft OAuth credentials missing.');
+    }
+
+    try {
+        // Exchange code for token
+        const tokenParams = new URLSearchParams();
+        tokenParams.append('client_id', clientId);
+        tokenParams.append('scope', 'openid profile offline_access Mail.Send Mail.ReadWrite');
+        tokenParams.append('code', code);
+        tokenParams.append('redirect_uri', redirectUri);
+        tokenParams.append('grant_type', 'authorization_code');
+        tokenParams.append('client_secret', clientSecret);
+
+        const tokenResponse = await axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', tokenParams, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const { access_token, refresh_token } = tokenResponse.data;
+
+        // Fetch Microsoft Graph profile to get primary email address
+        const profileResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        const outlookEmail = profileResponse.data.mail || profileResponse.data.userPrincipalName;
+
+        // Update target user's outlook credentials in SQLite database
+        db.run(
+            `UPDATE users SET outlook_email = ?, outlook_access_token = ?, outlook_refresh_token = ?, is_outlook_active = 1 WHERE id = ?`,
+            [outlookEmail, access_token, refresh_token, linkingUserId],
+            (dbErr) => {
+                if (dbErr) {
+                    console.error('Database update error in Microsoft OAuth callback:', dbErr);
+                    return res.status(500).send('Database Error: Failed to update Outlook credentials.');
+                }
+
+                // Clear session linking variables
+                delete req.session.linking_user_id;
+
+                // Redirect Admin back to User Management page
+                res.redirect('/admin.html');
+            }
+        );
+    } catch (error) {
+        console.error('Microsoft OAuth exchange error:', error.response ? error.response.data : error.message);
+        res.status(500).send('Authentication Error: Failed to retrieve tokens from Microsoft.');
+    }
+});
+
+// ── HELPER: REFRESH MICROSOFT OUTLOOK TOKEN ─────────────────
+async function refreshOutlookToken(userId, refreshToken) {
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error('Microsoft OAuth configuration is missing.');
+    }
+
+    try {
+        const tokenParams = new URLSearchParams();
+        tokenParams.append('client_id', clientId);
+        tokenParams.append('scope', 'openid profile offline_access Mail.Send Mail.ReadWrite');
+        tokenParams.append('refresh_token', refreshToken);
+        tokenParams.append('grant_type', 'refresh_token');
+        tokenParams.append('client_secret', clientSecret);
+
+        const response = await axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', tokenParams, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const newAccessToken = response.data.access_token;
+        const newRefreshToken = response.data.refresh_token || refreshToken;
+
+        await new Promise((resolve, reject) => {
+            db.run(
+                "UPDATE users SET outlook_access_token = ?, outlook_refresh_token = ? WHERE id = ?",
+                [newAccessToken, newRefreshToken, userId],
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                }
+            );
+        });
+
+        return newAccessToken;
+    } catch (error) {
+        console.error('Failed to refresh Microsoft Outlook token:', error.response ? error.response.data : error.message);
+        throw new Error('Token refresh failed.');
+    }
+}
+
+// ── HELPER: GET VALID OUTLOOK ACCESS TOKEN ──────────────────
+async function getOrRefreshOutlookToken(userId) {
+    return new Promise((resolve, reject) => {
+        db.get(
+            "SELECT outlook_access_token, outlook_refresh_token, is_outlook_active FROM users WHERE id = ?",
+            [userId],
+            async (err, row) => {
+                if (err) {
+                    return reject(new Error('Database error: ' + err.message));
+                }
+                if (!row) {
+                    return reject(new Error('User not found.'));
+                }
+                if (!row.is_outlook_active) {
+                    return reject(new Error('Outlook email integration is not active.'));
+                }
+                if (!row.outlook_access_token) {
+                    return reject(new Error('Outlook access token is missing.'));
+                }
+
+                try {
+                    // Check if current token is valid by hitting cheap endpoint
+                    await axios.get('https://graph.microsoft.com/v1.0/me', {
+                        headers: { Authorization: `Bearer ${row.outlook_access_token}` }
+                    });
+                    return resolve(row.outlook_access_token);
+                } catch (apiErr) {
+                    if (apiErr.response && apiErr.response.status === 401 && row.outlook_refresh_token) {
+                        console.log(`Access token expired for user ${userId}. Refreshing...`);
+                        try {
+                            const newAccessToken = await refreshOutlookToken(userId, row.outlook_refresh_token);
+                            return resolve(newAccessToken);
+                        } catch (refreshErr) {
+                            return reject(refreshErr);
+                        }
+                    } else {
+                        return reject(new Error('Graph API validation failed: ' + apiErr.message));
+                    }
+                }
+            }
+        );
+    });
+}
+
+// ── OUTLOOK EMAIL SENDING ROUTE ─────────────────────────────
+app.post('/crm/send-email', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Login required' });
+    }
+
+    const userId = req.session.user.id;
+    const { to, subject, body } = req.body;
+
+    if (!to || !subject || !body) {
+        return res.status(400).json({ error: 'Missing required fields: to, subject, and body are required.' });
+    }
+
+    try {
+        const accessToken = await getOrRefreshOutlookToken(userId);
+
+        const toRecipients = to.split(/[,;]/).map(email => ({
+            emailAddress: { address: email.trim() }
+        })).filter(r => r.emailAddress.address);
+
+        if (toRecipients.length === 0) {
+            return res.status(400).json({ error: 'No valid recipient email address provided.' });
+        }
+
+        const mailPayload = {
+            message: {
+                subject: subject,
+                body: {
+                    contentType: 'HTML',
+                    content: body
+                },
+                toRecipients: toRecipients
+            },
+            saveToSentItems: "true"
+        };
+
+        await axios.post('https://graph.microsoft.com/v1.0/me/sendMail', mailPayload, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        res.json({ success: true, message: 'Email sent successfully via Outlook.' });
+
+    } catch (error) {
+        console.error('Error sending email via Microsoft Graph API:', error.message);
+        const errMsg = error.response && error.response.data && error.response.data.error 
+            ? error.response.data.error.message 
+            : error.message;
+        res.status(500).json({ error: 'Failed to send email: ' + errMsg });
+    }
+});
 
 // ── BLOCK DEPRECATED MODULES ───────────────────────────────
 app.get('/my_leads.html', (req, res) => {
@@ -1489,7 +1723,7 @@ server.listen(PORT, () => {
     console.log('║  🔐 Login Page: http://localhost:3000/login            ║');
     console.log('║  👤 Run: node create-admin.js to set up admin user     ║');
     console.log('║  ⚙️  API: All routes require login (session-based)     ║');
-    console.log('║  💾 Database: solar_crm.db (auto-initialized)          ║');
+    console.log('║  💾 Database: solar_v2.db (auto-initialized)          ║');
     console.log('║  � Backups: Auto-backup 5AM-2PM IST daily            ║');
     console.log('╚════════════════════════════════════════════════════════╝');
     console.log('');

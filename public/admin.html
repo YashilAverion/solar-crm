@@ -113,10 +113,10 @@
         .perm-section { background: var(--surface); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; flex-shrink: 0; }
         .perm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .perm-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
-        .perm-matrix { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .perm-matrix th, .perm-matrix td { border: 1px solid var(--border); padding: 6px 10px; text-align: center; }
+        .perm-matrix { width: auto; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
+        .perm-matrix th, .perm-matrix td { border: 1px solid var(--border); padding: 6px 10px; text-align: center; width: 100px; min-width: 100px; max-width: 100px; box-sizing: border-box; }
         .perm-matrix th { background: #f8fafc; font-weight: 600; text-transform: uppercase; color: var(--text-muted); font-size: 10px; }
-        .perm-matrix td:first-child { text-align: left; font-weight: 600; background: #f8fafc; color: var(--text-dark); width: 40%; }
+        .perm-matrix th:first-child, .perm-matrix td:first-child { text-align: left; font-weight: 600; background: #f8fafc; color: var(--text-dark); width: 220px; min-width: 220px; max-width: 220px; box-sizing: border-box; }
         .perm-matrix tr.feature-row td { background: var(--surface); color: var(--text-muted); font-weight: 500; font-size: 11px; padding-left: 24px; }
         .perm-table-wrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
         
@@ -575,7 +575,9 @@ document.addEventListener("DOMContentLoaded", function() {
         'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
     ];
     const PERM_SCHEMA = {
-        'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'View Revenue', 'Edit Address'],
+        'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
+        'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
+        'Projects': ['Access Module', 'Leads'],
         'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
         'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
         'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
@@ -836,7 +838,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const res = await fetch(`/api/role-permissions/${role}`);
             const matrix = await res.json();
             
-            let userOverrides = [];
+            let userOverrides = {};
             if (userId) {
                 const uRes = await fetch(`/admin/users/${userId}/permissions`);
                 if (uRes.ok) userOverrides = await uRes.json();
@@ -846,25 +848,29 @@ document.addEventListener("DOMContentLoaded", function() {
             for (const [mod, feats] of Object.entries(matrix)) {
                 if (feats['Access Module'] !== undefined) {
                     const isModRoleEnabled = !!feats['Access Module'];
-                    const overrideMod = userOverrides.find(o => o.module_name === mod && o.feature_name === 'Access Module');
-                    const isModEnabled = overrideMod ? overrideMod.is_enabled === 1 : isModRoleEnabled;
+                    const hasModOverride = userOverrides && userOverrides[mod] && userOverrides[mod]['Access Module'] !== undefined;
+                    const isModEnabled = hasModOverride ? !!userOverrides[mod]['Access Module'] : isModRoleEnabled;
                     const modChecked = isModEnabled ? 'checked' : '';
-                    const modIndicator = overrideMod ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
+                    const modIndicator = hasModOverride ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
                     
                     html += `<li style="margin-bottom: 6px;">
                         <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                             <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="Access Module" data-role-value="${isModRoleEnabled}" ${modChecked}>
-                            <strong style="color:var(--text-dark);">📁 ${mod}</strong> ${modIndicator}
+                            <strong style="color:var(--text-dark);">${mod}</strong> ${modIndicator}
                         </label>
                         <ul style="padding-left: 24px; margin-top: 4px; color: var(--text-muted); list-style: none;">`;
                     for (const [f, enabled] of Object.entries(feats)) {
                         if (f !== 'Access Module') {
-                            const featChecked = enabled ? 'checked' : '';
+                            const isFeatRoleEnabled = !!enabled;
+                            const hasFeatOverride = userOverrides && userOverrides[mod] && userOverrides[mod][f] !== undefined;
+                            const isFeatEnabled = hasFeatOverride ? !!userOverrides[mod][f] : isFeatRoleEnabled;
+                            const featChecked = isFeatEnabled ? 'checked' : '';
+                            const featIndicator = hasFeatOverride ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
                             
                             html += `<li style="margin-bottom: 4px;">
                                 <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                                    <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="${f}" ${featChecked}>
-                                    <span>${f}</span>
+                                    <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="${f}" data-role-value="${isFeatRoleEnabled}" ${featChecked}>
+                                    <span>${f}</span>${featIndicator}
                                 </label>
                             </li>`;
                         }
@@ -1040,8 +1046,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function renderPermissionsMatrix(data) {
         const thead = document.getElementById('permMatrixHead');
-        if (thead && thead.innerHTML.trim() === '') {
-            thead.innerHTML = '<tr><th>Modules</th>' + PERM_ROLES.map(r => `<th style="min-width: 90px;">${r.replace(' ', '<br>')}</th>`).join('') + '</tr>';
+        if (thead && !thead.querySelector('tr')) {
+            thead.innerHTML = '<tr><th style="text-align: left; padding-left: 20px;">Modules</th>' + PERM_ROLES.map(r => `<th style="text-align: center; vertical-align: middle;">${r.replace(/ /g, '<br>')}</th>`).join('') + '</tr>';
         }
         const tbody = document.getElementById('permMatrixBody');
         if (!tbody) return;
@@ -1049,7 +1055,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         let htmlString = '';
         Object.keys(PERM_SCHEMA).forEach(mod => {
-            let row = `<tr style="background: #f1f5f9;"><td style="text-align: left; min-width: 180px;">📁 ${mod}</td>`;
+            let row = `<tr style="background: #f1f5f9;"><td style="text-align: left;">${mod}</td>`;
             PERM_ROLES.forEach(role => {
                 const perm = data.find(p => p.role_name === role && p.module_name === mod && p.feature_name === 'Access Module');
                 const isChecked = perm && perm.is_enabled === 1 ? 'checked' : '';

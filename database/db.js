@@ -94,7 +94,11 @@ db.serialize(() => {
             can_delete TEXT DEFAULT 'No',
             status TEXT DEFAULT 'Active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            custom_permissions_json TEXT
+            custom_permissions_json TEXT,
+            outlook_email TEXT,
+            outlook_access_token TEXT,
+            outlook_refresh_token TEXT,
+            is_outlook_active INTEGER DEFAULT 0
         )
     `);
 
@@ -433,6 +437,10 @@ db.serialize(() => {
         "ALTER TABLE leads ADD COLUMN is_notified INTEGER DEFAULT 0",
         "ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN custom_permissions_json TEXT",
+        "ALTER TABLE users ADD COLUMN outlook_email TEXT",
+        "ALTER TABLE users ADD COLUMN outlook_access_token TEXT",
+        "ALTER TABLE users ADD COLUMN outlook_refresh_token TEXT",
+        "ALTER TABLE users ADD COLUMN is_outlook_active INTEGER DEFAULT 0",
         "ALTER TABLE products ADD COLUMN datasheet TEXT",
         "ALTER TABLE products ADD COLUMN installation_manual TEXT",
         "ALTER TABLE products ADD COLUMN wifi_manual TEXT",
@@ -459,6 +467,85 @@ db.serialize(() => {
             UNIQUE(role_name, module_name, feature_name)
         )
     `, () => {
+        // --- START MIGRATION FOR OLD NAMES ---
+        db.serialize(() => {
+            // A. Migrate 'User Management' -> 'Settings'
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, 'Settings', feature_name, is_enabled FROM field_permissions WHERE module_name = 'User Management'");
+            db.run("DELETE FROM field_permissions WHERE module_name = 'User Management'");
+
+            // B. Migrate Masters features
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Products', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Product Master'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage STC', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'STC Master'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Rebates', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Rebate Live Master'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Margins', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Margin Master'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Charges', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Installation Charges Master'");
+            db.run("DELETE FROM field_permissions WHERE module_name = 'Masters' AND feature_name IN ('Product Master', 'STC Master', 'Rebate Live Master', 'Margin Master', 'Installation Charges Master')");
+
+            // C. Migrate Lead Master features
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'View Leads', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Master Leads'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Delete Lead', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Delete Leads'");
+            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Duplicate Lead', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Duplicate Leads'");
+            db.run("DELETE FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name IN ('Master Leads', 'Delete Leads', 'Duplicate Leads')");
+
+            // D. Migrate User Custom Override JSON strings
+            db.all("SELECT id, custom_permissions_json FROM users WHERE custom_permissions_json IS NOT NULL", [], (err, rows) => {
+                if (!err && rows) {
+                    rows.forEach(row => {
+                        try {
+                            let perms = JSON.parse(row.custom_permissions_json);
+                            let changed = false;
+                            
+                            // Migrate User Management -> Settings
+                            if (perms['User Management']) {
+                                perms['Settings'] = perms['User Management'];
+                                delete perms['User Management'];
+                                changed = true;
+                            }
+                            
+                            // Migrate Masters features
+                            if (perms['Masters']) {
+                                const mappings = {
+                                    'Product Master': 'Manage Products',
+                                    'STC Master': 'Manage STC',
+                                    'Rebate Live Master': 'Manage Rebates',
+                                    'Margin Master': 'Manage Margins',
+                                    'Installation Charges Master': 'Manage Charges'
+                                };
+                                for (const [oldName, newName] of Object.entries(mappings)) {
+                                    if (perms['Masters'][oldName] !== undefined) {
+                                        perms['Masters'][newName] = perms['Masters'][oldName];
+                                        delete perms['Masters'][oldName];
+                                        changed = true;
+                                    }
+                                }
+                            }
+                            
+                            // Migrate Lead Master features
+                            if (perms['Lead Master']) {
+                                const mappings = {
+                                    'Master Leads': 'View Leads',
+                                    'Delete Leads': 'Delete Lead',
+                                    'Duplicate Leads': 'Duplicate Lead'
+                                };
+                                for (const [oldName, newName] of Object.entries(mappings)) {
+                                    if (perms['Lead Master'][oldName] !== undefined) {
+                                        perms['Lead Master'][newName] = perms['Lead Master'][oldName];
+                                        delete perms['Lead Master'][oldName];
+                                        changed = true;
+                                    }
+                                }
+                            }
+                            
+                            if (changed) {
+                                db.run("UPDATE users SET custom_permissions_json = ? WHERE id = ?", [JSON.stringify(perms), row.id]);
+                            }
+                        } catch (e) {}
+                    });
+                }
+            });
+        });
+        // --- END MIGRATION FOR OLD NAMES ---
+
         const roles = [
             'Admin',
             'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
@@ -467,11 +554,11 @@ db.serialize(() => {
         ];
         const modulesAndFeatures = {
             'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
-            'Lead Master': ['Access Module', 'Master Leads', 'Delete Leads', 'Duplicate Leads', 'Lead Approvals', 'Add Lead', 'Edit Lead', 'View Revenue', 'Edit Address'],
+            'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
             'Projects': ['Access Module', 'Leads'],
-            'Masters': ['Access Module', 'Product Master', 'STC Master', 'Rebate Live Master', 'Margin Master', 'Installation Charges Master'],
+            'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
             'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
-            'User Management': ['Access Module', 'Manage Users', 'Manage Roles'],
+            'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
             'Attendance & Payroll': ['Access Module', 'Employees', 'Leave', 'Timesheets', 'Pay Employee', 'Superannuation']
         };
         const stmt = db.prepare("INSERT OR IGNORE INTO field_permissions (role_name, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
