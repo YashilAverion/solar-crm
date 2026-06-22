@@ -140,4 +140,88 @@ router.delete('/users/:id', requireManager, (req, res) => {
     });
 });
 
+// ── GET RATE LIMITS & BLOCKED ATTEMPTS ────────────────────────
+router.get('/rate-limits', requireManager, (req, res) => {
+    // Get whitelisted IPs
+    db.all("SELECT id, ip, added_by, added_at FROM ip_whitelist ORDER BY id DESC", [], (err, whitelisted) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        // Get recent blocked attempts (last 50)
+        db.all("SELECT id, ip, username, attempted_at, was_blocked FROM login_attempts ORDER BY id DESC LIMIT 50", [], (err2, attempts) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            
+            res.json({
+                whitelisted: whitelisted || [],
+                attempts: attempts || []
+            });
+        });
+    });
+});
+
+// ── ADD IP TO WHITELIST ───────────────────────────────────────
+router.post('/rate-limits/whitelist', requireManager, (req, res) => {
+    const { ip } = req.body;
+    if (!ip || ip.trim().length === 0) {
+        return res.status(400).json({ error: 'IP Address is required.' });
+    }
+    
+    // Validate IP format (IPv4 or IPv6 basic check)
+    const cleanIp = ip.trim();
+    const addedBy = req.session.user.full_name || req.session.user.username || 'Admin';
+    
+    db.run(
+        "INSERT INTO ip_whitelist (ip, added_by) VALUES (?, ?)",
+        [cleanIp, addedBy],
+        function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE')) {
+                    return res.status(400).json({ error: 'This IP is already whitelisted.' });
+                }
+                return res.status(500).json({ error: err.message });
+            }
+            
+            // Also reset in memory if they are blocked
+            const limiter = req.app.get('loginLimiter');
+            if (limiter && typeof limiter.resetKey === 'function') {
+                try { limiter.resetKey(cleanIp); } catch(e) { console.error(e); }
+            }
+            
+            res.json({ success: true, id: this.lastID });
+        }
+    );
+});
+
+// ── REMOVE IP FROM WHITELIST ──────────────────────────────────
+router.delete('/rate-limits/whitelist/:ip', requireManager, (req, res) => {
+    const ip = req.params.ip;
+    db.run("DELETE FROM ip_whitelist WHERE ip = ?", [ip], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// ── RESET RATE LIMIT FOR IP ───────────────────────────────────
+router.post('/rate-limits/reset', requireManager, (req, res) => {
+    const { ip } = req.body;
+    if (!ip) return res.status(400).json({ error: 'IP Address is required.' });
+    
+    const cleanIp = ip.trim();
+    
+    // Reset key in rate limiter memory
+    const limiter = req.app.get('loginLimiter');
+    if (limiter && typeof limiter.resetKey === 'function') {
+        try {
+            limiter.resetKey(cleanIp);
+        } catch(e) {
+            console.error('Failed to reset key in express-rate-limit:', e);
+        }
+    }
+    
+    // Delete their blocked attempts from log so they disappear from list
+    db.run("DELETE FROM login_attempts WHERE ip = ?", [cleanIp], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 module.exports = router;

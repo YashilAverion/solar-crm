@@ -414,6 +414,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="admin-tab-bar">
             <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')">👤 User Accounts List</button>
             <button class="tab-chip" id="tab-permissions-grid" onclick="switchAdminSection('permissions-grid')">🔐 Role Permission Control Center</button>
+            <button class="tab-chip" id="tab-rate-limits" onclick="switchAdminSection('rate-limits')">🔒 Login Security & Rate Limits</button>
         </div>
 
         <div id="section-permissions-grid" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -446,6 +447,65 @@ document.addEventListener("DOMContentLoaded", function() {
                 <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
             </div>
         </div>
+            </div>
+        </div>
+ 
+        <div id="section-rate-limits" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 0; overflow: auto; padding: 10px 0;">
+                
+                <!-- Left Panel: Whitelisted IPs -->
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 400px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size:14px; font-weight:700; color:var(--text-dark);">🔒 Whitelisted IPs (Bypass Rate Limiter)</h3>
+                    </div>
+                    
+                    <!-- Manual Whitelist Form -->
+                    <form onsubmit="manualWhitelist(event)" style="display:flex; gap:8px; margin-bottom:16px;">
+                        <input type="text" id="whitelistIpInput" placeholder="Enter IP address (e.g. 192.168.1.1)" required style="flex:1; height:32px; border:1px solid var(--border); border-radius:6px; padding:0 10px; font-size:13px; outline:none;">
+                        <button type="submit" class="btn-save" style="margin-top:0; padding:0 16px; height:32px; font-size:12px;">Whitelist IP</button>
+                    </form>
+                    
+                    <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">IP Address</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">Whitelisted By</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">Whitelisted At</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); text-align:center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="whitelistedIpsBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Blocked Login Attempts -->
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 400px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size:14px; font-weight:700; color:var(--text-dark);">🚨 Recent Blocked Login Attempts</h3>
+                        <button type="button" onclick="loadRateLimits()" class="act-btn" style="width:auto; height:24px; padding:0 10px; font-size:11px;" title="Refresh attempts list">🔄 Refresh</button>
+                    </div>
+                    
+                    <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">IP Address</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">Username Tried</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); border-right:1px solid var(--border); text-align:center;">Attempt Time</th>
+                                    <th style="font-size:10px; padding:8px; background:#f8fafc; border-bottom:2px solid var(--border); text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blockedAttemptsBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
             </div>
         </div>
 
@@ -628,8 +688,159 @@ document.addEventListener("DOMContentLoaded", function() {
     function switchAdminSection(target) {
         document.getElementById('section-users-list').style.display = target === 'users-list' ? 'flex' : 'none';
         document.getElementById('section-permissions-grid').style.display = target === 'permissions-grid' ? 'flex' : 'none';
+        document.getElementById('section-rate-limits').style.display = target === 'rate-limits' ? 'flex' : 'none';
+        
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-permissions-grid').classList.toggle('active-chip', target === 'permissions-grid');
+        document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
+        
+        if (target === 'rate-limits') {
+            loadRateLimits();
+        }
+    }
+
+    async function loadRateLimits() {
+        const whiteBody = document.getElementById('whitelistedIpsBody');
+        const blockedBody = document.getElementById('blockedAttemptsBody');
+        
+        whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">Loading whitelisted IPs...</td></tr>';
+        blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">Loading attempts...</td></tr>';
+        
+        try {
+            const res = await fetch('/admin/rate-limits');
+            if (res.ok) {
+                const data = await res.json();
+                
+                // Render Whitelisted
+                if (data.whitelisted.length === 0) {
+                    whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">No whitelisted IPs.</td></tr>';
+                } else {
+                    whiteBody.innerHTML = data.whitelisted.map(w => {
+                        const fmt = new Date(w.added_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
+                        return `<tr>
+                            <td><strong>${w.ip}</strong></td>
+                            <td>${w.added_by}</td>
+                            <td>${fmt}</td>
+                            <td><button type="button" class="act-btn act-btn-del" title="Remove Whitelist" onclick="removeWhitelist('${w.ip}')">🗑️</button></td>
+                        </tr>`;
+                    }).join('');
+                }
+                
+                // Render Attempts
+                if (data.attempts.length === 0) {
+                    blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">No rate-limited attempts logged.</td></tr>';
+                } else {
+                    blockedBody.innerHTML = data.attempts.map(a => {
+                        const fmt = new Date(a.attempted_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
+                        return `<tr>
+                            <td><strong>${a.ip}</strong></td>
+                            <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600;">${a.username || '-'}</span></td>
+                            <td>${fmt}</td>
+                            <td>
+                                <div style="display:flex; gap:4px; justify-content:center;">
+                                    <button type="button" class="act-btn" title="Unlock IP (Reset Rate Limit)" onclick="resetRateLimit('${a.ip}')" style="width:auto; padding:0 8px;">🔑 Unlock</button>
+                                    <button type="button" class="act-btn" style="background:#eef2f8; color:var(--primary); width:auto; padding:0 8px;" title="Whitelist IP" onclick="whitelistDirect('${a.ip}')">🛡️ Whitelist</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
+                }
+            } else {
+                throw new Error('Failed to fetch');
+            }
+        } catch(e) {
+            whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading whitelisted IPs.</td></tr>';
+            blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading attempts.</td></tr>';
+        }
+    }
+
+    async function manualWhitelist(event) {
+        event.preventDefault();
+        const ipInput = document.getElementById('whitelistIpInput');
+        const ip = ipInput.value.trim();
+        if (!ip) return;
+        
+        try {
+            const res = await fetch('/admin/rate-limits/whitelist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Success', 'IP has been whitelisted.', 'success');
+                ipInput.value = '';
+                loadRateLimits();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to whitelist IP.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
+    }
+
+    async function whitelistDirect(ip) {
+        try {
+            const res = await fetch('/admin/rate-limits/whitelist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Success', `IP ${ip} has been whitelisted and unlocked.`, 'success');
+                loadRateLimits();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to whitelist IP.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
+    }
+
+    async function removeWhitelist(ip) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Remove Whitelist?',
+            text: `Are you sure you want to remove IP ${ip} from the rate limit bypass whitelist?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, Remove'
+        });
+        
+        if (isConfirmed) {
+            try {
+                const res = await fetch(`/admin/rate-limits/whitelist/${encodeURIComponent(ip)}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Swal.fire('Removed!', 'IP has been removed from whitelist.', 'success');
+                    loadRateLimits();
+                } else {
+                    Swal.fire('Error', 'Failed to remove IP.', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Network error.', 'error');
+            }
+        }
+    }
+
+    async function resetRateLimit(ip) {
+        try {
+            const res = await fetch('/admin/rate-limits/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Unlocked!', `Rate limit for IP ${ip} has been reset. User can attempt login again.`, 'success');
+                loadRateLimits();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to unlock IP.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Network error.', 'error');
+        }
     }
 
     function togglePasswordDisplay() {

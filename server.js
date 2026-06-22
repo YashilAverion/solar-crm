@@ -148,10 +148,30 @@ app.get('/ares_energy_logo.png', (req, res) => {
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes window
     max: 5, // limit each IP to 5 login requests per windowMs
-    message: { error: 'Too many login attempts from this IP. Please try again after 15 minutes.' },
+    skip: async (req) => {
+        const ip = req.ip || req.socket.remoteAddress;
+        const whitelisted = await new Promise((resolve) => {
+            db.get("SELECT id FROM ip_whitelist WHERE ip = ?", [ip], (err, row) => {
+                if (err || !row) resolve(false);
+                else resolve(true);
+            });
+        });
+        return whitelisted;
+    },
+    handler: (req, res, next, options) => {
+        const ip = req.ip || req.socket.remoteAddress;
+        const username = req.body.username || '';
+        // Log this blocked attempt
+        db.run("INSERT INTO login_attempts (ip, username, was_blocked) VALUES (?, ?, 1)", [ip, username], (err) => {
+            if (err) console.error("Error logging blocked login attempt:", err.message);
+        });
+        res.status(options.statusCode).json({ error: `Too many login attempts from this IP (${ip}). Please try again after 15 minutes.` });
+    },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
+
+app.set('loginLimiter', loginLimiter);
 
 // ── LOGIN ACTION ───────────────────────────────────────────
 app.post('/login', loginLimiter, [

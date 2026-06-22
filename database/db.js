@@ -864,6 +864,26 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_attendance_timesheets_user_id_date ON attendance_timesheets (user_id, work_date)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_leave_balances_user_id ON leave_balances_and_requests (user_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_payroll_records_user_id ON payroll_historical_records (user_id)", () => {});
+
+    // 17. IP Whitelist and Login Attempts
+    db.run(`
+        CREATE TABLE IF NOT EXISTS ip_whitelist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip TEXT UNIQUE,
+            added_by TEXT,
+            added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip TEXT,
+            username TEXT,
+            attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            was_blocked INTEGER DEFAULT 0
+        )
+    `);
 });
 
 module.exports = db;
