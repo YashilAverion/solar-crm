@@ -1,4 +1,8 @@
 node_modules/
 *.db
-solar_crm.db
+*.db-shm
+*.db-wal
+database/*.db-shm
+database/*.db-wal
+SYSTEM_BACKUPS/
 .env

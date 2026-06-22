@@ -531,8 +531,8 @@ router.post('/calculate', requireAuth, async (req, res) => {
 
             if (batStcRow) {
                 batteryRatings = batStcRow.ratings || 0;
-                batteryDeemingPeriod = batStcRow.deeming_period || 0;
-                const batteryStcQty = totalBatteryKwh * batteryRatings * batteryDeemingPeriod;
+                // Battery certificates are capacity-based and do not use SRES solar PV deeming period multiplication
+                const batteryStcQty = totalBatteryKwh * batteryRatings;
                 batteryRebate = batteryStcQty * actualRate;
 
                 rebatesBreakdown.push({
@@ -567,31 +567,48 @@ router.post('/calculate', requireAuth, async (req, res) => {
         let batteryMargin = 0;
         const marginsBreakdown = [];
 
-        const marginRows = await dbAll(
-            "SELECT margin_type, margins FROM margin_master_v2 WHERE state = ? AND area = ?",
+        let marginRows = await dbAll(
+            "SELECT margin_type, margins, state, area FROM margin_master_v2 WHERE (state = ? OR state = 'WA') AND (area = ? OR area = 'Metro')",
             [customerState, customerArea]
         );
+
+        // 1. State Filter / Fallback
+        const hasCustomerStateRows = marginRows.some(row => row.state === customerState);
+        if (hasCustomerStateRows) {
+            marginRows = marginRows.filter(row => row.state === customerState);
+        } else {
+            marginRows = marginRows.filter(row => row.state === 'WA');
+        }
+
+        // 2. Area Filter / Fallback
+        const hasCustomerAreaRows = marginRows.some(row => row.area === customerArea);
+        if (hasCustomerAreaRows) {
+            marginRows = marginRows.filter(row => row.area === customerArea);
+        } else {
+            marginRows = marginRows.filter(row => row.area === 'Metro');
+        }
 
         marginRows.forEach(row => {
             try {
                 const bracketArray = JSON.parse(row.margins);
-                if (Array.isArray(bracketArray) && bracketArray.length > 0) {
-                    const bracket = bracketArray[0];
-                    const valFrom = parseFloat(bracket.from);
-                    const valTo = parseFloat(bracket.to);
-                    const marginVal = parseFloat(bracket.margin);
+                if (Array.isArray(bracketArray)) {
+                    bracketArray.forEach(bracket => {
+                        const valFrom = parseFloat(bracket.from);
+                        const valTo = parseFloat(bracket.to);
+                        const marginVal = parseFloat(bracket.margin);
 
-                    if (row.margin_type === 'PV') {
-                        const checkVal = Math.round(totalPanelKw * 10) / 10;
-                        if (checkVal >= valFrom && checkVal <= valTo) {
-                            pvMargin = marginVal;
+                        if (row.margin_type === 'PV') {
+                            const checkVal = Math.round(totalPanelKw * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) {
+                                pvMargin = marginVal;
+                            }
+                        } else if (row.margin_type === 'Battery') {
+                            const checkVal = Math.round(totalBatteryKwh * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) {
+                                batteryMargin = marginVal;
+                            }
                         }
-                    } else if (row.margin_type === 'Battery') {
-                        const checkVal = Math.round(totalBatteryKwh * 10) / 10;
-                        if (checkVal >= valFrom && checkVal <= valTo) {
-                            batteryMargin = marginVal;
-                        }
-                    }
+                    });
                 }
             } catch (e) {
                 console.error("Error parsing margins JSON bracket:", e);

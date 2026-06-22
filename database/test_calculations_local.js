@@ -1,6 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const dbPath = path.resolve(__dirname, 'solar_crm.db');
+const dbPath = path.resolve(__dirname, 'solar_v2.db');
 const db = new sqlite3.Database(dbPath);
 
 function dbGet(sql, params = []) {
@@ -261,8 +261,8 @@ async function testCalculation(reqBody) {
             );
             if (batStcRow) {
                 batteryRatings = batStcRow.ratings || 0;
-                batteryDeemingPeriod = batStcRow.deeming_period || 0;
-                const batteryStcQty = totalBatteryKwh * batteryRatings * batteryDeemingPeriod;
+                // Battery certificates are capacity-based and do not use SRES solar PV deeming period multiplication
+                const batteryStcQty = totalBatteryKwh * batteryRatings;
                 batteryRebate = batteryStcQty * actualRate;
                 rebatesBreakdown.push({
                     name: "STC Battery",
@@ -286,25 +286,43 @@ async function testCalculation(reqBody) {
         let batteryMargin = 0;
         const marginsBreakdown = [];
 
-        const marginRows = await dbAll(
-            "SELECT margin_type, margins FROM margin_master_v2 WHERE state = ? AND area = ?",
+        let marginRows = await dbAll(
+            "SELECT margin_type, margins, state, area FROM margin_master_v2 WHERE (state = ? OR state = 'WA') AND (area = ? OR area = 'Metro')",
             [customerState, customerArea]
         );
+        
+        // 1. State Filter / Fallback
+        const hasCustomerStateRows = marginRows.some(row => row.state === customerState);
+        if (hasCustomerStateRows) {
+            marginRows = marginRows.filter(row => row.state === customerState);
+        } else {
+            marginRows = marginRows.filter(row => row.state === 'WA');
+        }
+
+        // 2. Area Filter / Fallback
+        const hasCustomerAreaRows = marginRows.some(row => row.area === customerArea);
+        if (hasCustomerAreaRows) {
+            marginRows = marginRows.filter(row => row.area === customerArea);
+        } else {
+            marginRows = marginRows.filter(row => row.area === 'Metro');
+        }
+
         marginRows.forEach(row => {
             try {
                 const bracketArray = JSON.parse(row.margins);
-                if (Array.isArray(bracketArray) && bracketArray.length > 0) {
-                    const bracket = bracketArray[0];
-                    const valFrom = parseFloat(bracket.from);
-                    const valTo = parseFloat(bracket.to);
-                    const marginVal = parseFloat(bracket.margin);
-                    if (row.margin_type === 'PV') {
-                        const checkVal = Math.round(totalPanelKw * 10) / 10;
-                        if (checkVal >= valFrom && checkVal <= valTo) pvMargin = marginVal;
-                    } else if (row.margin_type === 'Battery') {
-                        const checkVal = Math.round(totalBatteryKwh * 10) / 10;
-                        if (checkVal >= valFrom && checkVal <= valTo) batteryMargin = marginVal;
-                    }
+                if (Array.isArray(bracketArray)) {
+                    bracketArray.forEach(bracket => {
+                        const valFrom = parseFloat(bracket.from);
+                        const valTo = parseFloat(bracket.to);
+                        const marginVal = parseFloat(bracket.margin);
+                        if (row.margin_type === 'PV') {
+                            const checkVal = Math.round(totalPanelKw * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) pvMargin = marginVal;
+                        } else if (row.margin_type === 'Battery') {
+                            const checkVal = Math.round(totalBatteryKwh * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) batteryMargin = marginVal;
+                        }
+                    });
                 }
             } catch (e) {}
         });
@@ -350,13 +368,14 @@ async function testCalculation(reqBody) {
 // and Growatt Inverter (code: 2004, qty: 1)
 // and Single Phase
 testCalculation({
-    leadId: 16,
-    postcode: '6112',
-    state: 'WA',
+    leadId: 31,
+    postcode: '4560',
+    state: 'QLD',
     blackout: 'No',
     phase: '1',
     products: [
         { type: 'Panel', code: '1001', qty: 14 },
-        { type: 'Inverter', code: '2004', qty: 1 }
+        { type: 'Inverter', code: '2004', qty: 1 },
+        { type: 'Battery', code: '2007', qty: 1 }
     ]
 });
