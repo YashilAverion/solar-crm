@@ -1485,8 +1485,11 @@ function toggleNav(event, element) {
                 const name = row.querySelector('.cp-name')?.value || '';
                 const code = row.querySelector('.cp-code')?.value || '';
                 const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
-                if (code && qty > 0) {
-                    products.push({ type, name, code, qty });
+                const size = row.querySelector('.cp-size')?.value || '';
+                const kw = row.querySelector('.cp-kw')?.value || '';
+                // Include products with stock code OR products with a name (for fallback size calculation)
+                if (qty > 0 && (code || name.trim())) {
+                    products.push({ type, name, code, qty, size, kw });
                 }
             });
 

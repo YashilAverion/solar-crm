@@ -108,48 +108,70 @@ router.post('/calculate', requireAuth, async (req, res) => {
                 const qty = parseFloat(item.qty) || 0;
                 if (qty <= 0) continue;
 
+                let dbProduct = null;
                 if (item.code) {
-                    const dbProduct = await dbGet(
+                    dbProduct = await dbGet(
                         "SELECT prod_name, purchase_price, purchase_price_ex_gst, panels_capacity_w, usable_battery_kwh, nominal_battery_capacity_kwh, product_category, inv_mppt FROM products WHERE stock_code = ? AND product_status = 'Active'",
                         [item.code.trim()]
                     );
-                    
-                    if (dbProduct) {
-                        const priceIncGst = parseFloat(dbProduct.purchase_price) || (parseFloat(dbProduct.purchase_price_ex_gst) * 1.1) || 0;
-                        const productTotal = priceIncGst * qty;
-                        totalProductCost += productTotal;
+                }
 
-                        productsBreakdown.push({
-                            type: dbProduct.product_category || item.type,
-                            name: dbProduct.prod_name || item.name,
-                            code: item.code.trim(),
-                            qty: qty,
-                            rate: priceIncGst,
-                            total: productTotal
-                        });
+                if (dbProduct) {
+                    const priceIncGst = parseFloat(dbProduct.purchase_price) || (parseFloat(dbProduct.purchase_price_ex_gst) * 1.1) || 0;
+                    const productTotal = priceIncGst * qty;
+                    totalProductCost += productTotal;
 
-                        if (dbProduct.product_category === 'Panel') {
-                            const capacityW = parseFloat(dbProduct.panels_capacity_w) || 0;
-                            totalPanelKw += (capacityW * qty) / 1000;
-                        } else if (dbProduct.product_category === 'Battery') {
-                            const capacityKwh = parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
-                            totalBatteryKwh += capacityKwh * qty;
-                        } else if (dbProduct.product_category === 'Inverter') {
-                            const mpptCount = parseInt(dbProduct.inv_mppt) || 0;
-                            if (mpptCount > 2) {
-                                hasExtraRoofInstallation = true;
-                            }
+                    productsBreakdown.push({
+                        type: dbProduct.product_category || item.type,
+                        name: dbProduct.prod_name || item.name,
+                        code: item.code ? item.code.trim() : '',
+                        qty: qty,
+                        rate: priceIncGst,
+                        total: productTotal
+                    });
+
+                    if (dbProduct.product_category === 'Panel') {
+                        const capacityW = parseFloat(dbProduct.panels_capacity_w) || 0;
+                        totalPanelKw += (capacityW * qty) / 1000;
+                    } else if (dbProduct.product_category === 'Battery') {
+                        const capacityKwh = parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
+                        totalBatteryKwh += capacityKwh * qty;
+                    } else if (dbProduct.product_category === 'Inverter') {
+                        const mpptCount = parseInt(dbProduct.inv_mppt) || 0;
+                        if (mpptCount > 2) {
+                            hasExtraRoofInstallation = true;
                         }
-                    } else {
-                        // Fallback to UI details if not found in active database list
+                    }
+                } else {
+                    // Fallback: product not in DB or no stock code — use UI size field for capacity estimation
+                    const itemType = (item.type || '').trim();
+                    const itemSize = parseFloat(item.size) || parseFloat(item.kw) || 0;
+                    const itemKw = parseFloat(item.kw) || 0;
+
+                    // Only add to capacity if the item has a name (not blank row)
+                    if (item.name && item.name.trim()) {
                         productsBreakdown.push({
-                            type: item.type,
+                            type: itemType || 'Unknown',
                             name: item.name,
-                            code: item.code,
+                            code: item.code || '—',
                             qty: qty,
                             rate: 0,
                             total: 0
                         });
+
+                        if (itemType === 'Panel' && itemSize > 0) {
+                            // itemSize is in Watts for panels
+                            totalPanelKw += (itemSize * qty) / 1000;
+                        } else if (itemType === 'Panel' && itemKw > 0) {
+                            // itemKw is in kW for panels
+                            totalPanelKw += itemKw * qty;
+                        } else if (itemType === 'Battery' && itemSize > 0) {
+                            // itemSize is in kWh for batteries
+                            totalBatteryKwh += itemSize * qty;
+                        } else if (itemType === 'Battery' && itemKw > 0) {
+                            // itemKw is in kWh for batteries
+                            totalBatteryKwh += itemKw * qty;
+                        }
                     }
                 }
             }
@@ -597,12 +619,12 @@ router.post('/calculate', requireAuth, async (req, res) => {
                         const valTo = parseFloat(bracket.to);
                         const marginVal = parseFloat(bracket.margin);
 
-                        if (row.margin_type === 'PV') {
+                        if (row.margin_type === 'PV' && totalPanelKw > 0) {
                             const checkVal = Math.round(totalPanelKw * 10) / 10;
                             if (checkVal >= valFrom && checkVal <= valTo) {
                                 pvMargin = marginVal;
                             }
-                        } else if (row.margin_type === 'Battery') {
+                        } else if (row.margin_type === 'Battery' && totalBatteryKwh > 0) {
                             const checkVal = Math.round(totalBatteryKwh * 10) / 10;
                             if (checkVal >= valFrom && checkVal <= valTo) {
                                 batteryMargin = marginVal;
