@@ -484,6 +484,93 @@ router.delete('/:id/documents/:docId', (req, res) => {
     });
 });
 
+// ── HELPERS FOR OUTLOOK OAUTH INTEGRATION ───────────────────
+async function refreshOutlookTokenLocal(userId, refreshToken) {
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error('Microsoft OAuth configuration is missing.');
+    }
+
+    try {
+        const axios = require('axios');
+        const tokenParams = new URLSearchParams();
+        tokenParams.append('client_id', clientId);
+        tokenParams.append('scope', 'openid profile offline_access Mail.Send Mail.ReadWrite');
+        tokenParams.append('refresh_token', refreshToken);
+        tokenParams.append('grant_type', 'refresh_token');
+        tokenParams.append('client_secret', clientSecret);
+
+        const response = await axios.post('https://login.microsoftonline.com/common/oauth2/v2.0/token', tokenParams, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const newAccessToken = response.data.access_token;
+        const newRefreshToken = response.data.refresh_token || refreshToken;
+
+        await new Promise((resolve, reject) => {
+            db.run(
+                "UPDATE users SET outlook_access_token = ?, outlook_refresh_token = ? WHERE id = ?",
+                [newAccessToken, newRefreshToken, userId],
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                }
+            );
+        });
+
+        return newAccessToken;
+    } catch (error) {
+        console.error('Failed to refresh Microsoft Outlook token locally:', error.response ? error.response.data : error.message);
+        throw new Error('Token refresh failed.');
+    }
+}
+
+async function getOrRefreshOutlookTokenLocal(userId) {
+    return new Promise((resolve, reject) => {
+        db.get(
+            "SELECT outlook_access_token, outlook_refresh_token, is_outlook_active FROM users WHERE id = ?",
+            [userId],
+            async (err, row) => {
+                if (err) {
+                    return reject(new Error('Database error: ' + err.message));
+                }
+                if (!row) {
+                    return reject(new Error('User not found.'));
+                }
+                if (!row.is_outlook_active) {
+                    return reject(new Error('Outlook email integration is not active.'));
+                }
+                if (!row.outlook_access_token) {
+                    return reject(new Error('Outlook access token is missing.'));
+                }
+
+                try {
+                    const axios = require('axios');
+                    // Check if current token is valid by hitting cheap endpoint
+                    await axios.get('https://graph.microsoft.com/v1.0/me', {
+                        headers: { Authorization: `Bearer ${row.outlook_access_token}` }
+                    });
+                    return resolve(row.outlook_access_token);
+                } catch (apiErr) {
+                    if (apiErr.response && apiErr.response.status === 401 && row.outlook_refresh_token) {
+                        console.log(`Access token expired for user ${userId}. Refreshing locally...`);
+                        try {
+                            const newAccessToken = await refreshOutlookTokenLocal(userId, row.outlook_refresh_token);
+                            return resolve(newAccessToken);
+                        } catch (refreshErr) {
+                            return reject(refreshErr);
+                        }
+                    } else {
+                        return reject(new Error('Graph API validation failed: ' + apiErr.message));
+                    }
+                }
+            }
+        );
+    });
+}
+
 // 🔥 NEW: Route to Generate & Email PDF Invoice Server-Side using Puppeteer 🔥
 router.post('/:id/email-invoice', async (req, res) => {
     const { email, subject, text, projectNumber } = req.body;
@@ -540,36 +627,99 @@ router.post('/:id/email-invoice', async (req, res) => {
         // 5. Generate PDF buffer directly into memory (triggers @media print CSS to hide buttons automatically)
         const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
         await browser.close();
+        browser = null; // Mark as closed
 
-        // 6. Send via Configured SMTP or fallback to Microsoft 365 (Outlook)
-        const isEmailConfigured = config.email.user && config.email.user.trim() !== '' && !config.email.user.includes('your-email@');
-        const transporter = nodemailer.createTransport({
-            host: isEmailConfigured ? config.email.host : 'smtp.office365.com',
-            port: isEmailConfigured ? config.email.port : 587,
-            secure: isEmailConfigured ? config.email.secure : false,
-            requireTLS: !isEmailConfigured || undefined,
-            auth: {
-                user: isEmailConfigured ? config.email.user : 'billing@aresenergy.com.au',
-                pass: isEmailConfigured ? config.email.pass : 'your-email-password'
+        // 6. Send via Microsoft Outlook OAuth (M365) if active for logged-in user, otherwise fallback to SMTP
+        const userId = req.session && req.session.user ? req.session.user.id : null;
+        let emailSent = false;
+        let outlookErrorMsg = '';
+
+        if (userId) {
+            try {
+                const accessToken = await getOrRefreshOutlookTokenLocal(userId);
+                if (accessToken) {
+                    const pdfBase64 = pdfBuffer.toString('base64');
+                    const toRecipients = email.split(/[,;]/).map(e => ({
+                        emailAddress: { address: e.trim() }
+                    })).filter(r => r.emailAddress.address);
+
+                    const mailPayload = {
+                        message: {
+                            subject: subject || `Tax Invoice - Ares Energy (Ref: ${projectNumber})`,
+                            body: {
+                                contentType: 'HTML',
+                                content: text || 'Please find your invoice attached.'
+                            },
+                            toRecipients: toRecipients,
+                            attachments: [
+                                {
+                                    '@odata.type': '#microsoft.graph.fileAttachment',
+                                    name: `Ares_Invoice_${projectNumber}.pdf`,
+                                    contentType: 'application/pdf',
+                                    contentBytes: pdfBase64
+                                }
+                            ]
+                        },
+                        saveToSentItems: "true"
+                    };
+
+                    const axios = require('axios');
+                    await axios.post('https://graph.microsoft.com/v1.0/me/sendMail', mailPayload, {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    emailSent = true;
+                    console.log(`Invoice email sent successfully via Outlook for user ${userId}`);
+                }
+            } catch (outlookErr) {
+                outlookErrorMsg = outlookErr.message;
+                console.warn(`Outlook email sending failed/not active for user ${userId}. Falling back to SMTP. Error: ${outlookErr.message}`);
             }
-        });
+        }
 
-        const mailOptions = { 
-            from: isEmailConfigured ? (config.email.from || '"Ares Energy" <billing@aresenergy.com.au>') : '"Ares Energy" <billing@aresenergy.com.au>', 
-            to: email, 
-            subject: subject || `Tax Invoice - Ares Energy (Ref: ${projectNumber})`, 
-            text: text || 'Please find your invoice attached.', 
-            attachments: [{ filename: `Ares_Invoice_${projectNumber}.pdf`, content: pdfBuffer }] 
-        };
-        
-        await transporter.sendMail(mailOptions);
+        if (!emailSent) {
+            // Check SMTP configuration
+            const isEmailConfigured = config.email.user && config.email.user.trim() !== '' && !config.email.user.includes('your-email@');
+            
+            if (!isEmailConfigured) {
+                const hint = outlookErrorMsg ? ` (Outlook Info: ${outlookErrorMsg})` : '';
+                return res.status(400).json({ 
+                    error: `Email could not be sent. Outlook integration is not active or has expired${hint}, and SMTP credentials are not configured in your .env file. Please connect to Outlook or configure SMTP.` 
+                });
+            }
+
+            const transporter = nodemailer.createTransport({
+                host: config.email.host,
+                port: config.email.port,
+                secure: config.email.secure,
+                auth: {
+                    user: config.email.user,
+                    pass: config.email.pass
+                }
+            });
+
+            const mailOptions = { 
+                from: config.email.from || `"Ares Energy" <${config.email.user}>`, 
+                to: email, 
+                subject: subject || `Tax Invoice - Ares Energy (Ref: ${projectNumber})`, 
+                text: text || 'Please find your invoice attached.', 
+                attachments: [{ filename: `Ares_Invoice_${projectNumber}.pdf`, content: pdfBuffer }] 
+            };
+            
+            await transporter.sendMail(mailOptions);
+            emailSent = true;
+        }
+
         res.json({ success: true });
         
     } catch (err) {
         if (browser) await browser.close();
         console.error("Server-side PDF/Email Error:", err);
-        res.status(500).json({ error: 'Failed to generate PDF and send email. Check backend console logs.' });
+        res.status(500).json({ error: `Failed to generate PDF or send email: ${err.message}` });
     }
 });
 
 module.exports = router;
+
