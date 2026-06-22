@@ -174,7 +174,7 @@ app.post('/login', loginLimiter, [
 
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
         if (err) return res.status(500).json({ error: 'Database error.' });
-        if (!user) return res.status(401).json({ error: 'Username ya password galat hai.' });
+        if (!user) return res.status(401).json({ error: 'Invalid username or password.' });
 
         if (user.status === 'Inactive' || user.status === 'Deleted') {
             return res.status(403).json({ error: 'Account disabled. Please contact the administrator.' });
@@ -186,7 +186,7 @@ app.post('/login', loginLimiter, [
                 // Auto-migrate: if stored password is plaintext (not a bcrypt hash), re-hash on first login
                 const looksLikeHash = user.password && user.password.startsWith('$2');
                 if (looksLikeHash || user.password !== password) {
-                    return res.status(401).json({ error: 'Password galat hai.' });
+                    return res.status(401).json({ error: 'Incorrect password.' });
                 }
                 // Plaintext matched — re-hash and save silently
                 bcrypt.hash(password, 10, (hashErr, newHash) => {
@@ -738,6 +738,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), { 
 const leadRoutes = require('./modules/leads');
 const productRoutes = require('./modules/products');
 const adminRoutes = require('./modules/admin');
+const deployRoutes = require('./modules/deploy');
 const companyRoutes = require('./modules/companies');
 const installationRoutes = require('./modules/installations');
 const chargesRoutes = require('./modules/installation_charges');
@@ -1404,6 +1405,7 @@ app.get('/api/leads/unnotified', (req, res) => {
 app.use('/leads', leadRoutes);
 app.use('/products', productRoutes);
 app.use('/admin', adminRoutes);
+app.use('/admin', deployRoutes);
 app.use('/companies', companyRoutes);
 app.use('/installations', installationRoutes);
 app.use('/api/masters/installation-charges', chargesRoutes);

@@ -194,8 +194,8 @@ router.post('/', requireAuth, (req, res) => {
             if (dup && !forceNew) {
                 insertLeadRecord('Pending Approval', 'Pending Approval', '-', '-', '-');
             } else {
-                // User khud add kar raha hai toh usi ko assign karo.
-                // Isse Round-Robin algorithm usko next automatic lead distribute karte waqt skip kar dega.
+                // If user is adding it manually, assign it to them directly.
+                // This prevents the Round-Robin algorithm from distributing it again later.
                 generateProjectNumber(d.service === 'Yes', (num) => {
                     insertLeadRecord(num, 'Planned', currentUser, getSydneyTime(), currentUser);
                 });

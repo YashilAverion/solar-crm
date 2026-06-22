@@ -120,9 +120,9 @@ router.put('/users/:id', requireManager, async (req, res) => {
     }
 });
 
-// ── DELETE USER (soft delete — set status Inactive) ───────────
+// ── DELETE USER ──────────────────────────────────────────────
 router.delete('/users/:id', requireManager, (req, res) => {
-    db.run("UPDATE users SET status = 'Inactive' WHERE id = ?", [req.params.id], (err) => {
+    db.run("DELETE FROM users WHERE id = ?", [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });

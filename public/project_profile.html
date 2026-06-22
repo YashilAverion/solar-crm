@@ -1351,13 +1351,23 @@ function toggleNav(event, element) {
                     const productRowsContainer = document.getElementById('productRows');
                     productRowsContainer.innerHTML = '';
                     projectData.products.forEach(p => {
+                        // Heal type if mismatch exists between stored type and active products catalog category
+                        let resolvedType = p.type;
+                        const matchingProduct = allActiveProducts.find(ap => ap.stock_code === p.code || ap.prod_name === p.name);
+                        if (matchingProduct) {
+                            const pCat = matchingProduct.product_category === 'Wi-Fi & Control Devices' ? 'Wi-Component' : matchingProduct.product_category;
+                            if (pCat === 'Panel' || pCat === 'Inverter' || pCat === 'Battery' || pCat === 'Wi-Component' || pCat === 'Accessories') {
+                                resolvedType = pCat;
+                            }
+                        }
+
                         // Skip invalid/Combo product rows that were accidentally saved
                         const validTypes = ['Panel', 'Inverter', 'Battery', 'Wi-Component', 'Accessories'];
-                        if (p.type && !validTypes.includes(p.type)) return; // skip Combo/unknown types
+                        if (resolvedType && !validTypes.includes(resolvedType)) return; // skip Combo/unknown types
                         const row = document.createElement('div');
                         row.className = 'product-selection-row';
                         row.innerHTML = `
-                            <div class="product-field-group"><label>Type</label><select class="cp-type"><option ${p.type==='Panel'?'selected':''}>Panel</option><option ${p.type==='Inverter'?'selected':''}>Inverter</option><option ${p.type==='Battery'?'selected':''}>Battery</option><option ${p.type==='Wi-Component'?'selected':''}>Wi-Component</option><option ${p.type==='Accessories'?'selected':''}>Accessories</option></select></div>
+                            <div class="product-field-group"><label>Type</label><select class="cp-type"><option ${resolvedType==='Panel'?'selected':''}>Panel</option><option ${resolvedType==='Inverter'?'selected':''}>Inverter</option><option ${resolvedType==='Battery'?'selected':''}>Battery</option><option ${resolvedType==='Wi-Component'?'selected':''}>Wi-Component</option><option ${resolvedType==='Accessories'?'selected':''}>Accessories</option></select></div>
                             <div class="product-field-group">
                                 <label>Product Name</label>
                                 <div class="ac-wrap">
@@ -2685,8 +2695,9 @@ function toggleNav(event, element) {
                 filteredList = allActiveProducts.filter(p => {
                     // Exclude Combo products from individual product autocomplete
                     if (p.product_category === 'Combo') return false;
-                    // Strictly match product category
-                    if (p.product_category && p.product_category.toLowerCase() !== selectedType.toLowerCase()) {
+                    // Strictly match product category (map Wi-Fi & Control Devices to Wi-Component)
+                    const pCat = p.product_category === 'Wi-Fi & Control Devices' ? 'Wi-Component' : p.product_category;
+                    if (pCat && pCat.toLowerCase() !== selectedType.toLowerCase()) {
                         return false;
                     }
 
@@ -2875,13 +2886,14 @@ function toggleNav(event, element) {
                 el.dispatchEvent(new Event('change', { bubbles: true }));
             }
 
-            // Combo products should not be individually selected � they expand via child_products
+            // Combo products should not be individually selected  they expand via child_products
             // For any other unknown category, default to 'Panel'
             if (product.product_category === 'Combo') {
-                // Skip direct Combo selection � let child_products expand handle it below
+                // Skip direct Combo selection  let child_products expand handle it below
             }
-            const mappedType = (product.product_category === 'Panel' || product.product_category === 'Inverter' || product.product_category === 'Battery' || product.product_category === 'Wi-Component' || product.product_category === 'Accessories') 
-                ? product.product_category 
+            const pCat = product.product_category === 'Wi-Fi & Control Devices' ? 'Wi-Component' : product.product_category;
+            const mappedType = (pCat === 'Panel' || pCat === 'Inverter' || pCat === 'Battery' || pCat === 'Wi-Component' || pCat === 'Accessories') 
+                ? pCat 
                 : 'Panel';
 
             if (typeSelect) typeSelect.value = mappedType;
@@ -2959,8 +2971,9 @@ function toggleNav(event, element) {
 
                     const childMaster = allActiveProducts.find(p => p.stock_code === child.code);
                     if (childMaster) {
-                        const cMappedType = (childMaster.product_category === 'Panel' || childMaster.product_category === 'Inverter' || childMaster.product_category === 'Battery' || childMaster.product_category === 'Wi-Component' || childMaster.product_category === 'Accessories') 
-                            ? childMaster.product_category 
+                        const cCat = childMaster.product_category === 'Wi-Fi & Control Devices' ? 'Wi-Component' : childMaster.product_category;
+                        const cMappedType = (cCat === 'Panel' || cCat === 'Inverter' || cCat === 'Battery' || cCat === 'Wi-Component' || cCat === 'Accessories') 
+                            ? cCat 
                             : 'Panel';
                         if (cTypeSelect) cTypeSelect.value = cMappedType;
                         if (cNameInput) cNameInput.value = childMaster.prod_name || '';

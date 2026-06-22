@@ -388,6 +388,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="tb-spacer"></div>
         <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()">&#128190; Restore from Backup</button>
         <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()">&#128190; Backup Now</button>
+        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px; background:#10b981; color:#fff; border-color:#10b981;" onclick="triggerDeployment()">🚀 Deploy to Live</button>
         <button class="tb-btn btn-add" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()">+ Add User</button>
     </div>
 
@@ -508,8 +509,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="field">
                     <label class="required" id="u_pass_label">Password</label>
                     <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
-                        <input type="password" id="u_password" class="form-control" placeholder="***" style="width: 100%; padding-right: 35px !important;">
-                        <span id="passwordToggleIcon" style="position: absolute; right: 10px; cursor: pointer; user-select: none; font-size: 14px;" onclick="togglePasswordDisplay()">👁️</span>
+                        <input type="password" id="u_password" class="form-control" placeholder="***" style="width: 100%; padding-right: 38px !important;">
+                        <button type="button" id="passwordToggleBtn" style="position: absolute; right: 12px; background: none; border: none; padding: 0; cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center; outline: none;" onclick="togglePasswordDisplay()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
                     </div>
                     <div id="password-strength-meter" style="margin-top: 6px; display: none;">
                         <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;"><div id="strength-bar" style="width: 0%; height: 100%; background: #ef4444; transition: width 0.3s, background-color 0.3s;"></div></div>
@@ -630,13 +633,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function togglePasswordDisplay() {
         const pwd = document.getElementById('u_password');
-        const icon = document.getElementById('passwordToggleIcon');
+        const btn = document.getElementById('passwordToggleBtn');
         if (pwd.type === 'password') {
             pwd.type = 'text';
-            icon.innerText = '🙈';
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
         } else {
             pwd.type = 'password';
-            icon.innerText = '👁️';
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         }
     }
 
@@ -1128,6 +1131,89 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         } catch(e) { Swal.fire('Error', e.message, 'error'); }
+    }
+
+    async function triggerDeployment() {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Deploy to Production',
+            text: 'This will push your local changes to GitHub and trigger a remote pull/restart on Hostinger. Do you want to proceed?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, Deploy!'
+        });
+
+        if (!isConfirmed) return;
+
+        Swal.fire({
+            title: 'Deploying Code...',
+            html: `
+                <div style="text-align: left; background: #0f172a; color: #38bdf8; font-family: monospace; font-size: 12px; padding: 12px; border-radius: 6px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;" id="deploy-logs">
+Initializing deployment stream...
+                </div>
+            `,
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: async () => {
+                const logsDiv = document.getElementById('deploy-logs');
+                try {
+                    const response = await fetch('/admin/deploy', { method: 'POST' });
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({}));
+                        throw new Error(err.error || 'Deployment failed.');
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        logsDiv.innerText += chunk;
+                        logsDiv.scrollTop = logsDiv.scrollHeight;
+                    }
+
+                    if (logsDiv.innerText.includes('DEPLOYMENT SUCCESSFUL')) {
+                        Swal.update({
+                            icon: 'success',
+                            title: 'Deployment Successful!',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Done',
+                            confirmButtonColor: '#10b981'
+                        });
+                    } else if (logsDiv.innerText.includes('Deployment failed') || logsDiv.innerText.includes('Error')) {
+                        Swal.update({
+                            icon: 'error',
+                            title: 'Deployment Failed',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Close',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    } else {
+                        Swal.update({
+                            icon: 'success',
+                            title: 'Code Pushed to GitHub!',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Done',
+                            confirmButtonColor: '#10b981'
+                        });
+                    }
+                } catch (e) {
+                    logsDiv.innerText += `\n❌ Error: ${e.message}`;
+                    Swal.update({
+                        icon: 'error',
+                        title: 'Deployment Failed',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            }
+        });
     }
 
     window.onload = () => { 

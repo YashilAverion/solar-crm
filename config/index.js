@@ -42,5 +42,15 @@ module.exports = {
     pagination: {
         defaultPageSize: 50,
         maxPageSize: 500
+    },
+
+    deployment: {
+        sshHost: process.env.DEPLOY_SSH_HOST || 'crm.aresenergy.com.au',
+        sshPort: parseInt(process.env.DEPLOY_SSH_PORT) || 22,
+        sshUser: process.env.DEPLOY_SSH_USER || '',
+        sshPassword: process.env.DEPLOY_SSH_PASSWORD || '',
+        sshKeyPath: process.env.DEPLOY_SSH_KEY_PATH || '',
+        deployPath: process.env.DEPLOY_PATH || '',
+        restartCmd: process.env.DEPLOY_RESTART_CMD || 'pm2 restart server.js'
     }
 };
