@@ -6,10 +6,22 @@ const { requireManager, isStrongPassword, getPasswordStrengthMessage } = require
 
 // ── GET ALL USERS ─────────────────────────────────────────────
 router.get('/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
+});
+
+// ── DISCONNECT OUTLOOK FOR A USER ─────────────────────────────
+router.delete('/users/:id/outlook', requireManager, (req, res) => {
+    db.run(
+        "UPDATE users SET outlook_email = NULL, outlook_access_token = NULL, outlook_refresh_token = NULL, is_outlook_active = 0 WHERE id = ?",
+        [req.params.id],
+        (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
 });
 
 // ── GET USER PERMISSION OVERRIDES ─────────────────────────────

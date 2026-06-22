@@ -841,6 +841,12 @@ db.run("ALTER TABLE leads ADD COLUMN annual_savings REAL DEFAULT 0", () => { });
 db.run("ALTER TABLE leads ADD COLUMN payback_period REAL DEFAULT 0", () => { });
 db.run("ALTER TABLE leads ADD COLUMN co2_reduction REAL DEFAULT 0", () => { });
 
+// ── ENSURE MICROSOFT OUTLOOK COLUMNS IN USERS TABLE ─────────────
+db.run("ALTER TABLE users ADD COLUMN outlook_email TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE users ADD COLUMN outlook_access_token TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE users ADD COLUMN outlook_refresh_token TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE users ADD COLUMN is_outlook_active INTEGER DEFAULT 0", () => { });
+
 // ── LEADS API ROUTES ───────────────────────────────────────
 
 // Master Leads: all non-deleted (Manager sees all statuses except Deleted)

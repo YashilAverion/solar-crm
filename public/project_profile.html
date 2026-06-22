@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1269,6 +1269,14 @@ function toggleNav(event, element) {
                 const editIdEl = document.getElementById('edit_id');
                 if (editIdEl) editIdEl.value = id;
 
+                // Populate email data for Send Email modal
+                _currentLeadEmailData = {
+                    email: projectData.email_id_1 || '',
+                    first_name: projectData.first_name || '',
+                    last_name: projectData.last_name || '',
+                    project_number: projectData.project_number || ''
+                };
+
                 const projNum = projectData.project_number || 'N/A';
                 const fName = projectData.first_name || '';
                 const lName = projectData.last_name || '';
@@ -1485,11 +1493,8 @@ function toggleNav(event, element) {
                 const name = row.querySelector('.cp-name')?.value || '';
                 const code = row.querySelector('.cp-code')?.value || '';
                 const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
-                const size = row.querySelector('.cp-size')?.value || '';
-                const kw = row.querySelector('.cp-kw')?.value || '';
-                // Include products with stock code OR products with a name (for fallback size calculation)
-                if (qty > 0 && (code || name.trim())) {
-                    products.push({ type, name, code, qty, size, kw });
+                if (code && qty > 0) {
+                    products.push({ type, name, code, qty });
                 }
             });
 
@@ -3563,5 +3568,153 @@ function toggleNav(event, element) {
     } catch(e) { window.location.href = "/login"; }
 })()
 </script>
+
+<!-- ── SEND EMAIL MODAL ─────────────────────────────────────── -->
+<div id="sendEmailModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:600px;">
+        <button class="modal-close" type="button" onclick="document.getElementById('sendEmailModal').style.display='none'">✕</button>
+        <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Send Email to Customer
+        </div>
+        <div id="emailOutlookStatus" style="display:none; background:#fff8e1; border:1px solid #fde68a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#7c5a00;">
+            ⚠️ <strong>Outlook not connected.</strong> Please ask your Admin to link your Microsoft Outlook account from User Management.
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="field">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">From (Your Outlook Account)</label>
+                <div id="emailFromDisplay" style="padding:6px 10px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; font-size:13px; color:var(--text-muted); font-style:italic;">Checking Outlook connection...</div>
+            </div>
+            <div class="field">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">To <span style="color:#b93a20;">*</span></label>
+                <input type="email" id="emailTo" placeholder="customer@example.com" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:13px; width:100%; box-sizing:border-box; outline:none;" />
+            </div>
+            <div class="field">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">Subject <span style="color:#b93a20;">*</span></label>
+                <input type="text" id="emailSubject" placeholder="e.g. Solar Project Update" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:13px; width:100%; box-sizing:border-box; outline:none;" />
+            </div>
+            <div class="field">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">Message Body <span style="color:#b93a20;">*</span></label>
+                <textarea id="emailBody" rows="8" placeholder="Type your email message here..." style="padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; width:100%; box-sizing:border-box; resize:vertical; outline:none; font-family:inherit; line-height:1.5;"></textarea>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">✨ Tip: You can use basic HTML tags like &lt;b&gt;, &lt;br&gt;, &lt;ul&gt; for formatting.</div>
+            </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);">
+            <button type="button" onclick="document.getElementById('sendEmailModal').style.display='none'" style="padding:8px 20px; border-radius:6px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:13px; font-weight:600; color:var(--text-dark);">Cancel</button>
+            <button type="button" id="btnDoSendEmail" onclick="sendEmailToCustomer()" style="padding:8px 24px; border-radius:6px; border:none; background:var(--accent); color:#fff; cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; box-shadow:0 4px 6px -1px rgba(232,104,30,0.3); transition:all 0.2s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                Send Email
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── SEND EMAIL MODAL LOGIC ────────────────────────────────────
+let _currentLeadEmailData = {};
+
+async function openSendEmailModal() {
+    const modal = document.getElementById('sendEmailModal');
+    const statusDiv = document.getElementById('emailOutlookStatus');
+    const fromDiv = document.getElementById('emailFromDisplay');
+    const toInput = document.getElementById('emailTo');
+    const subjectInput = document.getElementById('emailSubject');
+    const bodyInput = document.getElementById('emailBody');
+    const sendBtn = document.getElementById('btnDoSendEmail');
+
+    // Pre-fill from current lead data
+    const leadId = document.getElementById('edit_id') ? document.getElementById('edit_id').value : null;
+    toInput.value = _currentLeadEmailData.email || '';
+    
+    const projectNo = _currentLeadEmailData.project_number || '';
+    const customerName = ((_currentLeadEmailData.first_name || '') + ' ' + (_currentLeadEmailData.last_name || '')).trim();
+    subjectInput.value = projectNo ? `Solar Project Update — ${projectNo}` : 'Solar Project Update';
+    bodyInput.value = customerName ? `Dear ${customerName},\n\nThank you for choosing Ares Energy.\n\n` : '';
+
+    // Check Outlook connection for current user
+    fromDiv.innerHTML = '<span style="color:var(--text-muted);">Checking...</span>';
+    statusDiv.style.display = 'none';
+    sendBtn.disabled = false;
+
+    try {
+        const meRes = await fetch('/api/me');
+        if (meRes.ok) {
+            const me = await meRes.json();
+            // Fetch user's outlook status
+            const uRes = await fetch('/admin/users');
+            if (uRes.ok) {
+                const users = await uRes.json();
+                const myUser = users.find(u => u.id === me.id);
+                if (myUser && myUser.is_outlook_active && myUser.outlook_email) {
+                    fromDiv.innerHTML = `<strong style="color:var(--primary);">✅ ${myUser.outlook_email}</strong>`;
+                    statusDiv.style.display = 'none';
+                    sendBtn.disabled = false;
+                } else {
+                    fromDiv.innerHTML = '<span style="color:#b93a20;">⚠️ Not connected</span>';
+                    statusDiv.style.display = 'block';
+                    sendBtn.disabled = true;
+                }
+            }
+        }
+    } catch(e) {
+        fromDiv.innerHTML = '<span style="color:var(--text-muted);">Unable to check</span>';
+    }
+
+    modal.style.display = 'flex';
+}
+
+async function sendEmailToCustomer() {
+    const to = document.getElementById('emailTo').value.trim();
+    const subject = document.getElementById('emailSubject').value.trim();
+    const rawBody = document.getElementById('emailBody').value.trim();
+    const sendBtn = document.getElementById('btnDoSendEmail');
+
+    if (!to || !subject || !rawBody) {
+        Swal.fire('Required Fields', 'Please fill in all required fields: To, Subject, and Message.', 'warning');
+        return;
+    }
+
+    // Convert plain newlines to HTML <br> for email body
+    const htmlBody = rawBody.replace(/\n/g, '<br>');
+
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span> Sending...';
+
+    try {
+        const res = await fetch('/crm/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject, body: htmlBody })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            document.getElementById('sendEmailModal').style.display = 'none';
+            Swal.fire({
+                title: '✅ Email Sent!',
+                html: `Your email to <b>${to}</b> has been sent successfully via Outlook.<br><small style="color:#6b7a8d;">The email will appear in your Outlook Sent folder.</small>`,
+                icon: 'success',
+                confirmButtonColor: '#1c3557'
+            });
+        } else {
+            const errMsg = data.error || 'Failed to send email.';
+            if (errMsg.toLowerCase().includes('not active') || errMsg.toLowerCase().includes('missing') || errMsg.toLowerCase().includes('not found')) {
+                Swal.fire('Outlook Not Connected', 'Your Outlook account is not linked. Please ask Admin to connect it from User Management.', 'warning');
+            } else {
+                Swal.fire('Send Failed', errMsg, 'error');
+            }
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Network error. Could not send email.', 'error');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Email';
+    }
+}
+</script>
 </body>
 </html>
+
+
+
