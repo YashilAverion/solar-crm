@@ -553,8 +553,22 @@ router.post('/calculate', requireAuth, async (req, res) => {
 
             if (batStcRow) {
                 batteryRatings = batStcRow.ratings || 0;
-                // Battery certificates are capacity-based and do not use SRES solar PV deeming period multiplication
-                const batteryStcQty = totalBatteryKwh * batteryRatings;
+                // Battery certificates are capacity-based and use a tapered slab system (effective 1 May 2026):
+                // - 0 to 14 kWh: 100% of STC factor
+                // - >14 to 28 kWh: 60% of STC factor
+                // - >28 to 50 kWh: 15% of STC factor
+                // - Above 50 kWh: 0% of STC factor (max 50 kWh usable capacity eligible)
+                // The final STC quantity is rounded down (floored) to the nearest integer.
+                const eligibleCapacity = Math.min(totalBatteryKwh, 50);
+                const slab1 = Math.min(eligibleCapacity, 14);
+                const slab2 = Math.max(0, Math.min(eligibleCapacity, 28) - 14);
+                const slab3 = Math.max(0, eligibleCapacity - 28);
+                
+                const rawStcQty = (slab1 * batteryRatings * 1.0) + 
+                                  (slab2 * batteryRatings * 0.6) + 
+                                  (slab3 * batteryRatings * 0.15);
+                                  
+                const batteryStcQty = Math.floor(rawStcQty);
                 batteryRebate = batteryStcQty * actualRate;
 
                 rebatesBreakdown.push({
