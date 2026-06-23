@@ -638,21 +638,22 @@ app.get('/api/master-leads', (req, res) => {
     };
 
     const todayStr = getSydneyDateStr(0);
-    const sevenDaysAgoStr = getSydneyDateStr(-7);
     const safeDate = (col) => `date(${col})`;
 
     const statsSql = `
         SELECT 
             COUNT(*) as total,
             SUM(CASE WHEN ${safeDate('lead_entered_date')} = date(?) THEN 1 ELSE 0 END) as today,
-            SUM(CASE WHEN assign_to IS NULL OR assign_to = '-' OR assign_to = '' THEN 1 ELSE 0 END) as unassigned,
-            SUM(CASE WHEN ${safeDate('lead_entered_date')} < date(?) THEN 1 ELSE 0 END) as overdue
+            SUM(CASE WHEN type_of_lead = 'PV' THEN 1 ELSE 0 END) as pv,
+            SUM(CASE WHEN type_of_lead = 'PV+Battery' THEN 1 ELSE 0 END) as pvBattery,
+            SUM(CASE WHEN type_of_lead = 'Battery' THEN 1 ELSE 0 END) as battery,
+            SUM(CASE WHEN type_of_lead = 'Service' THEN 1 ELSE 0 END) as service
         FROM leads 
         WHERE status != 'Deleted'
     `;
 
-    db.get(statsSql, [todayStr, sevenDaysAgoStr], (err, statsRow) => {
-        const stats = statsRow || { total: 0, today: 0, unassigned: 0, overdue: 0 };
+    db.get(statsSql, [todayStr], (err, statsRow) => {
+        const stats = statsRow || { total: 0, today: 0, pv: 0, pvBattery: 0, battery: 0, service: 0 };
 
         db.get(countQuery, params, (err, countRow) => {
             if (err) return res.status(500).json({ error: 'Database error.' });

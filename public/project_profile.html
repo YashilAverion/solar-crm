@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1493,8 +1493,10 @@ function toggleNav(event, element) {
                 const name = row.querySelector('.cp-name')?.value || '';
                 const code = row.querySelector('.cp-code')?.value || '';
                 const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                const size = parseFloat(row.querySelector('.cp-size')?.value) || 0;
+                const kw = parseFloat(row.querySelector('.cp-kw')?.value) || 0;
                 if (code && qty > 0) {
-                    products.push({ type, name, code, qty });
+                    products.push({ type, name, code, qty, size, kw });
                 }
             });
 

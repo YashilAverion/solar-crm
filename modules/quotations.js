@@ -131,10 +131,10 @@ router.post('/calculate', requireAuth, async (req, res) => {
                     });
 
                     if (dbProduct.product_category === 'Panel') {
-                        const capacityW = parseFloat(dbProduct.panels_capacity_w) || 0;
+                        const capacityW = parseFloat(item.size) || parseFloat(dbProduct.panels_capacity_w) || 0;
                         totalPanelKw += (capacityW * qty) / 1000;
                     } else if (dbProduct.product_category === 'Battery') {
-                        const capacityKwh = parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
+                        const capacityKwh = parseFloat(item.kw) || parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
                         totalBatteryKwh += capacityKwh * qty;
                     } else if (dbProduct.product_category === 'Inverter') {
                         const mpptCount = parseInt(dbProduct.inv_mppt) || 0;

@@ -54,14 +54,16 @@
         .profile-select-wrap select { border: none; background: transparent; font-weight: 600; color: var(--text-dark); font-size: 13px; outline: none; cursor: pointer; }
 
         /* ========== STATS ROW ========== */
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px 16px; flex-shrink: 0; }
+        .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 8px 16px; flex-shrink: 0; }
         .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
         .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); transition: all 0.2s; }
         .stat-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.08); transform: translateY(-1px); }
-        .stat-card:hover::before { background: var(--primary); }
-        .stat-card:nth-child(2):hover::before { background: #10b981; }
+        .stat-card:nth-child(1):hover::before { background: #3b82f6; }
+        .stat-card:nth-child(2):hover::before { background: #6366f1; }
         .stat-card:nth-child(3):hover::before { background: #f59e0b; }
-        .stat-card:nth-child(4):hover::before { background: #ef4444; }
+        .stat-card:nth-child(4):hover::before { background: #14b8a6; }
+        .stat-card:nth-child(5):hover::before { background: var(--primary); }
+        .stat-card:nth-child(6):hover::before { background: #10b981; }
         .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; letter-spacing: -0.5px; }
         .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
@@ -510,6 +512,26 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="stats-row">
+        <div class="stat-card" onclick="applyLeadTypeFilter('PV')" title="PV Leads">
+            <div class="stat-label">PV</div>
+            <div class="stat-val" id="statPV">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="applyLeadTypeFilter('PV+Battery')" title="PV + Battery Leads">
+            <div class="stat-label">PV + Battery</div>
+            <div class="stat-val" id="statPVBattery">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="applyLeadTypeFilter('Battery')" title="Battery Leads">
+            <div class="stat-label">Battery</div>
+            <div class="stat-val" id="statBattery">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
+        <div class="stat-card" onclick="applyLeadTypeFilter('Service')" title="Service Leads">
+            <div class="stat-label">Service</div>
+            <div class="stat-val" id="statService">0</div>
+            <div class="stat-sub">Click to filter</div>
+        </div>
         <div class="stat-card" onclick="applyAgeFilter('all')" title="Show All Leads">
             <div class="stat-label">Total Leads</div>
             <div class="stat-val" id="statTotal">0</div>
@@ -519,16 +541,6 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="stat-label">Today's New</div>
             <div class="stat-val" id="statToday">0</div>
             <div class="stat-sub">Click to filter</div>
-        </div>
-        <div class="stat-card" onclick="applyAgeFilter('unassigned')" title="Pending Assignment">
-            <div class="stat-label">Pending Assign</div>
-            <div class="stat-val" id="statUnassigned">0</div>
-            <div class="stat-sub">Click to filter</div>
-        </div>
-        <div class="stat-card" onclick="applyAgeFilter('overdue')" title="Overdue 7+ Days">
-            <div class="stat-label">Overdue 7+ Days</div>
-            <div class="stat-val" id="statOverdue">0</div>
-            <div class="stat-sub">Needs attention</div>
         </div>
     </div>
 
@@ -1227,8 +1239,10 @@ document.addEventListener("DOMContentLoaded", function() {
         const active=leads.filter(l=>l.status!=='Deleted');
         document.getElementById('statTotal').innerText=active.length;
         document.getElementById('statToday').innerText=active.filter(l=>isToday(l.lead_entered_date)).length;
-        document.getElementById('statUnassigned').innerText=active.filter(l=>!l.assign_to||l.assign_to==='-').length;
-        document.getElementById('statOverdue').innerText=active.filter(l=>{ const d=getAgeDays(l.lead_entered_date); return d!==null&&d>7; }).length;
+        document.getElementById('statPV').innerText=active.filter(l=>l.type_of_lead==='PV').length;
+        document.getElementById('statPVBattery').innerText=active.filter(l=>l.type_of_lead==='PV+Battery').length;
+        document.getElementById('statBattery').innerText=active.filter(l=>l.type_of_lead==='Battery').length;
+        document.getElementById('statService').innerText=active.filter(l=>l.type_of_lead==='Service').length;
     }
 
     function setFilterChip(chip) {
@@ -1237,7 +1251,26 @@ document.addEventListener("DOMContentLoaded", function() {
         currentPage=1; load();
     }
 
+    function applyLeadTypeFilter(type) {
+        // Reset active filter chip (All) to avoid conflicts
+        setFilterChip('all');
+        const advTypeEl = document.getElementById('adv_type');
+        if (advTypeEl) {
+            advTypeEl.value = type;
+        }
+        activeAdvFilters.type = type;
+        currentPage = 1;
+        load();
+    }
+
     function applyAgeFilter(type) {
+        // Clear lead type filter when applying age filters
+        const advTypeEl = document.getElementById('adv_type');
+        if (advTypeEl) {
+            advTypeEl.value = '';
+        }
+        delete activeAdvFilters.type;
+
         if (type==='today') setFilterChip('today');
         else if (type==='unassigned') setFilterChip('unassigned');
         else if (type==='overdue') setFilterChip('overdue');
@@ -1273,8 +1306,10 @@ document.addEventListener("DOMContentLoaded", function() {
             if (resObj.stats) {
                 document.getElementById('statTotal').innerText = resObj.stats.total || 0;
                 document.getElementById('statToday').innerText = resObj.stats.today || 0;
-                document.getElementById('statUnassigned').innerText = resObj.stats.unassigned || 0;
-                document.getElementById('statOverdue').innerText = resObj.stats.overdue || 0;
+                document.getElementById('statPV').innerText = resObj.stats.pv || 0;
+                document.getElementById('statPVBattery').innerText = resObj.stats.pvBattery || 0;
+                document.getElementById('statBattery').innerText = resObj.stats.battery || 0;
+                document.getElementById('statService').innerText = resObj.stats.service || 0;
             }
 
             selectedLeadIds.clear(); 
