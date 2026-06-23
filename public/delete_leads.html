@@ -866,6 +866,10 @@ document.addEventListener("DOMContentLoaded", function() {
         window.loggedInUser = user.full_name || user.username || 'System';
         window.loggedInRole = user.role || 'Standard';
         
+        currentUser.full_name = window.loggedInUser;
+        currentUser.role = window.loggedInRole;
+        loadDeleteLeads(currentTab);
+        
         const nameEl   = document.getElementById("sidebarName");
         const roleEl   = document.getElementById("sidebarRole");
         const avatarEl = document.getElementById("sidebarAvatar");
