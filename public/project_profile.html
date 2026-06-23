@@ -2686,6 +2686,10 @@ function toggleNav(event, element) {
             }
 
             input.addEventListener('input', function(e) {
+                if (e.isTrusted === false) {
+                    drop.style.display = 'none';
+                    return;
+                }
                 if (!checkPhaseBeforeProductSelect(e)) {
                     this.value = '';
                     return;
