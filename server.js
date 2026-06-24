@@ -2547,7 +2547,8 @@ app.post('/api/voipline/click-to-call', (req, res) => {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
                     'token': masterKey
-                }
+                },
+                httpsAgent: new (require('https')).Agent({ family: 4 })
             });
 
             console.log('[VoIPLine Click-To-Call] Integration v2 API response:', response.data);
@@ -2710,6 +2711,7 @@ app.post('/api/voipline/manual-dial', (req, res) => {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
                     'token': masterKey
                 },
+                httpsAgent: new (require('https')).Agent({ family: 4 }),
                 timeout: 10000
             });
             
