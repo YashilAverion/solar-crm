@@ -592,6 +592,39 @@ function requireLogin(req, res, next) {
 // ── APPLY AUTH MIDDLEWARE ──────────────────────────────────
 app.use(requireLogin);
 
+// ── GET USER/DEVICE CONFIGURATIONS (API) ──────────────────
+app.get('/api/configurations', (req, res) => {
+    const userId = req.session.user.id;
+    db.all("SELECT config_key, config_value FROM configurations WHERE user_id = ?", [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const configs = {};
+        (rows || []).forEach(row => {
+            configs[row.config_key] = row.config_value;
+        });
+        res.json(configs);
+    });
+});
+
+// ── SAVE USER/DEVICE CONFIGURATIONS (API) ─────────────────
+app.post('/api/configurations', (req, res) => {
+    const userId = req.session.user.id;
+    const { config_key, config_value } = req.body;
+    if (!config_key) {
+        return res.status(400).json({ error: 'config_key is required.' });
+    }
+    db.run(
+        `INSERT INTO configurations (user_id, config_key, config_value) 
+         VALUES (?, ?, ?) 
+         ON CONFLICT(user_id, config_key) 
+         DO UPDATE SET config_value = excluded.config_value, updated_at = CURRENT_TIMESTAMP`,
+        [userId, config_key, config_value],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
 // ── OVERRIDE ADMIN USERS ROUTES FOR ENCRYPTION ───────────────
 app.get('/admin/users', requireManager, (req, res) => {
     db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync FROM users", [], (err, rows) => {

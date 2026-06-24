@@ -995,6 +995,23 @@ db.serialize(() => {
     });
     db.run("CREATE INDEX IF NOT EXISTS idx_phonebook_user_id ON voip_phonebook (user_id)", () => {});
 
+    // ── CONFIGURATIONS TABLE (User and device preferences) ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS configurations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            config_key TEXT NOT NULL,
+            config_value TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, config_key)
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating configurations table:', err.message);
+        else console.log('[DB] configurations table ready.');
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_configurations_user_id ON configurations(user_id)", () => {});
+
 });
 
 module.exports = db;
