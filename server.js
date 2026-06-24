@@ -2541,14 +2541,12 @@ app.post('/api/voipline/click-to-call', (req, res) => {
             
             bodyBuffer += `--${boundary}--\r\n`;
 
-            const authHeaderVal = masterKey.startsWith('Bearer ') ? masterKey : `Bearer ${masterKey}`;
-
             console.log(`[VoIPLine Click-To-Call] Initiating call via integration v2 API: user_number ${extension} to ${normalizedNumber} using caller_id ${outboundLine || 'default'}`);
             
             const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                    'Authorization': authHeaderVal
+                    'token': masterKey
                 }
             });
 
@@ -2705,14 +2703,12 @@ app.post('/api/voipline/manual-dial', (req, res) => {
             }
             bodyBuffer += `--${boundary}--\r\n`;
 
-            const authHeaderVal = masterKey.startsWith('Bearer ') ? masterKey : `Bearer ${masterKey}`;
-            
             console.log(`[VoIPLine Manual Dial] Outbound call: user_number ${extension} -> ${normalizedNumber}`);
             
             const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                    'Authorization': authHeaderVal
+                    'token': masterKey
                 },
                 timeout: 10000
             });
