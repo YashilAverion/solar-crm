@@ -2510,32 +2510,42 @@ app.post('/api/voipline/click-to-call', (req, res) => {
             return res.status(400).json({ error: 'No VoIPLine extension is configured or provided for calling.' });
         }
 
+        // 1. Number Format Normalization
+        let normalizedNumber = String(phoneNumber).replace(/\s+/g, '');
+        if (normalizedNumber.startsWith('0')) {
+            normalizedNumber = normalizedNumber.substring(1);
+        }
+        if (!normalizedNumber.startsWith('61') && !normalizedNumber.startsWith('+61')) {
+            normalizedNumber = '61' + normalizedNumber;
+        }
+        normalizedNumber = normalizedNumber.replace('+', '');
+
         try {
             // Build manual boundary multipart/form-data request to remain completely version-independent
             const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2, 15)}`;
             let bodyBuffer = '';
             
-            // user field (extension)
+            // user_number field
             bodyBuffer += `--${boundary}\r\n`;
-            bodyBuffer += `Content-Disposition: form-data; name="user"\r\n\r\n${extension}\r\n`;
+            bodyBuffer += `Content-Disposition: form-data; name="user_number"\r\n\r\n${extension}\r\n`;
             
-            // number field
+            // number_to_call field
             bodyBuffer += `--${boundary}\r\n`;
-            bodyBuffer += `Content-Disposition: form-data; name="number"\r\n\r\n${phoneNumber}\r\n`;
+            bodyBuffer += `Content-Disposition: form-data; name="number_to_call"\r\n\r\n${normalizedNumber}\r\n`;
             
-            // line field
+            // caller_id field
             if (outboundLine && outboundLine.trim() !== '') {
                 bodyBuffer += `--${boundary}\r\n`;
-                bodyBuffer += `Content-Disposition: form-data; name="line"\r\n\r\n${outboundLine.trim()}\r\n`;
+                bodyBuffer += `Content-Disposition: form-data; name="caller_id"\r\n\r\n${outboundLine.trim()}\r\n`;
             }
             
             bodyBuffer += `--${boundary}--\r\n`;
 
             const authHeaderVal = masterKey.startsWith('Bearer ') ? masterKey : `Bearer ${masterKey}`;
 
-            console.log(`[VoIPLine Click-To-Call] Initiating call via integration v2 API: extension ${extension} to ${phoneNumber} using line ${outboundLine || 'default'}`);
+            console.log(`[VoIPLine Click-To-Call] Initiating call via integration v2 API: user_number ${extension} to ${normalizedNumber} using caller_id ${outboundLine || 'default'}`);
             
-            const response = await axios.post('https://api.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
+            const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
                     'Authorization': authHeaderVal
@@ -2545,7 +2555,7 @@ app.post('/api/voipline/click-to-call', (req, res) => {
             console.log('[VoIPLine Click-To-Call] Integration v2 API response:', response.data);
             return res.json({ success: true, data: response.data });
         } catch (error) {
-            console.error('[VoIPLine Click-To-Call] API error:', error.response ? error.response.data : error.message);
+            console.error('[VoIPLine Click-To-Call] API error response data:', error.response ? error.response.data : error.message);
             return res.status(500).json({ 
                 error: 'Failed to place call via VoIPLine Telecom integration v2 API', 
                 details: error.response ? error.response.data : error.message 
@@ -2675,21 +2685,31 @@ app.post('/api/voipline/manual-dial', (req, res) => {
         const outboundLine = userRow.voipline_outbound_line;
         const masterKey = decrypt(userRow.voipline_master_key) || 'xCRAei2xvzl64n4WzeTlfsNFJlnVXNJDasHeYmK6CMtBTxNFkqJXnPYDNATGP6M2';
 
+        // 1. Number Format Normalization
+        let normalizedNumber = String(phoneNumber).replace(/\s+/g, '');
+        if (normalizedNumber.startsWith('0')) {
+            normalizedNumber = normalizedNumber.substring(1);
+        }
+        if (!normalizedNumber.startsWith('61') && !normalizedNumber.startsWith('+61')) {
+            normalizedNumber = '61' + normalizedNumber;
+        }
+        normalizedNumber = normalizedNumber.replace('+', '');
+
         try {
             const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2, 15)}`;
             let bodyBuffer = '';
-            bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="user"\r\n\r\n${extension}\r\n`;
-            bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="number"\r\n\r\n${phoneNumber}\r\n`;
+            bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="user_number"\r\n\r\n${extension}\r\n`;
+            bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="number_to_call"\r\n\r\n${normalizedNumber}\r\n`;
             if (outboundLine) {
-                bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="line"\r\n\r\n${outboundLine.trim()}\r\n`;
+                bodyBuffer += `--${boundary}\r\nContent-Disposition: form-data; name="caller_id"\r\n\r\n${outboundLine.trim()}\r\n`;
             }
             bodyBuffer += `--${boundary}--\r\n`;
 
             const authHeaderVal = masterKey.startsWith('Bearer ') ? masterKey : `Bearer ${masterKey}`;
             
-            console.log(`[VoIPLine Manual Dial] Outbound call: extension ${extension} -> ${phoneNumber}`);
+            console.log(`[VoIPLine Manual Dial] Outbound call: user_number ${extension} -> ${normalizedNumber}`);
             
-            const response = await axios.post('https://api.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
+            const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
                     'Authorization': authHeaderVal
@@ -2699,7 +2719,7 @@ app.post('/api/voipline/manual-dial', (req, res) => {
             
             db.run(
                 "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, 'outgoing', 0, '', '')",
-                [req.session.user.id, phoneNumber, ''],
+                [req.session.user.id, normalizedNumber, ''],
                 function() {
                     const io = req.app.get('io');
                     if (io) {
@@ -2710,10 +2730,10 @@ app.post('/api/voipline/manual-dial', (req, res) => {
 
             return res.json({ success: true, data: response.data });
         } catch (error) {
-            console.error('[VoIPLine Manual Dial] API error:', error.message);
+            console.error('[VoIPLine Manual Dial] API error response data:', error.response ? error.response.data : error.message);
             db.run(
                 "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, 'outgoing', 15, '', 'Simulated manual dial connection')",
-                [req.session.user.id, phoneNumber, ''],
+                [req.session.user.id, normalizedNumber, ''],
                 function() {
                     const io = req.app.get('io');
                     if (io) {
