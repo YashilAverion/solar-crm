@@ -1359,7 +1359,7 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
                 <td>${l.created_date || '-'}</td>
                 <td>${projHtml}</td>
                 <td><a href="javascript:void(0)" onclick="showProjectSnapshot(${l.id})" style="color:var(--primary); font-weight:700; text-decoration:none; border-bottom:1px dashed var(--primary);" title="Click for Quick Preview">${fullName || '-'}</a></td>
-                <td>${l.phone_number || '-'}</td>
+                <td>${l.phone_number ? `<div style="display:flex; align-items:center; justify-content:center; gap:4px;"><span>${l.phone_number}</span><button type="button" style="width: 20px; height: 20px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${l.phone_number.replace(/'/g, "\\\\'")}')" title="Call Customer">📞</button></div>` : '-'}</td>
                 <td>${l.email_id_1 || '-'}</td>
                 <td>${mergedAddr || '-'}</td>
                 <td>${l.suburb || '-'} ${l.state || ''}</td>
@@ -1628,7 +1628,7 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
                     <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--text-dark); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: flex; align-items: center; gap: 4px;">📋 Copy</button>
                     
                     <div style="margin-bottom: 8px; padding-right: 60px;"><b>👤 Customer:</b> ${customerName}</div>
-                    <div style="margin-bottom: 8px;"><b>📞 Phone:</b> ${p.phone_number || '-'}</div>
+                    <div style="margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><b>📞 Phone:</b> <span>${p.phone_number || '-'}</span>${p.phone_number ? `<button type="button" style="width: 20px; height: 20px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${p.phone_number.replace(/'/g, "\\\\'")}')" title="Call Phone">📞</button>` : ''}</div>
                     <div style="margin-bottom: 8px;"><b>✉️ Email:</b> ${p.email_id_1 || '-'}</div>
                     <div style="margin-bottom: 8px;"><b>📍 Address:</b> ${addressText}</div>
                     <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">

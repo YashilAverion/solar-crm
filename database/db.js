@@ -98,7 +98,15 @@ db.serialize(() => {
             outlook_email TEXT,
             outlook_access_token TEXT,
             outlook_refresh_token TEXT,
-            is_outlook_active INTEGER DEFAULT 0
+            is_outlook_active INTEGER DEFAULT 0,
+            voipline_extension TEXT,
+            voipline_api_key TEXT,
+            voipline_outbound_line TEXT,
+            voipline_secret_token TEXT,
+            voipline_master_key TEXT,
+            last_call_sync_timestamp TEXT,
+            voipline_sync_status TEXT DEFAULT 'Offline',
+            voipline_last_sync TEXT
         )
     `);
 
@@ -441,6 +449,14 @@ db.serialize(() => {
         "ALTER TABLE users ADD COLUMN outlook_access_token TEXT",
         "ALTER TABLE users ADD COLUMN outlook_refresh_token TEXT",
         "ALTER TABLE users ADD COLUMN is_outlook_active INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN voipline_extension TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_api_key TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_outbound_line TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_secret_token TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_master_key TEXT",
+        "ALTER TABLE users ADD COLUMN last_call_sync_timestamp TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_sync_status TEXT DEFAULT 'Offline'",
+        "ALTER TABLE users ADD COLUMN voipline_last_sync TEXT",
         "ALTER TABLE products ADD COLUMN datasheet TEXT",
         "ALTER TABLE products ADD COLUMN installation_manual TEXT",
         "ALTER TABLE products ADD COLUMN wifi_manual TEXT",
@@ -455,6 +471,12 @@ db.serialize(() => {
     alterStatements.forEach(sql => {
         db.run(sql, () => { /* Silently fail if column already exists */ });
     });
+
+    // 13b. Optimizing Indexes for fast searches when incoming payloads hit the server
+    db.run("CREATE INDEX IF NOT EXISTS idx_leads_phone_number ON leads(phone_number)");
+    db.run("CREATE INDEX IF NOT EXISTS idx_leads_phone_number_2 ON leads(phone_number_2)");
+    db.run("CREATE INDEX IF NOT EXISTS idx_leads_landline_number ON leads(landline_number)");
+    db.run("CREATE INDEX IF NOT EXISTS idx_users_voipline_extension ON users(voipline_extension)");
 
     // 14. Granular Field Permissions Matrix Table
     db.run(`
@@ -884,6 +906,95 @@ db.serialize(() => {
             was_blocked INTEGER DEFAULT 0
         )
     `);
+
+    // Apply migrations for users VoIP columns
+    db.run("ALTER TABLE users ADD COLUMN voipline_extension TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_api_key TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_outbound_line TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_secret_token TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_master_key TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN last_call_sync_timestamp TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_sync_status TEXT DEFAULT 'Offline'", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_last_sync TEXT", () => {});
+
+    // Create call_logs table for VoIP recording and transcripts
+    db.run(`
+        CREATE TABLE IF NOT EXISTS call_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            caller_number TEXT,
+            project_number TEXT,
+            direction TEXT,
+            duration INTEGER,
+            recording_url TEXT,
+            transcript_text TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `);
+
+    db.run("CREATE INDEX IF NOT EXISTS idx_call_logs_project_number ON call_logs (project_number)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_call_logs_user_id ON call_logs (user_id)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_call_logs_caller_number ON call_logs (caller_number)", () => {});
+
+    // Create sms_logs table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS sms_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            party_number TEXT,
+            message_body TEXT,
+            direction TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `);
+
+    // Create voicemails table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS voicemails (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            caller_number TEXT,
+            audio_url TEXT,
+            status TEXT DEFAULT 'unread',
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `);
+
+    db.run("CREATE INDEX IF NOT EXISTS idx_sms_logs_party_number ON sms_logs (party_number)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_sms_logs_user_id ON sms_logs (user_id)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_voicemails_caller_number ON voicemails (caller_number)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_voicemails_user_id ON voicemails (user_id)", () => {});
+
+    // Defensive migrations for DTMF and transfer tracking on call_logs
+    db.run("ALTER TABLE call_logs ADD COLUMN dtmf_sequence TEXT DEFAULT ''", () => {});
+    db.run("ALTER TABLE call_logs ADD COLUMN transferred_to_extension TEXT DEFAULT ''", () => {});
+
+    // Defensive migrations for in-call state tracking
+    // call_state: 'Idle' | 'Ringing' | 'Active' | 'On-Hold'
+    // muted_state: 0 = unmuted, 1 = muted
+    // transferred_to_user_id: FK ref to users.id
+    db.run("ALTER TABLE call_logs ADD COLUMN call_state TEXT DEFAULT 'Idle'", () => {});
+    db.run("ALTER TABLE call_logs ADD COLUMN muted_state INTEGER DEFAULT 0", () => {});
+    db.run("ALTER TABLE call_logs ADD COLUMN transferred_to_user_id INTEGER DEFAULT NULL", () => {});
+
+    // ── PHONEBOOK TABLE (Dialer saved contacts) ──────────────
+    db.run(`
+        CREATE TABLE IF NOT EXISTS voip_phonebook (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            name        TEXT NOT NULL,
+            number      TEXT NOT NULL,
+            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating voip_phonebook table:', err.message);
+        else console.log('[DB] voip_phonebook table ready.');
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_phonebook_user_id ON voip_phonebook (user_id)", () => {});
+
 });
 
 module.exports = db;

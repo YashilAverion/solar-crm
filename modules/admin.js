@@ -6,7 +6,7 @@ const { requireManager, isStrongPassword, getPasswordStrengthMessage } = require
 
 // ── GET ALL USERS ─────────────────────────────────────────────
 router.get('/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, last_call_sync_timestamp FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -48,7 +48,7 @@ router.get('/users/:id/permissions', requireManager, (req, res) => {
 // ── CREATE USER ───────────────────────────────────────────────
 router.post('/users', requireManager, async (req, res) => {
     try {
-        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions } = req.body;
+        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
 
         if (!username || username.trim().length < 3) {
             return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
@@ -78,8 +78,8 @@ router.post('/users', requireManager, async (req, res) => {
 
         const permsJson = (custom_permissions && Object.keys(custom_permissions).length > 0) ? JSON.stringify(custom_permissions) : null;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json) VALUES (?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || ''], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
         });
@@ -92,7 +92,7 @@ router.post('/users', requireManager, async (req, res) => {
 // ── UPDATE USER ───────────────────────────────────────────────
 router.put('/users/:id', requireManager, async (req, res) => {
     try {
-        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions } = req.body;
+        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
         const id = req.params.id;
 
         if (!username || username.trim().length < 3) {
@@ -114,14 +114,14 @@ router.put('/users/:id', requireManager, async (req, res) => {
                 return res.status(400).json({ error: getPasswordStrengthMessage() });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true });
             });
         } else {
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, custom_permissions_json=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, permsJson, id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, permsJson, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true });
             });

@@ -415,6 +415,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')">👤 User Accounts List</button>
             <button class="tab-chip" id="tab-permissions-grid" onclick="switchAdminSection('permissions-grid')">🔐 Role Permission Control Center</button>
             <button class="tab-chip" id="tab-rate-limits" onclick="switchAdminSection('rate-limits')">🔒 Login Security & Rate Limits</button>
+            <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')">📞 VoIP Analytics & Recordings</button>
         </div>
 
         <div id="section-permissions-grid" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -509,6 +510,55 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
 
+        <div id="section-voip-analytics" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
+            <!-- Metrics Cards Panel -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; flex-shrink: 0;">
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Calls Logged</span>
+                    <span id="voip-metric-total" style="font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 4px;">0</span>
+                </div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Incoming Calls</span>
+                    <span id="voip-metric-incoming" style="font-size: 20px; font-weight: 800; color: #15803d; margin-top: 4px;">0</span>
+                </div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Outgoing Calls</span>
+                    <span id="voip-metric-outgoing" style="font-size: 20px; font-weight: 800; color: #1d4ed8; margin-top: 4px;">0</span>
+                </div>
+                <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="font-size: 11px; font-weight: 700; color: #9a3412; text-transform: uppercase;">Avg Call Duration</span>
+                    <span id="voip-metric-duration" style="font-size: 20px; font-weight: 800; color: #c2410c; margin-top: 4px;">0s</span>
+                </div>
+            </div>
+
+            <!-- Call Log Table Wrapper -->
+            <div style="flex: 1; min-height: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding: 10px 16px; background: #fafafa;">
+                    <h3 style="font-size:13px; font-weight:700; color:var(--text-dark); margin:0;">📞 VoIP Call Logs & Transcripts Database</h3>
+                    <button type="button" onclick="loadVoipAnalytics()" class="act-btn" style="width:auto; height:24px; padding:0 10px; font-size:11px; margin:0;" title="Refresh call logs">🔄 Refresh Logs</button>
+                </div>
+                
+                <div style="flex: 1; overflow-y: auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <thead>
+                            <tr style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:left;">Timestamp</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:left;">CRM User</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:left;">Caller / Destination</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:center;">Direction</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:center;">Duration</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:center;">Audio Recording</th>
+                                <th style="padding:10px 14px; border-bottom:2px solid var(--border); text-align:center;">AI Transcript</th>
+                            </tr>
+                        </thead>
+                        <tbody id="voipLogsBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="section-users-list" style="display:flex; flex: 1; overflow: hidden; flex-direction: column;">
             <div class="table-wrap">
                 <table>
@@ -558,70 +608,105 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <!-- User Add/Edit Modal -->
 <div id="userModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 950px; width: 95vw; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden; padding: 20px 24px 16px;">
         <button class="modal-close" type="button" onclick="document.getElementById('userModal').style.display='none'">✕</button>
-        <div class="modal-title" id="userModalTitle">Add New User</div>
-        <form id="userForm" onsubmit="saveUser(event)">
+        <div class="modal-title" id="userModalTitle" style="margin-bottom: 12px; padding-bottom: 8px;">Add New User</div>
+        <form id="userForm" onsubmit="saveUser(event)" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
             <input type="hidden" id="edit_user_id" value="">
-            <div class="form-grid">
-                <div class="field full-width"><label class="required">Full Name</label><input type="text" id="u_full_name" required></div>
-                <div class="field"><label class="required">Username</label><input type="text" id="u_username" required></div>
-                <div class="field"><label class="required">Email Address</label><input type="email" id="u_email" placeholder="user@example.com" required></div>
-                <div class="field">
-                    <label class="required" id="u_pass_label">Password</label>
-                    <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
-                        <input type="password" id="u_password" class="form-control" placeholder="***" style="width: 100%; padding-right: 38px !important;">
-                        <button type="button" id="passwordToggleBtn" style="position: absolute; right: 12px; background: none; border: none; padding: 0; cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center; outline: none;" onclick="togglePasswordDisplay()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
+            
+            <div style="display: flex; gap: 24px; align-items: stretch; width: 100%; flex: 1; overflow: hidden;">
+                <!-- LEFT COLUMN: Account Settings -->
+                <div style="flex: 1.2; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 4px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-bottom: 4px;">Account Settings</div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="field" style="grid-column: span 2;"><label class="required">Full Name</label><input type="text" id="u_full_name" required></div>
+                        <div class="field"><label class="required">Username</label><input type="text" id="u_username" required></div>
+                        <div class="field"><label class="required">Email Address</label><input type="email" id="u_email" placeholder="user@example.com" required></div>
+                        <div class="field">
+                            <label class="required" id="u_pass_label">Password</label>
+                            <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
+                                <input type="password" id="u_password" class="form-control" placeholder="***" style="width: 100%; padding-right: 38px !important;">
+                                <button type="button" id="passwordToggleBtn" style="position: absolute; right: 12px; background: none; border: none; padding: 0; cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center; outline: none;" onclick="togglePasswordDisplay()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
+                            <div id="password-strength-meter" style="margin-top: 6px; display: none;">
+                                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;"><div id="strength-bar" style="width: 0%; height: 100%; background: #ef4444; transition: width 0.3s, background-color 0.3s;"></div></div>
+                                <span id="strength-text" style="font-size: 11px; font-weight: 600; margin-top: 4px; display: block; text-align: right;"></span>
+                            </div>
+                        </div>
+                        <div class="field"><label class="required">Role</label>
+                            <select id="u_role" required>
+                                <option value="">Select Role</option>
+                                <option value="Admin">Admin</option>
+                                <optgroup label="Manager">
+                                    <option value="Sales Manager">Sales Manager</option>
+                                    <option value="Procurement Manager">Procurement Manager</option>
+                                    <option value="Accounts Manager">Accounts Manager</option>
+                                    <option value="Installation Manager">Installation Manager</option>
+                                    <option value="Admin Manager">Admin Manager</option>
+                                    <option value="Service Manager">Service Manager</option>
+                                </optgroup>
+                                <optgroup label="Team Leader">
+                                    <option value="Sales Team Leader">Sales Team Leader</option>
+                                    <option value="Procurement Team Leader">Procurement Team Leader</option>
+                                    <option value="Accounts Team Leader">Accounts Team Leader</option>
+                                    <option value="Installation Team Leader">Installation Team Leader</option>
+                                    <option value="Admin Team Leader">Admin Team Leader</option>
+                                    <option value="Service Team Leader">Service Team Leader</option>
+                                </optgroup>
+                                <optgroup label="Executive">
+                                    <option value="Sales Executive">Sales Executive</option>
+                                    <option value="Procurement Executive">Procurement Executive</option>
+                                    <option value="Account Executive">Account Executive</option>
+                                    <option value="Installation Executive">Installation Executive</option>
+                                    <option value="Admin Executive">Admin Executive</option>
+                                    <option value="Service Executive">Service Executive</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="field"><label>Status</label><select id="u_status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+                        <div class="field"><label>Can Edit</label><select id="u_can_edit"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                        <div class="field" style="grid-column: span 2;"><label>Can Delete</label><select id="u_can_delete"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                     </div>
-                    <div id="password-strength-meter" style="margin-top: 6px; display: none;">
-                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;"><div id="strength-bar" style="width: 0%; height: 100%; background: #ef4444; transition: width 0.3s, background-color 0.3s;"></div></div>
-                        <span id="strength-text" style="font-size: 11px; font-weight: 600; margin-top: 4px; display: block; text-align: right;"></span>
+                </div>
+                
+                <!-- VERTICAL DIVIDER -->
+                <div style="width: 1px; background: #cbd5e1; align-self: stretch; margin: 0 4px;"></div>
+                
+                <!-- RIGHT COLUMN: VoIP Configuration & Module Access Preview -->
+                <div style="flex: 1.1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 4px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>VoIP Configuration</span>
+                        <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">🔑 Inject Credentials</button>
+                    </div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px;">
+                        <div class="field"><label>VoIP Extension</label><input type="text" id="u_voipline_extension" placeholder="e.g. 101"></div>
+                        <div class="field"><label>Outbound Line ID</label><input type="text" id="u_voipline_outbound_line" placeholder="e.g. line_1234"></div>
+                        <div class="field"><label>Webhook Secret Token</label><input type="text" id="u_voipline_secret_token" placeholder="Webhook token"></div>
+                        <div class="field"><label>VoIP API Key</label><input type="text" id="u_voipline_api_key" placeholder="API Key if custom"></div>
+                        <div class="field" style="grid-column: span 2;"><label>VoIP Master API Key</label><input type="text" id="u_voipline_master_key" placeholder="VoIPLine Master Key"></div>
+                        <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px;">
+                            <label style="margin: 0; font-weight: 600;">Sync Status:</label>
+                            <span id="voipline_sync_status" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span>
+                                Offline
+                            </span>
+                            <span id="voipline_last_sync_time" style="font-size: 11px; color: var(--text-muted); margin-left: auto;">Last Sync: Never</span>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Module Access Preview</span>
+                        <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">🔄 Restore Defaults</button>
+                    </div>
+                    <div id="roleAccessPreview" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; max-height: 190px; overflow-y: auto; font-size: 12px; color: var(--text-muted); box-sizing: border-box; width: 100%; flex: 1;">
+                        Select a role to see granted permissions.
                     </div>
                 </div>
-                <div class="field"><label class="required">Role</label>
-                    <select id="u_role" required>
-                        <option value="">Select Role</option>
-                        <option value="Admin">Admin</option>
-                        <optgroup label="Manager">
-                            <option value="Sales Manager">Sales Manager</option>
-                            <option value="Procurement Manager">Procurement Manager</option>
-                            <option value="Accounts Manager">Accounts Manager</option>
-                            <option value="Installation Manager">Installation Manager</option>
-                            <option value="Admin Manager">Admin Manager</option>
-                            <option value="Service Manager">Service Manager</option>
-                        </optgroup>
-                        <optgroup label="Team Leader">
-                            <option value="Sales Team Leader">Sales Team Leader</option>
-                            <option value="Procurement Team Leader">Procurement Team Leader</option>
-                            <option value="Accounts Team Leader">Accounts Team Leader</option>
-                            <option value="Installation Team Leader">Installation Team Leader</option>
-                            <option value="Admin Team Leader">Admin Team Leader</option>
-                            <option value="Service Team Leader">Service Team Leader</option>
-                        </optgroup>
-                        <optgroup label="Executive">
-                            <option value="Sales Executive">Sales Executive</option>
-                            <option value="Procurement Executive">Procurement Executive</option>
-                            <option value="Account Executive">Account Executive</option>
-                            <option value="Installation Executive">Installation Executive</option>
-                            <option value="Admin Executive">Admin Executive</option>
-                            <option value="Service Executive">Service Executive</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="field"><label>Status</label><select id="u_status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
-                <div class="field"><label>Can Edit</label><select id="u_can_edit"><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                <div class="field"><label>Can Delete</label><select id="u_can_delete"><option value="No">No</option><option value="Yes">Yes</option></select></div>
             </div>
-                <div class="section-divider" style="margin-top: 16px; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 6px; justify-content: space-between;">
-                    <span>Module Access Preview</span>
-                    <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 24px; font-size: 11px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc;" onclick="resetToRoleDefaults()">🔄 Restore Role Defaults</button>
-                </div>
-                <div id="roleAccessPreview" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-top: 8px; max-height: 160px; overflow-y: auto; font-size: 12px; color: var(--text-muted); box-sizing: border-box; width: 100%;">
-                Select a role to see granted permissions.
-            </div>
-            <div class="form-footer">
+            
+            <div class="form-footer" style="margin-top: 12px; padding-top: 8px;">
                 <button type="submit" class="btn-save" id="saveUserBtn">Save User</button>
             </div>
         </form>
@@ -689,13 +774,17 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-users-list').style.display = target === 'users-list' ? 'flex' : 'none';
         document.getElementById('section-permissions-grid').style.display = target === 'permissions-grid' ? 'flex' : 'none';
         document.getElementById('section-rate-limits').style.display = target === 'rate-limits' ? 'flex' : 'none';
+        document.getElementById('section-voip-analytics').style.display = target === 'voip-analytics' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-permissions-grid').classList.toggle('active-chip', target === 'permissions-grid');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
+        document.getElementById('tab-voip-analytics').classList.toggle('active-chip', target === 'voip-analytics');
         
         if (target === 'rate-limits') {
             loadRateLimits();
+        } else if (target === 'voip-analytics') {
+            loadVoipAnalytics();
         }
     }
 
@@ -1019,6 +1108,16 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_pass_label').classList.add('required');
         document.getElementById('roleAccessPreview').innerHTML = 'Select a role to see granted permissions.';
         
+        const statusEl = document.getElementById('voipline_sync_status');
+        const lastSyncEl = document.getElementById('voipline_last_sync_time');
+        if (statusEl) {
+            statusEl.style.background = '#fee2e2';
+            statusEl.style.color = '#ef4444';
+            statusEl.style.borderColor = '#fecaca';
+            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
+            lastSyncEl.innerText = 'Last Sync: Never';
+        }
+        
         document.getElementById('userModal').style.display = 'flex';
     }
 
@@ -1038,7 +1137,25 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_can_edit').value = u.can_edit || 'No';
         document.getElementById('u_can_delete').value = u.can_delete || 'No';
         document.getElementById('u_status').value = u.status || 'Active';
+        document.getElementById('u_voipline_extension').value = u.voipline_extension || '';
+        document.getElementById('u_voipline_outbound_line').value = u.voipline_outbound_line || '';
+        document.getElementById('u_voipline_secret_token').value = u.voipline_secret_token || '';
+        document.getElementById('u_voipline_api_key').value = u.voipline_api_key || '';
+        document.getElementById('u_voipline_master_key').value = u.voipline_master_key || '';
         document.getElementById('u_password').value = ''; // SECURITY FIX: Never show hashed password
+        
+        const statusEl = document.getElementById('voipline_sync_status');
+        const lastSyncEl = document.getElementById('voipline_last_sync_time');
+        if (statusEl) {
+            const syncStatus = u.voipline_sync_status || 'Offline';
+            const lastSync = u.voipline_last_sync ? new Date(u.voipline_last_sync).toLocaleString() : 'Never';
+            
+            statusEl.style.background = syncStatus === 'Online' ? '#dcfce7' : '#fee2e2';
+            statusEl.style.color = syncStatus === 'Online' ? '#15803d' : '#ef4444';
+            statusEl.style.borderColor = syncStatus === 'Online' ? '#bbf7d0' : '#fecaca';
+            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${syncStatus === 'Online' ? '#22c55e' : '#ef4444'};" id="voipline_status_dot"></span> ${syncStatus === 'Online' ? 'Active (Online)' : 'Offline'}`;
+            lastSyncEl.innerText = syncStatus === 'Online' ? `Last Sync: ${lastSync}` : 'Last Sync: Never';
+        }
         
         // Form Security: Blank out password on edit, remove strict requirement
         document.getElementById('u_password').required = false;
@@ -1155,6 +1272,11 @@ document.addEventListener("DOMContentLoaded", function() {
             can_edit: document.getElementById('u_can_edit').value,
             can_delete: document.getElementById('u_can_delete').value,
             status: document.getElementById('u_status').value,
+            voipline_extension: document.getElementById('u_voipline_extension').value.trim(),
+            voipline_outbound_line: document.getElementById('u_voipline_outbound_line').value.trim(),
+            voipline_secret_token: document.getElementById('u_voipline_secret_token').value.trim(),
+            voipline_api_key: document.getElementById('u_voipline_api_key').value.trim(),
+            voipline_master_key: document.getElementById('u_voipline_master_key').value.trim(),
             custom_permissions: customPerms
         };
 
@@ -1518,12 +1640,159 @@ Initializing deployment stream...
         });
     }
 
+    function injectDefaultVoipCredentials() {
+        document.getElementById('u_voipline_master_key').value = 'xCRAei2xvzl64n4WzeTlfsNFJlnVXNJDasHeYmK6CMtBTxNFkqJXnPYDNATGP6M2';
+        
+        // Generate a secure 16-character random hex string for webhook secret token
+        const chars = '0123456789abcdef';
+        let token = '';
+        for (let i = 0; i < 16; i++) {
+            token += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('u_voipline_secret_token').value = token;
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Credentials Injected',
+            text: 'VoIPLine Master Key and a new Webhook Secret Token have been injected successfully.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    async function checkVoIPLineStatus() {
+        try {
+            const res = await fetch('/api/voipline/status');
+            if (res.ok) {
+                const data = await res.json();
+                const statusEl = document.getElementById('voipline_sync_status');
+                const lastSyncEl = document.getElementById('voipline_last_sync_time');
+                if (!statusEl) return;
+                
+                if (data.online) {
+                    statusEl.style.background = '#dcfce7';
+                    statusEl.style.color = '#15803d';
+                    statusEl.style.borderColor = '#bbf7d0';
+                    statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #22c55e;" id="voipline_status_dot"></span> Active (Online)`;
+                    lastSyncEl.innerText = data.lastSync ? `Last Sync: ${new Date(data.lastSync).toLocaleTimeString()}` : 'Last Sync: Just now';
+                } else {
+                    statusEl.style.background = '#fee2e2';
+                    statusEl.style.color = '#b91c1c';
+                    statusEl.style.borderColor = '#fecaca';
+                    statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
+                    lastSyncEl.innerText = 'Last Sync: Never';
+                }
+            }
+        } catch (e) {
+            console.error('Failed to check VoIPLine sync status:', e);
+        }
+    }
+
     window.onload = () => { 
         loadUsers(); 
         fetchLastBackup(); 
         loadPermissions(); 
+        checkVoIPLineStatus();
+        setInterval(checkVoIPLineStatus, 10000);
         const pwdInput = document.getElementById('u_password');
         if (pwdInput) pwdInput.addEventListener('input', updatePasswordStrength);
+
+        // Auto-refresh VoIP Analytics dashboard on real-time log event
+        if (window.voipSocket) {
+            window.voipSocket.on('voipline-call-log-added', () => {
+                const currentTab = document.querySelector('.tab-chip.active-chip');
+                if (currentTab && currentTab.id === 'tab-voip-analytics') {
+                    loadVoipAnalytics();
+                }
+            });
+        }
+    };
+
+    async function loadVoipAnalytics() {
+        const totalEl = document.getElementById('voip-metric-total');
+        const incomingEl = document.getElementById('voip-metric-incoming');
+        const outgoingEl = document.getElementById('voip-metric-outgoing');
+        const durationEl = document.getElementById('voip-metric-duration');
+        const logsBody = document.getElementById('voipLogsBody');
+        
+        if (!logsBody) return;
+        
+        logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:var(--text-muted);">Loading VoIP Call Logs...</td></tr>';
+        
+        try {
+            const res = await fetch('/admin/voip/logs');
+            if (res.ok) {
+                const data = await res.json();
+                
+                // Set metrics
+                totalEl.innerText = data.metrics.total;
+                incomingEl.innerText = data.metrics.incoming;
+                outgoingEl.innerText = data.metrics.outgoing;
+                
+                // Format duration
+                const d = data.metrics.avgDuration;
+                if (d >= 60) {
+                    durationEl.innerText = `${Math.floor(d / 60)}m ${d % 60}s`;
+                } else {
+                    durationEl.innerText = `${d}s`;
+                }
+                
+                // Render logs list
+                if (!data.logs || data.logs.length === 0) {
+                    logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:var(--text-muted);">No calls logged yet.</td></tr>';
+                } else {
+                    logsBody.innerHTML = data.logs.map(log => {
+                        const date = new Date(log.timestamp);
+                        const dateStr = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
+                        const userStr = log.full_name ? `${log.full_name} (${log.username})` : 'System / Unmapped';
+                        const projectLink = log.project_number ? `<a href="/project_profile.html?project=${encodeURIComponent(log.project_number)}" style="color:var(--primary); font-weight:600;">${log.project_number}</a>` : '<span style="color:#94a3b8;">Unlinked</span>';
+                        
+                        const directionBadge = log.direction === 'incoming' 
+                            ? `<span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">INCOMING</span>`
+                            : `<span style="background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">OUTGOING</span>`;
+                        
+                        const durationStr = log.duration >= 60 
+                            ? `${Math.floor(log.duration / 60)}m ${log.duration % 60}s`
+                            : `${log.duration}s`;
+                        
+                        const audioPlayer = log.recording_url 
+                            ? `<audio src="${log.recording_url}" controls style="height:24px; max-width:180px; outline:none;"></audio>` 
+                            : `<span style="color:#94a3b8; font-style:italic;">No recording</span>`;
+                        
+                        const transcriptBtn = log.transcript_text 
+                            ? `<button type="button" class="act-btn" style="background:#eef2f8; color:var(--primary); width:auto; padding:0 8px; height:22px; font-size:11px; margin:0;" onclick="showVoipTranscript('${encodeURIComponent(log.transcript_text)}', '${log.project_number || ''}', '${log.caller_number || ''}')">📖 View Transcript</button>`
+                            : `<span style="color:#94a3b8; font-style:italic;">No text</span>`;
+                        
+                        return `
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px 14px; color:var(--text-dark);">${dateStr}</td>
+                                <td style="padding:10px 14px; color:var(--text-dark); font-weight:500;">${userStr}</td>
+                                <td style="padding:10px 14px; color:var(--text-dark);">${log.caller_number} (${projectLink})</td>
+                                <td style="padding:10px 14px; text-align:center;">${directionBadge}</td>
+                                <td style="padding:10px 14px; text-align:center; color:var(--text-dark); font-weight:600;">${durationStr}</td>
+                                <td style="padding:10px 14px; text-align:center;">${audioPlayer}</td>
+                                <td style="padding:10px 14px; text-align:center;">${transcriptBtn}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } else {
+                logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:#b93a20;">Failed to fetch call logs from API.</td></tr>';
+            }
+        } catch (e) {
+            console.error('Error fetching VoIP analytics:', e);
+            logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:#b93a20;">Error loading call logs dashboard.</td></tr>';
+        }
+    }
+
+    window.showVoipTranscript = function(encodedText, project, phone) {
+        const text = decodeURIComponent(encodedText);
+        Swal.fire({
+            title: `📋 Call Transcript - ${project || 'Unlinked'} (${phone})`,
+            html: `<div style="text-align:left; font-size:14px; line-height:1.5; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; max-height:300px; overflow-y:auto; font-family:'Inter', sans-serif;">${text}</div>`,
+            icon: 'info',
+            confirmButtonText: 'Close'
+        });
     };
 
     (async function loadSidebarUser() {
@@ -1551,7 +1820,7 @@ Initializing deployment stream...
                             }
                         };
                         check('/products.html', 'Masters', 'Manage Products');
-                    check('/combo_master.html', 'Masters', 'Manage Products');
+                        check('/combo_master.html', 'Masters', 'Manage Products');
                         check('/stc_master.html', 'Masters', 'Manage STC');
                         check('/rebate_live_master.html', 'Masters', 'Manage Rebates');
                         check('/margin_master.html', 'Masters', 'Manage Margins');
