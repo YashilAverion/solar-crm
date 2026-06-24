@@ -457,6 +457,10 @@ db.serialize(() => {
         "ALTER TABLE users ADD COLUMN last_call_sync_timestamp TEXT",
         "ALTER TABLE users ADD COLUMN voipline_sync_status TEXT DEFAULT 'Offline'",
         "ALTER TABLE users ADD COLUMN voipline_last_sync TEXT",
+        "ALTER TABLE users ADD COLUMN voipline_sip_username TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN voipline_sip_password TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN voipline_sip_domain TEXT DEFAULT 'au.voipcloud.online'",
+        "ALTER TABLE users ADD COLUMN voipline_wss_url TEXT DEFAULT ''",
         "ALTER TABLE products ADD COLUMN datasheet TEXT",
         "ALTER TABLE products ADD COLUMN installation_manual TEXT",
         "ALTER TABLE products ADD COLUMN wifi_manual TEXT",
@@ -918,6 +922,10 @@ db.serialize(() => {
     db.run("ALTER TABLE users ADD COLUMN voipline_last_sync TEXT", () => {});
     db.run("ALTER TABLE users ADD COLUMN allowed_specific_ip TEXT DEFAULT ''", () => {});
     db.run("ALTER TABLE users ADD COLUMN is_bypass_ip_restriction INTEGER DEFAULT 0", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_sip_username TEXT DEFAULT ''", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_sip_password TEXT DEFAULT ''", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_sip_domain TEXT DEFAULT 'au.voipcloud.online'", () => {});
+    db.run("ALTER TABLE users ADD COLUMN voipline_wss_url TEXT DEFAULT ''", () => {});
 
     // Create call_logs table for VoIP recording and transcripts
     db.run(`

@@ -1225,6 +1225,10 @@
 
     // ── INJECT INTEGRATED COMMUNICATION DRAWER & ACTIONS ───────────
     function injectCommunicationSuite(user) {
+        let _ua = null;
+        let _session = null;
+        let _sipCreds = null;
+
         // A. Inject Stylesheet
         if (!document.getElementById('comm-suite-styles')) {
             const styles = document.createElement('style');
@@ -2315,6 +2319,11 @@
                 if (window._commCallActive) {
                     // STATE B: DTMF mode — stream digit, never mutate dial input
                     flashDtmf(char);
+                    if (_session) {
+                        console.log('[SIP] Sending native DTMF:', char);
+                        _session.sendDTMF(char);
+                        return;
+                    }
                     try {
                         await fetch('/api/voipline/send-dtmf', {
                             method: 'POST',
@@ -2402,7 +2411,7 @@
             const callBtn = drawer.querySelector('#comm-dial-call-btn');
             const dialStatus = drawer.querySelector('#comm-dial-status');
             if (callBtn) { callBtn.disabled = false; callBtn.style.opacity = '1'; callBtn.style.pointerEvents = 'auto'; }
-            if (dialStatus) dialStatus.innerText = 'Status: Idle';
+            if (dialStatus) dialStatus.innerText = _ua && _ua.isRegistered() ? 'Status: Connected (SIP Ready)' : 'Status: Idle';
             if (dtmfFlash) { dtmfFlash.innerText = ''; dtmfFlash.style.display = 'none'; }
             if (activeCallPanel) { activeCallPanel.style.display = 'none'; activeCallPanel.classList.remove('on-hold'); }
             if (callTimerEl) callTimerEl.innerText = '00:00';
@@ -2421,27 +2430,63 @@
             const num = dialInput.value.trim();
             if (!num) return window.showToast('Please enter a phone number first.', 'error');
 
-            dialStatus.innerText = 'Status: Dialing...';
+            dialStatus.innerText = 'Status: Accessing Microphone...';
             dialCallBtn.disabled = true;
 
             try {
-                const res = await fetch('/api/voipline/manual-dial', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phoneNumber: num })
-                });
-                const data = await res.json();
-                if (res.ok && (data.success || data.simulated)) {
-                    window.showToast('Outbound call initiated!', 'success');
-                    activateCallState(data.callLogId || null, num);
-                } else {
-                    dialStatus.innerText = 'Status: Call Failed';
-                    window.showToast(data.error || 'Failed to place call', 'error');
-                    dialCallBtn.disabled = false;
+                // Request mic permission explicitly and hold stream to ensure it works
+                const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('[WebRTC] Microphone permission granted.');
+
+                if (!_ua || !_ua.isRegistered()) {
+                    console.warn('[SIP] UA not registered. Falling back to server-side calling.');
+                    
+                    // Stop local stream since server-side calls handle media at the phone/extension
+                    localStream.getTracks().forEach(t => t.stop());
+
+                    const res = await fetch('/api/voipline/manual-dial', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phoneNumber: num })
+                    });
+                    const data = await res.json();
+                    if (res.ok && (data.success || data.simulated)) {
+                        window.showToast('Outbound call initiated (Server-side)!', 'success');
+                        activateCallState(data.callLogId || null, num);
+                    } else {
+                        dialStatus.innerText = 'Status: Call Failed';
+                        window.showToast(data.error || 'Failed to place call', 'error');
+                        dialCallBtn.disabled = false;
+                    }
+                    return;
                 }
+
+                dialStatus.innerText = 'Status: Dialing...';
+
+                // Format number: VoIPLine WebRTC expects E.164 (like '614...' or '612...')
+                let cleanNum = num.replace(/\D/g, '');
+                if (cleanNum.startsWith('0')) {
+                    cleanNum = '61' + cleanNum.substring(1);
+                } else if (!cleanNum.startsWith('61') && cleanNum.length === 9) {
+                    cleanNum = '61' + cleanNum;
+                }
+
+                // Place native JsSIP call
+                const options = {
+                    mediaStream: localStream,
+                    mediaConstraints: { audio: true, video: false },
+                    rtcOfferConstraints: { offerToReceiveAudio: 1, offerToReceiveVideo: 0 }
+                };
+
+                console.log('[SIP] Initiating native WebRTC call to:', cleanNum);
+                const session = _ua.call(`sip:${cleanNum}@${_sipCreds.sip_domain}`, options);
+                _session = session;
+
             } catch (err) {
+                console.error('[WebRTC/SIP] Place call failed:', err);
                 dialStatus.innerText = 'Status: Error';
                 dialCallBtn.disabled = false;
+                window.showToast(`Microphone or dialing error: ${err.message}`, 'error');
             }
         });
 
@@ -2450,6 +2495,28 @@
             if (!window._commCallActive) return;
             const holdBtn = drawer.querySelector('#comm-hold-btn');
             const holdLabel = drawer.querySelector('#comm-hold-btn-label');
+            
+            if (_session) {
+                // Native SIP hold/unhold
+                if (_callIsOnHold) {
+                    console.log('[SIP] Unholding native call');
+                    _session.unhold();
+                    _callIsOnHold = false;
+                    holdBtn.classList.remove('active-hold');
+                    holdLabel.textContent = 'Hold';
+                    updateCallStateBadge('Active');
+                } else {
+                    console.log('[SIP] Holding native call');
+                    _session.hold();
+                    _callIsOnHold = true;
+                    holdBtn.classList.add('active-hold');
+                    holdLabel.textContent = 'Unhold';
+                    updateCallStateBadge('On-Hold');
+                }
+                return;
+            }
+
+            // Fallback to server-side hold/unhold
             const endpoint = _callIsOnHold ? '/api/voipline/unhold' : '/api/voipline/hold';
             holdBtn.disabled = true;
             try {
@@ -2478,6 +2545,29 @@
             if (!window._commCallActive) return;
             const muteBtn = drawer.querySelector('#comm-mute-btn');
             const muteLabel = drawer.querySelector('#comm-mute-btn-label');
+            
+            if (_session) {
+                // Native SIP mute/unmute
+                const nextMuted = !_callIsMuted;
+                if (nextMuted) {
+                    console.log('[SIP] Muting native mic');
+                    _session.mute({ audio: true });
+                    _callIsMuted = true;
+                    muteBtn.classList.add('active-mute');
+                    muteLabel.textContent = 'Unmute';
+                    window.showToast('Microphone muted.', 'info');
+                } else {
+                    console.log('[SIP] Unmuting native mic');
+                    _session.unmute({ audio: true });
+                    _callIsMuted = false;
+                    muteBtn.classList.remove('active-mute');
+                    muteLabel.textContent = 'Mute Mic';
+                    window.showToast('Microphone unmuted.', 'info');
+                }
+                return;
+            }
+
+            // Fallback to server-side mute/unmute
             muteBtn.disabled = true;
             const nextMuted = !_callIsMuted;
             try {
@@ -2511,6 +2601,11 @@
 
         // ── End Call button ───────────────────────────────────────────────
         drawer.querySelector('#comm-end-call-btn').addEventListener('click', () => {
+            if (_session) {
+                console.log('[SIP] Terminating active JsSIP session.');
+                _session.terminate();
+                _session = null;
+            }
             resetCallState();
             window.showToast('Call ended.', 'info');
         });
@@ -2796,6 +2891,128 @@
                 }
             }
         });
+
+        // Initialize WebRTC SIP client
+        initializeWebRTCEngine();
+
+        async function initializeWebRTCEngine() {
+            try {
+                const res = await fetch('/api/voipline/sip-credentials');
+                if (!res.ok) {
+                    console.log('[SIP] WebRTC registration credentials not available.');
+                    return;
+                }
+                const creds = await res.json();
+                if (!creds.sip_username || !creds.sip_password || !creds.wss_url) {
+                    console.log('[SIP] WebRTC softphone credentials not configured for current user.');
+                    return;
+                }
+
+                _sipCreds = creds;
+
+                // Load JsSIP
+                if (!window.JsSIP) {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jssip/3.9.0/jssip.min.js';
+                    s.async = true;
+                    s.onload = () => {
+                        console.log('[SIP] JsSIP library loaded.');
+                        startSipClient();
+                    };
+                    document.head.appendChild(s);
+                } else {
+                    startSipClient();
+                }
+            } catch (err) {
+                console.error('[SIP] Initialization error:', err);
+            }
+        }
+
+        function startSipClient() {
+            if (!_sipCreds) return;
+            console.log('[SIP] Registering WebRTC client endpoint for extension:', _sipCreds.sip_username);
+            
+            try {
+                const socket = new JsSIP.WebSocketInterface(_sipCreds.wss_url);
+                const configuration = {
+                    sockets: [socket],
+                    uri: `sip:${_sipCreds.sip_username}@${_sipCreds.sip_domain}`,
+                    password: _sipCreds.sip_password,
+                    display_name: _sipCreds.sip_username
+                };
+
+                _ua = new JsSIP.UA(configuration);
+
+                _ua.on('connected', () => {
+                    console.log('[SIP] WSS Connection established.');
+                    const dialStatus = drawer.querySelector('#comm-dial-status');
+                    if (dialStatus) dialStatus.innerText = 'Status: Connected (SIP Ready)';
+                });
+
+                _ua.on('disconnected', () => {
+                    console.log('[SIP] WSS Connection disconnected.');
+                    const dialStatus = drawer.querySelector('#comm-dial-status');
+                    if (dialStatus) dialStatus.innerText = 'Status: Disconnected (SIP)';
+                });
+
+                _ua.on('registered', () => {
+                    console.log('[SIP] Registered endpoint successfully.');
+                });
+
+                _ua.on('registrationFailed', (e) => {
+                    console.error('[SIP] Registration failed:', e.cause);
+                });
+
+                _ua.on('newRTCSession', (data) => {
+                    const session = data.session;
+                    _session = session;
+
+                    session.on('peerconnection', (e) => {
+                        e.peerconnection.addEventListener('track', (event) => {
+                            let remoteAudio = document.getElementById('webrtc-remote-audio');
+                            if (!remoteAudio) {
+                                remoteAudio = document.createElement('audio');
+                                remoteAudio.id = 'webrtc-remote-audio';
+                                remoteAudio.autoplay = true;
+                                document.body.appendChild(remoteAudio);
+                            }
+                            remoteAudio.srcObject = event.streams[0];
+                        });
+                    });
+
+                    session.on('connecting', () => {
+                        const dialStatus = drawer.querySelector('#comm-dial-status');
+                        if (dialStatus) dialStatus.innerText = 'Status: Connecting...';
+                    });
+
+                    session.on('progress', () => {
+                        const dialStatus = drawer.querySelector('#comm-dial-status');
+                        if (dialStatus) dialStatus.innerText = 'Status: Ringing...';
+                    });
+
+                    session.on('accepted', () => {
+                        const dialStatus = drawer.querySelector('#comm-dial-status');
+                        if (dialStatus) dialStatus.innerText = 'Status: Connected';
+                        activateCallState(null, session.remote_identity.uri.user);
+                    });
+
+                    session.on('ended', (e) => {
+                        resetCallState();
+                        _session = null;
+                    });
+
+                    session.on('failed', (e) => {
+                        resetCallState();
+                        _session = null;
+                        window.showToast(`Call failed: ${e.cause}`, 'error');
+                    });
+                });
+
+                _ua.start();
+            } catch (err) {
+                console.error('[SIP] Error configuring JsSIP UA:', err);
+            }
+        }
     }
 
 
@@ -2951,25 +3168,26 @@
         const cleanNumber = String(phoneNumber).replace(/[^\d+]/g, '');
         if (!cleanNumber) return;
 
-        try {
-            window.showToast(`Connecting to ${cleanNumber}...`, 'info');
-            const response = await fetch('/api/voipline/click-to-call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ phoneNumber: cleanNumber })
-            });
+        // Toggle drawer open
+        const d = document.getElementById('comm-suite-drawer');
+        if (d && d.style.right !== '0px') {
+            d.style.right = '0px';
+        }
+        
+        // Switch to Dialer Tab
+        const dialerTab = document.querySelector('.comm-tab-btn[data-tab="dialer"]');
+        if (dialerTab) {
+            dialerTab.click();
+        }
+        
+        const dialInput = document.getElementById('comm-dial-input');
+        if (dialInput) {
+            dialInput.value = cleanNumber;
+        }
 
-            const data = await response.json();
-            if (response.ok && data.success) {
-                window.showToast('Outbound call request successful!', 'success');
-            } else {
-                window.showToast(data.error || 'Failed to trigger outbound call', 'error');
-            }
-        } catch (error) {
-            console.error('[VoIPLine] Outbound call error:', error);
-            window.showToast('Failed to trigger outbound call', 'error');
+        const dialCallBtn = document.getElementById('comm-dial-call-btn');
+        if (dialCallBtn) {
+            dialCallBtn.click();
         }
     };
 })();

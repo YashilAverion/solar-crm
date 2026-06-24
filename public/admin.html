@@ -718,6 +718,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </div>
                     
+                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 10px; margin-bottom: 4px;">
+                        <span>WebRTC SIP Configuration</span>
+                    </div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px;">
+                        <div class="field"><label>SIP Username</label><input type="text" id="u_voipline_sip_username" placeholder="e.g. 1001"></div>
+                        <div class="field"><label>SIP Password</label><input type="password" id="u_voipline_sip_password" placeholder="SIP Secret"></div>
+                        <div class="field"><label>SIP Domain</label><input type="text" id="u_voipline_sip_domain" placeholder="au.voipcloud.online"></div>
+                        <div class="field"><label>WSS URL</label><input type="text" id="u_voipline_wss_url" placeholder="wss://au.voipcloud.online:4443"></div>
+                    </div>
+                    
                     <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
                         <span>Module Access Preview</span>
                         <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">🔄 Restore Defaults</button>
@@ -1171,6 +1181,10 @@ document.addEventListener("DOMContentLoaded", function() {
         
         document.getElementById('u_allowed_specific_ip').value = '';
         document.getElementById('u_is_bypass_ip_restriction').checked = false;
+        document.getElementById('u_voipline_sip_username').value = '';
+        document.getElementById('u_voipline_sip_password').value = '';
+        document.getElementById('u_voipline_sip_domain').value = 'au.voipcloud.online';
+        document.getElementById('u_voipline_wss_url').value = '';
         
         document.getElementById('u_password').required = true;
         document.getElementById('u_pass_label').innerText = 'Password';
@@ -1211,10 +1225,15 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_voipline_secret_token').value = u.voipline_secret_token || '';
         document.getElementById('u_voipline_api_key').value = u.voipline_api_key || '';
         document.getElementById('u_voipline_master_key').value = u.voipline_master_key || '';
-        document.getElementById('u_password').value = ''; // SECURITY FIX: Never show hashed password
+        document.getElementById('u_password').value = '';
         
         document.getElementById('u_allowed_specific_ip').value = u.allowed_specific_ip || '';
         document.getElementById('u_is_bypass_ip_restriction').checked = u.is_bypass_ip_restriction === 1;
+
+        document.getElementById('u_voipline_sip_username').value = u.voipline_sip_username || '';
+        document.getElementById('u_voipline_sip_password').value = u.voipline_sip_password || '';
+        document.getElementById('u_voipline_sip_domain').value = u.voipline_sip_domain || 'au.voipcloud.online';
+        document.getElementById('u_voipline_wss_url').value = u.voipline_wss_url || '';
         
         const statusEl = document.getElementById('voipline_sync_status');
         const lastSyncEl = document.getElementById('voipline_last_sync_time');
@@ -1229,7 +1248,6 @@ document.addEventListener("DOMContentLoaded", function() {
             lastSyncEl.innerText = syncStatus === 'Online' ? `Last Sync: ${lastSync}` : 'Last Sync: Never';
         }
         
-        // Form Security: Blank out password on edit, remove strict requirement
         document.getElementById('u_password').required = false;
         document.getElementById('u_pass_label').innerText = 'Password (Leave blank to keep)';
         document.getElementById('u_pass_label').classList.remove('required');
@@ -1339,7 +1357,7 @@ document.addEventListener("DOMContentLoaded", function() {
             full_name: document.getElementById('u_full_name').value.trim(),
             username: document.getElementById('u_username').value.trim(),
             email: document.getElementById('u_email').value.trim(),
-            password: document.getElementById('u_password').value, // Allow blank if isEdit
+            password: document.getElementById('u_password').value,
             role: document.getElementById('u_role').value,
             can_edit: document.getElementById('u_can_edit').value,
             can_delete: document.getElementById('u_can_delete').value,
@@ -1351,6 +1369,10 @@ document.addEventListener("DOMContentLoaded", function() {
             voipline_master_key: document.getElementById('u_voipline_master_key').value.trim(),
             allowed_specific_ip: document.getElementById('u_allowed_specific_ip').value.trim(),
             is_bypass_ip_restriction: document.getElementById('u_is_bypass_ip_restriction').checked ? 1 : 0,
+            voipline_sip_username: document.getElementById('u_voipline_sip_username').value.trim(),
+            voipline_sip_password: document.getElementById('u_voipline_sip_password').value,
+            voipline_sip_domain: document.getElementById('u_voipline_sip_domain').value.trim(),
+            voipline_wss_url: document.getElementById('u_voipline_wss_url').value.trim(),
             custom_permissions: customPerms
         };
 

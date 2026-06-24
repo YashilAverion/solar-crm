@@ -724,6 +724,22 @@ function requireLogin(req, res, next) {
 // ── APPLY AUTH MIDDLEWARE ──────────────────────────────────
 app.use(requireLogin);
 
+// ── GET USER SIP CREDENTIALS (API) ──────────────────────────
+app.get('/api/voipline/sip-credentials', requireLogin, (req, res) => {
+    const userId = req.session.user.id;
+    db.get("SELECT voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url FROM users WHERE id = ?", [userId], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'User not found' });
+        
+        res.json({
+            sip_username: row.voipline_sip_username || '',
+            sip_password: decrypt(row.voipline_sip_password) || '',
+            sip_domain: row.voipline_sip_domain || 'au.voipcloud.online',
+            wss_url: row.voipline_wss_url || ''
+        });
+    });
+});
+
 // ── GET USER/DEVICE CONFIGURATIONS (API) ──────────────────
 app.get('/api/configurations', (req, res) => {
     const userId = req.session.user.id;
@@ -768,12 +784,13 @@ app.post('/api/configurations', (req, res) => {
 
 // ── OVERRIDE ADMIN USERS ROUTES FOR ENCRYPTION ───────────────
 app.get('/admin/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync, allowed_specific_ip, is_bypass_ip_restriction FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const decrypted = (rows || []).map(u => {
             u.voipline_master_key = decrypt(u.voipline_master_key);
             u.voipline_secret_token = decrypt(u.voipline_secret_token);
             u.voipline_api_key = decrypt(u.voipline_api_key);
+            u.voipline_sip_password = decrypt(u.voipline_sip_password);
             return u;
         });
         res.json(decrypted);
@@ -782,7 +799,7 @@ app.get('/admin/users', requireManager, (req, res) => {
 
 app.post('/admin/users', requireManager, async (req, res) => {
     try {
-        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction } = req.body;
+        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url } = req.body;
 
         if (!username || username.trim().length < 3) {
             return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
@@ -817,9 +834,10 @@ app.post('/admin/users', requireManager, async (req, res) => {
         const encMasterKey = encrypt(voipline_master_key || '');
         const encSecretToken = encrypt(voipline_secret_token || '');
         const encApiKey = encrypt(voipline_api_key || '');
+        const encSipPassword = encrypt(voipline_sip_password || '');
 
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || ''], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
         });
@@ -831,7 +849,7 @@ app.post('/admin/users', requireManager, async (req, res) => {
 
 app.put('/admin/users/:id', requireManager, async (req, res) => {
     try {
-        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction } = req.body;
+        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url } = req.body;
         const id = req.params.id;
 
         if (!username || username.trim().length < 3) {
@@ -851,6 +869,7 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
         const encMasterKey = encrypt(voipline_master_key || '');
         const encSecretToken = encrypt(voipline_secret_token || '');
         const encApiKey = encrypt(voipline_api_key || '');
+        const encSipPassword = encrypt(voipline_sip_password || '');
 
         // If new password provided, validate strength
         if (password && password.trim() !== '') {
@@ -858,14 +877,14 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                 return res.status(400).json({ error: getPasswordStrengthMessage() });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true });
             });
         } else {
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true });
             });
