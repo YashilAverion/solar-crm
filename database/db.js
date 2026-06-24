@@ -916,6 +916,8 @@ db.serialize(() => {
     db.run("ALTER TABLE users ADD COLUMN last_call_sync_timestamp TEXT", () => {});
     db.run("ALTER TABLE users ADD COLUMN voipline_sync_status TEXT DEFAULT 'Offline'", () => {});
     db.run("ALTER TABLE users ADD COLUMN voipline_last_sync TEXT", () => {});
+    db.run("ALTER TABLE users ADD COLUMN allowed_specific_ip TEXT DEFAULT ''", () => {});
+    db.run("ALTER TABLE users ADD COLUMN is_bypass_ip_restriction INTEGER DEFAULT 0", () => {});
 
     // Create call_logs table for VoIP recording and transcripts
     db.run(`
@@ -1008,9 +1010,14 @@ db.serialize(() => {
         )
     `, (err) => {
         if (err) console.error('[DB] Error creating configurations table:', err.message);
-        else console.log('[DB] configurations table ready.');
+        else {
+            console.log('[DB] configurations table ready.');
+            // Initialize global_office_ip key with user_id = NULL (global system config)
+            db.run(`INSERT OR IGNORE INTO configurations (user_id, config_key, config_value) VALUES (NULL, 'global_office_ip', '')`);
+        }
     });
     db.run("CREATE INDEX IF NOT EXISTS idx_configurations_user_id ON configurations(user_id)", () => {});
+    db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_configurations_global_unique ON configurations(config_key) WHERE user_id IS NULL", () => {});
 
 });
 

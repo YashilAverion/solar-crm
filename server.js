@@ -50,6 +50,28 @@ const crypto = require('crypto');
 const db = require('./database/db');
 const { requireManager, isoToDisplay, isStrongPassword, getPasswordStrengthMessage } = require('./helpers');
 
+// ── GLOBAL OFFICE IP CACHE & HELPER ─────────────────────────
+let globalOfficeIpCache = '';
+
+// Load global_office_ip on startup
+db.get("SELECT config_value FROM configurations WHERE user_id IS NULL AND config_key = 'global_office_ip'", [], (err, row) => {
+    if (!err && row) {
+        globalOfficeIpCache = row.config_value;
+        console.log(`[SECURITY] Loaded global office IP: "${globalOfficeIpCache}"`);
+    }
+});
+
+function getClientIp(req) {
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (ip && ip.includes(',')) {
+        ip = ip.split(',')[0].trim();
+    }
+    if (ip && ip.startsWith('::ffff:')) {
+        ip = ip.substring(7);
+    }
+    return ip;
+}
+
 
 app.use(compression({ level: 6, threshold: 1024 })); // Compresses responses larger than 1KB
 app.use(express.json({ limit: '10mb' }));
@@ -217,6 +239,103 @@ const sessionMiddleware = session({
 });
 app.use(sessionMiddleware);
 
+function ipFirewall(req, res, next) {
+    const path = req.path;
+    const publicPaths = [
+        '/login', 
+        '/logout', 
+        '/ares_energy_logo.png', 
+        '/favicon.ico', 
+        '/responsive.css', 
+        '/responsive.js', 
+        '/crm-autosave-toast.js',
+        '/australian-timezones.js',
+        '/track.html',
+        '/track'
+    ];
+    
+    if (
+        publicPaths.some(p => path === p || path.startsWith(p + '?')) ||
+        path.startsWith('/css/') ||
+        path.startsWith('/js/') ||
+        path.startsWith('/images/') ||
+        path.endsWith('.css') ||
+        path.endsWith('.js') ||
+        path.endsWith('.png') ||
+        path.endsWith('.jpg') ||
+        path.endsWith('.ico')
+    ) {
+        return next();
+    }
+
+    const clientIp = getClientIp(req);
+
+    // Localhost bypass
+    if (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost' || clientIp === '::ffff:127.0.0.1') {
+        return next();
+    }
+
+    // Match global office IP
+    if (globalOfficeIpCache && clientIp === globalOfficeIpCache) {
+        return next();
+    }
+
+    // Check WFH user overrides
+    if (req.session && req.session.user) {
+        const userId = req.session.user.id;
+        db.get("SELECT is_bypass_ip_restriction, allowed_specific_ip FROM users WHERE id = ?", [userId], (err, user) => {
+            if (err || !user) {
+                return renderAccessDenied(res, clientIp);
+            }
+            
+            const isBypass = user.is_bypass_ip_restriction === 1;
+            const allowedIp = user.allowed_specific_ip ? user.allowed_specific_ip.trim() : '';
+            
+            if (isBypass || (allowedIp && clientIp === allowedIp)) {
+                return next();
+            } else {
+                return renderAccessDenied(res, clientIp);
+            }
+        });
+    } else {
+        if (req.path.startsWith('/api/')) {
+            return res.status(401).json({ error: 'Login required' });
+        }
+        return res.redirect('/login');
+    }
+}
+
+function renderAccessDenied(res, clientIp) {
+    res.status(403).send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Access Denied - Ares Energy</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+            .card { background: #1e293b; border: 1px solid #334155; padding: 40px; border-radius: 12px; max-width: 480px; width: 90%; text-align: center; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+            .icon { font-size: 48px; color: #ef4444; margin-bottom: 20px; }
+            h1 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+            p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px; }
+            .ip-badge { background: #0f172a; padding: 8px 14px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #f43f5e; border: 1px solid #ef4444; display: inline-block; margin-top: 10px; margin-bottom: 10px; }
+            .footer { font-size: 12px; color: #64748b; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="icon">⚠️</div>
+            <h1>Access Denied</h1>
+            <p>Access Denied: IP address <br><span class="ip-badge">${clientIp}</span><br> is unauthorized. Contact Ares Energy Security Administration.</p>
+            <div class="footer">Ares Energy Solar CRM Security Policy</div>
+        </div>
+    </body>
+    </html>
+    `);
+}
+
+app.use(ipFirewall);
+
 // ── LOGIN PAGE (PUBLIC) ────────────────────────────────────
 app.get('/login', (req, res) => {
     if (req.session && req.session.user) {
@@ -284,6 +403,19 @@ app.post('/login', loginLimiter, [
 
         if (user.status === 'Inactive' || user.status === 'Deleted') {
             return res.status(403).json({ error: 'Account disabled. Please contact the administrator.' });
+        }
+
+        // IP restriction check wall
+        const clientIp = getClientIp(req);
+        const isOfficeIp = globalOfficeIpCache && clientIp === globalOfficeIpCache;
+        const isLocalhost = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost' || clientIp === '::ffff:127.0.0.1';
+        
+        if (!isOfficeIp && !isLocalhost) {
+            const isBypass = user.is_bypass_ip_restriction === 1;
+            const allowedIp = user.allowed_specific_ip ? user.allowed_specific_ip.trim() : '';
+            if (!isBypass && clientIp !== allowedIp) {
+                return res.status(403).json({ error: `Access Denied: IP address ${clientIp} is unauthorized. Contact Ares Energy Security Administration.` });
+            }
         }
 
         // Secure password check using bcrypt
@@ -595,7 +727,7 @@ app.use(requireLogin);
 // ── GET USER/DEVICE CONFIGURATIONS (API) ──────────────────
 app.get('/api/configurations', (req, res) => {
     const userId = req.session.user.id;
-    db.all("SELECT config_key, config_value FROM configurations WHERE user_id = ?", [userId], (err, rows) => {
+    db.all("SELECT config_key, config_value FROM configurations WHERE user_id = ? OR user_id IS NULL", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const configs = {};
         (rows || []).forEach(row => {
@@ -607,19 +739,28 @@ app.get('/api/configurations', (req, res) => {
 
 // ── SAVE USER/DEVICE CONFIGURATIONS (API) ─────────────────
 app.post('/api/configurations', (req, res) => {
-    const userId = req.session.user.id;
     const { config_key, config_value } = req.body;
     if (!config_key) {
         return res.status(400).json({ error: 'config_key is required.' });
     }
+    
+    // global_office_ip is system-wide, so it should be saved with user_id = null
+    let targetUserId = req.session.user.id;
+    if (config_key === 'global_office_ip') {
+        if (req.session.user.role !== 'Admin') {
+            return res.status(403).json({ error: 'Unauthorized to modify system configuration.' });
+        }
+        targetUserId = null;
+    }
+
     db.run(
-        `INSERT INTO configurations (user_id, config_key, config_value) 
-         VALUES (?, ?, ?) 
-         ON CONFLICT(user_id, config_key) 
-         DO UPDATE SET config_value = excluded.config_value, updated_at = CURRENT_TIMESTAMP`,
-        [userId, config_key, config_value],
+        `REPLACE INTO configurations (user_id, config_key, config_value) VALUES (?, ?, ?)`,
+        [targetUserId, config_key, config_value],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (config_key === 'global_office_ip') {
+                globalOfficeIpCache = config_value;
+            }
             res.json({ success: true });
         }
     );
@@ -627,7 +768,7 @@ app.post('/api/configurations', (req, res) => {
 
 // ── OVERRIDE ADMIN USERS ROUTES FOR ENCRYPTION ───────────────
 app.get('/admin/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync, allowed_specific_ip, is_bypass_ip_restriction FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const decrypted = (rows || []).map(u => {
             u.voipline_master_key = decrypt(u.voipline_master_key);
@@ -641,7 +782,7 @@ app.get('/admin/users', requireManager, (req, res) => {
 
 app.post('/admin/users', requireManager, async (req, res) => {
     try {
-        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
+        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction } = req.body;
 
         if (!username || username.trim().length < 3) {
             return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
@@ -677,8 +818,8 @@ app.post('/admin/users', requireManager, async (req, res) => {
         const encSecretToken = encrypt(voipline_secret_token || '');
         const encApiKey = encrypt(voipline_api_key || '');
 
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline'], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
         });
@@ -690,7 +831,7 @@ app.post('/admin/users', requireManager, async (req, res) => {
 
 app.put('/admin/users/:id', requireManager, async (req, res) => {
     try {
-        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
+        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction } = req.body;
         const id = req.params.id;
 
         if (!username || username.trim().length < 3) {
@@ -717,8 +858,8 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                 return res.status(400).json({ error: getPasswordStrengthMessage() });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true });
             });

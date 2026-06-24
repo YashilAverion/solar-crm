@@ -457,6 +457,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 
                 <!-- Left Panel: Whitelisted IPs -->
                 <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 400px;">
+                    <!-- Global Office IP Configuration -->
+                    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                        <h4 style="font-size: 12px; font-weight: 700; color: var(--primary); margin: 0 0 8px 0; text-transform: uppercase;">🏢 Global Office IP Configuration</h4>
+                        <form onsubmit="saveGlobalOfficeIp(event)" style="display: flex; gap: 8px;">
+                            <input type="text" id="globalOfficeIpInput" placeholder="Enter Office IP (e.g. 203.0.113.10)" required style="flex: 1; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; outline: none; background: #fff;">
+                            <button type="submit" class="btn-save" id="saveOfficeIpBtn" style="margin-top: 0; padding: 0 16px; height: 32px; font-size: 12px;">Save Office IP</button>
+                        </form>
+                    </div>
+
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
                         <h3 style="font-size:14px; font-weight:700; color:var(--text-dark);">🔒 Whitelisted IPs (Bypass Rate Limiter)</h3>
                     </div>
@@ -670,6 +679,18 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="field"><label>Can Edit</label><select id="u_can_edit"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                         <div class="field" style="grid-column: span 2;"><label>Can Delete</label><select id="u_can_delete"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                     </div>
+                    
+                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 14px; margin-bottom: 4px;">Location Access Management</div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="field" style="grid-column: span 2;">
+                            <label>Allowed Specific Static IP</label>
+                            <input type="text" id="u_allowed_specific_ip" placeholder="e.g. 203.0.113.50">
+                        </div>
+                        <div class="field" style="grid-column: span 2; display: flex; flex-direction: row; align-items: center; gap: 8px; margin-top: 4px;">
+                            <input type="checkbox" id="u_is_bypass_ip_restriction" style="width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--primary);">
+                            <label for="u_is_bypass_ip_restriction" style="margin: 0; font-weight: 600; text-transform: none; font-size: 12px; cursor: pointer;">Bypass IP Restriction (Full Remote Access)</label>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- VERTICAL DIVIDER -->
@@ -784,6 +805,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         if (target === 'rate-limits') {
             loadRateLimits();
+            loadGlobalOfficeIp();
         } else if (target === 'voip-analytics') {
             loadVoipAnalytics();
         }
@@ -841,6 +863,49 @@ document.addEventListener("DOMContentLoaded", function() {
         } catch(e) {
             whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading whitelisted IPs.</td></tr>';
             blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading attempts.</td></tr>';
+        }
+    }
+
+    async function loadGlobalOfficeIp() {
+        try {
+            const res = await fetch('/api/configurations');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.global_office_ip !== undefined) {
+                    document.getElementById('globalOfficeIpInput').value = data.global_office_ip;
+                }
+            }
+        } catch(e) {
+            console.error('Failed to load global office IP:', e);
+        }
+    }
+
+    async function saveGlobalOfficeIp(event) {
+        event.preventDefault();
+        const ipInput = document.getElementById('globalOfficeIpInput');
+        const ip = ipInput.value.trim();
+        const btn = document.getElementById('saveOfficeIpBtn');
+        
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        
+        try {
+            const res = await fetch('/api/configurations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_key: 'global_office_ip', config_value: ip })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Success', 'Global Office IP has been updated successfully.', 'success');
+            } else {
+                Swal.fire('Error', data.error || 'Failed to update Global Office IP.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Unable to connect to server.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Save Office IP';
         }
     }
 
@@ -1104,6 +1169,9 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('saveUserBtn').innerText = 'Create User';
         document.getElementById('password-strength-meter').style.display = 'none';
         
+        document.getElementById('u_allowed_specific_ip').value = '';
+        document.getElementById('u_is_bypass_ip_restriction').checked = false;
+        
         document.getElementById('u_password').required = true;
         document.getElementById('u_pass_label').innerText = 'Password';
         document.getElementById('u_pass_label').classList.add('required');
@@ -1144,6 +1212,9 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_voipline_api_key').value = u.voipline_api_key || '';
         document.getElementById('u_voipline_master_key').value = u.voipline_master_key || '';
         document.getElementById('u_password').value = ''; // SECURITY FIX: Never show hashed password
+        
+        document.getElementById('u_allowed_specific_ip').value = u.allowed_specific_ip || '';
+        document.getElementById('u_is_bypass_ip_restriction').checked = u.is_bypass_ip_restriction === 1;
         
         const statusEl = document.getElementById('voipline_sync_status');
         const lastSyncEl = document.getElementById('voipline_last_sync_time');
@@ -1278,6 +1349,8 @@ document.addEventListener("DOMContentLoaded", function() {
             voipline_secret_token: document.getElementById('u_voipline_secret_token').value.trim(),
             voipline_api_key: document.getElementById('u_voipline_api_key').value.trim(),
             voipline_master_key: document.getElementById('u_voipline_master_key').value.trim(),
+            allowed_specific_ip: document.getElementById('u_allowed_specific_ip').value.trim(),
+            is_bypass_ip_restriction: document.getElementById('u_is_bypass_ip_restriction').checked ? 1 : 0,
             custom_permissions: customPerms
         };
 
