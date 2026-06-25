@@ -784,6 +784,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
                     <!-- VoIP/SIP Settings Content -->
                     <div id="user_modal_voip_content" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
+
+                        <!-- ══ VoIP Master Feature Toggle ══ -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #fff7f0 0%, #fff3eb 100%); border: 1.5px solid #e8681e; border-radius: 8px; padding: 10px 14px; flex-shrink: 0; gap: 12px; box-shadow: 0 2px 8px rgba(232,104,30,0.10);">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <span style="font-size: 12px; font-weight: 800; color: #1c3557; letter-spacing: 0.02em;">📞 Enable VoIP Telephony Integration</span>
+                                <span style="font-size: 10px; color: #64748b; font-weight: 500;">Enables dialing, SMS, call history & the communication cabinet for this user.</span>
+                            </div>
+                            <label class="ios-switch" style="width: 44px; height: 24px; flex-shrink: 0;" title="Toggle VoIP Telephony Module">
+                                <input type="checkbox" id="u_is_voip_enabled">
+                                <span class="ios-slider" style="border-radius: 24px;"></span>
+                            </label>
+                        </div>
+
                         <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
                             <span>VoIP Configuration</span>
                             <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">🔑 Inject Credentials</button>
@@ -1291,6 +1304,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         document.getElementById('u_allowed_specific_ip').value = '';
         document.getElementById('u_is_bypass_ip_restriction').checked = false;
+        document.getElementById('u_is_voip_enabled').checked = false;
         document.getElementById('u_voipline_sip_username').value = '';
         document.getElementById('u_voipline_sip_password').value = '';
         document.getElementById('u_voipline_sip_domain').value = 'au.voipcloud.online';
@@ -1341,6 +1355,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         document.getElementById('u_allowed_specific_ip').value = u.allowed_specific_ip || '';
         document.getElementById('u_is_bypass_ip_restriction').checked = u.is_bypass_ip_restriction === 1;
+        document.getElementById('u_is_voip_enabled').checked = u.is_voip_enabled === 1;
 
         document.getElementById('u_voipline_sip_username').value = u.voipline_sip_username || '';
         document.getElementById('u_voipline_sip_password').value = u.voipline_sip_password || '';
@@ -1595,6 +1610,7 @@ document.addEventListener("DOMContentLoaded", function() {
             voipline_master_key: document.getElementById('u_voipline_master_key').value.trim(),
             allowed_specific_ip: document.getElementById('u_allowed_specific_ip').value.trim(),
             is_bypass_ip_restriction: document.getElementById('u_is_bypass_ip_restriction').checked ? 1 : 0,
+            is_voip_enabled: document.getElementById('u_is_voip_enabled').checked ? 1 : 0,
             voipline_sip_username: document.getElementById('u_voipline_sip_username').value.trim(),
             voipline_sip_password: document.getElementById('u_voipline_sip_password').value,
             voipline_sip_domain: document.getElementById('u_voipline_sip_domain').value.trim(),

@@ -896,12 +896,50 @@
                 const currentUser = await res.json();
                 if (currentUser && currentUser.username) {
                     window.currentUser = currentUser;
+
+                    // ── VoIP MASTER TOGGLE GATE ─────────────────────────────────
+                    if (!currentUser.is_voip_enabled) {
+                        // DYNAMIC UI STRIPPING LAYER: VoIP is disabled for this user.
+                        // Inject a persistent CSS override that hides ALL dial icon buttons.
+                        if (!document.getElementById('voip-disabled-style')) {
+                            const killStyle = document.createElement('style');
+                            killStyle.id = 'voip-disabled-style';
+                            killStyle.innerHTML = `
+                                /* VoIP Disabled — hide all dial trigger buttons globally */
+                                *[onclick*="triggerVoIPCall"],
+                                button[onclick*="triggerVoIPCall"],
+                                a[onclick*="triggerVoIPCall"] {
+                                    display: none !important;
+                                    pointer-events: none !important;
+                                }
+                                #comm-fixed-fab,
+                                #comm-widget-trigger-btn,
+                                #comm-suite-drawer {
+                                    display: none !important;
+                                }
+                            `;
+                            document.head.appendChild(killStyle);
+                        }
+                        // Also proactively remove any already-mounted elements
+                        ['comm-fixed-fab', 'comm-widget-trigger-btn', 'comm-suite-drawer'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.remove();
+                        });
+                        // Override the global dial trigger so any runtime calls are silently blocked
+                        window.triggerVoIPCall = function() {
+                            console.warn('[VoIP] Call blocked — VoIP module is disabled for this user.');
+                        };
+                        console.log('[VoIPLine] VoIP module is DISABLED for this user. Communication suite and dial icons suppressed.');
+                        return; // Abort all further VoIP initialization
+                    }
+                    // ── END GATE ─────────────────────────────────────────────────
+
                     const liveStreamSocket = io('/api/voipline/live-stream');
                     window.liveStreamSocket = liveStreamSocket;
-                    
+
                     liveStreamSocket.emit('join', { username: currentUser.username });
                     console.log(`[VoIPLine Live Stream] Joined namespace room: ${currentUser.username}`);
-                    
+
                     liveStreamSocket.on('caption-update', (data) => {
                         showFloatingCaption(data);
                     });

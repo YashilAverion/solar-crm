@@ -445,7 +445,8 @@ app.post('/login', loginLimiter, [
                     full_name: user.full_name,
                     role: user.role,
                     can_edit: user.can_edit,
-                    can_delete: user.can_delete
+                    can_delete: user.can_delete,
+                    is_voip_enabled: user.is_voip_enabled || 0
                 };
 
                 res.json({
@@ -473,27 +474,36 @@ app.get('/api/me', (req, res) => {
         return res.status(401).json({ error: 'Not logged in' });
     }
     const userId = req.session.user.id;
-    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
-        if (err) return res.status(500).json({ error: 'Database error.' });
-        
-        const matrix = {};
-        const allowedModules = new Set();
-        (rows || []).forEach(r => {
-            if (r.feature_name === 'Access Module' && r.access_status === 1) {
-                allowedModules.add(r.module_name);
-            }
-        });
-        
-        (rows || []).forEach(r => {
-            if (allowedModules.has(r.module_name)) {
-                if (!matrix[r.module_name]) matrix[r.module_name] = {};
-                matrix[r.module_name][r.feature_name] = r.access_status === 1;
-            }
-        });
-        
-        res.json({
-            ...req.session.user,
-            permissions: matrix
+    // Fetch fresh is_voip_enabled from DB to ensure real-time flag accuracy
+    db.get("SELECT is_voip_enabled FROM users WHERE id = ?", [userId], (userErr, userRow) => {
+        if (userErr) console.error('[/api/me] Failed to fetch VoIP flag:', userErr.message);
+        const isVoipEnabled = userRow ? (userRow.is_voip_enabled || 0) : 0;
+        // Update session to keep in sync
+        if (req.session.user) req.session.user.is_voip_enabled = isVoipEnabled;
+
+        db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Database error.' });
+
+            const matrix = {};
+            const allowedModules = new Set();
+            (rows || []).forEach(r => {
+                if (r.feature_name === 'Access Module' && r.access_status === 1) {
+                    allowedModules.add(r.module_name);
+                }
+            });
+
+            (rows || []).forEach(r => {
+                if (allowedModules.has(r.module_name)) {
+                    if (!matrix[r.module_name]) matrix[r.module_name] = {};
+                    matrix[r.module_name][r.feature_name] = r.access_status === 1;
+                }
+            });
+
+            res.json({
+                ...req.session.user,
+                is_voip_enabled: isVoipEnabled,
+                permissions: matrix
+            });
         });
     });
 });
@@ -750,10 +760,15 @@ app.use(requireLogin);
 // ── GET USER SIP CREDENTIALS (API) ──────────────────────────
 app.get('/api/voipline/sip-credentials', requireLogin, (req, res) => {
     const userId = req.session.user.id;
-    db.get("SELECT voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url FROM users WHERE id = ?", [userId], (err, row) => {
+    db.get("SELECT voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled FROM users WHERE id = ?", [userId], (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!row) return res.status(404).json({ error: 'User not found' });
-        
+
+        // ── VoIP Master Toggle Gate ─────────────────────────────
+        if (!row.is_voip_enabled) {
+            return res.status(403).json({ success: false, message: 'VoIP module is currently disabled by system administrator.' });
+        }
+
         res.json({
             sip_username: row.voipline_sip_username || '',
             sip_password: decrypt(row.voipline_sip_password) || '',
@@ -807,7 +822,7 @@ app.post('/api/configurations', (req, res) => {
 
 // ── OVERRIDE ADMIN USERS ROUTES FOR ENCRYPTION ───────────────
 app.get('/admin/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, voipline_last_sync, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const decrypted = (rows || []).map(u => {
             u.voipline_master_key = decrypt(u.voipline_master_key);
@@ -822,7 +837,7 @@ app.get('/admin/users', requireManager, (req, res) => {
 
 app.post('/admin/users', requireManager, async (req, res) => {
     try {
-        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url } = req.body;
+        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled } = req.body;
 
         if (!username || username.trim().length < 3) {
             return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
@@ -858,8 +873,8 @@ app.post('/admin/users', requireManager, async (req, res) => {
         const encApiKey = encrypt(voipline_api_key || '');
         const encSipPassword = encrypt(voipline_sip_password || '');
 
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || ''], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             
             const userId = this.lastID;
@@ -909,7 +924,7 @@ function invalidateUserSessions(userId, username) {
 
 app.put('/admin/users/:id', requireManager, async (req, res) => {
     try {
-        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url } = req.body;
+        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled } = req.body;
         const id = req.params.id;
 
         if (!username || username.trim().length < 3) {
@@ -963,8 +978,8 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                         return res.status(400).json({ error: getPasswordStrengthMessage() });
                     }
                     const hashedPassword = await bcrypt.hash(password, 10);
-                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=? WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, id], (err) => {
                         if (err) return res.status(500).json({ error: err.message });
                         handlePermissionsSync(() => {
                             invalidateUserSessions(id, oldUsername);
@@ -975,8 +990,8 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                         });
                     });
                 } else {
-                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=? WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, id], (err) => {
                         if (err) return res.status(500).json({ error: err.message });
                         handlePermissionsSync(() => {
                             invalidateUserSessions(id, oldUsername);
@@ -3115,7 +3130,7 @@ function startVoIPLinePolling() {
     setInterval(async () => {
         try {
             // Fetch all users with extensions
-            db.all("SELECT id, username, full_name, voipline_extension, voipline_master_key, voipline_last_sync, last_call_sync_timestamp FROM users WHERE voipline_extension IS NOT NULL AND voipline_extension != ''", [], async (err, users) => {
+            db.all("SELECT id, username, full_name, voipline_extension, voipline_master_key, voipline_last_sync, last_call_sync_timestamp FROM users WHERE voipline_extension IS NOT NULL AND voipline_extension != '' AND is_voip_enabled = 1", [], async (err, users) => {
                 if (err || !users || users.length === 0) return;
 
                 // Group users by decrypted master key
@@ -3318,10 +3333,15 @@ app.post('/api/voipline/click-to-call', (req, res) => {
     }
 
     const loggedInUser = req.session.user;
-    
-    db.get("SELECT voipline_extension, voipline_api_key, voipline_outbound_line, voipline_master_key FROM users WHERE id = ?", [loggedInUser.id], async (err, userRow) => {
+
+    db.get("SELECT voipline_extension, voipline_api_key, voipline_outbound_line, voipline_master_key, is_voip_enabled FROM users WHERE id = ?", [loggedInUser.id], async (err, userRow) => {
         if (err || !userRow) {
             return res.status(500).json({ error: 'Failed to retrieve user calling configuration.' });
+        }
+
+        // ── VoIP Master Toggle Gate ─────────────────────────────
+        if (!userRow.is_voip_enabled) {
+            return res.status(403).json({ success: false, message: 'VoIP module is currently disabled by system administrator.' });
         }
 
         const extension = reqExtension || userRow.voipline_extension;

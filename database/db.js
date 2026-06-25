@@ -106,7 +106,8 @@ db.serialize(() => {
             voipline_master_key TEXT,
             last_call_sync_timestamp TEXT,
             voipline_sync_status TEXT DEFAULT 'Offline',
-            voipline_last_sync TEXT
+            voipline_last_sync TEXT,
+            is_voip_enabled INTEGER DEFAULT 0
         )
     `);
 
@@ -962,6 +963,20 @@ db.serialize(() => {
     });
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_user_id ON system_file_operations(user_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_time ON system_file_operations(timestamp)", () => {});
+
+    // ── SAFE MIGRATION: Add is_voip_enabled to existing users tables ───
+    db.all("PRAGMA table_info(users)", [], (pragmaErr, cols) => {
+        if (pragmaErr) { console.error('[DB Migration] Could not inspect users table:', pragmaErr.message); return; }
+        const hasVoipEnabled = (cols || []).some(c => c.name === 'is_voip_enabled');
+        if (!hasVoipEnabled) {
+            db.run("ALTER TABLE users ADD COLUMN is_voip_enabled INTEGER DEFAULT 0", (alterErr) => {
+                if (alterErr) console.error('[DB Migration] Failed to add is_voip_enabled column:', alterErr.message);
+                else console.log('[DB Migration] Added is_voip_enabled column to users table successfully.');
+            });
+        } else {
+            console.log('[DB] users.is_voip_enabled column already present — no migration needed.');
+        }
+    });
 
     function runUserPermissionsInitialization() {
         const modulesAndFeatures = {
