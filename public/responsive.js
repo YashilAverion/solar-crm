@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 3. Load & Apply Layout Configurations, and Setup UI Settings Panel
     setupLayoutPreferences();
+
+    // 4. Enforce Global Sidebar Permissions to prevent leaks
+    enforceSidebarPermissions();
 });
 
 function setupHamburgerMenu() {
@@ -222,5 +225,78 @@ function applyPreferences(prefs) {
         document.body.classList.add('hide-stats');
     } else {
         document.body.classList.remove('hide-stats');
+    }
+}
+
+async function enforceSidebarPermissions() {
+    try {
+        const meRes = await fetch('/api/me');
+        if (!meRes.ok) return;
+        const user = await meRes.json();
+        
+        // Admins skip checks
+        if (user.role === 'Admin') return;
+        
+        const permRes = await fetch('/api/my-permissions');
+        if (!permRes.ok) return;
+        const matrix = await permRes.json();
+        
+        // Map URLs to respective module/feature names
+        const mappings = [
+            { selector: 'a[href="/dashboard_sales.html"]', module: 'Dashboard', feature: 'Sales' },
+            { selector: 'a[href="/dashboard_installation.html"]', module: 'Dashboard', feature: 'Installation' },
+            { selector: 'a[href="/dashboard_service.html"]', module: 'Dashboard', feature: 'Service' },
+            { selector: 'a[href="/dashboard_ares_installation.html"]', module: 'Dashboard', feature: 'Ares Installation' },
+            { selector: 'a[href="/"]', module: 'Lead Master', feature: 'View Leads' },
+            { selector: 'a[href="/delete_leads.html"]', module: 'Lead Master', feature: 'Delete Lead' },
+            { selector: 'a[href="/duplicate_leads.html"]', module: 'Lead Master', feature: 'Duplicate Lead' },
+            { selector: 'a[href="/lead_approvals.html"]', module: 'Lead Master', feature: 'Lead Approvals' },
+            { selector: 'a[href="/project_leads.html"]', module: 'Projects', feature: 'Leads' },
+            { selector: 'a[href="/products.html"]', module: 'Masters', feature: 'Manage Products' },
+            { selector: 'a[href="/combo_master.html"]', module: 'Masters', feature: 'Manage Products' },
+            { selector: 'a[href="/stc_master.html"]', module: 'Masters', feature: 'Manage STC' },
+            { selector: 'a[href="/rebate_live_master.html"]', module: 'Masters', feature: 'Manage Rebates' },
+            { selector: 'a[href="/margin_master.html"]', module: 'Masters', feature: 'Manage Margins' },
+            { selector: 'a[href="/installation_charges.html"]', module: 'Masters', feature: 'Manage Charges' },
+            { selector: 'a[href="/installations.html"]', module: 'Ares Installation Outside', feature: 'Installations' },
+            { selector: 'a[href="/outstanding_payments.html"]', module: 'Ares Installation Outside', feature: 'Outstanding Payments' },
+            { selector: 'a[href="/paid_payments.html"]', module: 'Ares Installation Outside', feature: 'Paid Payments' },
+            { selector: 'a[href="/company_details.html"]', module: 'Ares Installation Outside', feature: 'Company Details' },
+            { selector: 'a[href="/admin.html"]', module: 'Settings', feature: 'Manage Users' },
+            { selector: 'a[href="/attendance.html"]', module: 'Attendance & Payroll', feature: 'Employees' },
+            { selector: 'a[href="/attendance.html#leave"]', module: 'Attendance & Payroll', feature: 'Leave' },
+            { selector: 'a[href="/attendance.html#timesheets"]', module: 'Attendance & Payroll', feature: 'Timesheets' },
+            { selector: 'a[href="/attendance.html#pay"]', module: 'Attendance & Payroll', feature: 'Pay Employee' },
+            { selector: 'a[href="/attendance.html#super"]', module: 'Attendance & Payroll', feature: 'Superannuation' }
+        ];
+
+        // Process each link visibility
+        mappings.forEach(m => {
+            const els = document.querySelectorAll(`.sidebar ${m.selector}`);
+            els.forEach(el => {
+                if (!matrix[m.module] || !matrix[m.module][m.feature]) {
+                    el.style.display = 'none';
+                }
+            });
+        });
+
+        // Hide parent menus that have no visible children
+        document.querySelectorAll('.sidebar .sub-menu').forEach(sub => {
+            const links = Array.from(sub.querySelectorAll('a.menu-item'));
+            if (links.length > 0 && links.every(a => a.style.display === 'none')) {
+                if (sub.previousElementSibling && sub.previousElementSibling.classList.contains('menu-item')) {
+                    sub.previousElementSibling.style.display = 'none';
+                }
+            }
+        });
+        
+        // Handle User Management standalone menu item
+        const userMgmtEl = document.querySelector('.sidebar a[href="/admin.html"]');
+        if (userMgmtEl && (!matrix['Settings'] || !matrix['Settings']['Manage Users'])) {
+            userMgmtEl.style.display = 'none';
+        }
+        
+    } catch (e) {
+        console.error('Error enforcing sidebar permissions:', e);
     }
 }

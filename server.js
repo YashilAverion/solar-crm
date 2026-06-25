@@ -472,7 +472,30 @@ app.get('/api/me', (req, res) => {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ error: 'Not logged in' });
     }
-    res.json(req.session.user);
+    const userId = req.session.user.id;
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Database error.' });
+        
+        const matrix = {};
+        const allowedModules = new Set();
+        (rows || []).forEach(r => {
+            if (r.feature_name === 'Access Module' && r.access_status === 1) {
+                allowedModules.add(r.module_name);
+            }
+        });
+        
+        (rows || []).forEach(r => {
+            if (allowedModules.has(r.module_name)) {
+                if (!matrix[r.module_name]) matrix[r.module_name] = {};
+                matrix[r.module_name][r.feature_name] = r.access_status === 1;
+            }
+        });
+        
+        res.json({
+            ...req.session.user,
+            permissions: matrix
+        });
+    });
 });
 
 // ── GET WORKSPACE ANALYTICS SUMMARY (API) ──────────────────
@@ -863,6 +886,27 @@ app.post('/admin/users', requireManager, async (req, res) => {
     }
 });
 
+function invalidateUserSessions(userId, username) {
+    const sqlite3 = require('sqlite3').verbose();
+    const sessionDbPath = path.resolve(__dirname, 'database', 'solar_sessions.db');
+    const sessionDb = new sqlite3.Database(sessionDbPath, (err) => {
+        if (err) {
+            console.error('[SESSION INVALIDATE] Error connecting to session DB:', err.message);
+            return;
+        }
+        const query = `DELETE FROM sessions WHERE sess LIKE ? OR sess LIKE ?`;
+        const params = [`%"id":${userId}%`, `%"username":"${username}"%`];
+        sessionDb.run(query, params, function(delErr) {
+            if (delErr) {
+                console.error('[SESSION INVALIDATE] Error clearing sessions:', delErr.message);
+            } else {
+                console.log(`[SESSION INVALIDATE] Cleared ${this.changes} sessions for user ${userId} (${username}).`);
+            }
+            sessionDb.close();
+        });
+    });
+}
+
 app.put('/admin/users/:id', requireManager, async (req, res) => {
     try {
         const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url } = req.body;
@@ -908,28 +952,45 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
             });
         };
 
-        // If new password provided, validate strength
-        if (password && password.trim() !== '') {
-            if (!isStrongPassword(password)) {
-                return res.status(400).json({ error: getPasswordStrengthMessage() });
-            }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                handlePermissionsSync(() => {
-                    res.json({ success: true });
-                });
-            });
-        } else {
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                handlePermissionsSync(() => {
-                    res.json({ success: true });
-                });
-            });
-        }
+        // Query original username first for robust session invalidation
+        db.get("SELECT username FROM users WHERE id = ?", [id], (userErr, existingUser) => {
+            const oldUsername = existingUser ? existingUser.username : username;
+
+            const performUpdate = async () => {
+                // If new password provided, validate strength
+                if (password && password.trim() !== '') {
+                    if (!isStrongPassword(password)) {
+                        return res.status(400).json({ error: getPasswordStrengthMessage() });
+                    }
+                    const hashedPassword = await bcrypt.hash(password, 10);
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        handlePermissionsSync(() => {
+                            invalidateUserSessions(id, oldUsername);
+                            if (username.trim() !== oldUsername) {
+                                invalidateUserSessions(id, username.trim());
+                            }
+                            res.json({ success: true });
+                        });
+                    });
+                } else {
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        handlePermissionsSync(() => {
+                            invalidateUserSessions(id, oldUsername);
+                            if (username.trim() !== oldUsername) {
+                                invalidateUserSessions(id, username.trim());
+                            }
+                            res.json({ success: true });
+                        });
+                    });
+                }
+            };
+            performUpdate();
+        });
+
     } catch (err) {
         console.error('Error updating user:', err);
         res.status(500).json({ error: 'Internal server error during user update.' });
@@ -2300,18 +2361,33 @@ app.delete('/api/system/backups/delete/:filename', requireManager, (req, res) =>
 
 // ── PERMISSIONS API ────────────────────────────────────────
 
+function getUserPermissionsMatrix(userId, callback) {
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+        if (err) return callback(err);
+
+        const matrix = {};
+        const allowedModules = new Set();
+        (rows || []).forEach(r => {
+            if (r.feature_name === 'Access Module' && r.access_status === 1) {
+                allowedModules.add(r.module_name);
+            }
+        });
+
+        (rows || []).forEach(r => {
+            if (allowedModules.has(r.module_name)) {
+                if (!matrix[r.module_name]) matrix[r.module_name] = {};
+                matrix[r.module_name][r.feature_name] = r.access_status === 1;
+            }
+        });
+        callback(null, matrix);
+    });
+}
+
 app.get('/api/my-permissions', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     const { id } = req.session.user;
-
-    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [id], (err, rows) => {
+    getUserPermissionsMatrix(id, (err, matrix) => {
         if (err) return res.status(500).json({ error: 'Database error.' });
-
-        const matrix = {};
-        (rows || []).forEach(r => {
-            if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.access_status === 1;
-        });
         res.json(matrix);
     });
 });
@@ -2319,6 +2395,7 @@ app.get('/api/my-permissions', (req, res) => {
 // ── GET USER PERMISSIONS ──────────────────────────────────────
 app.get('/api/users/:id/permissions', requireManager, (req, res) => {
     const userId = req.params.id;
+    // For admin view, return all features/permissions so they can toggle them
     db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const matrix = {};
@@ -2380,15 +2457,8 @@ app.post('/api/users/:id/permissions', requireManager, (req, res) => {
 app.get('/api/role-permissions/:role', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     const userId = req.session.user.id;
-    
-    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+    getUserPermissionsMatrix(userId, (err, matrix) => {
         if (err) return res.status(500).json({ error: 'Database error.' });
-
-        const matrix = {};
-        (rows || []).forEach(r => {
-            if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.access_status === 1;
-        });
         res.json(matrix);
     });
 });
