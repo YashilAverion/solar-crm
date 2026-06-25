@@ -1957,9 +1957,8 @@ const applyAdvancedFilters = (req, baseQuery, params) => {
     return query;
 };
 
-// ── SYSTEM SPACE AUDIT API ─────────────────────────────────
-let spaceAuditCache = null;
-let spaceAuditCacheTime = 0;
+// ── SYSTEM SPACE AUDIT & STORAGE CONTROLLERS ───────────────
+const { exec } = require('child_process');
 
 function getDirSize(dirPath, excludeDirs = ['node_modules', '.git', '.gemini', '.github', 'backups']) {
     let size = 0;
@@ -1983,83 +1982,319 @@ function getDirSize(dirPath, excludeDirs = ['node_modules', '.git', '.gemini', '
     return size;
 }
 
-app.get('/api/system/space-audit', requireManager, async (req, res) => {
-    const now = Date.now();
-    if (spaceAuditCache && (now - spaceAuditCacheTime < 60000)) {
-        return res.json(spaceAuditCache);
-    }
-    
-    try {
-        let totalSpaceGB = 0;
-        let freeSpaceGB = 0;
-        let usedSpaceGB = 0;
-        let percentUsed = 0;
-        
-        if (fs.promises && fs.promises.statfs) {
-            try {
-                const stats = await fs.promises.statfs(__dirname);
-                const totalBytes = stats.bsize * stats.blocks;
-                const freeBytes = stats.bsize * stats.bfree;
-                const usedBytes = totalBytes - freeBytes;
-                
-                totalSpaceGB = parseFloat((totalBytes / (1024 * 1024 * 1024)).toFixed(2));
-                freeSpaceGB = parseFloat((freeBytes / (1024 * 1024 * 1024)).toFixed(2));
-                usedSpaceGB = parseFloat((usedBytes / (1024 * 1024 * 1024)).toFixed(2));
-                percentUsed = parseFloat(((usedBytes / totalBytes) * 100).toFixed(1));
-            } catch (diskErr) {
-                console.error('Error fetching disk space stats:', diskErr.message);
+function getDirSizeHelper(dirPath, callback) {
+    if (process.platform !== 'win32') {
+        exec(`du -sb "${dirPath}"`, (err, stdout, stderr) => {
+            if (err) {
+                return callback(null, getDirSize(dirPath));
             }
+            const match = stdout.trim().match(/^(\d+)/);
+            if (match) {
+                return callback(null, parseInt(match[1], 10));
+            }
+            callback(null, getDirSize(dirPath));
+        });
+    } else {
+        callback(null, getDirSize(dirPath));
+    }
+}
+
+function getDiskStats(callback) {
+    if (process.platform !== 'win32') {
+        exec('df -h /', (error, stdout, stderr) => {
+            if (error) {
+                return getFallbackDiskStats(callback);
+            }
+            try {
+                const lines = stdout.trim().split('\n');
+                if (lines.length > 1) {
+                    const parts = lines[1].replace(/\s+/g, ' ').split(' ');
+                    if (parts.length >= 5) {
+                        const total = parts[1];
+                        const used = parts[2];
+                        const free = parts[3];
+                        const percent = parts[4].replace('%', '');
+                        return callback(null, {
+                            totalSpace: total,
+                            usedSpace: used,
+                            freeSpace: free,
+                            percentUsed: parseFloat(percent) || 0
+                        });
+                    }
+                }
+                getFallbackDiskStats(callback);
+            } catch (e) {
+                getFallbackDiskStats(callback);
+            }
+        });
+    } else {
+        getFallbackDiskStats(callback);
+    }
+}
+
+async function getFallbackDiskStats(callback) {
+    try {
+        if (fs.promises && fs.promises.statfs) {
+            const stats = await fs.promises.statfs(__dirname);
+            const totalBytes = stats.bsize * stats.blocks;
+            const freeBytes = stats.bsize * stats.bfree;
+            const usedBytes = totalBytes - freeBytes;
+            
+            const totalSpaceGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
+            const freeSpaceGB = (freeBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
+            const usedSpaceGB = (usedBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
+            const percentUsed = parseFloat(((usedBytes / totalBytes) * 100).toFixed(1));
+            
+            return callback(null, {
+                totalSpace: totalSpaceGB,
+                usedSpace: usedSpaceGB,
+                freeSpace: freeSpaceGB,
+                percentUsed: percentUsed
+            });
+        }
+    } catch (err) {
+        // ignore
+    }
+    callback(null, {
+        totalSpace: '100G',
+        usedSpace: '15G',
+        freeSpace: '85G',
+        percentUsed: 15.0
+    });
+}
+
+const config = require('./config');
+
+function getStorageCapacityStats(callback) {
+    getDiskStats((err, diskStats) => {
+        if (err) {
+            return callback(err);
         }
         
-        if (totalSpaceGB === 0) {
-            totalSpaceGB = 100;
-            freeSpaceGB = 85;
-            usedSpaceGB = 15;
-            percentUsed = 15;
-        }
-
         const uploadsPath = path.join(__dirname, 'public', 'uploads');
-        const dbPath = path.join(__dirname, 'database', 'solar_crm.db');
+        const dbPath = path.isAbsolute(config.database.path)
+            ? config.database.path
+            : path.resolve(__dirname, config.database.path);
+        const backupsPath = path.join(__dirname, 'SYSTEM_BACKUPS');
         
         let uploadsSizeMB = 0;
         let dbSizeMB = 0;
         let projectSizeMB = 0;
+        let backupsSizeMB = 0;
         
-        try {
-            if (fs.existsSync(uploadsPath)) {
-                uploadsSizeMB = parseFloat((getDirSize(uploadsPath) / (1024 * 1024)).toFixed(2));
-            }
-        } catch (e) {}
-        
-        try {
-            if (fs.existsSync(dbPath)) {
-                dbSizeMB = parseFloat((fs.statSync(dbPath).size / (1024 * 1024)).toFixed(2));
-            }
-        } catch (e) {}
-        
-        try {
-            projectSizeMB = parseFloat((getDirSize(__dirname) / (1024 * 1024)).toFixed(2));
-        } catch (e) {}
+        getDirSizeHelper(uploadsPath, (err1, size1) => {
+            uploadsSizeMB = parseFloat((size1 / (1024 * 1024)).toFixed(2));
+            
+            try {
+                if (fs.existsSync(dbPath)) {
+                    dbSizeMB = parseFloat((fs.statSync(dbPath).size / (1024 * 1024)).toFixed(2));
+                }
+            } catch (e) {}
+            
+            getDirSizeHelper(backupsPath, (err2, size2) => {
+                backupsSizeMB = parseFloat((size2 / (1024 * 1024)).toFixed(2));
+                
+                getDirSizeHelper(__dirname, (err3, size3) => {
+                    projectSizeMB = parseFloat((size3 / (1024 * 1024)).toFixed(2));
+                    
+                    const statsData = {
+                        totalSpace: diskStats.totalSpace,
+                        usedSpace: diskStats.usedSpace,
+                        freeSpace: diskStats.freeSpace,
+                        percentUsed: diskStats.percentUsed,
+                        details: {
+                            uploadsFolderMB: uploadsSizeMB,
+                            dbFileMB: dbSizeMB,
+                            projectFolderMB: projectSizeMB,
+                            backupsFolderMB: backupsSizeMB
+                        }
+                    };
+                    callback(null, statsData);
+                });
+            });
+        });
+    });
+}
 
-        const result = {
-            totalSpaceGB,
-            freeSpaceGB,
-            usedSpaceGB,
-            percentUsed,
-            details: {
-                uploadsFolderMB: uploadsSizeMB,
-                dbFileMB: dbSizeMB,
-                projectFolderMB: projectSizeMB
-            }
+function logFileOperation(userId, actionType, fileName, fileSize, callback) {
+    const sql = `INSERT INTO system_file_operations (user_id, action_type, file_name, file_size) VALUES (?, ?, ?, ?)`;
+    db.run(sql, [userId, actionType, fileName, fileSize], function(err) {
+        if (err) {
+            console.error('[DB] Error logging file operation:', err.message);
+        }
+        if (callback) callback(err);
+    });
+}
+
+// ── GET STORAGE STATS API ──
+app.get('/api/system/storage-stats', requireManager, (req, res) => {
+    getStorageCapacityStats((err, stats) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to retrieve storage capacity stats.' });
+        }
+        res.json(stats);
+    });
+});
+
+// ── BACKWARDS COMPATIBLE SPACE AUDIT API ──
+app.get('/api/system/space-audit', requireManager, (req, res) => {
+    getStorageCapacityStats((err, stats) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to perform space audit' });
+        }
+        const parseGB = (str) => {
+            const val = parseFloat(str);
+            return isNaN(val) ? 0 : val;
         };
-        
-        spaceAuditCache = result;
-        spaceAuditCacheTime = now;
-        
-        res.json(result);
+        res.json({
+            totalSpaceGB: parseGB(stats.totalSpace),
+            usedSpaceGB: parseGB(stats.usedSpace),
+            freeSpaceGB: parseGB(stats.freeSpace),
+            percentUsed: stats.percentUsed,
+            details: {
+                uploadsFolderMB: stats.details.uploadsFolderMB,
+                dbFileMB: stats.details.dbFileMB,
+                projectFolderMB: stats.details.projectFolderMB
+            }
+        });
+    });
+});
+
+// ── LIST BACKUPS API ──
+app.get('/api/system/backups', requireManager, (req, res) => {
+    const backupDirs = [
+        path.join(__dirname, 'SYSTEM_BACKUPS'),
+        '/var/backups'
+    ];
+    let allFiles = [];
+
+    backupDirs.forEach(dir => {
+        if (fs.existsSync(dir)) {
+            try {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    if (file.endsWith('.zip') || file.endsWith('.tar.gz') || file.endsWith('.tgz')) {
+                        const filePath = path.join(dir, file);
+                        const stats = fs.statSync(filePath);
+                        allFiles.push({
+                            name: file,
+                            path: filePath,
+                            size: (stats.size / 1024 / 1024).toFixed(2), // MB
+                            sizeBytes: stats.size,
+                            date: stats.mtime
+                        });
+                    }
+                });
+            } catch (e) {
+                console.error(`Error scanning backup dir ${dir}:`, e.message);
+            }
+        }
+    });
+
+    allFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.json(allFiles);
+});
+
+// ── STREAMING BACKUP DOWNLOAD API ──
+app.get('/api/system/backups/download/:filename', requireManager, (req, res) => {
+    const filename = req.params.filename;
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return res.status(400).send('Invalid filename.');
+    }
+
+    const backupDirs = [
+        path.join(__dirname, 'SYSTEM_BACKUPS'),
+        '/var/backups'
+    ];
+    let filePath = null;
+    for (const dir of backupDirs) {
+        const p = path.join(dir, filename);
+        if (fs.existsSync(p)) {
+            filePath = p;
+            break;
+        }
+    }
+
+    if (!filePath) {
+        return res.status(404).send('Backup file not found.');
+    }
+
+    try {
+        const stats = fs.statSync(filePath);
+        const fileSizeFormatted = (stats.size / 1024 / 1024).toFixed(2) + ' MB';
+        const userId = req.session && req.session.user ? req.session.user.id : null;
+
+        logFileOperation(userId, 'Download', filename, fileSizeFormatted, () => {
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Length', stats.size);
+
+            const stream = fs.createReadStream(filePath);
+            stream.on('error', (err) => {
+                console.error('[DOWNLOAD STREAM ERROR]', err.message);
+                if (!res.headersSent) {
+                    res.status(500).send('Error streaming file.');
+                }
+            });
+            stream.pipe(res);
+        });
     } catch (err) {
-        console.error('Space audit error:', err.message);
-        res.status(500).json({ error: 'Failed to perform space audit' });
+        console.error('Download error:', err.message);
+        res.status(500).send('Server error initiating download.');
+    }
+});
+
+// ── PURGE BACKUP FILE API ──
+app.delete('/api/system/backups/delete/:filename', requireManager, (req, res) => {
+    if (!req.session.user || !req.session.user.role || req.session.user.role.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Access Denied: Admin privileges required.' });
+    }
+
+    const filename = req.params.filename;
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return res.status(400).json({ error: 'Invalid filename.' });
+    }
+
+    const backupDirs = [
+        path.join(__dirname, 'SYSTEM_BACKUPS'),
+        '/var/backups'
+    ];
+    let filePath = null;
+    for (const dir of backupDirs) {
+        const p = path.join(dir, filename);
+        if (fs.existsSync(p)) {
+            filePath = p;
+            break;
+        }
+    }
+
+    if (!filePath) {
+        return res.status(404).json({ error: 'Backup file not found.' });
+    }
+
+    try {
+        const stats = fs.statSync(filePath);
+        const fileSizeFormatted = (stats.size / 1024 / 1024).toFixed(2) + ' MB';
+        const userId = req.session.user.id;
+
+        logFileOperation(userId, 'Delete', filename, fileSizeFormatted, (logErr) => {
+            fs.unlink(filePath, (unlinkErr) => {
+                if (unlinkErr) {
+                    console.error('[DELETE FILE ERROR]', unlinkErr.message);
+                    return res.status(500).json({ error: 'Failed to delete the backup file from server.' });
+                }
+
+                getStorageCapacityStats((statsErr, statsData) => {
+                    if (statsErr) {
+                        return res.json({ success: true, message: 'File deleted, but failed to fetch updated storage stats.' });
+                    }
+                    res.json({ success: true, message: 'File deleted successfully.', storageStats: statsData });
+                });
+            });
+        });
+    } catch (err) {
+        console.error('Delete action error:', err.message);
+        res.status(500).json({ error: 'Server error processing delete action.' });
     }
 });
 

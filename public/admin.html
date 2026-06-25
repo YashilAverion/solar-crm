@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">of <span id="statDiskTotal">0.00 GB</span></span>
             </div>
             <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px;">
-                <div id="statDiskProgress" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.3s;"></div>
+            <div id="statDiskProgress" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.3s;"></div>
             </div>
         </div>
     </div>
@@ -427,6 +427,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')">👤 User Accounts List</button>
             <button class="tab-chip" id="tab-rate-limits" onclick="switchAdminSection('rate-limits')">🔒 Login Security & Rate Limits</button>
             <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')">📞 VoIP Analytics & Recordings</button>
+            <button class="tab-chip" id="tab-storage-backups" onclick="switchAdminSection('storage-backups')">💾 System Storage & Backups</button>
         </div>
  
         <div id="section-rate-limits" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -539,6 +540,74 @@ document.addEventListener("DOMContentLoaded", function() {
                             </tr>
                         </thead>
                         <tbody id="voipLogsBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Storage & Backups Tab Content -->
+        <div id="section-storage-backups" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
+            <!-- Storage Progress and Info Block (DESIGN METRICS MODULE) -->
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex-shrink: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin: 0;">💾 Hostinger VPS Storage Allocation</h3>
+                    <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">
+                        Used: <span id="backupUsedGB" style="color: #8b5cf6; font-weight: 700;">0.00 GB</span> / 
+                        Available: <span id="backupTotalGB" style="font-weight: 700;">0.00 GB</span> (<span id="backupPercent" style="font-weight: 700;">0%</span> Used)
+                    </span>
+                </div>
+                <!-- Progress Bar -->
+                <div style="width: 100%; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); display: flex;">
+                    <div id="backupProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); transition: width 0.4s ease; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700;"></div>
+                </div>
+                <!-- Detailed Folder Sizes breakdown -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Uploads Folder</div>
+                        <div id="breakdownUploads" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">CRM Database</div>
+                        <div id="breakdownDB" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Server Backups</div>
+                        <div id="breakdownBackups" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Project</div>
+                        <div id="breakdownProject" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup Management & File Grid Table -->
+            <div style="flex: 1; min-height: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 16px; background: #fafafa; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin: 0;">📦 VPS Server Backup Archives</h3>
+                        <span style="font-size: 11px; background: #fee2e2; color: #ef4444; font-weight: 600; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;">Hostinger VPS Storage</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="tb-btn" style="height: 28px; padding: 0 12px; font-size: 12px; margin: 0; background: #10b981; color: #fff; border-color: #10b981;">&#128190; Create Backup</button>
+                        <button type="button" onclick="loadStorageStatsAndBackups()" class="act-btn" style="width: auto; height: 28px; padding: 0 12px; font-size: 11px; margin: 0;" title="Refresh backups list">🔄 Refresh List</button>
+                    </div>
+                </div>
+
+                <!-- Backup Files List Table Grid -->
+                <div style="flex: 1; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                                <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark);">File Name</th>
+                                <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark);">Creation Date</th>
+                                <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: right; background: #f8fafc; color: var(--text-dark);">File Size</th>
+                                <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: center; width: 220px; background: #f8fafc; color: var(--text-dark);">Action Control</th>
+                            </tr>
+                        </thead>
+                        <tbody id="backupsTableBody">
                             <!-- Populated dynamically -->
                         </tbody>
                     </table>
@@ -809,16 +878,20 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-users-list').style.display = target === 'users-list' ? 'flex' : 'none';
         document.getElementById('section-rate-limits').style.display = target === 'rate-limits' ? 'flex' : 'none';
         document.getElementById('section-voip-analytics').style.display = target === 'voip-analytics' ? 'flex' : 'none';
+        document.getElementById('section-storage-backups').style.display = target === 'storage-backups' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
         document.getElementById('tab-voip-analytics').classList.toggle('active-chip', target === 'voip-analytics');
+        document.getElementById('tab-storage-backups').classList.toggle('active-chip', target === 'storage-backups');
         
         if (target === 'rate-limits') {
             loadRateLimits();
             loadGlobalOfficeIp();
         } else if (target === 'voip-analytics') {
             loadVoipAnalytics();
+        } else if (target === 'storage-backups') {
+            loadStorageStatsAndBackups();
         }
     }
 
@@ -1785,6 +1858,134 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         } catch(e) { Swal.fire('Error', e.message, 'error'); }
+    }
+
+    async function loadStorageStatsAndBackups() {
+        try {
+            // Load stats
+            const statsRes = await fetch('/api/system/storage-stats');
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                renderStorageStats(stats);
+            }
+
+            // Load files
+            const backupsRes = await fetch('/api/system/backups');
+            if (backupsRes.ok) {
+                const backups = await backupsRes.json();
+                renderBackupsTable(backups);
+            }
+        } catch (e) {
+            console.error('Failed to load storage/backups data:', e);
+        }
+    }
+
+    function renderStorageStats(stats) {
+        document.getElementById('backupUsedGB').innerText = stats.usedSpace;
+        document.getElementById('backupTotalGB').innerText = stats.totalSpace;
+        document.getElementById('backupPercent').innerText = `${stats.percentUsed}%`;
+        
+        const progressEl = document.getElementById('backupProgress');
+        progressEl.style.width = `${stats.percentUsed}%`;
+        progressEl.innerText = `${stats.percentUsed}%`;
+        
+        document.getElementById('breakdownUploads').innerText = `${stats.details.uploadsFolderMB.toFixed(2)} MB`;
+        document.getElementById('breakdownDB').innerText = `${stats.details.dbFileMB.toFixed(2)} MB`;
+        document.getElementById('breakdownBackups').innerText = `${stats.details.backupsFolderMB.toFixed(2)} MB`;
+        document.getElementById('breakdownProject').innerText = `${stats.details.projectFolderMB.toFixed(2)} MB`;
+    }
+
+    function renderBackupsTable(backups) {
+        const tbody = document.getElementById('backupsTableBody');
+        if (!tbody) return;
+        if (!backups || backups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 16px; text-align: center; color: var(--text-muted);">No backup archives found on Hostinger VPS.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        backups.forEach(file => {
+            const dateStr = new Date(file.date).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            html += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 10px 16px; text-align: left; font-weight: 600; color: var(--text-dark);">${file.name}</td>
+                    <td style="padding: 10px 16px; text-align: left; color: var(--text-muted);">${dateStr}</td>
+                    <td style="padding: 10px 16px; text-align: right; font-weight: 600; color: var(--text-dark);">${file.size} MB</td>
+                    <td style="padding: 10px 16px; text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button type="button" class="act-btn" onclick="downloadBackupFile('${file.name}')" style="background: #e8681e; color: #fff; border-color: #e8681e; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; width: auto; height: 22px; font-size: 11px;" title="Download to PC">
+                                📥 Download
+                            </button>
+                            <button type="button" class="act-btn act-btn-del" onclick="deleteBackupFile('${file.name}')" style="background: #ef4444; color: #fff; border-color: #ef4444; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; width: auto; height: 22px; font-size: 11px;" title="Delete from Server">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function downloadBackupFile(filename) {
+        const url = `/api/system/backups/download/${encodeURIComponent(filename)}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(loadStorageStatsAndBackups, 2000);
+    }
+
+    async function deleteBackupFile(filename) {
+        const { isConfirmed: confirm1 } = await Swal.fire({
+            title: 'Delete Backup?',
+            text: `Are you sure you want to delete ${filename}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e8681e',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, Delete'
+        });
+
+        if (!confirm1) return;
+
+        const { isConfirmed: confirm2 } = await Swal.fire({
+            title: 'Double Confirmation Required',
+            text: 'Warning: This action permanently deletes this backup from Hostinger VPS. Proceed?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, permanently delete!'
+        });
+
+        if (!confirm2) return;
+
+        try {
+            const res = await fetch(`/api/system/backups/delete/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                Swal.fire('Deleted!', 'The backup file has been permanently deleted.', 'success');
+                if (data.storageStats) {
+                    renderStorageStats(data.storageStats);
+                } else {
+                    loadStorageStatsAndBackups();
+                }
+                loadSpaceAudit();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to delete backup file.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network error occurred.', 'error');
+        }
     }
 
     async function triggerDeployment() {

@@ -945,6 +945,24 @@ db.serialize(() => {
     });
     db.run("CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id)", () => {});
 
+    // ── SYSTEM FILE OPERATIONS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS system_file_operations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            action_type TEXT CHECK(action_type IN ('Download', 'Delete')),
+            file_name TEXT NOT NULL,
+            file_size TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating system_file_operations table:', err.message);
+        else console.log('[DB] system_file_operations table ready.');
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_user_id ON system_file_operations(user_id)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_time ON system_file_operations(timestamp)", () => {});
+
     function runUserPermissionsInitialization() {
         const modulesAndFeatures = {
             'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
