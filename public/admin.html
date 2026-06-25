@@ -578,15 +578,21 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Project</div>
                         <div id="breakdownProject" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                     </div>
-                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
-                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">System Logs</div>
-                        <div id="breakdownSystemLogs" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">System Logs</div>
+                            <div id="breakdownSystemLogs" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                        </div>
+                        <button type="button" onclick="purgeServerCaches()" class="act-btn" style="width: auto; padding: 2px 8px; font-size: 10px; margin-top: 6px; background: #ea580c; color: #fff; border-color: #ea580c; height: 20px; line-height: 14px; font-weight: 600;" title="Clean & truncate traffic logs">⚡ Purge Logs</button>
                     </div>
-                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
-                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">PM2 Caches</div>
-                        <div id="breakdownPm2Cache" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">PM2 Caches</div>
+                            <div id="breakdownPm2Cache" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                        </div>
+                        <button type="button" onclick="purgeServerCaches()" class="act-btn" style="width: auto; padding: 2px 8px; font-size: 10px; margin-top: 6px; background: #ea580c; color: #fff; border-color: #ea580c; height: 20px; line-height: 14px; font-weight: 600;" title="Flush PM2 runtime logs">⚡ Purge Cache</button>
                     </div>
-                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 0 1px #8b5cf6;">
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 0 1px #8b5cf6; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                         <div style="font-size: 10px; font-weight: 700; color: #8b5cf6; text-transform: uppercase;">OS & Engines</div>
                         <div id="breakdownOS" style="font-size: 13px; font-weight: 700; color: #8b5cf6; margin-top: 4px;">0.00 MB</div>
                     </div>
@@ -600,7 +606,8 @@ document.addEventListener("DOMContentLoaded", function() {
                         <h3 style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin: 0;">📦 VPS Server Backup Archives</h3>
                         <span style="font-size: 11px; background: #fee2e2; color: #ef4444; font-weight: 600; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;">Hostinger VPS Storage</span>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="tb-btn" style="height: 28px; padding: 0 12px; font-size: 12px; margin: 0; background: #ef4444; color: #fff; border-color: #ef4444; display: none; font-weight: 700;">🗑️ Delete Selected (0)</button>
                         <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="tb-btn" style="height: 28px; padding: 0 12px; font-size: 12px; margin: 0; background: #10b981; color: #fff; border-color: #10b981;">&#128190; Create Backup</button>
                         <button type="button" onclick="loadStorageStatsAndBackups()" class="act-btn" style="width: auto; height: 28px; padding: 0 12px; font-size: 11px; margin: 0;" title="Refresh backups list">🔄 Refresh List</button>
                     </div>
@@ -611,6 +618,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                                <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: center; width: 40px; background: #f8fafc; color: var(--text-dark);"><input type="checkbox" id="masterBackupCheckbox" onchange="toggleAllBackupCheckboxes(this)" style="cursor: pointer; transform: scale(1.1);"></th>
                                 <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark);">File Name</th>
                                 <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark);">Creation Date</th>
                                 <th style="padding: 10px 16px; border-bottom: 2px solid var(--border); text-align: right; background: #f8fafc; color: var(--text-dark);">File Size</th>
@@ -1926,8 +1934,18 @@ document.addEventListener("DOMContentLoaded", function() {
     function renderBackupsTable(backups) {
         const tbody = document.getElementById('backupsTableBody');
         if (!tbody) return;
+
+        // Reset checkboxes state
+        const master = document.getElementById('masterBackupCheckbox');
+        if (master) master.checked = false;
+        const btn = document.getElementById('btnBulkDeleteBackups');
+        if (btn) {
+            btn.style.display = 'none';
+            btn.innerText = '🗑️ Delete Selected (0)';
+        }
+
         if (!backups || backups.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="padding: 16px; text-align: center; color: var(--text-muted);">No backup archives found on Hostinger VPS.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-muted);">No backup archives found on Hostinger VPS.</td></tr>';
             return;
         }
 
@@ -1939,6 +1957,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             html += `
                 <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 10px 16px; text-align: center; width: 40px;"><input type="checkbox" class="backup-row-checkbox" data-filename="${file.name}" onchange="updateBulkDeleteButtonState()" style="cursor: pointer; transform: scale(1.1);"></td>
                     <td style="padding: 10px 16px; text-align: left; font-weight: 600; color: var(--text-dark);">${file.name}</td>
                     <td style="padding: 10px 16px; text-align: left; color: var(--text-muted);">${dateStr}</td>
                     <td style="padding: 10px 16px; text-align: right; font-weight: 600; color: var(--text-dark);">${file.size} MB</td>
@@ -2013,6 +2032,174 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         } catch (e) {
             Swal.fire('Error', 'Network error occurred.', 'error');
+        }
+    }
+
+    function toggleAllBackupCheckboxes(master) {
+        const checkboxes = document.querySelectorAll('.backup-row-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = master.checked;
+        });
+        updateBulkDeleteButtonState();
+    }
+
+    function updateBulkDeleteButtonState() {
+        const checkedBoxes = document.querySelectorAll('.backup-row-checkbox:checked');
+        const count = checkedBoxes.length;
+        const btn = document.getElementById('btnBulkDeleteBackups');
+        if (!btn) return;
+        
+        if (count > 0) {
+            btn.style.display = 'inline-block';
+            btn.innerText = `🗑️ Delete Selected (${count})`;
+        } else {
+            btn.style.display = 'none';
+        }
+        
+        const master = document.getElementById('masterBackupCheckbox');
+        if (master) {
+            const allBoxes = document.querySelectorAll('.backup-row-checkbox');
+            master.checked = allBoxes.length > 0 && count === allBoxes.length;
+        }
+    }
+
+    async function deleteSelectedBackups() {
+        const checkedBoxes = document.querySelectorAll('.backup-row-checkbox:checked');
+        const filenames = Array.from(checkedBoxes).map(cb => cb.getAttribute('data-filename'));
+        if (filenames.length === 0) return;
+
+        const firstConfirm = await Swal.fire({
+            title: `Delete ${filenames.length} backups?`,
+            text: `You have selected ${filenames.length} archives to delete. This cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete selected!'
+        });
+
+        if (!firstConfirm.isConfirmed) return;
+
+        const secondConfirm = await Swal.fire({
+            title: 'Are you absolutely sure?',
+            text: 'This will permanently remove the selected backup files from the Hostinger VPS server storage.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, permanently delete!'
+        });
+
+        if (!secondConfirm.isConfirmed) return;
+
+        try {
+            const btn = document.getElementById('btnBulkDeleteBackups');
+            btn.disabled = true;
+            btn.innerText = 'Deleting Selected...';
+
+            const res = await fetch('/api/system/backups/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filenames })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: data.message,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                const master = document.getElementById('masterBackupCheckbox');
+                if (master) master.checked = false;
+
+                if (data.storageStats) {
+                    renderStorageStats(data.storageStats);
+                } else {
+                    loadStorageStatsAndBackups();
+                }
+                loadSpaceAudit();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to delete selected backups.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network or server error.', 'error');
+        } finally {
+            const btn = document.getElementById('btnBulkDeleteBackups');
+            if (btn) {
+                btn.disabled = false;
+                btn.style.display = 'none';
+            }
+        }
+    }
+
+    async function purgeServerCaches() {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Purge Server Caches & Logs?',
+            text: 'This will flush PM2 runtime logs and safely clean/truncate traffic logfiles in /var/log to free up space.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ea580c',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, Purge Caches!'
+        });
+
+        if (!isConfirmed) return;
+
+        try {
+            const targets = ['breakdownSystemLogs', 'breakdownPm2Cache', 'breakdownOS'];
+            targets.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.closest('div').style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    el.closest('div').style.transform = 'scale(0.9)';
+                    el.closest('div').style.opacity = '0.6';
+                }
+            });
+
+            const res = await fetch('/api/system/clear-cache', { method: 'POST' });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setTimeout(() => {
+                    if (data.storageStats) {
+                        renderStorageStats(data.storageStats);
+                    }
+                    targets.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.closest('div').style.transform = 'scale(1.05)';
+                            el.closest('div').style.opacity = '1';
+                            setTimeout(() => {
+                                el.closest('div').style.transform = 'scale(1)';
+                            }, 300);
+                        }
+                    });
+                }, 400);
+
+                Swal.fire({
+                    title: 'Caches Purged!',
+                    text: data.message,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                loadSpaceAudit();
+            } else {
+                targets.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.closest('div').style.transform = 'scale(1)';
+                        el.closest('div').style.opacity = '1';
+                    }
+                });
+                Swal.fire('Error', data.error || 'Failed to clear caches.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network or server error.', 'error');
         }
     }
 
@@ -2153,6 +2340,13 @@ Initializing deployment stream...
         loadPermissions(); 
         checkVoIPLineStatus();
         setInterval(checkVoIPLineStatus, 10000);
+
+        // Storage Background Sync Interval (Every 2 hours - 7200000 ms)
+        setInterval(() => {
+            console.log('[STORAGE SYNC] Running background disk directory sync...');
+            loadStorageStatsAndBackups();
+        }, 7200000);
+
         const pwdInput = document.getElementById('u_password');
         if (pwdInput) pwdInput.addEventListener('input', updatePasswordStrength);
 

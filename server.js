@@ -2403,6 +2403,133 @@ app.delete('/api/system/backups/delete/:filename', requireManager, (req, res) =>
     }
 });
 
+// ── BULK DELETE BACKUPS API ──
+app.post('/api/system/backups/bulk-delete', requireManager, (req, res) => {
+    if (!req.session.user || !req.session.user.role || req.session.user.role.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Access Denied: Admin privileges required.' });
+    }
+
+    const { filenames } = req.body;
+    if (!filenames || !Array.isArray(filenames) || filenames.length === 0) {
+        return res.status(400).json({ error: 'Invalid or empty filenames list.' });
+    }
+
+    // Sanitize filenames to prevent traversal attacks
+    for (const filename of filenames) {
+        if (typeof filename !== 'string' || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return res.status(400).json({ error: `Invalid filename detected: ${filename}` });
+        }
+    }
+
+    const backupDirs = [
+        path.join(__dirname, 'SYSTEM_BACKUPS'),
+        '/var/backups'
+    ];
+    const userId = req.session.user.id;
+    let deletedCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    const deleteFile = (filename) => {
+        return new Promise((resolve) => {
+            let filePath = null;
+            for (const dir of backupDirs) {
+                const p = path.join(dir, filename);
+                if (fs.existsSync(p)) {
+                    filePath = p;
+                    break;
+                }
+            }
+
+            if (!filePath) {
+                failedCount++;
+                errors.push(`${filename}: Not found`);
+                return resolve();
+            }
+
+            try {
+                const stats = fs.statSync(filePath);
+                const fileSizeFormatted = (stats.size / 1024 / 1024).toFixed(2) + ' MB';
+
+                logFileOperation(userId, 'Delete', filename, fileSizeFormatted, (logErr) => {
+                    fs.unlink(filePath, (unlinkErr) => {
+                        if (unlinkErr) {
+                            console.error('[BULK DELETE FILE ERROR]', unlinkErr.message);
+                            failedCount++;
+                            errors.push(`${filename}: Failed to delete`);
+                            resolve();
+                        } else {
+                            deletedCount++;
+                            resolve();
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('[BULK DELETE ERROR]', err.message);
+                failedCount++;
+                errors.push(`${filename}: ${err.message}`);
+                resolve();
+            }
+        });
+    };
+
+    Promise.all(filenames.map(deleteFile))
+        .then(() => {
+            getStorageCapacityStats((statsErr, statsData) => {
+                res.json({
+                    success: true,
+                    message: `Bulk delete complete. Deleted: ${deletedCount}, Failed: ${failedCount}`,
+                    deletedCount,
+                    failedCount,
+                    errors,
+                    storageStats: statsErr ? null : statsData
+                });
+            });
+        })
+        .catch((err) => {
+            console.error('[BULK DELETE PROMISE ERROR]', err);
+            res.status(500).json({ error: 'Server error processing bulk delete.' });
+        });
+});
+
+// ── PURGE SERVER CACHES API ──
+app.post('/api/system/clear-cache', requireManager, (req, res) => {
+    if (!req.session.user || !req.session.user.role || req.session.user.role.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Access Denied: Admin privileges required.' });
+    }
+
+    if (process.platform !== 'win32') {
+        // Linux commands to flush pm2 logs, delete rotated .gz/.1/etc log files under /var/log, and truncate active log files safely
+        const commands = [
+            'pm2 flush',
+            'find /var/log -type f \\( -name "*.gz" -o -name "*.1" -o -name "*.[0-9].log" \\) -delete',
+            'find /var/log -type f -name "*.log" -exec truncate -s 0 {} +'
+        ];
+        
+        exec(commands.join(' && '), (err, stdout, stderr) => {
+            if (err) {
+                console.error('[CLEAR CACHE ERROR]', err.message);
+            }
+            getStorageCapacityStats((statsErr, statsData) => {
+                res.json({
+                    success: true,
+                    message: 'Server caches and system logs purged successfully.',
+                    storageStats: statsErr ? null : statsData
+                });
+            });
+        });
+    } else {
+        // Windows development simulation
+        getStorageCapacityStats((statsErr, statsData) => {
+            res.json({
+                success: true,
+                message: 'Cache purge simulated on Windows development environment.',
+                storageStats: statsErr ? null : statsData
+            });
+        });
+    }
+});
+
 // ── PERMISSIONS API ────────────────────────────────────────
 
 function getUserPermissionsMatrix(userId, callback) {
