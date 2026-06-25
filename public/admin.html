@@ -444,6 +444,9 @@ document.addEventListener("DOMContentLoaded", function() {
                         </form>
                     </div>
 
+                    <!-- My Current WAN IP Banner -->
+                    <div id="myCurrentIpBanner" style="display:none; align-items:center; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:12px; font-size:11px; font-weight:600; color:#0369a1; gap:4px; flex-wrap:wrap;"></div>
+
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
                         <h3 style="font-size:14px; font-weight:700; color:var(--text-dark);">🔒 Whitelisted IPs (Bypass Rate Limiter)</h3>
                     </div>
@@ -929,44 +932,62 @@ document.addEventListener("DOMContentLoaded", function() {
     async function loadRateLimits() {
         const whiteBody = document.getElementById('whitelistedIpsBody');
         const blockedBody = document.getElementById('blockedAttemptsBody');
-        
-        whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">Loading whitelisted IPs...</td></tr>';
-        blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">Loading attempts...</td></tr>';
-        
+
+        whiteBody.innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:var(--text-muted); font-size:12px;">Loading whitelisted IPs...</td></tr>';
+        blockedBody.innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:var(--text-muted); font-size:12px;">Loading attempts...</td></tr>';
+
+        // Fetch admin's own current WAN IP from backend to display as helper banner
+        try {
+            const myIpRes = await fetch('/api/my-ip');
+            if (myIpRes.ok) {
+                const { ip: myIp } = await myIpRes.json();
+                const banner = document.getElementById('myCurrentIpBanner');
+                if (banner && myIp) {
+                    banner.innerHTML = `Your current WAN IP: <code style="font-family:monospace; font-weight:700; color:#1c3557; background:#e0f2fe; padding:1px 6px; border-radius:4px;">${myIp}</code>
+                        <button type="button" onclick="whitelistDirect('${myIp}')" class="act-btn" style="margin-left:8px; height:20px; padding:0 8px; font-size:10px; width:auto;">🛡️ Whitelist My IP</button>`;
+                    banner.style.display = 'flex';
+                }
+            }
+        } catch(e) { /* non-critical */ }
+
         try {
             const res = await fetch('/admin/rate-limits');
             if (res.ok) {
                 const data = await res.json();
-                
-                // Render Whitelisted
+
+                // ── Render Whitelisted IPs ───────────────────────────────────
                 if (data.whitelisted.length === 0) {
-                    whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">No whitelisted IPs.</td></tr>';
+                    whiteBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No whitelisted IPs.</td></tr>';
                 } else {
                     whiteBody.innerHTML = data.whitelisted.map(w => {
                         const fmt = new Date(w.added_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
                         return `<tr>
-                            <td><strong>${w.ip}</strong></td>
-                            <td>${w.added_by}</td>
-                            <td>${fmt}</td>
-                            <td><button type="button" class="act-btn act-btn-del" title="Remove Whitelist" onclick="removeWhitelist('${w.ip}')">🗑️</button></td>
+                            <td style="padding:6px 10px;"><code style="font-family:monospace; font-size:12px; font-weight:700; background:#f0f9ff; color:#0369a1; padding:2px 6px; border-radius:4px; border:1px solid #bae6fd;">${w.ip}</code></td>
+                            <td style="padding:6px 10px; font-size:12px; color:var(--text-muted);">${w.added_by}</td>
+                            <td style="padding:6px 10px; font-size:11px; color:var(--text-muted);">${fmt}</td>
+                            <td style="padding:6px 10px; text-align:center;"><button type="button" class="act-btn act-btn-del" title="Remove Whitelist" onclick="removeWhitelist('${w.ip}')">🗑️</button></td>
                         </tr>`;
                     }).join('');
                 }
-                
-                // Render Attempts
+
+                // ── Render Blocked Attempts ──────────────────────────────────
                 if (data.attempts.length === 0) {
-                    blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:var(--text-muted);">No rate-limited attempts logged.</td></tr>';
+                    blockedBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No rate-limited attempts logged.</td></tr>';
                 } else {
                     blockedBody.innerHTML = data.attempts.map(a => {
                         const fmt = new Date(a.attempted_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
-                        return `<tr>
-                            <td><strong>${a.ip}</strong></td>
-                            <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600;">${a.username || '-'}</span></td>
-                            <td>${fmt}</td>
-                            <td>
+                        const isBlocked = a.was_blocked === 1;
+                        return `<tr style="${isBlocked ? 'background:#fff5f5;' : ''}">
+                            <td style="padding:6px 10px;">
+                                <code style="font-family:monospace; font-size:12px; font-weight:700; background:${isBlocked ? '#fee2e2' : '#f0f9ff'}; color:${isBlocked ? '#b91c1c' : '#0369a1'}; padding:2px 6px; border-radius:4px; border:1px solid ${isBlocked ? '#fecaca' : '#bae6fd'};">${a.ip}</code>
+                                ${isBlocked ? '<span style="font-size:9px; background:#ef4444; color:#fff; border-radius:3px; padding:1px 4px; margin-left:4px; font-weight:700;">BLOCKED</span>' : ''}
+                            </td>
+                            <td style="padding:6px 10px;"><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">${a.username || '-'}</span></td>
+                            <td style="padding:6px 10px; font-size:11px; color:var(--text-muted);">${fmt}</td>
+                            <td style="padding:6px 10px;">
                                 <div style="display:flex; gap:4px; justify-content:center;">
-                                    <button type="button" class="act-btn" title="Unlock IP (Reset Rate Limit)" onclick="resetRateLimit('${a.ip}')" style="width:auto; padding:0 8px;">🔑 Unlock</button>
-                                    <button type="button" class="act-btn" style="background:#eef2f8; color:var(--primary); width:auto; padding:0 8px;" title="Whitelist IP" onclick="whitelistDirect('${a.ip}')">🛡️ Whitelist</button>
+                                    <button type="button" class="act-btn" title="Unlock IP (Reset Rate Limit)" onclick="resetRateLimit('${a.ip}')" style="width:auto; padding:0 8px; height:22px; font-size:10px;">🔑 Unlock</button>
+                                    <button type="button" class="act-btn" style="background:#eef2f8; color:var(--primary); width:auto; padding:0 8px; height:22px; font-size:10px;" title="Whitelist IP" onclick="whitelistDirect('${a.ip}')">🛡️ Whitelist</button>
                                 </div>
                             </td>
                         </tr>`;
@@ -976,8 +997,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 throw new Error('Failed to fetch');
             }
         } catch(e) {
-            whiteBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading whitelisted IPs.</td></tr>';
-            blockedBody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#b93a20;">Error loading attempts.</td></tr>';
+            whiteBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:#b93a20; font-size:12px;">Error loading whitelisted IPs.</td></tr>';
+            blockedBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:#b93a20; font-size:12px;">Error loading attempts.</td></tr>';
         }
     }
 

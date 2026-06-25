@@ -61,15 +61,28 @@ db.get("SELECT config_value FROM configurations WHERE user_id IS NULL AND config
     }
 });
 
+// ── CANONICAL CLIENT IP RESOLVER ────────────────────────────────
+// Resolves the true public WAN IPv4 from behind Hostinger's reverse proxy.
+// Priority: X-Forwarded-For (first hop) > X-Real-IP > socket address
+// Strips IPv6-mapped IPv4 prefixes (::ffff:) and loopback noise.
 function getClientIp(req) {
-    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    if (ip && ip.includes(',')) {
-        ip = ip.split(',')[0].trim();
+    let ip = '';
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    if (xForwardedFor) {
+        // XFF can be a comma-separated list; first entry is the originating client
+        ip = xForwardedFor.split(',')[0].trim();
+    } else if (req.headers['x-real-ip']) {
+        ip = req.headers['x-real-ip'].trim();
+    } else {
+        ip = req.socket ? req.socket.remoteAddress : '';
     }
+    // Strip IPv6-mapped IPv4 prefix (::ffff:1.2.3.4 → 1.2.3.4)
     if (ip && ip.startsWith('::ffff:')) {
         ip = ip.substring(7);
     }
-    return ip;
+    // Treat pure loopback IPv6 same as localhost
+    if (ip === '::1') ip = '127.0.0.1';
+    return ip || '0.0.0.0';
 }
 
 
@@ -196,7 +209,7 @@ app.use((req, res, next) => {
 
     // Log security warning if malicious data was intercepted and cleaned
     if (context.maliciousFound) {
-        const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const ip = getClientIp(req);
         const user = req.session && req.session.user ? req.session.user.username : 'Guest';
         console.warn(`[SECURITY ALERT] Malicious input sanitized! IP: ${ip} | User: ${user} | URL: ${req.originalUrl}`);
     }
@@ -211,7 +224,7 @@ app.use(helmet({
 }));
 
 // ── SESSION SETUP ──────────────────────────────────────────
-app.set('trust proxy', 1); // Essential if hosting behind Nginx/Cloudflare for secure cookies
+app.set('trust proxy', true); // Full upstream header trust for Hostinger Nginx reverse-proxy (passes X-Forwarded-For correctly)
 
 // Ensure database directory exists before initializing session store to prevent fatal boot crashes
 const dbDir = path.join(__dirname, 'database');
@@ -271,7 +284,7 @@ function ipFirewall(req, res, next) {
     const clientIp = getClientIp(req);
 
     // Localhost bypass
-    if (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost' || clientIp === '::ffff:127.0.0.1') {
+    if (clientIp === '127.0.0.1' || clientIp === 'localhost' || clientIp === '0.0.0.0') {
         return next();
     }
 
@@ -353,8 +366,9 @@ app.get('/ares_energy_logo.png', (req, res) => {
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes window
     max: 5, // limit each IP to 5 login requests per windowMs
+    keyGenerator: (req) => getClientIp(req), // Use canonical normalized WAN IPv4 as the rate-limit key
     skip: async (req) => {
-        const ip = req.ip || req.socket.remoteAddress;
+        const ip = getClientIp(req);
         const whitelisted = await new Promise((resolve) => {
             db.get("SELECT id FROM ip_whitelist WHERE ip = ?", [ip], (err, row) => {
                 if (err || !row) resolve(false);
@@ -364,9 +378,9 @@ const loginLimiter = rateLimit({
         return whitelisted;
     },
     handler: (req, res, next, options) => {
-        const ip = req.ip || req.socket.remoteAddress;
+        const ip = getClientIp(req);
         const username = req.body.username || '';
-        // Log this blocked attempt
+        // Log this blocked attempt with normalized public IPv4
         db.run("INSERT INTO login_attempts (ip, username, was_blocked) VALUES (?, ?, 1)", [ip, username], (err) => {
             if (err) console.error("Error logging blocked login attempt:", err.message);
         });
@@ -386,7 +400,8 @@ app.post('/login', loginLimiter, [
 ], (req, res) => {
     // Honeypot Check: If the hidden 'website' field is filled, it's an automated bot.
     if (req.body.website) {
-        console.warn(`[SECURITY ALERT] Honeypot triggered on login! IP: ${req.ip || req.socket.remoteAddress}`);
+        const honeypotIp = getClientIp(req);
+        console.warn(`[SECURITY ALERT] Honeypot triggered on login! IP: ${honeypotIp}`);
         return res.status(403).json({ error: 'Automated bot behavior detected.' });
     }
 
@@ -408,7 +423,7 @@ app.post('/login', loginLimiter, [
         // IP restriction check wall
         const clientIp = getClientIp(req);
         const isOfficeIp = globalOfficeIpCache && clientIp === globalOfficeIpCache;
-        const isLocalhost = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost' || clientIp === '::ffff:127.0.0.1';
+        const isLocalhost = clientIp === '127.0.0.1' || clientIp === 'localhost' || clientIp === '0.0.0.0';
         
         if (!isOfficeIp && !isLocalhost) {
             const isBypass = user.is_bypass_ip_restriction === 1;
@@ -506,6 +521,12 @@ app.get('/api/me', (req, res) => {
             });
         });
     });
+});
+
+// ── RETURN CALLER'S CANONICAL WAN IPv4 (PUBLIC) ────────────────
+// Used by the Login Security panel so admins can see and whitelist their own IP.
+app.get('/api/my-ip', requireLogin, (req, res) => {
+    res.json({ ip: getClientIp(req) });
 });
 
 // ── GET WORKSPACE ANALYTICS SUMMARY (API) ──────────────────
