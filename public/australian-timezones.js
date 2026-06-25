@@ -49,7 +49,7 @@
                 justify-content: center !important; /* Center the clocks horizontally across the entire width */
                 background: #0b1120 !important; /* Premium dark ceiling strip */
                 border-bottom: 1px solid #1e293b !important;
-                padding: 6px 16px !important;
+                padding: 4px 16px !important;
                 font-family: 'Inter', system-ui, sans-serif !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
@@ -62,13 +62,13 @@
             .timezone-clock-item {
                 display: inline-flex !important;
                 align-items: center !important;
-                gap: 6px !important;
-                padding: 4px 10px !important;
+                gap: 4px !important;
+                padding: 3px 8px !important;
                 background-color: #ffffff !important;
                 border-radius: 6px !important;
                 font-weight: 600 !important;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                margin-right: 16px !important; /* Adjusted spacing to 16px */
+                margin-right: 12px !important; /* Adjusted spacing to 12px */
                 border: 1px solid #e2e8f0 !important;
                 transition: all 0.2s ease !important;
                 margin-left: 0 !important;
@@ -84,13 +84,13 @@
                 font-weight: 800 !important;
                 color: #64748b !important;
                 text-transform: uppercase !important;
-                font-size: 10px !important;
+                font-size: 9px !important;
                 letter-spacing: 0.5px !important;
             }
             .timezone-clock-time {
                 font-weight: 700 !important;
                 color: #0f172a !important;
-                font-size: 13px !important;
+                font-size: 11px !important;
                 font-variant-numeric: tabular-nums !important;
             }
             
@@ -105,6 +105,7 @@
                 box-sizing: border-box !important;
                 height: 46px !important;
                 gap: 12px !important;
+                position: relative !important;
             }
             
             /* Action Buttons styling */
@@ -158,9 +159,6 @@
             .topbar .user-profile {
                 color: var(--text-muted, #6b7a8d) !important;
                 font-size: 12px !important;
-            }
-            .main-wrap {
-                margin-left: 180px !important;
             }
         `;
         document.head.appendChild(style);
@@ -217,37 +215,60 @@
             }
         }
 
-        // Inject global action buttons
-        let actionsContainer = tier2.querySelector('.topbar-actions');
-        if (!actionsContainer) {
-            actionsContainer = document.createElement('div');
-            actionsContainer.className = 'topbar-actions';
+        // Inject global action buttons (Admin only)
+        if (window.location.pathname.includes('admin.html')) {
+            let actionsContainer = tier2.querySelector('.topbar-actions');
+            if (!actionsContainer) {
+                actionsContainer = document.createElement('div');
+                actionsContainer.className = 'topbar-actions';
 
-            const backupBtn = document.createElement('button');
-            backupBtn.className = 'topbar-btn';
-            backupBtn.innerHTML = '🔒 Backup Now';
-            backupBtn.onclick = startGlobalManualBackup;
+                const backupBtn = document.createElement('button');
+                backupBtn.className = 'topbar-btn';
+                backupBtn.innerHTML = '🔒 Backup Now';
+                backupBtn.onclick = startGlobalManualBackup;
 
-            const deployBtn = document.createElement('button');
-            deployBtn.className = 'topbar-btn btn-deploy';
-            deployBtn.innerHTML = '🚀 Deploy to Live';
-            deployBtn.onclick = triggerGlobalDeployment;
+                const deployBtn = document.createElement('button');
+                deployBtn.className = 'topbar-btn btn-deploy';
+                deployBtn.innerHTML = '🚀 Deploy to Live';
+                deployBtn.onclick = triggerGlobalDeployment;
 
-            actionsContainer.appendChild(backupBtn);
-            actionsContainer.appendChild(deployBtn);
+                actionsContainer.appendChild(backupBtn);
+                actionsContainer.appendChild(deployBtn);
 
-            const userDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay') || tier2.querySelector('#sidebarAvatar');
-            if (userDisplay) {
-                tier2.insertBefore(actionsContainer, userDisplay);
-            } else {
-                tier2.appendChild(actionsContainer);
+                const userDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay') || tier2.querySelector('#sidebarAvatar');
+                if (userDisplay) {
+                    tier2.insertBefore(actionsContainer, userDisplay);
+                } else {
+                    tier2.appendChild(actionsContainer);
+                }
             }
         }
 
         // Overwrite topbar body
         topbar.innerHTML = '';
-        topbar.appendChild(tier1);
-        topbar.appendChild(tier2);
+        HTMLElement.prototype.appendChild.call(topbar, tier1);
+        HTMLElement.prototype.appendChild.call(topbar, tier2);
+
+        // Override DOM insertion methods to redirect dynamic scripts (e.g. responsive.js) to Tier 2
+        topbar.appendChild = function(newChild) {
+            if (newChild === tier1 || newChild === tier2 || newChild.tagName === 'STYLE' || newChild.tagName === 'SCRIPT') {
+                return HTMLElement.prototype.appendChild.call(this, newChild);
+            }
+            return tier2.appendChild(newChild);
+        };
+
+        topbar.insertBefore = function(newChild, refChild) {
+            if (newChild === tier1 || newChild === tier2 || refChild === tier1 || refChild === tier2) {
+                return HTMLElement.prototype.insertBefore.call(this, newChild, refChild);
+            }
+            if (refChild && tier2.contains(refChild)) {
+                return tier2.insertBefore(newChild, refChild);
+            }
+            if (tier2.firstChild) {
+                return tier2.insertBefore(newChild, tier2.firstChild);
+            }
+            return tier2.appendChild(newChild);
+        };
 
         // Clocks ticking function
         function updateClocks() {
