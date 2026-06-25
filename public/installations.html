@@ -1571,6 +1571,38 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             apActiveMandatory = mandatoryRules[cat]||['ap_prod_name','ap_manufacturer_name','ap_model_number'];
         }
+
+        // Dynamically add/remove "Both Phase" option in number of phase dropdown
+        const noOfPhaseSelect = document.getElementById('ap_no_of_phase');
+        if (noOfPhaseSelect) {
+            const currentValue = noOfPhaseSelect.value;
+            let bothOptExists = false;
+            for (let i = 0; i < noOfPhaseSelect.options.length; i++) {
+                if (noOfPhaseSelect.options[i].value === 'Both Phase' || noOfPhaseSelect.options[i].text === 'Both Phase') {
+                    bothOptExists = true;
+                    break;
+                }
+            }
+            if (cat === 'Battery') {
+                if (!bothOptExists) {
+                    const opt = document.createElement('option');
+                    opt.text = 'Both Phase';
+                    opt.value = 'Both Phase';
+                    noOfPhaseSelect.add(opt);
+                }
+            } else {
+                if (bothOptExists && currentValue !== 'Both Phase') {
+                    for (let i = 0; i < noOfPhaseSelect.options.length; i++) {
+                        if (noOfPhaseSelect.options[i].value === 'Both Phase' || noOfPhaseSelect.options[i].text === 'Both Phase') {
+                            noOfPhaseSelect.remove(i);
+                            break;
+                        }
+                    }
+                }
+            }
+            noOfPhaseSelect.value = currentValue;
+        }
+
         apActiveMandatory.forEach(fid=>{const el=document.getElementById(fid),lbl=document.getElementById(fid.replace('ap_','ap_lbl_'));if(el)el.setAttribute('required','true');if(lbl)lbl.classList.add('required-star');});
         apCheckAutoStockCode();
     }

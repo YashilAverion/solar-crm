@@ -2441,38 +2441,40 @@ function toggleNav(event, element) {
                     }
                 } else if (type === 'Battery') {
                     const pPhase = prod.no_of_phase || '';
-                    let selectedInverterPhase = null;
-                    document.querySelectorAll('#productRows .product-selection-row').forEach(r => {
-                        const t = r.querySelector('.cp-type')?.value;
-                        const nameIn = r.querySelector('.cp-name');
-                        const codeIn = r.querySelector('.cp-code');
-                        if (t === 'Inverter' && nameIn && nameIn.value.trim()) {
-                            const pC = codeIn ? codeIn.value.trim() : '';
-                            const pProd = allActiveProducts.find(ap => ap.stock_code === pC || ap.prod_name === nameIn.value.trim());
-                            if (pProd && pProd.no_of_phase) {
-                                selectedInverterPhase = pProd.no_of_phase;
+                    if (!pPhase.toLowerCase().includes('both')) {
+                        let selectedInverterPhase = null;
+                        document.querySelectorAll('#productRows .product-selection-row').forEach(r => {
+                            const t = r.querySelector('.cp-type')?.value;
+                            const nameIn = r.querySelector('.cp-name');
+                            const codeIn = r.querySelector('.cp-code');
+                            if (t === 'Inverter' && nameIn && nameIn.value.trim()) {
+                                const pC = codeIn ? codeIn.value.trim() : '';
+                                const pProd = allActiveProducts.find(ap => ap.stock_code === pC || ap.prod_name === nameIn.value.trim());
+                                if (pProd && pProd.no_of_phase) {
+                                    selectedInverterPhase = pProd.no_of_phase;
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    if (selectedInverterPhase) {
-                        if (selectedInverterPhase.toLowerCase().includes('single') && !pPhase.toLowerCase().includes('single')) {
-                            clearProductRow(row);
-                            window.showToast?.('Cleared selected Battery as it does not match Inverter phase.', 'info');
-                        } else if (selectedInverterPhase.toLowerCase().includes('three') && !pPhase.toLowerCase().includes('three')) {
-                            clearProductRow(row);
-                            window.showToast?.('Cleared selected Battery as it does not match Inverter phase.', 'info');
-                        }
-                    } else {
-                        if (selectedPhase === '1' || selectedPhase === '2') {
-                            if (!pPhase.toLowerCase().includes('single')) {
+                        if (selectedInverterPhase) {
+                            if (selectedInverterPhase.toLowerCase().includes('single') && !pPhase.toLowerCase().includes('single')) {
                                 clearProductRow(row);
-                                window.showToast?.('Cleared selected Battery as it does not match Single Phase.', 'info');
+                                window.showToast?.('Cleared selected Battery as it does not match Inverter phase.', 'info');
+                            } else if (selectedInverterPhase.toLowerCase().includes('three') && !pPhase.toLowerCase().includes('three')) {
+                                clearProductRow(row);
+                                window.showToast?.('Cleared selected Battery as it does not match Inverter phase.', 'info');
                             }
-                        } else if (selectedPhase === '3') {
-                            if (!pPhase.toLowerCase().includes('three')) {
-                                clearProductRow(row);
-                                window.showToast?.('Cleared selected Battery as it does not match Three Phase.', 'info');
+                        } else {
+                            if (selectedPhase === '1' || selectedPhase === '2') {
+                                if (!pPhase.toLowerCase().includes('single')) {
+                                    clearProductRow(row);
+                                    window.showToast?.('Cleared selected Battery as it does not match Single Phase.', 'info');
+                                }
+                            } else if (selectedPhase === '3') {
+                                if (!pPhase.toLowerCase().includes('three')) {
+                                    clearProductRow(row);
+                                    window.showToast?.('Cleared selected Battery as it does not match Three Phase.', 'info');
+                                }
                             }
                         }
                     }
@@ -2759,22 +2761,24 @@ function toggleNav(event, element) {
                         });
 
                         const pPhase = p.no_of_phase || '';
-                        if (selectedInverterPhase) {
-                            if (selectedInverterPhase.toLowerCase().includes('single') && !pPhase.toLowerCase().includes('single')) {
-                                return false;
-                            }
-                            if (selectedInverterPhase.toLowerCase().includes('three') && !pPhase.toLowerCase().includes('three')) {
-                                return false;
-                            }
-                        } else {
-                            const selectedPhase = document.querySelector('input[name="tb_phase"]:checked')?.value;
-                            if (selectedPhase === '1' || selectedPhase === '2') {
-                                if (!pPhase.toLowerCase().includes('single')) {
+                        if (!pPhase.toLowerCase().includes('both')) {
+                            if (selectedInverterPhase) {
+                                if (selectedInverterPhase.toLowerCase().includes('single') && !pPhase.toLowerCase().includes('single')) {
                                     return false;
                                 }
-                            } else if (selectedPhase === '3') {
-                                if (!pPhase.toLowerCase().includes('three')) {
+                                if (selectedInverterPhase.toLowerCase().includes('three') && !pPhase.toLowerCase().includes('three')) {
                                     return false;
+                                }
+                            } else {
+                                const selectedPhase = document.querySelector('input[name="tb_phase"]:checked')?.value;
+                                if (selectedPhase === '1' || selectedPhase === '2') {
+                                    if (!pPhase.toLowerCase().includes('single')) {
+                                        return false;
+                                    }
+                                } else if (selectedPhase === '3') {
+                                    if (!pPhase.toLowerCase().includes('three')) {
+                                        return false;
+                                    }
                                 }
                             }
                         }
@@ -3383,10 +3387,12 @@ function toggleNav(event, element) {
                     const batProd = allActiveProducts.find(p => p.stock_code === c.battery_stock_code);
                     if (batProd && batProd.no_of_phase) {
                         const pPhase = batProd.no_of_phase.toLowerCase();
-                        if (selectedPhase === '1' || selectedPhase === '2') {
-                            if (!pPhase.includes('single')) isPhaseCompatible = false;
-                        } else if (selectedPhase === '3') {
-                            if (!pPhase.includes('three')) isPhaseCompatible = false;
+                        if (!pPhase.includes('both')) {
+                            if (selectedPhase === '1' || selectedPhase === '2') {
+                                if (!pPhase.includes('single')) isPhaseCompatible = false;
+                            } else if (selectedPhase === '3') {
+                                if (!pPhase.includes('three')) isPhaseCompatible = false;
+                            }
                         }
                     }
                 }

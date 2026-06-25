@@ -678,7 +678,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <div class="filter-field"><label>Product Expiry Date</label><input type="date" id="flt_exp"></div>
             <div class="filter-field"><label>Number of Phase</label>
-                <select id="flt_phase"><option value="">All</option><option>Single Phase</option><option>Three Phase</option></select>
+                <select id="flt_phase"><option value="">All</option><option>Single Phase</option><option>Three Phase</option><option>Both Phase</option></select>
             </div>
             <div class="filter-field"><label>Type of Inverter</label>
                 <select id="flt_type_of_inverter">
@@ -1055,6 +1055,38 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             activeMandatory=mandatoryRules[cat]||['prod_name','manufacturer_name','model_number'];
         }
+
+        // Dynamically add/remove "Both Phase" option in number of phase dropdown
+        const noOfPhaseSelect = document.getElementById('no_of_phase');
+        if (noOfPhaseSelect) {
+            const currentValue = noOfPhaseSelect.value;
+            let bothOptExists = false;
+            for (let i = 0; i < noOfPhaseSelect.options.length; i++) {
+                if (noOfPhaseSelect.options[i].value === 'Both Phase' || noOfPhaseSelect.options[i].text === 'Both Phase') {
+                    bothOptExists = true;
+                    break;
+                }
+            }
+            if (cat === 'Battery') {
+                if (!bothOptExists) {
+                    const opt = document.createElement('option');
+                    opt.text = 'Both Phase';
+                    opt.value = 'Both Phase';
+                    noOfPhaseSelect.add(opt);
+                }
+            } else {
+                if (bothOptExists && currentValue !== 'Both Phase') {
+                    for (let i = 0; i < noOfPhaseSelect.options.length; i++) {
+                        if (noOfPhaseSelect.options[i].value === 'Both Phase' || noOfPhaseSelect.options[i].text === 'Both Phase') {
+                            noOfPhaseSelect.remove(i);
+                            break;
+                        }
+                    }
+                }
+            }
+            noOfPhaseSelect.value = currentValue;
+        }
+
         activeMandatory.forEach(fid=>{const el=document.getElementById(fid),lbl=document.getElementById('lbl_'+fid);if(el)el.setAttribute('required','true');if(lbl)lbl.classList.add('required-star');});
         checkAutoStockCode();
     }
