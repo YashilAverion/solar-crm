@@ -6,7 +6,7 @@ const conn = new Client();
 conn.on('ready', () => {
     console.log('SSH Connection established.');
     
-    const cmd = 'tail -n 50 /root/.pm2/logs/solar-crm-error.log';
+    const cmd = 'pm2 show solar-crm';
     console.log(`Executing remote command: ${cmd}`);
     
     conn.exec(cmd, (err, stream) => {

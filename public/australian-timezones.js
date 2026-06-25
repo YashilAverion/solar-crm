@@ -49,39 +49,45 @@
                 justify-content: center !important;
                 background: #0b1120 !important; /* Premium dark ceiling strip */
                 border-bottom: 1px solid #1e293b !important;
-                padding: 5px 16px !important;
-                font-size: 10px !important;
-                color: #94a3b8 !important;
+                padding: 6px 16px !important;
                 font-family: 'Inter', system-ui, sans-serif !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
-                gap: 12px !important;
                 user-select: none !important;
             }
             
+            /* Recalibrated Contrast - Premium Light-Badge Theme */
             .timezone-clock-item {
                 display: inline-flex !important;
                 align-items: center !important;
-                gap: 5px !important;
-                padding: 2px 6px !important;
-                background: #0f172a !important;
-                border: 1px solid #1e293b !important;
-                border-radius: 4px !important;
+                gap: 6px !important;
+                padding: 4px 10px !important;
+                background-color: #ffffff !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+                margin-right: 12px !important;
+                border: 1px solid #e2e8f0 !important;
                 transition: all 0.2s ease !important;
+            }
+            .timezone-clock-item:last-child {
+                margin-right: 0 !important;
             }
             .timezone-clock-item:hover {
                 border-color: var(--accent, #e8681e) !important;
+                transform: translateY(-1px) !important;
             }
             .timezone-clock-label {
                 font-weight: 800 !important;
                 color: #64748b !important;
                 text-transform: uppercase !important;
-                font-size: 8px !important;
+                font-size: 10px !important;
                 letter-spacing: 0.5px !important;
             }
             .timezone-clock-time {
                 font-weight: 700 !important;
-                color: var(--accent, #e8681e) !important;
+                color: #0f172a !important;
+                font-size: 13px !important;
                 font-variant-numeric: tabular-nums !important;
             }
             
