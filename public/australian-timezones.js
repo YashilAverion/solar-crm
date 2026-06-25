@@ -35,7 +35,7 @@
                 height: auto !important;
                 padding: 0 !important;
                 position: sticky !important;
-                top: 22px !important; /* Stick right below the fixed clocks status bar */
+                top: 0 !important; /* Reset to 0 to remove any offset gaps inside main-wrap */
                 z-index: 1000 !important;
                 background: var(--surface) !important;
                 border-bottom: 2px solid var(--accent, #e8681e) !important;
@@ -60,7 +60,7 @@
                 top: 0 !important;
                 left: 0 !important;
                 right: 0 !important;
-                height: 22px !important;
+                height: 26px !important; /* Increased height to 26px (+2 size) */
                 z-index: 2100 !important;
             }
             
@@ -68,17 +68,17 @@
             .timezone-clock-item {
                 display: inline-flex !important;
                 align-items: center !important;
-                gap: 4px !important;
-                padding: 1px 6px !important;
+                gap: 5px !important;
+                padding: 2px 8px !important;
                 background-color: #ffffff !important;
-                border-radius: 4px !important;
+                border-radius: 5px !important;
                 font-weight: 600 !important;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                margin-right: 10px !important; /* Adjusted spacing to 10px */
+                margin-right: 12px !important; /* Increased spacing to 12px */
                 border: 1px solid #e2e8f0 !important;
                 transition: all 0.2s ease !important;
                 margin-left: 0 !important;
-                height: 16px !important;
+                height: 20px !important; /* Increased height to 20px (+2 size) */
                 box-sizing: border-box !important;
             }
             .timezone-clock-item:last-child {
@@ -92,14 +92,14 @@
                 font-weight: 800 !important;
                 color: #64748b !important;
                 text-transform: uppercase !important;
-                font-size: 8px !important;
+                font-size: 10px !important; /* Increased font-size to 10px (+2 size) */
                 letter-spacing: 0.5px !important;
                 line-height: 1 !important;
             }
             .timezone-clock-time {
                 font-weight: 700 !important;
                 color: #0f172a !important;
-                font-size: 10px !important;
+                font-size: 12px !important; /* Increased font-size to 12px (+2 size) */
                 font-variant-numeric: tabular-nums !important;
                 line-height: 1 !important;
             }
@@ -173,12 +173,12 @@
             
             /* Adjust sidebar and main-wrap to fit under the status bar */
             .sidebar {
-                top: 22px !important;
-                height: calc(100vh - 22px) !important;
+                top: 26px !important;
+                height: calc(100vh - 26px) !important;
             }
             .main-wrap {
-                margin-top: 22px !important;
-                height: calc(100vh - 22px) !important;
+                margin-top: 26px !important;
+                height: calc(100vh - 26px) !important;
             }
         `;
         document.head.appendChild(style);
