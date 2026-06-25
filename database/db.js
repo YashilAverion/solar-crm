@@ -961,6 +961,18 @@ db.serialize(() => {
 
             db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='field_permissions'", [], (metaErr, tableRow) => {
                 const fieldPermissionsTableExists = !metaErr && tableRow;
+                let pendingUsers = usersList.length;
+
+                const checkCleanup = () => {
+                    pendingUsers--;
+                    if (pendingUsers === 0 && fieldPermissionsTableExists) {
+                        console.log('[DB Migration] All users checked. Safely dropping deprecated field_permissions table...');
+                        db.run("DROP TABLE IF EXISTS field_permissions", (dropErr) => {
+                            if (dropErr) console.error('[DB] Error dropping field_permissions table:', dropErr.message);
+                            else console.log('[DB] Deprecated field_permissions table successfully dropped.');
+                        });
+                    }
+                };
 
                 usersList.forEach(user => {
                     db.get("SELECT count(*) as count FROM user_permissions WHERE user_id = ?", [user.id], (cntErr, countRow) => {
@@ -975,22 +987,26 @@ db.serialize(() => {
                                             fpRows.forEach(fp => {
                                                 insertStmt.run(user.id, fp.module_name, fp.feature_name, fp.is_enabled);
                                             });
-                                            insertStmt.finalize();
+                                            insertStmt.finalize((finErr) => {
+                                                checkCleanup();
+                                            });
                                         });
                                     } else {
-                                        insertDefaultsForUser(user.id, user.role);
+                                        insertDefaultsForUser(user.id, user.role, checkCleanup);
                                     }
                                 });
                             } else {
-                                insertDefaultsForUser(user.id, user.role);
+                                insertDefaultsForUser(user.id, user.role, checkCleanup);
                             }
+                        } else {
+                            checkCleanup();
                         }
                     });
                 });
             });
         });
 
-        function insertDefaultsForUser(userId, role) {
+        function insertDefaultsForUser(userId, role, callback) {
             db.serialize(() => {
                 const insertStmt = db.prepare("INSERT OR IGNORE INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                 for (const [mod, features] of Object.entries(modulesAndFeatures)) {
@@ -1009,7 +1025,9 @@ db.serialize(() => {
                         insertStmt.run(userId, mod, feat, isEnabled);
                     });
                 }
-                insertStmt.finalize();
+                insertStmt.finalize((err) => {
+                    if (callback) callback();
+                });
             });
         }
     }

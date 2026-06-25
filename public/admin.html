@@ -47,12 +47,13 @@
         .btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; transform: translateY(-1px); }
 
         /* ========== STATS ROW ========== */
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 8px 16px; flex-shrink: 0; }
         .stat-card { background: var(--surface); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
         .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
         .stat-card:nth-child(1)::before { background: var(--primary); }
         .stat-card:nth-child(2)::before { background: #f59e0b; }
         .stat-card:nth-child(3)::before { background: #10b981; }
+        .stat-card:nth-child(4)::before { background: #8b5cf6; }
         .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-val { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 2px 0 1px; line-height: 1; }
         .stat-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
@@ -408,6 +409,16 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="stat-label">Active Users</div>
             <div class="stat-val" id="statActive">0</div>
             <div class="stat-sub">Currently active</div>
+        </div>
+        <div class="stat-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="stat-label">System Storage Audit</div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                <span class="stat-val" id="statDiskUsed" style="font-weight: 700; color: #8b5cf6;">0.00 GB</span>
+                <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">of <span id="statDiskTotal">0.00 GB</span></span>
+            </div>
+            <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px;">
+                <div id="statDiskProgress" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.3s;"></div>
+            </div>
         </div>
     </div>
 
@@ -1156,10 +1167,28 @@ document.addEventListener("DOMContentLoaded", function() {
     function prevPage() { if (currentPage > 1) { currentPage--; renderUsers(); } }
     function nextPage() { currentPage++; renderUsers(); }
 
+    async function loadSpaceAudit() {
+        try {
+            const res = await fetch('/api/system/space-audit');
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('statDiskUsed').innerText = `${data.usedSpaceGB.toFixed(2)} GB`;
+                document.getElementById('statDiskTotal').innerText = `${data.totalSpaceGB.toFixed(2)} GB`;
+                document.getElementById('statDiskProgress').style.width = `${data.percentUsed}%`;
+                
+                const titleStr = `Uploads: ${data.details.uploadsFolderMB.toFixed(1)} MB\nDB Size: ${data.details.dbFileMB.toFixed(1)} MB\nProject: ${data.details.projectFolderMB.toFixed(1)} MB`;
+                document.getElementById('statDiskUsed').closest('.stat-card').title = titleStr;
+            }
+        } catch (e) {
+            console.error('Failed to load space audit metrics:', e);
+        }
+    }
+
     function updateStats() {
         document.getElementById('statTotal').innerText = allUsersData.length;
         document.getElementById('statManagers').innerText = allUsersData.filter(u => u.role === 'Admin' || (u.role && u.role.includes('Manager'))).length;
         document.getElementById('statActive').innerText = allUsersData.filter(u => u.status !== 'Inactive').length;
+        loadSpaceAudit();
     }
 
     function openAddUserModal() {

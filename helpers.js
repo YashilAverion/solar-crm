@@ -24,13 +24,19 @@ function requireManager(req, res, next) {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ error: 'Login required' });
     }
-    const role = req.session.user.role || '';
-    // Allow Admins, old 'Manager', or any new '* Manager'
-    if (role === 'Manager' || role === 'Admin' || role.includes('Manager')) {
-        return next();
-    } else {
-        return res.status(403).json({ error: 'Only managers can perform this action.' });
-    }
+    const userId = req.session.user.id;
+    const db = require('./database/db');
+    db.get(
+        "SELECT access_status FROM user_permissions WHERE user_id = ? AND module_name = 'Settings' AND (feature_name = 'Manage Users' OR feature_name = 'Access Module')",
+        [userId],
+        (err, row) => {
+            if (err) return res.status(500).json({ error: 'Database error in authorization middleware.' });
+            if (row && row.access_status === 1) {
+                return next();
+            }
+            return res.status(403).json({ error: 'Access Denied: Settings permissions not enabled.' });
+        }
+    );
 }
 
 // ── CURRENT USER ─────────────────────────────────────────────
@@ -44,6 +50,7 @@ function sendSuccess(res, data = {}, statusCode = 200) {
     return res.status(statusCode).json({ success: true, ...data });
 }
 
+// ── ERROR RESPONSE HELPER ─────────────────────────────────────
 function sendError(res, message, statusCode = 500) {
     console.error(`[CRM ERROR ${statusCode}] ${message}`);
     return res.status(statusCode).json({ error: message });
@@ -80,8 +87,6 @@ function safeJsonParse(str, fallback = []) {
 }
 
 // ── HISTORY LOGGER FACTORY ────────────────────────────────────
-// Returns addHistory(id, action, details, userName) for tables with standard schema:
-// (entityIdField INTEGER, action TEXT, details TEXT, user_name TEXT, created_at TEXT)
 function makeHistoryLogger(db, tableName, entityIdField) {
     return function addHistory(entityId, action, details, userName) {
         db.run(
@@ -106,10 +111,10 @@ function getSydneyISO() {
 // ── ISO TO DISPLAY DATE FORMAT ─────────────────────────────────
 function isoToDisplay(isoStr) {
     if (!isoStr || isoStr === '-' || isoStr === 'Pending' || isoStr === 'Pending Details') return isoStr;
-    if (isoStr.includes('(')) return isoStr; // Already in display format
+    if (isoStr.includes('(')) return isoStr;
     
     const d = new Date(isoStr.replace(' ', 'T'));
-    if (isNaN(d.getTime())) return isoStr; // Fallback
+    if (isNaN(d.getTime())) return isoStr;
     
     const dd   = String(d.getDate()).padStart(2, '0');
     const mm   = String(d.getMonth() + 1).padStart(2, '0');
