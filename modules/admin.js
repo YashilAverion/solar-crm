@@ -27,12 +27,12 @@ router.delete('/users/:id/outlook', requireManager, (req, res) => {
 // ── GET USER PERMISSION OVERRIDES ─────────────────────────────
 router.get('/users/:id/custom-permissions', requireManager, (req, res) => {
     const userId = req.params.id;
-    db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const matrix = {};
         (rows || []).forEach(r => {
             if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.is_enabled;
+            matrix[r.module_name][r.feature_name] = r.access_status;
         });
         res.json(matrix);
     });
@@ -40,12 +40,12 @@ router.get('/users/:id/custom-permissions', requireManager, (req, res) => {
 
 router.get('/users/:id/permissions', requireManager, (req, res) => {
     const userId = req.params.id;
-    db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const matrix = {};
         (rows || []).forEach(r => {
             if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.is_enabled;
+            matrix[r.module_name][r.feature_name] = r.access_status;
         });
         res.json(matrix);
     });
@@ -92,7 +92,7 @@ router.post('/users', requireManager, async (req, res) => {
             // Insert overrides
             if (custom_permissions && typeof custom_permissions === 'object') {
                 db.serialize(() => {
-                    const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                    const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                     for (const mod in custom_permissions) {
                         for (const feat in custom_permissions[mod]) {
                             const val = custom_permissions[mod][feat] ? 1 : 0;
@@ -136,7 +136,7 @@ router.put('/users/:id', requireManager, async (req, res) => {
                 db.run("DELETE FROM user_permissions WHERE user_id = ?", [id], (deleteErr) => {
                     if (deleteErr) console.error('Error deleting user_permissions:', deleteErr.message);
                     if (custom_permissions && typeof custom_permissions === 'object') {
-                        const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                        const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                         for (const mod in custom_permissions) {
                             for (const feat in custom_permissions[mod]) {
                                 const val = custom_permissions[mod][feat] ? 1 : 0;

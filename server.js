@@ -841,10 +841,10 @@ app.post('/admin/users', requireManager, async (req, res) => {
             
             const userId = this.lastID;
 
-            // Insert custom overrides
+            // Insert custom permissions
             if (custom_permissions && typeof custom_permissions === 'object') {
                 db.serialize(() => {
-                    const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                    const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                     for (const mod in custom_permissions) {
                         for (const feat in custom_permissions[mod]) {
                             const val = custom_permissions[mod][feat] ? 1 : 0;
@@ -893,7 +893,7 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                 db.run("DELETE FROM user_permissions WHERE user_id = ?", [id], (deleteErr) => {
                     if (deleteErr) console.error('Error deleting user_permissions:', deleteErr.message);
                     if (custom_permissions && typeof custom_permissions === 'object') {
-                        const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                        const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                         for (const mod in custom_permissions) {
                             for (const feat in custom_permissions[mod]) {
                                 const val = custom_permissions[mod][feat] ? 1 : 0;
@@ -1958,53 +1958,38 @@ const applyAdvancedFilters = (req, baseQuery, params) => {
 };
 
 // ── PERMISSIONS API ────────────────────────────────────────
-app.get('/api/get-permissions', (req, res) => {
-    db.all("SELECT * FROM field_permissions", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: 'Database error.' });
-        res.json(rows);
-    });
-});
 
 app.get('/api/my-permissions', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
-    const { role, id } = req.session.user;
+    const { id } = req.session.user;
 
-    db.all("SELECT module_name, feature_name, is_enabled FROM field_permissions WHERE role_name = ?", [role], (err, roleRows) => {
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [id], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Database error.' });
 
         const matrix = {};
-        (roleRows || []).forEach(r => {
-            if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.is_enabled === 1;
-        });
-
-        db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [id], (err, overrideRows) => {
-            if (!err && overrideRows && overrideRows.length > 0) {
-                overrideRows.forEach(ov => {
-                    if (!matrix[ov.module_name]) matrix[ov.module_name] = {};
-                    matrix[ov.module_name][ov.feature_name] = ov.is_enabled === 1;
-                });
-            }
-            res.json(matrix);
-        });
-    });
-});
-
-// ── GET USER OVERRIDE PERMISSIONS ─────────────────────────────
-app.get('/api/users/:id/permissions', requireManager, (req, res) => {
-    const userId = req.params.id;
-    db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        const matrix = {};
         (rows || []).forEach(r => {
             if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.is_enabled;
+            matrix[r.module_name][r.feature_name] = r.access_status === 1;
         });
         res.json(matrix);
     });
 });
 
-// ── UPDATE USER OVERRIDE PERMISSIONS ──────────────────────────
+// ── GET USER PERMISSIONS ──────────────────────────────────────
+app.get('/api/users/:id/permissions', requireManager, (req, res) => {
+    const userId = req.params.id;
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const matrix = {};
+        (rows || []).forEach(r => {
+            if (!matrix[r.module_name]) matrix[r.module_name] = {};
+            matrix[r.module_name][r.feature_name] = r.access_status;
+        });
+        res.json(matrix);
+    });
+});
+
+// ── UPDATE USER PERMISSIONS ───────────────────────────────────
 app.post('/api/users/:id/permissions', requireManager, (req, res) => {
     const userId = req.params.id;
     const permissions = req.body; // Expecting { "Dashboard": { "Access Module": 1, ... }, ... }
@@ -2018,7 +2003,7 @@ app.post('/api/users/:id/permissions', requireManager, (req, res) => {
             }
             
             if (permissions && typeof permissions === 'object') {
-                const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                 try {
                     for (const mod in permissions) {
                         for (const feat in permissions[mod]) {
@@ -2050,51 +2035,20 @@ app.post('/api/users/:id/permissions', requireManager, (req, res) => {
     });
 });
 
+// Backward compatibility: returning individual user permissions instead of role-based permissions
 app.get('/api/role-permissions/:role', (req, res) => {
-    const role = req.params.role;
-    db.all("SELECT module_name, feature_name, is_enabled FROM field_permissions WHERE role_name = ?", [role], (err, rows) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const userId = req.session.user.id;
+    
+    db.all("SELECT module_name, feature_name, access_status FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Database error.' });
 
-        // Transform flat rows into a nested JSON structure for easy frontend consumption
         const matrix = {};
-        rows.forEach(r => {
+        (rows || []).forEach(r => {
             if (!matrix[r.module_name]) matrix[r.module_name] = {};
-            matrix[r.module_name][r.feature_name] = r.is_enabled === 1;
+            matrix[r.module_name][r.feature_name] = r.access_status === 1;
         });
         res.json(matrix);
-    });
-});
-
-app.post('/api/save-permissions', (req, res) => {
-    const permissions = req.body.permissions;
-    if (!permissions || !Array.isArray(permissions)) {
-        return res.status(400).json({ error: 'Invalid data format.' });
-    }
-
-    db.serialize(() => {
-        db.run("BEGIN TRANSACTION");
-        const stmt = db.prepare(`
-            INSERT INTO field_permissions (role_name, module_name, feature_name, is_enabled)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(role_name, module_name, feature_name) DO UPDATE SET is_enabled = excluded.is_enabled
-        `);
-
-        let hasError = false;
-        permissions.forEach(p => {
-            stmt.run(p.role_name, p.module_name, p.feature_name, p.is_enabled ? 1 : 0, (err) => {
-                if (err) hasError = true;
-            });
-        });
-
-        stmt.finalize(() => {
-            if (hasError) {
-                db.run("ROLLBACK");
-                res.status(500).json({ error: 'Failed to save some permissions.' });
-            } else {
-                db.run("COMMIT");
-                res.json({ success: true });
-            }
-        });
     });
 });
 

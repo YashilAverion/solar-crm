@@ -482,132 +482,8 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_leads_landline_number ON leads(landline_number)");
     db.run("CREATE INDEX IF NOT EXISTS idx_users_voipline_extension ON users(voipline_extension)");
 
-    // 14. Granular Field Permissions Matrix Table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS field_permissions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role_name TEXT,
-            module_name TEXT,
-            feature_name TEXT,
-            is_enabled INTEGER DEFAULT 0,
-            UNIQUE(role_name, module_name, feature_name)
-        )
-    `, () => {
-        // --- START MIGRATION FOR OLD NAMES ---
-        db.serialize(() => {
-            // A. Migrate 'User Management' -> 'Settings'
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, 'Settings', feature_name, is_enabled FROM field_permissions WHERE module_name = 'User Management'");
-            db.run("DELETE FROM field_permissions WHERE module_name = 'User Management'");
-
-            // B. Migrate Masters features
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Products', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Product Master'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage STC', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'STC Master'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Rebates', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Rebate Live Master'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Margins', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Margin Master'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Manage Charges', is_enabled FROM field_permissions WHERE module_name = 'Masters' AND feature_name = 'Installation Charges Master'");
-            db.run("DELETE FROM field_permissions WHERE module_name = 'Masters' AND feature_name IN ('Product Master', 'STC Master', 'Rebate Live Master', 'Margin Master', 'Installation Charges Master')");
-
-            // C. Migrate Lead Master features
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'View Leads', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Master Leads'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Delete Lead', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Delete Leads'");
-            db.run("INSERT OR REPLACE INTO field_permissions (role_name, module_name, feature_name, is_enabled) SELECT role_name, module_name, 'Duplicate Lead', is_enabled FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name = 'Duplicate Leads'");
-            db.run("DELETE FROM field_permissions WHERE module_name = 'Lead Master' AND feature_name IN ('Master Leads', 'Delete Leads', 'Duplicate Leads')");
-
-            // D. Migrate User Custom Override JSON strings
-            db.all("SELECT id, custom_permissions_json FROM users WHERE custom_permissions_json IS NOT NULL", [], (err, rows) => {
-                if (!err && rows) {
-                    rows.forEach(row => {
-                        try {
-                            let perms = JSON.parse(row.custom_permissions_json);
-                            let changed = false;
-                            
-                            // Migrate User Management -> Settings
-                            if (perms['User Management']) {
-                                perms['Settings'] = perms['User Management'];
-                                delete perms['User Management'];
-                                changed = true;
-                            }
-                            
-                            // Migrate Masters features
-                            if (perms['Masters']) {
-                                const mappings = {
-                                    'Product Master': 'Manage Products',
-                                    'STC Master': 'Manage STC',
-                                    'Rebate Live Master': 'Manage Rebates',
-                                    'Margin Master': 'Manage Margins',
-                                    'Installation Charges Master': 'Manage Charges'
-                                };
-                                for (const [oldName, newName] of Object.entries(mappings)) {
-                                    if (perms['Masters'][oldName] !== undefined) {
-                                        perms['Masters'][newName] = perms['Masters'][oldName];
-                                        delete perms['Masters'][oldName];
-                                        changed = true;
-                                    }
-                                }
-                            }
-                            
-                            // Migrate Lead Master features
-                            if (perms['Lead Master']) {
-                                const mappings = {
-                                    'Master Leads': 'View Leads',
-                                    'Delete Leads': 'Delete Lead',
-                                    'Duplicate Leads': 'Duplicate Lead'
-                                };
-                                for (const [oldName, newName] of Object.entries(mappings)) {
-                                    if (perms['Lead Master'][oldName] !== undefined) {
-                                        perms['Lead Master'][newName] = perms['Lead Master'][oldName];
-                                        delete perms['Lead Master'][oldName];
-                                        changed = true;
-                                    }
-                                }
-                            }
-                            
-                            if (changed) {
-                                db.run("UPDATE users SET custom_permissions_json = ? WHERE id = ?", [JSON.stringify(perms), row.id]);
-                            }
-                        } catch (e) {}
-                    });
-                }
-            });
-        });
-        // --- END MIGRATION FOR OLD NAMES ---
-
-        const roles = [
-            'Admin',
-            'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
-            'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader',
-            'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
-        ];
-        const modulesAndFeatures = {
-            'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
-            'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
-            'Projects': ['Access Module', 'Leads'],
-            'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
-            'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
-            'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
-            'Attendance & Payroll': ['Access Module', 'Employees', 'Leave', 'Timesheets', 'Pay Employee', 'Superannuation']
-        };
-        const stmt = db.prepare("INSERT OR IGNORE INTO field_permissions (role_name, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
-        roles.forEach(role => {
-            for (const [mod, features] of Object.entries(modulesAndFeatures)) {
-                features.forEach(feat => {
-                    let isEnabled = 0;
-                    if (role === 'Admin') {
-                        isEnabled = 1;
-                    } else if (mod === 'Attendance & Payroll') {
-                        const isMgr = role === 'Manager' || role.includes('Manager');
-                        if (isMgr) {
-                            isEnabled = 1;
-                        } else if (feat === 'Access Module' || feat === 'Employees' || feat === 'Leave') {
-                            isEnabled = 1;
-                        }
-                    }
-                    stmt.run(role, mod, feat, isEnabled);
-                });
-            }
-        });
-        stmt.finalize();
-    });
+    // 14. Deprecated central role-based permissions matrix table.
+    // Permissions are now fully decentralized and managed strictly per-user in user_permissions.
 
     // Deprecated: User-Specific Field Permission Overrides are now stored in users.custom_permissions_json
     db.run(`CREATE TABLE IF NOT EXISTS user_field_permissions (id INTEGER)`);
@@ -1027,14 +903,14 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_configurations_user_id ON configurations(user_id)", () => {});
     db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_configurations_global_unique ON configurations(config_key) WHERE user_id IS NULL", () => {});
 
-    // ── USER OVERRIDE PERMISSIONS TABLE ───
+    // ── USER PERMISSIONS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS user_permissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             module_name TEXT,
             feature_name TEXT,
-            is_enabled INTEGER DEFAULT 0,
+            access_status INTEGER DEFAULT 0,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(user_id, module_name, feature_name)
         )
@@ -1043,37 +919,100 @@ db.serialize(() => {
             console.error('[DB] Error creating user_permissions table:', err.message);
         } else {
             console.log('[DB] user_permissions table ready.');
-            // Run migration for existing users custom_permissions_json
-            db.all("SELECT id, custom_permissions_json FROM users WHERE custom_permissions_json IS NOT NULL AND custom_permissions_json != ''", [], (selectErr, rows) => {
-                if (!selectErr && rows && rows.length > 0) {
-                    db.serialize(() => {
-                        const stmt = db.prepare("INSERT OR IGNORE INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
-                        rows.forEach(row => {
-                            try {
-                                const perms = JSON.parse(row.custom_permissions_json);
-                                for (const mod in perms) {
-                                    for (const feat in perms[mod]) {
-                                        const isEnabled = perms[mod][feat] ? 1 : 0;
-                                        stmt.run(row.id, mod, feat, isEnabled);
-                                    }
-                                }
-                            } catch (e) {
-                                // Ignore JSON parse errors
+            
+            // Check if column rename is needed
+            db.all("PRAGMA table_info(user_permissions)", [], (pragmaErr, columns) => {
+                if (!pragmaErr && columns) {
+                    const hasIsEnabled = columns.some(col => col.name === 'is_enabled');
+                    if (hasIsEnabled) {
+                        console.log('[DB] Migrating user_permissions table: renaming is_enabled to access_status...');
+                        db.run("ALTER TABLE user_permissions RENAME COLUMN is_enabled TO access_status", (renameErr) => {
+                            if (renameErr) {
+                                console.error('[DB] Column rename failed:', renameErr.message);
+                            } else {
+                                console.log('[DB] Column successfully renamed.');
+                                runUserPermissionsInitialization();
                             }
                         });
-                        stmt.finalize((finalizeErr) => {
-                            if (!finalizeErr) {
-                                // Once migrated, clear custom_permissions_json to avoid double migration
-                                db.run("UPDATE users SET custom_permissions_json = NULL");
-                                console.log('[DB] Successfully migrated legacy custom_permissions_json to user_permissions table.');
-                            }
-                        });
-                    });
+                    } else {
+                        runUserPermissionsInitialization();
+                    }
+                } else {
+                    runUserPermissionsInitialization();
                 }
             });
         }
     });
     db.run("CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id)", () => {});
+
+    function runUserPermissionsInitialization() {
+        const modulesAndFeatures = {
+            'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
+            'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
+            'Projects': ['Access Module', 'Leads'],
+            'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
+            'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
+            'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
+            'Attendance & Payroll': ['Access Module', 'Employees', 'Leave', 'Timesheets', 'Pay Employee', 'Superannuation']
+        };
+
+        db.all("SELECT id, role FROM users", [], (userErr, usersList) => {
+            if (userErr || !usersList || usersList.length === 0) return;
+
+            db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='field_permissions'", [], (metaErr, tableRow) => {
+                const fieldPermissionsTableExists = !metaErr && tableRow;
+
+                usersList.forEach(user => {
+                    db.get("SELECT count(*) as count FROM user_permissions WHERE user_id = ?", [user.id], (cntErr, countRow) => {
+                        if (!cntErr && countRow && countRow.count === 0) {
+                            console.log(`[DB Migration] Initializing permissions for user ID: ${user.id} (${user.role})...`);
+                            
+                            if (fieldPermissionsTableExists) {
+                                db.all("SELECT module_name, feature_name, is_enabled FROM field_permissions WHERE role_name = ?", [user.role], (selErr, fpRows) => {
+                                    if (!selErr && fpRows && fpRows.length > 0) {
+                                        db.serialize(() => {
+                                            const insertStmt = db.prepare("INSERT OR IGNORE INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
+                                            fpRows.forEach(fp => {
+                                                insertStmt.run(user.id, fp.module_name, fp.feature_name, fp.is_enabled);
+                                            });
+                                            insertStmt.finalize();
+                                        });
+                                    } else {
+                                        insertDefaultsForUser(user.id, user.role);
+                                    }
+                                });
+                            } else {
+                                insertDefaultsForUser(user.id, user.role);
+                            }
+                        }
+                    });
+                });
+            });
+        });
+
+        function insertDefaultsForUser(userId, role) {
+            db.serialize(() => {
+                const insertStmt = db.prepare("INSERT OR IGNORE INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
+                for (const [mod, features] of Object.entries(modulesAndFeatures)) {
+                    features.forEach(feat => {
+                        let isEnabled = 0;
+                        if (role === 'Admin') {
+                            isEnabled = 1;
+                        } else if (mod === 'Attendance & Payroll') {
+                            const isMgr = role === 'Manager' || role.includes('Manager');
+                            if (isMgr) {
+                                isEnabled = 1;
+                            } else if (feat === 'Access Module' || feat === 'Employees' || feat === 'Leave') {
+                                isEnabled = 1;
+                            }
+                        }
+                        insertStmt.run(userId, mod, feat, isEnabled);
+                    });
+                }
+                insertStmt.finalize();
+            });
+        }
+    }
 
 });
 

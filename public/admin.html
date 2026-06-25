@@ -414,42 +414,8 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="content-area">
         <div class="admin-tab-bar">
             <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')">👤 User Accounts List</button>
-            <button class="tab-chip" id="tab-permissions-grid" onclick="switchAdminSection('permissions-grid')">🔐 Role Permission Control Center</button>
             <button class="tab-chip" id="tab-rate-limits" onclick="switchAdminSection('rate-limits')">🔒 Login Security & Rate Limits</button>
             <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')">📞 VoIP Analytics & Recordings</button>
-        </div>
-
-        <div id="section-permissions-grid" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
-            <div class="perm-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
-                <div class="perm-header">
-                    <div class="perm-title">🔒 Permission Control Center</div>
-                    <button class="btn-save" id="savePermBtn" onclick="savePermissions()">Save Permissions</button>
-                </div>
-                <div class="perm-table-wrapper" style="flex: 1; overflow: auto;">
-                    <table class="perm-matrix">
-                        <thead id="permMatrixHead">
-                            <!-- Dynamically populated -->
-                        </thead>
-                        <tbody id="permMatrixBody">
-                            <!-- Dynamically populated -->
-                        </tbody>
-                    </table>
-                </div>
-        <div class="pagination-footer">
-            <div class="pf-left">
-                <span class="pf-label">Show:</span>
-                <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
-                    <option value="30">30</option><option value="50">50</option><option value="100">100</option>
-                </select>
-                <span class="total-badge">Total: <span id="totalUsersCount">0</span></span>
-            </div>
-            <div class="pf-right">
-                <span class="page-info" id="pageInfo">Page 1 of 1</span>
-                <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
-                <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
-            </div>
-        </div>
-            </div>
         </div>
  
         <div id="section-rate-limits" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -586,6 +552,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     </thead>
                     <tbody id="usersBody"></tbody>
                 </table>
+            </div>
+            <div class="pagination-footer">
+                <div class="pf-left">
+                    <span class="pf-label">Show:</span>
+                    <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()">
+                        <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                    </select>
+                    <span class="total-badge">Total: <span id="totalUsersCount">0</span></span>
+                </div>
+                <div class="pf-right">
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>← Prev</button>
+                    <button class="page-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+                </div>
             </div>
         </div>
     </div>
@@ -816,12 +796,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function switchAdminSection(target) {
         document.getElementById('section-users-list').style.display = target === 'users-list' ? 'flex' : 'none';
-        document.getElementById('section-permissions-grid').style.display = target === 'permissions-grid' ? 'flex' : 'none';
         document.getElementById('section-rate-limits').style.display = target === 'rate-limits' ? 'flex' : 'none';
         document.getElementById('section-voip-analytics').style.display = target === 'voip-analytics' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
-        document.getElementById('tab-permissions-grid').classList.toggle('active-chip', target === 'permissions-grid');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
         document.getElementById('tab-voip-analytics').classList.toggle('active-chip', target === 'voip-analytics');
         
@@ -1299,78 +1277,131 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    function getStaticRoleDefaults(role) {
+        const defaults = {};
+        for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
+            defaults[mod] = {};
+            feats.forEach(feat => {
+                let val = 0;
+                if (role === 'Admin') {
+                    val = 1;
+                } else {
+                    // Smart defaults based on role name
+                    if (mod === 'Dashboard') {
+                        if (feat === 'Access Module') val = 1;
+                        else if (feat === 'Sales' && role.includes('Sales')) val = 1;
+                        else if (feat === 'Installation' && role.includes('Installation')) val = 1;
+                        else if (feat === 'Service' && role.includes('Service')) val = 1;
+                        else if (feat === 'Ares Installation' && (role.includes('Admin') || role.includes('Manager'))) val = 1;
+                    } else if (mod === 'Lead Master') {
+                        if (feat === 'Access Module' || feat === 'View Leads') val = 1;
+                        else if (feat === 'Add Lead' || feat === 'Edit Lead' || feat === 'Duplicate Lead') {
+                            val = role.includes('Sales') || role.includes('Admin') || role.includes('Manager') ? 1 : 0;
+                        } else if (feat === 'Lead Approvals' || feat === 'View Revenue') {
+                            val = role.includes('Manager') || role.includes('Admin') ? 1 : 0;
+                        } else if (feat === 'Delete Lead') {
+                            val = role === 'Admin' ? 1 : 0;
+                        } else if (feat === 'Edit Address') {
+                            val = 1;
+                        }
+                    } else if (mod === 'Projects') {
+                        val = 1; // Default allowed for most
+                    } else if (mod === 'Masters') {
+                        if (feat === 'Access Module' || feat === 'View Masters') {
+                            val = role.includes('Admin') || role.includes('Procurement') || role.includes('Manager') ? 1 : 0;
+                        } else {
+                            val = role.includes('Admin') || role.includes('Manager') ? 1 : 0;
+                        }
+                    } else if (mod === 'Ares Installation Outside') {
+                        if (role.includes('Installation') || role.includes('Admin') || role.includes('Manager') || role.includes('Accounts')) {
+                            val = 1;
+                        }
+                    } else if (mod === 'Settings') {
+                        if (role.includes('Admin') || role === 'Admin Manager') {
+                            val = 1;
+                        }
+                    } else if (mod === 'Attendance & Payroll') {
+                        if (role.includes('Manager') || role.includes('Accounts') || role.includes('Admin')) {
+                            val = 1;
+                        } else if (feat === 'Access Module' || feat === 'Employees' || feat === 'Leave') {
+                            val = 1;
+                        }
+                    }
+                }
+                defaults[mod][feat] = val === 1;
+            });
+        }
+        return defaults;
+    }
+
     function resetToRoleDefaults() {
-        document.querySelectorAll('.perm-override-toggle').forEach(cb => {
-            cb.checked = false;
-            toggleOverrideRow(cb);
+        const role = document.getElementById('u_role').value;
+        if (!role) return;
+        const roleDefaults = getStaticRoleDefaults(role);
+        
+        document.querySelectorAll('.user-perm-check').forEach(cb => {
+            const mod = cb.getAttribute('data-module');
+            const feat = cb.getAttribute('data-feature');
+            if (roleDefaults[mod] && roleDefaults[mod][feat] !== undefined) {
+                cb.checked = roleDefaults[mod][feat];
+            }
+            if (feat !== 'Access Module') {
+                const parentCb = document.querySelector(`.user-perm-check[data-module="${mod}"][data-feature="Access Module"]`);
+                cb.disabled = !parentCb.checked;
+            }
         });
     }
 
-    function toggleOverrideRow(cb) {
+    function toggleModuleFeatures(cb) {
         const mod = cb.getAttribute('data-module');
-        const feat = cb.getAttribute('data-feature');
-        const row = cb.closest('tr');
-        if (!row) return;
+        const isEnabled = cb.checked;
         
-        const valCheck = row.querySelector('.user-perm-check');
-        if (!valCheck) return;
-        
-        if (cb.checked) {
-            valCheck.disabled = false;
-        } else {
-            valCheck.disabled = true;
-            const roleDefault = cb.getAttribute('data-role-default') === 'true';
-            valCheck.checked = roleDefault;
-        }
+        document.querySelectorAll(`.user-perm-check[data-module="${mod}"]`).forEach(subCb => {
+            if (subCb.getAttribute('data-feature') !== 'Access Module') {
+                subCb.disabled = !isEnabled;
+                if (!isEnabled) {
+                    subCb.checked = false;
+                }
+            }
+        });
     }
 
     document.getElementById('u_role').addEventListener('change', function() {
-        const userId = document.getElementById('edit_user_id').value;
-        updateModalPermissionsTree(this.value, userId);
+        updateModalPermissionsTree(this.value, null);
     });
 
     async function updateModalPermissionsTree(role, userId) {
         const matrixContainer = document.getElementById('userPermissionsOverrideMatrix');
-        if (!role) { matrixContainer.innerHTML = 'Select a role to see permission overrides.'; return; }
-        matrixContainer.innerHTML = 'Loading permission matrix...';
+        if (!role) { matrixContainer.innerHTML = 'Select a role to see permissions.'; return; }
+        matrixContainer.innerHTML = 'Loading permissions...';
         
         try {
-            const res = await fetch(`/api/role-permissions/${role}`);
-            const roleMatrix = await res.json();
-            
-            let userOverrides = {};
+            let userPermissions = {};
             if (userId) {
                 const uRes = await fetch(`/api/users/${userId}/permissions`);
-                if (uRes.ok) userOverrides = await uRes.json();
+                if (uRes.ok) userPermissions = await uRes.json();
             }
+            
+            const roleDefaults = getStaticRoleDefaults(role);
             
             let html = `<table style="width:100%; border-collapse:collapse; font-size:11px;">
                 <thead>
                     <tr style="border-bottom:1px solid #cbd5e1; text-align:left; color:#475569;">
-                        <th style="padding:6px 4px; font-weight:600;">Module / Feature</th>
-                        <th style="padding:6px 4px; font-weight:600; text-align:center; width:90px;">Role Default</th>
-                        <th style="padding:6px 4px; font-weight:600; text-align:center; width:70px;">Override</th>
+                        <th style="padding:6px 4px; font-weight:600;">Module / Feature Name</th>
                         <th style="padding:6px 4px; font-weight:600; text-align:center; width:70px;">Status</th>
                     </tr>
                 </thead>
                 <tbody>`;
             
             for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
-                const roleHasModule = roleMatrix[mod] && roleMatrix[mod]['Access Module'] !== undefined;
-                const isModRoleEnabled = roleHasModule ? !!roleMatrix[mod]['Access Module'] : false;
-                
-                const hasModOverride = userOverrides && userOverrides[mod] && userOverrides[mod]['Access Module'] !== undefined;
-                const isModEnabled = hasModOverride ? !!userOverrides[mod]['Access Module'] : isModRoleEnabled;
+                const hasUserVal = userPermissions[mod] && userPermissions[mod]['Access Module'] !== undefined;
+                const isModEnabled = hasUserVal ? (userPermissions[mod]['Access Module'] === 1 || userPermissions[mod]['Access Module'] === true) : !!roleDefaults[mod]['Access Module'];
                 
                 html += `<tr style="background:#f1f5f9; border-bottom:1px solid #cbd5e1;">
                     <td style="padding:6px 4px; font-weight:700; color:var(--primary);">${mod}</td>
-                    <td style="padding:6px 4px; text-align:center; font-weight:600; color:${isModRoleEnabled ? '#15803d' : '#ef4444'};">${isModRoleEnabled ? 'Allowed' : 'Denied'}</td>
-                    <td style="padding:6px 4px; text-align:center;">
-                        <input type="checkbox" class="perm-override-toggle" data-module="${mod}" data-feature="Access Module" data-role-default="${isModRoleEnabled}" ${hasModOverride ? 'checked' : ''} onchange="toggleOverrideRow(this)">
-                    </td>
                     <td style="padding:6px 4px; text-align:center;">
                         <label class="ios-switch">
-                            <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="Access Module" ${isModEnabled ? 'checked' : ''} ${hasModOverride ? '' : 'disabled'}>
+                            <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="Access Module" ${isModEnabled ? 'checked' : ''} onchange="toggleModuleFeatures(this)">
                             <span class="ios-slider"></span>
                         </label>
                     </td>
@@ -1379,19 +1410,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 feats.forEach(feat => {
                     if (feat === 'Access Module') return;
                     
-                    const isFeatRoleEnabled = roleMatrix[mod] && roleMatrix[mod][feat] !== undefined ? !!roleMatrix[mod][feat] : false;
-                    const hasFeatOverride = userOverrides && userOverrides[mod] && userOverrides[mod][feat] !== undefined;
-                    const isFeatEnabled = hasFeatOverride ? !!userOverrides[mod][feat] : isFeatRoleEnabled;
+                    const hasFeatUserVal = userPermissions[mod] && userPermissions[mod][feat] !== undefined;
+                    const isFeatEnabled = hasFeatUserVal ? (userPermissions[mod][feat] === 1 || userPermissions[mod][feat] === true) : !!roleDefaults[mod][feat];
+                    const isParentDisabled = !isModEnabled;
                     
                     html += `<tr style="border-bottom:1px solid #e2e8f0;">
                         <td style="padding:5px 4px 5px 20px; color:#475569;">↳ ${feat}</td>
-                        <td style="padding:5px 4px; text-align:center; color:${isFeatRoleEnabled ? '#16a34a' : '#dc2626'};">${isFeatRoleEnabled ? 'Allowed' : 'Denied'}</td>
-                        <td style="padding:5px 4px; text-align:center;">
-                            <input type="checkbox" class="perm-override-toggle" data-module="${mod}" data-feature="${feat}" data-role-default="${isFeatRoleEnabled}" ${hasFeatOverride ? 'checked' : ''} onchange="toggleOverrideRow(this)">
-                        </td>
                         <td style="padding:5px 4px; text-align:center;">
                             <label class="ios-switch">
-                                <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="${feat}" ${isFeatEnabled ? 'checked' : ''} ${hasFeatOverride ? '' : 'disabled'}>
+                                <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="${feat}" ${isFeatEnabled ? 'checked' : ''} ${isParentDisabled ? 'disabled' : ''}>
                                 <span class="ios-slider"></span>
                             </label>
                         </td>
@@ -1423,21 +1450,13 @@ document.addEventListener("DOMContentLoaded", function() {
         btn.innerText = 'Saving...';
         
         const customPerms = {};
-        document.querySelectorAll('.perm-override-toggle').forEach(cb => {
-            if (cb.checked) {
-                const mod = cb.getAttribute('data-module');
-                const feat = cb.getAttribute('data-feature');
-                const row = cb.closest('tr');
-                if (!row) return;
-                
-                const valCheck = row.querySelector('.user-perm-check');
-                if (!valCheck) return;
-                
-                if (!customPerms[mod]) {
-                    customPerms[mod] = {};
-                }
-                customPerms[mod][feat] = valCheck.checked;
+        document.querySelectorAll('.user-perm-check').forEach(cb => {
+            const mod = cb.getAttribute('data-module');
+            const feat = cb.getAttribute('data-feature');
+            if (!customPerms[mod]) {
+                customPerms[mod] = {};
             }
+            customPerms[mod][feat] = cb.checked ? 1 : 0;
         });
 
         const payload = {
