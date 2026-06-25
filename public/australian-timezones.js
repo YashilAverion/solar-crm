@@ -200,7 +200,8 @@
         if (oldDeploy) oldDeploy.remove();
 
         // Inject standard search container if it's missing (and not the login page)
-        if (!tier2.querySelector('#globalOmniSearchInput') && !window.location.pathname.includes('login.html')) {
+        const hasExistingSearch = tier2.querySelector('input[type="text"]') || tier2.querySelector('input[type="search"]') || tier2.querySelector('.search-wrap');
+        if (!hasExistingSearch && !window.location.pathname.includes('login.html')) {
             const searchWrap = document.createElement('div');
             searchWrap.className = 'search-wrap';
             searchWrap.innerHTML = `
