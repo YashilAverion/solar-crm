@@ -696,44 +696,56 @@ document.addEventListener("DOMContentLoaded", function() {
                 <!-- VERTICAL DIVIDER -->
                 <div style="width: 1px; background: #cbd5e1; align-self: stretch; margin: 0 4px;"></div>
                 
-                <!-- RIGHT COLUMN: VoIP Configuration & Module Access Preview -->
-                <div style="flex: 1.1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 4px;">
-                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>VoIP Configuration</span>
-                        <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">🔑 Inject Credentials</button>
+                <!-- RIGHT COLUMN: VoIP Configuration & User-Specific Permissions -->
+                <div style="flex: 1.1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding-right: 4px;">
+                    <!-- Sleek sub-tab navigation -->
+                    <div style="display: flex; gap: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 4px; flex-shrink: 0;">
+                        <button type="button" id="tab_user_voip" class="sub-tab-btn active" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid var(--primary); cursor: pointer;" onclick="switchUserModalTab('voip')">VoIP & SIP Settings</button>
+                        <button type="button" id="tab_user_perms" class="sub-tab-btn" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid transparent; cursor: pointer;" onclick="switchUserModalTab('perms')">Module Access Overrides</button>
                     </div>
-                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px;">
-                        <div class="field"><label>VoIP Extension</label><input type="text" id="u_voipline_extension" placeholder="e.g. 101"></div>
-                        <div class="field"><label>Outbound Line ID</label><input type="text" id="u_voipline_outbound_line" placeholder="e.g. line_1234"></div>
-                        <div class="field"><label>Webhook Secret Token</label><input type="text" id="u_voipline_secret_token" placeholder="Webhook token"></div>
-                        <div class="field"><label>VoIP API Key</label><input type="text" id="u_voipline_api_key" placeholder="API Key if custom"></div>
-                        <div class="field" style="grid-column: span 2;"><label>VoIP Master API Key</label><input type="text" id="u_voipline_master_key" placeholder="VoIPLine Master Key"></div>
-                        <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px;">
-                            <label style="margin: 0; font-weight: 600;">Sync Status:</label>
-                            <span id="voipline_sync_status" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">
-                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span>
-                                Offline
-                            </span>
-                            <span id="voipline_last_sync_time" style="font-size: 11px; color: var(--text-muted); margin-left: auto;">Last Sync: Never</span>
+
+                    <!-- VoIP/SIP Settings Content -->
+                    <div id="user_modal_voip_content" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                            <span>VoIP Configuration</span>
+                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">🔑 Inject Credentials</button>
+                        </div>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; flex-shrink: 0;">
+                            <div class="field"><label>VoIP Extension</label><input type="text" id="u_voipline_extension" placeholder="e.g. 101"></div>
+                            <div class="field"><label>Outbound Line ID</label><input type="text" id="u_voipline_outbound_line" placeholder="e.g. line_1234"></div>
+                            <div class="field"><label>Webhook Secret Token</label><input type="text" id="u_voipline_secret_token" placeholder="Webhook token"></div>
+                            <div class="field"><label>VoIP API Key</label><input type="text" id="u_voipline_api_key" placeholder="API Key if custom"></div>
+                            <div class="field" style="grid-column: span 2;"><label>VoIP Master API Key</label><input type="text" id="u_voipline_master_key" placeholder="VoIPLine Master Key"></div>
+                            <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px;">
+                                <label style="margin: 0; font-weight: 600;">Sync Status:</label>
+                                <span id="voipline_sync_status" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span>
+                                    Offline
+                                </span>
+                                <span id="voipline_last_sync_time" style="font-size: 11px; color: var(--text-muted); margin-left: auto;">Last Sync: Never</span>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 10px; margin-bottom: 4px; flex-shrink: 0;">
+                            <span>WebRTC SIP Configuration</span>
+                        </div>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; flex-shrink: 0;">
+                            <div class="field"><label>SIP Username</label><input type="text" id="u_voipline_sip_username" placeholder="e.g. 1001"></div>
+                            <div class="field"><label>SIP Password</label><input type="password" id="u_voipline_sip_password" placeholder="SIP Secret"></div>
+                            <div class="field"><label>SIP Domain</label><input type="text" id="u_voipline_sip_domain" placeholder="au.voipcloud.online"></div>
+                            <div class="field"><label>WSS URL</label><input type="text" id="u_voipline_wss_url" placeholder="wss://au.voipcloud.online:4443"></div>
                         </div>
                     </div>
-                    
-                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 10px; margin-bottom: 4px;">
-                        <span>WebRTC SIP Configuration</span>
-                    </div>
-                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px;">
-                        <div class="field"><label>SIP Username</label><input type="text" id="u_voipline_sip_username" placeholder="e.g. 1001"></div>
-                        <div class="field"><label>SIP Password</label><input type="password" id="u_voipline_sip_password" placeholder="SIP Secret"></div>
-                        <div class="field"><label>SIP Domain</label><input type="text" id="u_voipline_sip_domain" placeholder="au.voipcloud.online"></div>
-                        <div class="field"><label>WSS URL</label><input type="text" id="u_voipline_wss_url" placeholder="wss://au.voipcloud.online:4443"></div>
-                    </div>
-                    
-                    <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>Module Access Preview</span>
-                        <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">🔄 Restore Defaults</button>
-                    </div>
-                    <div id="roleAccessPreview" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; max-height: 190px; overflow-y: auto; font-size: 12px; color: var(--text-muted); box-sizing: border-box; width: 100%; flex: 1;">
-                        Select a role to see granted permissions.
+
+                    <!-- User Permission Overrides Content -->
+                    <div id="user_modal_perms_content" style="display: none; flex-direction: column; flex: 1; overflow: hidden; gap: 8px;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 4px;">
+                            <span>User Permission Overrides</span>
+                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">🔄 Restore Role Defaults</button>
+                        </div>
+                        <div id="userPermissionsOverrideMatrix" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; overflow-y: auto; font-size: 12px; box-sizing: border-box; width: 100%; flex: 1;">
+                            <!-- Will be rendered dynamically via javascript -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1189,7 +1201,9 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_password').required = true;
         document.getElementById('u_pass_label').innerText = 'Password';
         document.getElementById('u_pass_label').classList.add('required');
-        document.getElementById('roleAccessPreview').innerHTML = 'Select a role to see granted permissions.';
+        
+        switchUserModalTab('voip');
+        document.getElementById('userPermissionsOverrideMatrix').innerHTML = 'Select a role to see permission overrides.';
         
         const statusEl = document.getElementById('voipline_sync_status');
         const lastSyncEl = document.getElementById('voipline_last_sync_time');
@@ -1249,20 +1263,65 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         
         document.getElementById('u_password').required = false;
-        document.getElementById('u_pass_label').innerText = 'Password (Leave blank to keep)';
+        document.getElementById('u_pass_label').innerText = 'Password (leave blank to keep current)';
         document.getElementById('u_pass_label').classList.remove('required');
-        document.getElementById('u_role').dispatchEvent(new Event('change'));
+        
+        switchUserModalTab('voip');
+        updateModalPermissionsTree(u.role, u.id);
         
         document.getElementById('userModal').style.display = 'flex';
     }
 
-    function resetToRoleDefaults() {
-        const role = document.getElementById('u_role').value;
-        if (!role) {
-            Swal.fire('Notice', 'Please select a role first.', 'info');
-            return;
+    function switchUserModalTab(tabName) {
+        const tabVoip = document.getElementById('tab_user_voip');
+        const tabPerms = document.getElementById('tab_user_perms');
+        const voipContent = document.getElementById('user_modal_voip_content');
+        const permsContent = document.getElementById('user_modal_perms_content');
+        
+        if (tabName === 'voip') {
+            tabVoip.classList.add('active');
+            tabVoip.style.color = 'var(--primary)';
+            tabVoip.style.borderBottom = '2px solid var(--primary)';
+            tabPerms.classList.remove('active');
+            tabPerms.style.color = '#64748b';
+            tabPerms.style.borderBottom = '2px solid transparent';
+            voipContent.style.display = 'flex';
+            permsContent.style.display = 'none';
+        } else {
+            tabPerms.classList.add('active');
+            tabPerms.style.color = 'var(--primary)';
+            tabPerms.style.borderBottom = '2px solid var(--primary)';
+            tabVoip.classList.remove('active');
+            tabVoip.style.color = '#64748b';
+            tabVoip.style.borderBottom = '2px solid transparent';
+            voipContent.style.display = 'none';
+            permsContent.style.display = 'flex';
         }
-        updateModalPermissionsTree(role, null);
+    }
+
+    function resetToRoleDefaults() {
+        document.querySelectorAll('.perm-override-toggle').forEach(cb => {
+            cb.checked = false;
+            toggleOverrideRow(cb);
+        });
+    }
+
+    function toggleOverrideRow(cb) {
+        const mod = cb.getAttribute('data-module');
+        const feat = cb.getAttribute('data-feature');
+        const row = cb.closest('tr');
+        if (!row) return;
+        
+        const valCheck = row.querySelector('.user-perm-check');
+        if (!valCheck) return;
+        
+        if (cb.checked) {
+            valCheck.disabled = false;
+        } else {
+            valCheck.disabled = true;
+            const roleDefault = cb.getAttribute('data-role-default') === 'true';
+            valCheck.checked = roleDefault;
+        }
     }
 
     document.getElementById('u_role').addEventListener('change', function() {
@@ -1271,58 +1330,80 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     async function updateModalPermissionsTree(role, userId) {
-        const preview = document.getElementById('roleAccessPreview');
-        if (!role) { preview.innerHTML = 'Select a role to see granted permissions.'; return; }
-        preview.innerHTML = 'Loading permissions...';
+        const matrixContainer = document.getElementById('userPermissionsOverrideMatrix');
+        if (!role) { matrixContainer.innerHTML = 'Select a role to see permission overrides.'; return; }
+        matrixContainer.innerHTML = 'Loading permission matrix...';
+        
         try {
             const res = await fetch(`/api/role-permissions/${role}`);
-            const matrix = await res.json();
+            const roleMatrix = await res.json();
             
             let userOverrides = {};
             if (userId) {
-                const uRes = await fetch(`/admin/users/${userId}/permissions`);
+                const uRes = await fetch(`/api/users/${userId}/permissions`);
                 if (uRes.ok) userOverrides = await uRes.json();
             }
-
-            let html = '<ul style="list-style: none; padding: 0;">';
-            for (const [mod, feats] of Object.entries(matrix)) {
-                if (feats['Access Module'] !== undefined) {
-                    const isModRoleEnabled = !!feats['Access Module'];
-                    const hasModOverride = userOverrides && userOverrides[mod] && userOverrides[mod]['Access Module'] !== undefined;
-                    const isModEnabled = hasModOverride ? !!userOverrides[mod]['Access Module'] : isModRoleEnabled;
-                    const modChecked = isModEnabled ? 'checked' : '';
-                    const modIndicator = hasModOverride ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
-                    
-                    html += `<li style="margin-bottom: 6px;">
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                            <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="Access Module" data-role-value="${isModRoleEnabled}" ${modChecked}>
-                            <strong style="color:var(--text-dark);">${mod}</strong> ${modIndicator}
+            
+            let html = `<table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <thead>
+                    <tr style="border-bottom:1px solid #cbd5e1; text-align:left; color:#475569;">
+                        <th style="padding:6px 4px; font-weight:600;">Module / Feature</th>
+                        <th style="padding:6px 4px; font-weight:600; text-align:center; width:90px;">Role Default</th>
+                        <th style="padding:6px 4px; font-weight:600; text-align:center; width:70px;">Override</th>
+                        <th style="padding:6px 4px; font-weight:600; text-align:center; width:70px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
+                const roleHasModule = roleMatrix[mod] && roleMatrix[mod]['Access Module'] !== undefined;
+                const isModRoleEnabled = roleHasModule ? !!roleMatrix[mod]['Access Module'] : false;
+                
+                const hasModOverride = userOverrides && userOverrides[mod] && userOverrides[mod]['Access Module'] !== undefined;
+                const isModEnabled = hasModOverride ? !!userOverrides[mod]['Access Module'] : isModRoleEnabled;
+                
+                html += `<tr style="background:#f1f5f9; border-bottom:1px solid #cbd5e1;">
+                    <td style="padding:6px 4px; font-weight:700; color:var(--primary);">${mod}</td>
+                    <td style="padding:6px 4px; text-align:center; font-weight:600; color:${isModRoleEnabled ? '#15803d' : '#ef4444'};">${isModRoleEnabled ? 'Allowed' : 'Denied'}</td>
+                    <td style="padding:6px 4px; text-align:center;">
+                        <input type="checkbox" class="perm-override-toggle" data-module="${mod}" data-feature="Access Module" data-role-default="${isModRoleEnabled}" ${hasModOverride ? 'checked' : ''} onchange="toggleOverrideRow(this)">
+                    </td>
+                    <td style="padding:6px 4px; text-align:center;">
+                        <label class="ios-switch">
+                            <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="Access Module" ${isModEnabled ? 'checked' : ''} ${hasModOverride ? '' : 'disabled'}>
+                            <span class="ios-slider"></span>
                         </label>
-                        <ul style="padding-left: 24px; margin-top: 4px; color: var(--text-muted); list-style: none;">`;
-                    for (const [f, enabled] of Object.entries(feats)) {
-                        if (f !== 'Access Module') {
-                            const isFeatRoleEnabled = !!enabled;
-                            const hasFeatOverride = userOverrides && userOverrides[mod] && userOverrides[mod][f] !== undefined;
-                            const isFeatEnabled = hasFeatOverride ? !!userOverrides[mod][f] : isFeatRoleEnabled;
-                            const featChecked = isFeatEnabled ? 'checked' : '';
-                            const featIndicator = hasFeatOverride ? '<span style="font-size:9px; background:#e0f2fe; color:#3b82f6; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:bold;">User Override</span>' : '';
-                            
-                            html += `<li style="margin-bottom: 4px;">
-                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                                    <input type="checkbox" class="perm-module-check" data-module="${mod}" data-permission="${f}" data-role-value="${isFeatRoleEnabled}" ${featChecked}>
-                                    <span>${f}</span>${featIndicator}
-                                </label>
-                            </li>`;
-                        }
-                    }
-                    html += `</ul></li>`;
-                }
+                    </td>
+                </tr>`;
+                
+                feats.forEach(feat => {
+                    if (feat === 'Access Module') return;
+                    
+                    const isFeatRoleEnabled = roleMatrix[mod] && roleMatrix[mod][feat] !== undefined ? !!roleMatrix[mod][feat] : false;
+                    const hasFeatOverride = userOverrides && userOverrides[mod] && userOverrides[mod][feat] !== undefined;
+                    const isFeatEnabled = hasFeatOverride ? !!userOverrides[mod][feat] : isFeatRoleEnabled;
+                    
+                    html += `<tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:5px 4px 5px 20px; color:#475569;">↳ ${feat}</td>
+                        <td style="padding:5px 4px; text-align:center; color:${isFeatRoleEnabled ? '#16a34a' : '#dc2626'};">${isFeatRoleEnabled ? 'Allowed' : 'Denied'}</td>
+                        <td style="padding:5px 4px; text-align:center;">
+                            <input type="checkbox" class="perm-override-toggle" data-module="${mod}" data-feature="${feat}" data-role-default="${isFeatRoleEnabled}" ${hasFeatOverride ? 'checked' : ''} onchange="toggleOverrideRow(this)">
+                        </td>
+                        <td style="padding:5px 4px; text-align:center;">
+                            <label class="ios-switch">
+                                <input type="checkbox" class="user-perm-check" data-module="${mod}" data-feature="${feat}" ${isFeatEnabled ? 'checked' : ''} ${hasFeatOverride ? '' : 'disabled'}>
+                                <span class="ios-slider"></span>
+                            </label>
+                        </td>
+                    </tr>`;
+                });
             }
-            html += '</ul>';
-            if (html === '<ul style="list-style: none; padding: 0;"></ul>') html = 'No access granted for this role.';
-            preview.innerHTML = html;
+            
+            html += `</tbody></table>`;
+            matrixContainer.innerHTML = html;
         } catch (e) {
-            preview.innerHTML = 'Failed to load permissions.';
+            matrixContainer.innerHTML = '<span style="color:#ef4444;">Failed to load permission details.</span>';
+            console.error(e);
         }
     }
 
@@ -1342,15 +1423,21 @@ document.addEventListener("DOMContentLoaded", function() {
         btn.innerText = 'Saving...';
         
         const customPerms = {};
-        document.querySelectorAll('.perm-module-check').forEach(chk => {
-            const mod = chk.getAttribute('data-module');
-            const feat = chk.getAttribute('data-permission');
-            if (!mod || !feat) return;
-
-            if (!customPerms[mod]) {
-                customPerms[mod] = {};
+        document.querySelectorAll('.perm-override-toggle').forEach(cb => {
+            if (cb.checked) {
+                const mod = cb.getAttribute('data-module');
+                const feat = cb.getAttribute('data-feature');
+                const row = cb.closest('tr');
+                if (!row) return;
+                
+                const valCheck = row.querySelector('.user-perm-check');
+                if (!valCheck) return;
+                
+                if (!customPerms[mod]) {
+                    customPerms[mod] = {};
+                }
+                customPerms[mod][feat] = valCheck.checked;
             }
-            customPerms[mod][feat] = chk.checked;
         });
 
         const payload = {
@@ -1393,7 +1480,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 loadUsers();
 
                 if (!isEdit && data.id) {
-                    // New user created — prompt to connect Microsoft Outlook
                     const { isConfirmed } = await Swal.fire({
                         title: '✅ User Created!',
                         html: `<b>${newUserName}</b> has been added to the CRM.<br><br>

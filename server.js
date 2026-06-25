@@ -827,7 +827,6 @@ app.post('/admin/users', requireManager, async (req, res) => {
         );
         if (existing) return res.status(400).json({ error: 'This username already exists.' });
 
-        const permsJson = (custom_permissions && Object.keys(custom_permissions).length > 0) ? JSON.stringify(custom_permissions) : null;
         const hashedPassword = await bcrypt.hash(password, 10);
         
         // Encrypt credentials
@@ -836,10 +835,27 @@ app.post('/admin/users', requireManager, async (req, res) => {
         const encApiKey = encrypt(voipline_api_key || '');
         const encSipPassword = encrypt(voipline_sip_password || '');
 
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions_json, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || ''], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || ''], function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, success: true });
+            
+            const userId = this.lastID;
+
+            // Insert custom overrides
+            if (custom_permissions && typeof custom_permissions === 'object') {
+                db.serialize(() => {
+                    const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                    for (const mod in custom_permissions) {
+                        for (const feat in custom_permissions[mod]) {
+                            const val = custom_permissions[mod][feat] ? 1 : 0;
+                            stmt.run(userId, mod, feat, val);
+                        }
+                    }
+                    stmt.finalize();
+                });
+            }
+            
+            res.json({ id: userId, success: true });
         });
     } catch (err) {
         console.error('Error creating user:', err);
@@ -863,13 +879,34 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
 
-        const permsJson = (custom_permissions && Object.keys(custom_permissions).length > 0) ? JSON.stringify(custom_permissions) : null;
-        
         // Encrypt credentials
         const encMasterKey = encrypt(voipline_master_key || '');
         const encSecretToken = encrypt(voipline_secret_token || '');
         const encApiKey = encrypt(voipline_api_key || '');
         const encSipPassword = encrypt(voipline_sip_password || '');
+
+        const handlePermissionsSync = (callback) => {
+            if (custom_permissions === undefined) {
+                return callback();
+            }
+            db.serialize(() => {
+                db.run("DELETE FROM user_permissions WHERE user_id = ?", [id], (deleteErr) => {
+                    if (deleteErr) console.error('Error deleting user_permissions:', deleteErr.message);
+                    if (custom_permissions && typeof custom_permissions === 'object') {
+                        const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                        for (const mod in custom_permissions) {
+                            for (const feat in custom_permissions[mod]) {
+                                const val = custom_permissions[mod][feat] ? 1 : 0;
+                                stmt.run(id, mod, feat, val);
+                            }
+                        }
+                        stmt.finalize(callback);
+                    } else {
+                        callback();
+                    }
+                });
+            });
+        };
 
         // If new password provided, validate strength
         if (password && password.trim() !== '') {
@@ -877,16 +914,20 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                 return res.status(400).json({ error: getPasswordStrengthMessage() });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json({ success: true });
+                handlePermissionsSync(() => {
+                    res.json({ success: true });
+                });
             });
         } else {
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, custom_permissions_json=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, permsJson, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json({ success: true });
+                handlePermissionsSync(() => {
+                    res.json({ success: true });
+                });
             });
         }
     } catch (err) {
@@ -1937,18 +1978,74 @@ app.get('/api/my-permissions', (req, res) => {
             matrix[r.module_name][r.feature_name] = r.is_enabled === 1;
         });
 
-        db.get("SELECT custom_permissions_json FROM users WHERE id = ?", [id], (err, userRow) => {
-            if (!err && userRow && userRow.custom_permissions_json) {
-                try {
-                    const customPerms = JSON.parse(userRow.custom_permissions_json);
-                    // Deep merge custom permissions over role defaults
-                    for (const mod in customPerms) {
-                        if (!matrix[mod]) matrix[mod] = {};
-                        Object.assign(matrix[mod], customPerms[mod]);
-                    }
-                } catch (e) { /* Ignore JSON parse errors */ }
+        db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [id], (err, overrideRows) => {
+            if (!err && overrideRows && overrideRows.length > 0) {
+                overrideRows.forEach(ov => {
+                    if (!matrix[ov.module_name]) matrix[ov.module_name] = {};
+                    matrix[ov.module_name][ov.feature_name] = ov.is_enabled === 1;
+                });
             }
             res.json(matrix);
+        });
+    });
+});
+
+// ── GET USER OVERRIDE PERMISSIONS ─────────────────────────────
+app.get('/api/users/:id/permissions', requireManager, (req, res) => {
+    const userId = req.params.id;
+    db.all("SELECT module_name, feature_name, is_enabled FROM user_permissions WHERE user_id = ?", [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const matrix = {};
+        (rows || []).forEach(r => {
+            if (!matrix[r.module_name]) matrix[r.module_name] = {};
+            matrix[r.module_name][r.feature_name] = r.is_enabled;
+        });
+        res.json(matrix);
+    });
+});
+
+// ── UPDATE USER OVERRIDE PERMISSIONS ──────────────────────────
+app.post('/api/users/:id/permissions', requireManager, (req, res) => {
+    const userId = req.params.id;
+    const permissions = req.body; // Expecting { "Dashboard": { "Access Module": 1, ... }, ... }
+    
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+        db.run("DELETE FROM user_permissions WHERE user_id = ?", [userId], (err) => {
+            if (err) {
+                db.run("ROLLBACK");
+                return res.status(500).json({ error: err.message });
+            }
+            
+            if (permissions && typeof permissions === 'object') {
+                const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                try {
+                    for (const mod in permissions) {
+                        for (const feat in permissions[mod]) {
+                            const val = permissions[mod][feat] ? 1 : 0;
+                            stmt.run(userId, mod, feat, val);
+                        }
+                    }
+                    stmt.finalize((err) => {
+                        if (err) {
+                            db.run("ROLLBACK");
+                            return res.status(500).json({ error: err.message });
+                        }
+                        db.run("COMMIT", (err) => {
+                            if (err) return res.status(500).json({ error: err.message });
+                            res.json({ success: true });
+                        });
+                    });
+                } catch (e) {
+                    db.run("ROLLBACK");
+                    return res.status(500).json({ error: e.message });
+                }
+            } else {
+                db.run("COMMIT", (err) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.json({ success: true });
+                });
+            }
         });
     });
 });

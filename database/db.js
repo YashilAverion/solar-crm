@@ -1027,6 +1027,54 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_configurations_user_id ON configurations(user_id)", () => {});
     db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_configurations_global_unique ON configurations(config_key) WHERE user_id IS NULL", () => {});
 
+    // ── USER OVERRIDE PERMISSIONS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS user_permissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            module_name TEXT,
+            feature_name TEXT,
+            is_enabled INTEGER DEFAULT 0,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, module_name, feature_name)
+        )
+    `, (err) => {
+        if (err) {
+            console.error('[DB] Error creating user_permissions table:', err.message);
+        } else {
+            console.log('[DB] user_permissions table ready.');
+            // Run migration for existing users custom_permissions_json
+            db.all("SELECT id, custom_permissions_json FROM users WHERE custom_permissions_json IS NOT NULL AND custom_permissions_json != ''", [], (selectErr, rows) => {
+                if (!selectErr && rows && rows.length > 0) {
+                    db.serialize(() => {
+                        const stmt = db.prepare("INSERT OR IGNORE INTO user_permissions (user_id, module_name, feature_name, is_enabled) VALUES (?, ?, ?, ?)");
+                        rows.forEach(row => {
+                            try {
+                                const perms = JSON.parse(row.custom_permissions_json);
+                                for (const mod in perms) {
+                                    for (const feat in perms[mod]) {
+                                        const isEnabled = perms[mod][feat] ? 1 : 0;
+                                        stmt.run(row.id, mod, feat, isEnabled);
+                                    }
+                                }
+                            } catch (e) {
+                                // Ignore JSON parse errors
+                            }
+                        });
+                        stmt.finalize((finalizeErr) => {
+                            if (!finalizeErr) {
+                                // Once migrated, clear custom_permissions_json to avoid double migration
+                                db.run("UPDATE users SET custom_permissions_json = NULL");
+                                console.log('[DB] Successfully migrated legacy custom_permissions_json to user_permissions table.');
+                            }
+                        });
+                    });
+                }
+            });
+        }
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id)", () => {});
+
 });
 
 module.exports = db;
