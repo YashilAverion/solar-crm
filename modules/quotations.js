@@ -196,34 +196,51 @@ router.post('/calculate', requireAuth, async (req, res) => {
             });
         }
         
-        // B. Battery Installation Charge (Upto 20 kWh base + excess, plus 10% GST)
+        // B. Battery Installation Charge (plus 10% GST)
+        // Upto 30 kWh: $2585 Inc GST ($2350 Ex GST)
+        // Between 30 kWh to 42 kWh: $3410 Inc GST ($3100 Ex GST)
+        // Above 42 kWh: $3410 Inc GST ($3100 Ex GST) + $110 Inc GST ($100 Ex GST) per kWh above 42 kWh
         let batteryInstallationCharge = 0;
         let batteryExcessCharge = 0;
         if (totalBatteryKwh > 0) {
-            const batteryBaseRate = chargeRates['Battery Installation Upto 20 kWh'] !== undefined ? chargeRates['Battery Installation Upto 20 kWh'] : 1500.00;
-            const batteryBaseRateIncGst = batteryBaseRate * 1.10;
-            if (totalBatteryKwh <= 20) {
+            if (totalBatteryKwh <= 30) {
+                const batteryBaseRate = chargeRates['Battery Installation Upto 30 kWh'] !== undefined ? chargeRates['Battery Installation Upto 30 kWh'] : 2350.00;
+                const batteryBaseRateIncGst = batteryBaseRate * 1.10;
                 batteryInstallationCharge = batteryBaseRateIncGst;
                 totalInstallationFee += batteryInstallationCharge;
                 installationsBreakdown.push({
-                    name: "Battery Installation Upto 20 kWh",
+                    name: "Battery Installation Upto 30 kWh",
+                    formula: `Flat Rate`,
+                    total: parseFloat(batteryInstallationCharge.toFixed(2))
+                });
+            } else if (totalBatteryKwh <= 42) {
+                const batteryMidRate = chargeRates['Battery Installation 30 kWh to 42 kWh'] !== undefined ? chargeRates['Battery Installation 30 kWh to 42 kWh'] : 3100.00;
+                const batteryMidRateIncGst = batteryMidRate * 1.10;
+                batteryInstallationCharge = batteryMidRateIncGst;
+                totalInstallationFee += batteryInstallationCharge;
+                installationsBreakdown.push({
+                    name: "Battery Installation 30 kWh to 42 kWh",
                     formula: `Flat Rate`,
                     total: parseFloat(batteryInstallationCharge.toFixed(2))
                 });
             } else {
-                const batteryExcessRate = chargeRates['Battery Installation More than 20 kWh - Per kWh'] !== undefined ? chargeRates['Battery Installation More than 20 kWh - Per kWh'] : 100.00;
+                const batteryMidRate = chargeRates['Battery Installation 30 kWh to 42 kWh'] !== undefined ? chargeRates['Battery Installation 30 kWh to 42 kWh'] : 3100.00;
+                const batteryMidRateIncGst = batteryMidRate * 1.10;
+                const batteryExcessRate = chargeRates['Battery Installation Above 42 kWh - Per kWh'] !== undefined ? chargeRates['Battery Installation Above 42 kWh - Per kWh'] : 100.00;
                 const batteryExcessRateIncGst = batteryExcessRate * 1.10;
-                batteryInstallationCharge = batteryBaseRateIncGst;
-                batteryExcessCharge = (totalBatteryKwh - 20) * batteryExcessRateIncGst;
+                
+                batteryInstallationCharge = batteryMidRateIncGst;
+                batteryExcessCharge = (totalBatteryKwh - 42) * batteryExcessRateIncGst;
                 totalInstallationFee += batteryInstallationCharge + batteryExcessCharge;
+                
                 installationsBreakdown.push({
-                    name: "Battery Installation Upto 20 kWh",
+                    name: "Battery Installation 30 kWh to 42 kWh",
                     formula: `Flat Rate`,
                     total: parseFloat(batteryInstallationCharge.toFixed(2))
                 });
                 installationsBreakdown.push({
-                    name: "Battery Installation Above 20 kWh",
-                    formula: `${(totalBatteryKwh - 20).toFixed(2)} kWh X $${batteryExcessRateIncGst.toFixed(2)}`,
+                    name: "Battery Installation Above 42 kWh",
+                    formula: `${(totalBatteryKwh - 42).toFixed(2)} kWh X $${batteryExcessRateIncGst.toFixed(2)}`,
                     total: parseFloat(batteryExcessCharge.toFixed(2))
                 });
             }
@@ -244,8 +261,9 @@ router.post('/calculate', requireAuth, async (req, res) => {
         }
 
         // D. Smart Meter (Export Control Device, plus 10% GST)
+        // Note: Do not charge if battery is present in the system
         let smartMeterCharge = 0;
-        if (totalPanelKw > 0 || totalBatteryKwh > 0) {
+        if (totalPanelKw > 0 && totalBatteryKwh === 0) {
             const isMultiPhase = customerPhase === '2' || customerPhase === '3';
             const smartMeterName = isMultiPhase ? 'Export Control Device 3 Phase / Smart Meter' : 'Export Control Device 1 Phase / Smart Meter';
             const smartMeterRate = chargeRates[smartMeterName] !== undefined ? chargeRates[smartMeterName] : (isMultiPhase ? 250.00 : 150.00);
@@ -260,8 +278,9 @@ router.post('/calculate', requireAuth, async (req, res) => {
         }
 
         // E. Main Switch (plus 10% GST)
+        // Note: Do not charge if battery is present in the system
         let mainSwitchCharge = 0;
-        if (totalPanelKw > 0 || totalBatteryKwh > 0) {
+        if (totalPanelKw > 0 && totalBatteryKwh === 0) {
             const mainSwitchRate = chargeRates['Main Switch 1P / 3P'] !== undefined ? chargeRates['Main Switch 1P / 3P'] : 109.09;
             const mainSwitchRateIncGst = mainSwitchRate * 1.10;
             mainSwitchCharge = mainSwitchRateIncGst;
@@ -344,17 +363,18 @@ router.post('/calculate', requireAuth, async (req, res) => {
                 });
             }
 
-            // If Replacement Panel Type, add Existing System Removal and Disposal
-            if (customerPanelInstallType === 'Replacement') {
-                const removalRate = chargeRates['Existing System Removal and Disposal'] !== undefined ? chargeRates['Existing System Removal and Disposal'] : 300.00;
-                const removalRateIncGst = removalRate * 1.10;
-                totalInstallationFee += removalRateIncGst;
-                installationsBreakdown.push({
-                    name: "Existing System Removal and Disposal",
-                    formula: `Flat Rate`,
-                    total: parseFloat(removalRateIncGst.toFixed(2))
-                });
-            }
+        }
+
+        // If Replacement Panel Type, add Existing System Removal and Disposal (regardless of panel capacity)
+        if (customerPanelInstallType === 'Replacement') {
+            const removalRate = chargeRates['Existing System Removal and Disposal'] !== undefined ? chargeRates['Existing System Removal and Disposal'] : 300.00;
+            const removalRateIncGst = removalRate * 1.10;
+            totalInstallationFee += removalRateIncGst;
+            installationsBreakdown.push({
+                name: "Existing System Removal and Disposal",
+                formula: `Flat Rate`,
+                total: parseFloat(removalRateIncGst.toFixed(2))
+            });
         }
 
         // K. Battery Install Type - AC Couple Rewiring (plus 10% GST)
@@ -416,37 +436,8 @@ router.post('/calculate', requireAuth, async (req, res) => {
         }
 
         // O. Battery Size Capacity Charges (plus 10% GST)
+        // Note: Purane capacity charges bypass kar diye gaye hain naye tiered charges ke chalte.
         if (totalBatteryKwh > 0) {
-            let batteryExtraName = '';
-            let batteryExtraFallback = 0;
-
-            if (totalBatteryKwh <= 20) {
-                batteryExtraName = 'Extra Battery upto 20 kWh';
-                batteryExtraFallback = 300.00;
-            } else if (totalBatteryKwh <= 30) {
-                batteryExtraName = 'Extra Battery upto 30 kWh';
-                batteryExtraFallback = 500.00;
-            } else if (totalBatteryKwh <= 40) {
-                batteryExtraName = 'Extra Battery upto 40 kWh';
-                batteryExtraFallback = 800.00;
-            } else if (totalBatteryKwh <= 50) {
-                batteryExtraName = 'Extra Battery upto 50 kWh';
-                batteryExtraFallback = 1000.00;
-            } else {
-                batteryExtraName = 'Extra Battery upto 60 kWh';
-                batteryExtraFallback = 1200.00;
-            }
-
-            if (batteryExtraName) {
-                const rate = chargeRates[batteryExtraName] !== undefined ? chargeRates[batteryExtraName] : batteryExtraFallback;
-                const rateIncGst = rate * 1.10;
-                totalInstallationFee += rateIncGst;
-                installationsBreakdown.push({
-                    name: batteryExtraName,
-                    formula: `Flat Rate`,
-                    total: parseFloat(rateIncGst.toFixed(2))
-                });
-            }
 
             if (totalBatteryKwh > 20) {
                 const secondStackRate = chargeRates['Add on 2nd Stack of Battery (Suitable according to Height)'] !== undefined
