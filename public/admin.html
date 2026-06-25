@@ -130,6 +130,16 @@
         input:checked + .ios-slider:before { transform: translateX(14px); }
         input:disabled + .ios-slider { opacity: 0.5; cursor: not-allowed; }
 
+        /* Large VoIP master toggle — 44×24px track, 20px knob, uniform 2px inset */
+        .ios-switch-lg { position: relative; display: inline-block; width: 44px; height: 24px; margin: 0; flex-shrink: 0; }
+        .ios-switch-lg input { opacity: 0; width: 0; height: 0; }
+        .ios-slider-lg { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e5e5ea; transition: .28s; border-radius: 24px; }
+        .ios-slider-lg:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background-color: #ffffff; transition: .28s; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+        .ios-switch-lg input:checked + .ios-slider-lg { background-color: var(--accent); }
+        .ios-switch-lg input:checked + .ios-slider-lg:before { transform: translateX(20px); }
+        .ios-switch-lg input:disabled + .ios-slider-lg { opacity: 0.5; cursor: not-allowed; }
+
+
         /* ========== TABS ========== */
         .admin-tab-bar { display: flex; gap: 8px; margin: 10px 0; border-bottom: 2px solid var(--border); padding-bottom: 4px; flex-shrink: 0; }
         .tab-chip { background: var(--surface); color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px 6px 0 0; cursor: pointer; border: 1px solid transparent; border-bottom: none; transition: all 0.2s; outline: none; }
@@ -791,18 +801,18 @@ document.addEventListener("DOMContentLoaded", function() {
                         <!-- ══ VoIP Master Feature Toggle ══ -->
                         <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #fff7f0 0%, #fff3eb 100%); border: 1.5px solid #e8681e; border-radius: 8px; padding: 10px 14px; flex-shrink: 0; gap: 12px; box-shadow: 0 2px 8px rgba(232,104,30,0.10);">
                             <div style="display: flex; flex-direction: column; gap: 2px;">
-                                <span style="font-size: 12px; font-weight: 800; color: #1c3557; letter-spacing: 0.02em;">📞 Enable VoIP Telephony Integration</span>
+                                <span style="font-size: 12px; font-weight: 800; color: #1c3557; letter-spacing: 0.02em;">Enable VoIP Telephony Integration</span>
                                 <span style="font-size: 10px; color: #64748b; font-weight: 500;">Enables dialing, SMS, call history & the communication cabinet for this user.</span>
                             </div>
-                            <label class="ios-switch" style="width: 44px; height: 24px; flex-shrink: 0;" title="Toggle VoIP Telephony Module">
-                                <input type="checkbox" id="u_is_voip_enabled">
-                                <span class="ios-slider" style="border-radius: 24px;"></span>
+                            <label class="ios-switch-lg" title="Toggle VoIP Telephony Module">
+                                <input type="checkbox" id="u_is_voip_enabled" onchange="onVoipToggleChange(this.checked)">
+                                <span class="ios-slider-lg"></span>
                             </label>
                         </div>
 
                         <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
                             <span>VoIP Configuration</span>
-                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">🔑 Inject Credentials</button>
+                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="injectDefaultVoipCredentials()">Inject Credentials</button>
                         </div>
                         <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; flex-shrink: 0;">
                             <div class="field"><label>VoIP Extension</label><input type="text" id="u_voipline_extension" placeholder="e.g. 101"></div>
@@ -835,7 +845,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div id="user_modal_perms_content" style="display: none; flex-direction: column; flex: 1; overflow: hidden; gap: 8px;">
                         <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 4px;">
                             <span>User Permission Overrides</span>
-                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">🔄 Restore Role Defaults</button>
+                            <button type="button" class="act-btn" style="width: auto; padding: 0 10px; height: 20px; font-size: 10px; color: var(--primary); border-color: #c5d3e8; background: #f8fafc; margin: 0;" onclick="resetToRoleDefaults()">Restore Role Defaults</button>
                         </div>
                         <div id="userPermissionsOverrideMatrix" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; overflow-y: auto; font-size: 12px; box-sizing: border-box; width: 100%; flex: 1;">
                             <!-- Will be rendered dynamically via javascript -->
@@ -855,6 +865,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let allUsersData = [];
     let currentPage = 1;
     let rowsPerPage = 30;
+    let voipStatusInterval = null;
     const PERM_ROLES = [
         'Admin',
         'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
@@ -1341,11 +1352,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const statusEl = document.getElementById('voipline_sync_status');
         const lastSyncEl = document.getElementById('voipline_last_sync_time');
         if (statusEl) {
-            statusEl.style.background = '#fee2e2';
-            statusEl.style.color = '#ef4444';
-            statusEl.style.borderColor = '#fecaca';
-            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
-            lastSyncEl.innerText = 'Last Sync: Never';
+            _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
         }
         
         document.getElementById('userModal').style.display = 'flex';
@@ -1386,14 +1393,22 @@ document.addEventListener("DOMContentLoaded", function() {
         const statusEl = document.getElementById('voipline_sync_status');
         const lastSyncEl = document.getElementById('voipline_last_sync_time');
         if (statusEl) {
+            const voipEnabled = u.is_voip_enabled === 1;
             const syncStatus = u.voipline_sync_status || 'Offline';
             const lastSync = u.voipline_last_sync ? new Date(u.voipline_last_sync).toLocaleString() : 'Never';
+            _renderVoipSyncBadge(statusEl, lastSyncEl, voipEnabled, syncStatus, lastSync);
             
-            statusEl.style.background = syncStatus === 'Online' ? '#dcfce7' : '#fee2e2';
-            statusEl.style.color = syncStatus === 'Online' ? '#15803d' : '#ef4444';
-            statusEl.style.borderColor = syncStatus === 'Online' ? '#bbf7d0' : '#fecaca';
-            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${syncStatus === 'Online' ? '#22c55e' : '#ef4444'};" id="voipline_status_dot"></span> ${syncStatus === 'Online' ? 'Active (Online)' : 'Offline'}`;
-            lastSyncEl.innerText = syncStatus === 'Online' ? `Last Sync: ${lastSync}` : 'Last Sync: Never';
+            // Set up polling intervals based on user state
+            if (!voipEnabled) {
+                if (voipStatusInterval) {
+                    clearInterval(voipStatusInterval);
+                    voipStatusInterval = null;
+                }
+            } else {
+                if (!voipStatusInterval) {
+                    voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
+                }
+            }
         }
         
         document.getElementById('u_password').required = false;
@@ -1404,6 +1419,44 @@ document.addEventListener("DOMContentLoaded", function() {
         updateModalPermissionsTree(u.role, u.id);
         
         document.getElementById('userModal').style.display = 'flex';
+    }
+
+    function _renderVoipSyncBadge(statusEl, lastSyncEl, voipEnabled, syncStatus, lastSync) {
+        if (!voipEnabled) {
+            statusEl.style.background = '#f1f5f9';
+            statusEl.style.color = '#94a3b8';
+            statusEl.style.borderColor = '#e2e8f0';
+            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #94a3b8;" id="voipline_status_dot"></span> Disabled (Offline)`;
+            lastSyncEl.innerText = 'Last Sync: N/A';
+        } else {
+            const isOnline = syncStatus === 'Online';
+            statusEl.style.background = isOnline ? '#dcfce7' : '#fee2e2';
+            statusEl.style.color = isOnline ? '#15803d' : '#ef4444';
+            statusEl.style.borderColor = isOnline ? '#bbf7d0' : '#fecaca';
+            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${isOnline ? '#22c55e' : '#ef4444'};" id="voipline_status_dot"></span> ${isOnline ? 'Active (Online)' : 'Offline'}`;
+            lastSyncEl.innerText = isOnline ? `Last Sync: ${lastSync}` : 'Last Sync: Never';
+        }
+    }
+
+    function onVoipToggleChange(isChecked) {
+        const statusEl = document.getElementById('voipline_sync_status');
+        const lastSyncEl = document.getElementById('voipline_last_sync_time');
+        if (statusEl && lastSyncEl) {
+            _renderVoipSyncBadge(statusEl, lastSyncEl, isChecked, 'Offline', 'Never');
+        }
+        if (!isChecked) {
+            if (voipStatusInterval) {
+                clearInterval(voipStatusInterval);
+                voipStatusInterval = null;
+                console.log('[VoIP] Cleared background pooling timer because VoIP was disabled.');
+            }
+        } else {
+            if (!voipStatusInterval) {
+                checkVoIPLineStatus();
+                voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
+                console.log('[VoIP] Restarted background pooling timer because VoIP was enabled.');
+            }
+        }
     }
 
     function switchUserModalTab(tabName) {
@@ -2345,7 +2398,27 @@ Initializing deployment stream...
 
     async function checkVoIPLineStatus() {
         try {
-            const res = await fetch('/api/voipline/status');
+            const modal = document.getElementById('userModal');
+            const isModalOpen = modal && modal.style.display === 'flex';
+            const editUserId = document.getElementById('edit_user_id')?.value;
+            const isVoipEnabledCheckbox = document.getElementById('u_is_voip_enabled');
+            
+            // If modal is open and VoIP toggle is unchecked, force Disabled (Offline) badge and skip polling
+            if (isModalOpen && isVoipEnabledCheckbox && !isVoipEnabledCheckbox.checked) {
+                const statusEl = document.getElementById('voipline_sync_status');
+                const lastSyncEl = document.getElementById('voipline_last_sync_time');
+                if (statusEl && lastSyncEl) {
+                    _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
+                }
+                return;
+            }
+
+            let url = '/api/voipline/status';
+            if (isModalOpen && editUserId) {
+                url += `?userId=${editUserId}`;
+            }
+
+            const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 const statusEl = document.getElementById('voipline_sync_status');
@@ -2359,11 +2432,16 @@ Initializing deployment stream...
                     statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #22c55e;" id="voipline_status_dot"></span> Active (Online)`;
                     lastSyncEl.innerText = data.lastSync ? `Last Sync: ${new Date(data.lastSync).toLocaleTimeString()}` : 'Last Sync: Just now';
                 } else {
-                    statusEl.style.background = '#fee2e2';
-                    statusEl.style.color = '#b91c1c';
-                    statusEl.style.borderColor = '#fecaca';
-                    statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
-                    lastSyncEl.innerText = 'Last Sync: Never';
+                    const isVoipActive = isModalOpen ? (isVoipEnabledCheckbox ? isVoipEnabledCheckbox.checked : true) : true;
+                    if (!isVoipActive) {
+                        _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
+                    } else {
+                        statusEl.style.background = '#fee2e2';
+                        statusEl.style.color = '#b91c1c';
+                        statusEl.style.borderColor = '#fecaca';
+                        statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
+                        lastSyncEl.innerText = 'Last Sync: Never';
+                    }
                 }
             }
         } catch (e) {
@@ -2376,7 +2454,7 @@ Initializing deployment stream...
         fetchLastBackup(); 
         loadPermissions(); 
         checkVoIPLineStatus();
-        setInterval(checkVoIPLineStatus, 10000);
+        voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
 
         // Storage Background Sync Interval (Every 2 hours - 7200000 ms)
         setInterval(() => {

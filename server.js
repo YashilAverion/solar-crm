@@ -999,8 +999,9 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                         return res.status(400).json({ error: getPasswordStrengthMessage() });
                     }
                     const hashedPassword = await bcrypt.hash(password, 10);
-                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=? WHERE id=?`;
-                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, id], (err) => {
+                    const voipSyncStatus = (is_voip_enabled ? 1 : 0) === 0 ? 'Offline' : null; // Reset to Offline immediately when VoIP is disabled
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=?, voipline_sync_status=CASE WHEN ? = 0 THEN 'Offline' ELSE voipline_sync_status END, voipline_last_sync=CASE WHEN ? = 0 THEN NULL ELSE voipline_last_sync END WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, is_voip_enabled ? 1 : 0, is_voip_enabled ? 1 : 0, id], (err) => {
                         if (err) return res.status(500).json({ error: err.message });
                         handlePermissionsSync(() => {
                             invalidateUserSessions(id, oldUsername);
@@ -1011,8 +1012,8 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
                         });
                     });
                 } else {
-                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=? WHERE id=?`;
-                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, id], (err) => {
+                    const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, allowed_specific_ip=?, is_bypass_ip_restriction=?, voipline_sip_username=?, voipline_sip_password=?, voipline_sip_domain=?, voipline_wss_url=?, is_voip_enabled=?, voipline_sync_status=CASE WHEN ? = 0 THEN 'Offline' ELSE voipline_sync_status END, voipline_last_sync=CASE WHEN ? = 0 THEN NULL ELSE voipline_last_sync END WHERE id=?`;
+                    db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0, is_voip_enabled ? 1 : 0, is_voip_enabled ? 1 : 0, id], (err) => {
                         if (err) return res.status(500).json({ error: err.message });
                         handlePermissionsSync(() => {
                             invalidateUserSessions(id, oldUsername);
@@ -3297,8 +3298,16 @@ app.get('/api/voipline/status', (req, res) => {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ error: 'Unauthorized. Please log in.' });
     }
-    db.get("SELECT voipline_sync_status, voipline_last_sync FROM users WHERE id = ?", [req.session.user.id], (err, row) => {
+    let targetUserId = req.session.user.id;
+    const isManagerOrAdmin = req.session.user.role === 'Admin' || (req.session.user.role && req.session.user.role.includes('Manager'));
+    if (req.query.userId && isManagerOrAdmin) {
+        targetUserId = parseInt(req.query.userId, 10);
+    }
+    db.get("SELECT voipline_sync_status, voipline_last_sync, is_voip_enabled FROM users WHERE id = ?", [targetUserId], (err, row) => {
         if (err || !row) {
+            return res.json({ online: false, lastSync: null });
+        }
+        if (row.is_voip_enabled === 0) {
             return res.json({ online: false, lastSync: null });
         }
         res.json({
