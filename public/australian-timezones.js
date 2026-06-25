@@ -107,21 +107,6 @@
                 gap: 12px !important;
             }
             
-            .topbar-logo-link {
-                display: flex !important;
-                align-items: center !important;
-                gap: 6px !important;
-                font-weight: 800 !important;
-                color: var(--text-dark, #1c2b3a) !important;
-                font-size: 13px !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
-                text-decoration: none !important;
-            }
-            .topbar-logo-link span {
-                color: var(--accent, #e8681e) !important;
-            }
-            
             /* Action Buttons styling */
             .topbar-actions {
                 display: flex !important;
@@ -193,13 +178,6 @@
         // 5. Build Tier 2 and migrate existing topbar contents into it
         const tier2 = document.createElement('div');
         tier2.className = 'topbar-tier2';
-
-        // Add Logo link
-        const logoLink = document.createElement('a');
-        logoLink.href = '/home.html';
-        logoLink.className = 'topbar-logo-link';
-        logoLink.innerHTML = '<span>ARES ENERGY</span> Solar CRM';
-        tier2.appendChild(logoLink);
 
         // Move children of topbar to Tier 2
         const children = Array.from(topbar.childNodes);
