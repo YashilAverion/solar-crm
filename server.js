@@ -1277,7 +1277,7 @@ app.get('/', (req, res) => {
 });
 
 // ── LAYOUTS COMPILATION ENGINE & ROUTE DELIVERY INTERCEPTOR ──
-app.get('/*.html', (req, res, next) => {
+app.get(/\.html$/, (req, res, next) => {
     const pagePath = path.join(__dirname, 'public', req.path);
     if (fs.existsSync(pagePath)) {
         try {
