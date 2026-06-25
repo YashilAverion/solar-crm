@@ -46,7 +46,7 @@
             .topbar-tier1 {
                 display: flex !important;
                 align-items: center !important;
-                justify-content: center !important;
+                justify-content: center !important; /* Center the clocks horizontally across the entire width */
                 background: #0b1120 !important; /* Premium dark ceiling strip */
                 border-bottom: 1px solid #1e293b !important;
                 padding: 6px 16px !important;
@@ -54,9 +54,11 @@
                 width: 100% !important;
                 box-sizing: border-box !important;
                 user-select: none !important;
+                flex-wrap: wrap !important; /* Avoid squishing on small screens */
+                gap: 0 !important;
             }
             
-            /* Recalibrated Contrast - Premium Light-Badge Theme */
+            /* Recalibrated Contrast - Premium Light-Badge Theme with Spacing & Margins */
             .timezone-clock-item {
                 display: inline-flex !important;
                 align-items: center !important;
@@ -66,9 +68,10 @@
                 border-radius: 6px !important;
                 font-weight: 600 !important;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                margin-right: 12px !important;
+                margin-right: 16px !important; /* Adjusted spacing to 16px */
                 border: 1px solid #e2e8f0 !important;
                 transition: all 0.2s ease !important;
+                margin-left: 0 !important;
             }
             .timezone-clock-item:last-child {
                 margin-right: 0 !important;
