@@ -2126,8 +2126,29 @@ async function getFallbackDiskStats(callback) {
 
 const config = require('./config');
 
+function parseUsedSpaceToMB(spaceStr) {
+    if (!spaceStr) return 0;
+    const match = spaceStr.trim().match(/^([\d.]+)\s*([a-zA-Z]*)/);
+    if (!match) return 0;
+    const value = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+    if (unit.startsWith('T')) {
+        return value * 1024 * 1024;
+    }
+    if (unit.startsWith('G')) {
+        return value * 1024;
+    }
+    if (unit.startsWith('M')) {
+        return value;
+    }
+    if (unit.startsWith('K')) {
+        return value / 1024;
+    }
+    return value;
+}
+
 function getStorageCapacityStats(callback) {
-    getDiskStats((err, diskStats) => {
+    getDiskStats(async (err, diskStats) => {
         if (err) {
             return callback(err);
         }
@@ -2137,43 +2158,63 @@ function getStorageCapacityStats(callback) {
             ? config.database.path
             : path.resolve(__dirname, config.database.path);
         const backupsPath = path.join(__dirname, 'SYSTEM_BACKUPS');
+        const systemLogsPath = '/var/log';
+        const os = require('os');
+        const pm2CachePath = path.join(os.homedir(), '.pm2');
         
-        let uploadsSizeMB = 0;
-        let dbSizeMB = 0;
-        let projectSizeMB = 0;
-        let backupsSizeMB = 0;
+        const getDirSizePromise = (dirPath) => {
+            return new Promise((resolve) => {
+                getDirSizeHelper(dirPath, (errSize, size) => {
+                    resolve(size || 0);
+                });
+            });
+        };
         
-        getDirSizeHelper(uploadsPath, (err1, size1) => {
-            uploadsSizeMB = parseFloat((size1 / (1024 * 1024)).toFixed(2));
+        try {
+            const [uploadsSize, backupsSize, projectSize, systemLogsSize, pm2CacheSize] = await Promise.all([
+                getDirSizePromise(uploadsPath),
+                getDirSizePromise(backupsPath),
+                getDirSizePromise(__dirname),
+                getDirSizePromise(systemLogsPath),
+                getDirSizePromise(pm2CachePath)
+            ]);
             
+            const uploadsSizeMB = parseFloat((uploadsSize / (1024 * 1024)).toFixed(2));
+            const backupsSizeMB = parseFloat((backupsSize / (1024 * 1024)).toFixed(2));
+            const projectSizeMB = parseFloat((projectSize / (1024 * 1024)).toFixed(2));
+            const systemLogsFolderMB = parseFloat((systemLogsSize / (1024 * 1024)).toFixed(2));
+            const pm2CacheFolderMB = parseFloat((pm2CacheSize / (1024 * 1024)).toFixed(2));
+            
+            let dbSizeMB = 0;
             try {
                 if (fs.existsSync(dbPath)) {
                     dbSizeMB = parseFloat((fs.statSync(dbPath).size / (1024 * 1024)).toFixed(2));
                 }
             } catch (e) {}
             
-            getDirSizeHelper(backupsPath, (err2, size2) => {
-                backupsSizeMB = parseFloat((size2 / (1024 * 1024)).toFixed(2));
-                
-                getDirSizeHelper(__dirname, (err3, size3) => {
-                    projectSizeMB = parseFloat((size3 / (1024 * 1024)).toFixed(2));
-                    
-                    const statsData = {
-                        totalSpace: diskStats.totalSpace,
-                        usedSpace: diskStats.usedSpace,
-                        freeSpace: diskStats.freeSpace,
-                        percentUsed: diskStats.percentUsed,
-                        details: {
-                            uploadsFolderMB: uploadsSizeMB,
-                            dbFileMB: dbSizeMB,
-                            projectFolderMB: projectSizeMB,
-                            backupsFolderMB: backupsSizeMB
-                        }
-                    };
-                    callback(null, statsData);
-                });
-            });
-        });
+            const totalUsedMB = parseUsedSpaceToMB(diskStats.usedSpace);
+            const trackedMB = projectSizeMB + systemLogsFolderMB + pm2CacheFolderMB;
+            const linuxOSFolderMB = Math.max(0, parseFloat((totalUsedMB - trackedMB).toFixed(2)));
+            
+            const statsData = {
+                totalSpace: diskStats.totalSpace,
+                usedSpace: diskStats.usedSpace,
+                freeSpace: diskStats.freeSpace,
+                percentUsed: diskStats.percentUsed,
+                details: {
+                    uploadsFolderMB: uploadsSizeMB,
+                    dbFileMB: dbSizeMB,
+                    projectFolderMB: projectSizeMB,
+                    backupsFolderMB: backupsSizeMB,
+                    systemLogsFolderMB: systemLogsFolderMB,
+                    pm2CacheFolderMB: pm2CacheFolderMB,
+                    linuxOSFolderMB: linuxOSFolderMB
+                }
+            };
+            callback(null, statsData);
+        } catch (e) {
+            callback(e);
+        }
     });
 }
 
@@ -2215,7 +2256,10 @@ app.get('/api/system/space-audit', requireManager, (req, res) => {
             details: {
                 uploadsFolderMB: stats.details.uploadsFolderMB,
                 dbFileMB: stats.details.dbFileMB,
-                projectFolderMB: stats.details.projectFolderMB
+                projectFolderMB: stats.details.projectFolderMB,
+                systemLogsFolderMB: stats.details.systemLogsFolderMB,
+                pm2CacheFolderMB: stats.details.pm2CacheFolderMB,
+                linuxOSFolderMB: stats.details.linuxOSFolderMB
             }
         });
     });

@@ -561,24 +561,34 @@ document.addEventListener("DOMContentLoaded", function() {
                 <!-- Progress Bar -->
                 <div style="width: 100%; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); display: flex;">
                     <div id="backupProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); transition: width 0.4s ease; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700;"></div>
-                </div>
-                <!-- Detailed Folder Sizes breakdown -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Uploads Folder</div>
-                        <div id="breakdownUploads" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                </div>                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Uploads Folder</div>
+                        <div id="breakdownUploads" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">CRM Database</div>
-                        <div id="breakdownDB" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">CRM Database</div>
+                        <div id="breakdownDB" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Server Backups</div>
-                        <div id="breakdownBackups" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Server Backups</div>
+                        <div id="breakdownBackups" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Project</div>
-                        <div id="breakdownProject" style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Project</div>
+                        <div id="breakdownProject" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">System Logs</div>
+                        <div id="breakdownSystemLogs" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">PM2 Caches</div>
+                        <div id="breakdownPm2Cache" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 0 1px #8b5cf6;">
+                        <div style="font-size: 10px; font-weight: 700; color: #8b5cf6; text-transform: uppercase;">OS & Engines</div>
+                        <div id="breakdownOS" style="font-size: 13px; font-weight: 700; color: #8b5cf6; margin-top: 4px;">0.00 MB</div>
                     </div>
                 </div>
             </div>
@@ -1249,7 +1259,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 document.getElementById('statDiskTotal').innerText = `${data.totalSpaceGB.toFixed(2)} GB`;
                 document.getElementById('statDiskProgress').style.width = `${data.percentUsed}%`;
                 
-                const titleStr = `Uploads: ${data.details.uploadsFolderMB.toFixed(1)} MB\nDB Size: ${data.details.dbFileMB.toFixed(1)} MB\nProject: ${data.details.projectFolderMB.toFixed(1)} MB`;
+                const titleStr = `Uploads: ${data.details.uploadsFolderMB.toFixed(1)} MB\nDB Size: ${data.details.dbFileMB.toFixed(1)} MB\nProject: ${data.details.projectFolderMB.toFixed(1)} MB\nSystem Logs: ${data.details.systemLogsFolderMB.toFixed(1)} MB\nPM2 Cache: ${data.details.pm2CacheFolderMB.toFixed(1)} MB\nOS & Engines: ${data.details.linuxOSFolderMB.toFixed(1)} MB`;
                 document.getElementById('statDiskUsed').closest('.stat-card').title = titleStr;
             }
         } catch (e) {
@@ -1893,6 +1903,24 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('breakdownDB').innerText = `${stats.details.dbFileMB.toFixed(2)} MB`;
         document.getElementById('breakdownBackups').innerText = `${stats.details.backupsFolderMB.toFixed(2)} MB`;
         document.getElementById('breakdownProject').innerText = `${stats.details.projectFolderMB.toFixed(2)} MB`;
+        
+        const breakdownLogsEl = document.getElementById('breakdownSystemLogs');
+        if (breakdownLogsEl && stats.details.systemLogsFolderMB !== undefined) {
+            breakdownLogsEl.innerText = `${stats.details.systemLogsFolderMB.toFixed(2)} MB`;
+        }
+        const breakdownPm2El = document.getElementById('breakdownPm2Cache');
+        if (breakdownPm2El && stats.details.pm2CacheFolderMB !== undefined) {
+            breakdownPm2El.innerText = `${stats.details.pm2CacheFolderMB.toFixed(2)} MB`;
+        }
+        const breakdownOSEl = document.getElementById('breakdownOS');
+        if (breakdownOSEl && stats.details.linuxOSFolderMB !== undefined) {
+            const osVal = stats.details.linuxOSFolderMB;
+            if (osVal >= 1024) {
+                breakdownOSEl.innerText = `${(osVal / 1024).toFixed(2)} GB`;
+            } else {
+                breakdownOSEl.innerText = `${osVal.toFixed(2)} MB`;
+            }
+        }
     }
 
     function renderBackupsTable(backups) {
