@@ -35,27 +35,33 @@
                 height: auto !important;
                 padding: 0 !important;
                 position: sticky !important;
-                top: 0 !important;
+                top: 22px !important; /* Stick right below the fixed clocks status bar */
                 z-index: 1000 !important;
                 background: var(--surface) !important;
                 border-bottom: 2px solid var(--accent, #e8681e) !important;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
             }
             
-            /* Tier 1: Clock Ceiling Strip */
+            /* Tier 1: Clocks Global Fixed Status Bar (full viewport width) */
             .topbar-tier1 {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important; /* Center the clocks horizontally across the entire width */
                 background: #f8fafc !important; /* Premium light ceiling strip */
                 border-bottom: 1px solid #e2e8f0 !important;
-                padding: 4px 16px !important;
+                padding: 0 16px !important;
                 font-family: 'Inter', system-ui, sans-serif !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
                 user-select: none !important;
                 flex-wrap: wrap !important; /* Avoid squishing on small screens */
                 gap: 0 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                height: 22px !important;
+                z-index: 2100 !important;
             }
             
             /* Recalibrated Contrast - Premium Light-Badge Theme with Spacing & Margins */
@@ -63,35 +69,39 @@
                 display: inline-flex !important;
                 align-items: center !important;
                 gap: 4px !important;
-                padding: 3px 8px !important;
+                padding: 1px 6px !important;
                 background-color: #ffffff !important;
-                border-radius: 6px !important;
+                border-radius: 4px !important;
                 font-weight: 600 !important;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                margin-right: 12px !important; /* Adjusted spacing to 12px */
+                margin-right: 10px !important; /* Adjusted spacing to 10px */
                 border: 1px solid #e2e8f0 !important;
                 transition: all 0.2s ease !important;
                 margin-left: 0 !important;
+                height: 16px !important;
+                box-sizing: border-box !important;
             }
             .timezone-clock-item:last-child {
                 margin-right: 0 !important;
             }
             .timezone-clock-item:hover {
                 border-color: var(--accent, #e8681e) !important;
-                transform: translateY(-1px) !important;
+                transform: translateY(-0.5px) !important;
             }
             .timezone-clock-label {
                 font-weight: 800 !important;
                 color: #64748b !important;
                 text-transform: uppercase !important;
-                font-size: 9px !important;
+                font-size: 8px !important;
                 letter-spacing: 0.5px !important;
+                line-height: 1 !important;
             }
             .timezone-clock-time {
                 font-weight: 700 !important;
                 color: #0f172a !important;
-                font-size: 11px !important;
+                font-size: 10px !important;
                 font-variant-numeric: tabular-nums !important;
+                line-height: 1 !important;
             }
             
             /* Tier 2: Navigation Controls Row */
@@ -159,6 +169,16 @@
             .topbar .user-profile {
                 color: var(--text-muted, #6b7a8d) !important;
                 font-size: 12px !important;
+            }
+            
+            /* Adjust sidebar and main-wrap to fit under the status bar */
+            .sidebar {
+                top: 22px !important;
+                height: calc(100vh - 22px) !important;
+            }
+            .main-wrap {
+                margin-top: 22px !important;
+                height: calc(100vh - 22px) !important;
             }
         `;
         document.head.appendChild(style);
@@ -247,8 +267,10 @@
 
         // Overwrite topbar body
         topbar.innerHTML = '';
-        HTMLElement.prototype.appendChild.call(topbar, tier1);
         HTMLElement.prototype.appendChild.call(topbar, tier2);
+
+        // Append Tier 1 (Clock ceiling strip) directly to document.body so it spans 100% viewport width
+        document.body.appendChild(tier1);
 
         // Override DOM insertion methods to redirect dynamic scripts (e.g. responsive.js) to Tier 2
         topbar.appendChild = function(newChild) {
