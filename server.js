@@ -1276,6 +1276,26 @@ app.get('/', (req, res) => {
     res.redirect('/index.html');
 });
 
+// ── LAYOUTS COMPILATION ENGINE & ROUTE DELIVERY INTERCEPTOR ──
+app.get('/*.html', (req, res, next) => {
+    const pagePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(pagePath)) {
+        try {
+            let html = fs.readFileSync(pagePath, 'utf8');
+            
+            // Invalidate server caching to force live changes downstream instantly
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            res.setHeader('Content-Type', 'text/html');
+            return res.send(html);
+        } catch (err) {
+            console.error('Error reading layout file:', err);
+        }
+    }
+    next();
+});
+
 // ── SERVE STATIC FILES (Protected) ─────────────────────────
 app.use(express.static('public', {
     maxAge: '1d',
