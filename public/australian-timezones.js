@@ -47,8 +47,8 @@
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important; /* Center the clocks horizontally across the entire width */
-                background: #0b1120 !important; /* Premium dark ceiling strip */
-                border-bottom: 1px solid #1e293b !important;
+                background: #f8fafc !important; /* Premium light ceiling strip */
+                border-bottom: 1px solid #e2e8f0 !important;
                 padding: 4px 16px !important;
                 font-family: 'Inter', system-ui, sans-serif !important;
                 width: 100% !important;
