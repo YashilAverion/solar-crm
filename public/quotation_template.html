@@ -273,8 +273,12 @@
             align-items: center;
             justify-content: center;
             color: var(--teal);
-            font-size: 10.5px;
             flex-shrink: 0;
+        }
+        .spec-icon-box svg {
+            width: 11px;
+            height: 11px;
+            stroke: var(--teal);
         }
         .spec-content {
             display: flex;
@@ -486,17 +490,20 @@
                         <strong id="lblDiscount" style="color:var(--accent);">-</strong>
                     </div>
 
-                    <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px;">
-                        <span style="font-size:9px; font-weight:600;">Less STC Panels Rebate</span>
-                        <strong id="lblPanelRebate" class="pricing-row-rebate">-$0.00</strong>
+                    <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less STC Panels Rebate</span>
+                        <span id="lblPanelRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                        <strong id="lblPanelRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
-                    <div class="pricing-row" id="rowBatteryRebate" style="display:none;">
-                        <span style="font-size:9px; font-weight:600;">Less STC Battery Rebate</span>
-                        <strong id="lblBatteryRebate" class="pricing-row-rebate">-$0.00</strong>
+                    <div class="pricing-row" id="rowBatteryRebate" style="display:none; justify-content: space-between; align-items: center;">
+                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less STC Battery Rebate</span>
+                        <span id="lblBatteryRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                        <strong id="lblBatteryRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
-                    <div class="pricing-row" id="rowVppRebate" style="display:none;">
-                        <span style="font-size:9px; font-weight:600;">Less WA Battery Rebate</span>
-                        <strong id="lblVppRebate" class="pricing-row-rebate">-$0.00</strong>
+                    <div class="pricing-row" id="rowVppRebate" style="display:none; justify-content: space-between; align-items: center;">
+                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less WA Battery Rebate</span>
+                        <span id="lblVppRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                        <strong id="lblVppRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
 
                     <div class="pricing-row pricing-row-total">
@@ -512,6 +519,10 @@
                         <span style="font-size:11px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
                         <span id="lblBalanceDue">$0.00</span>
                     </div>
+                    <ul class="pricing-notes" style="margin-top: 6px; padding-left: 10px; font-size: 7.2px; color: var(--text-muted); line-height: 1.3; list-style-type: disc; text-align: left; font-weight: 500;">
+                        <li>This Quote is valid for 10 days from the issue date. System layout is provisional. SAA Accredited Installer will design and install system based on actual site conditions.</li>
+                        <li>The Balance Due may change if the Proposed STC Rebates change or are not formalised. Please read the terms and conditions contained on pages 2-3 of this Quotation.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -522,21 +533,6 @@
                     <!-- Cards dynamically injected here -->
                 </div>
             </div>
-        </div>
-
-        <!-- Note details -->
-        <div class="quote-note-text">
-            <span style="width:50%;">Note: This Quote is valid for 10 days from the issue date. System layout is provisional. SAA Accredited Installer will design and install system based on actual site conditions.</span>
-            <span style="width:50%; text-align:right;">The Balance Due may change if the Proposed STC Rebates change or are not formalised. Please read the terms and conditions contained on pages 2-3 of this Quotation.</span>
-        </div>
-
-        <!-- Installation details row -->
-        <div class="installation-banner" style="margin-top:5px;">
-            <span>Installation Details</span>
-            <span style="font-size:9px;">Target Delivery Date: <strong style="color:#fff;" id="lblTargetDeliveryDate">-</strong></span>
-        </div>
-        <div class="installation-meta-row" id="installMetaRow">
-            <!-- Meta row items dynamically populated -->
         </div>
 
         <!-- Payment Details -->
@@ -715,10 +711,16 @@
             expiryDate.setDate(expiryDate.getDate() + 10);
             const expiryStr = formatDate(expiryDate.toISOString().split('T')[0]);
 
-            // Date 60 days from now for target delivery
+            // Date 30 days from now for target delivery in DD-MM-YYYY format
             const deliveryDate = new Date();
-            deliveryDate.setDate(deliveryDate.getDate() + 60);
-            const targetDeliveryStr = formatDate(deliveryDate.toISOString().split('T')[0]);
+            deliveryDate.setDate(deliveryDate.getDate() + 30);
+            const formatHyphenDate = (dateObj) => {
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const yyyy = dateObj.getFullYear();
+                return `${dd}-${mm}-${yyyy}`;
+            };
+            const targetDeliveryStr = formatHyphenDate(deliveryDate);
 
             // Customer Details
             const custName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Valued Customer';
@@ -765,10 +767,15 @@
 
             // Render pricing numbers
             setText('lblBasicCost', `$${basicSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            
+            const panelQtyVal = pDetails.panelStcQty || 0;
+            setText('lblPanelRebateQty', panelQtyVal > 0 ? `${Math.floor(panelQtyVal)} Qty` : '');
             setText('lblPanelRebate', `-$${panelRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             
             if (batteryRebate > 0) {
                 setDisplay('rowBatteryRebate', 'flex');
+                const batteryQtyVal = pDetails.batteryStcQty || 0;
+                setText('lblBatteryRebateQty', batteryQtyVal > 0 ? `${Math.floor(batteryQtyVal)} Qty` : '');
                 setText('lblBatteryRebate', `-$${batteryRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             } else {
                 setDisplay('rowBatteryRebate', 'none');
@@ -776,6 +783,7 @@
 
             if (vppRebate > 0) {
                 setDisplay('rowVppRebate', 'flex');
+                setText('lblVppRebateQty', '');
                 setText('lblVppRebate', `-$${vppRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             } else {
                 setDisplay('rowVppRebate', 'none');
@@ -789,26 +797,40 @@
             const specsGrid = document.getElementById('specsGrid');
             if (specsGrid) {
                 specsGrid.innerHTML = '';
+                
+                const svgHouse = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
+                const svgRoof = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-4h6v4"></path></svg>`;
+                const svgAngle = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M3 21L21 3M9 21a6 6 0 0 1 6-6"></path></svg>`;
+                const svgPhase = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+                const svgRetailer = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="16"></line><line x1="15" y1="22" x2="15" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><path d="M8 6h3M8 10h3M13 6h3M13 10h3"></path></svg>`;
+                const svgInstallType = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`;
+                const svgBatteryInstall = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="12" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="15"></line><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line></svg>`;
+                const svgBatteryLoc = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+                const svgDelivery = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
                 const specItems = [
-                    { label: 'House Type', value: eng.house_storey ? `${eng.house_storey} Storey` : 'Single Storey', emoji: '🏠' },
-                    { label: 'Roof Type', value: eng.roof_type || 'Tin / Metal', emoji: '🧱' },
-                    { label: 'Roof Pitch / Angle', value: eng.roof_angle || '0° to 16°', emoji: '📐' },
-                    { label: 'Electricity Phase', value: eng.phase ? `${eng.phase} Phase` : '1 Phase', emoji: '⚡' },
-                    { label: 'Energy Retailer', value: eng.retailer || 'Synergy', emoji: '🏢' },
-                    { label: 'Installation Type', value: eng.panel_install_type || 'New', emoji: '🚚' }
+                    { label: 'House Type', value: eng.house_storey ? `${eng.house_storey} Storey` : 'Single Storey', svg: svgHouse },
+                    { label: 'Roof Type', value: eng.roof_type || 'Tin / Metal', svg: svgRoof },
+                    { label: 'Roof Pitch / Angle', value: eng.roof_angle || '0° to 16°', svg: svgAngle },
+                    { label: 'Electricity Phase', value: eng.phase ? `${eng.phase} Phase` : '1 Phase', svg: svgPhase },
+                    { label: 'Energy Retailer', value: eng.retailer || 'Synergy', svg: svgRetailer },
+                    { label: 'Installation Type', value: eng.panel_install_type || 'New', svg: svgInstallType }
                 ];
                 
                 // Add battery items if battery is present
                 if (batKwh > 0) {
-                    specItems.push({ label: 'Battery Install Type', value: eng.battery_install_type || 'Hybrid / DC couple', emoji: '🔋' });
-                    specItems.push({ label: 'Battery Location', value: eng.battery_location || 'Inside', emoji: '📍' });
+                    specItems.push({ label: 'Battery Install Type', value: eng.battery_install_type || 'Hybrid / DC couple', svg: svgBatteryInstall });
+                    specItems.push({ label: 'Battery Location', value: eng.battery_location || 'Inside', svg: svgBatteryLoc });
                 }
+
+                // Add Target Delivery Date
+                specItems.push({ label: 'Target Delivery', value: targetDeliveryStr, svg: svgDelivery });
 
                 specItems.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'spec-card';
                     card.innerHTML = `
-                        <div class="spec-icon-box">${item.emoji}</div>
+                        <div class="spec-icon-box">${item.svg}</div>
                         <div class="spec-content">
                             <span class="spec-label">${item.label}</span>
                             <span class="spec-value">${item.value}</span>
@@ -816,28 +838,6 @@
                     `;
                     specsGrid.appendChild(card);
                 });
-            }
-
-            // Installation details metadata row at bottom
-            const meterPhase = eng.phase || '1';
-            setText('lblTargetDeliveryDate', targetDeliveryStr);
-            const installMetaRow = document.getElementById('installMetaRow');
-            if (installMetaRow) {
-                let html = `
-                    <div><strong>Elec. Retailer:</strong> ${eng.retailer || 'Synergy'}</div>
-                    <div><strong>Meter Phase:</strong> ${meterPhase} Phase</div>
-                    <div><strong>Inst. Type:</strong> ${eng.panel_install_type || 'New'}</div>
-                    <div><strong>Payment Modes:</strong> EFT / Credit Card</div>
-                `;
-                if (batKwh > 0) {
-                    html += `
-                        <div><strong>Battery Install:</strong> ${eng.battery_install_type || 'Hybrid'}</div>
-                        <div><strong>Battery Location:</strong> ${eng.battery_location || 'Inside'}</div>
-                    `;
-                }
-                installMetaRow.innerHTML = html;
-                const colCount = batKwh > 0 ? 6 : 4;
-                installMetaRow.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
             }
 
             // Render product breakdown on Left Column

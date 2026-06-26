@@ -1285,6 +1285,8 @@ router.get('/:id/preview-data', async (req, res) => {
                 stcRatings: ratings,
                 stcDeemingPeriod: deemingPeriod,
                 rebateRate: actualRate,
+                panelStcQty: totalPanelKw > 0 ? panelStcQty : 0,
+                batteryStcQty: totalBatteryKwh > 0 ? batteryStcQty : 0,
                 pvMargin: parseFloat(pvMargin.toFixed(2)),
                 batteryMargin: parseFloat(batteryMargin.toFixed(2)),
                 productsBreakdown,
