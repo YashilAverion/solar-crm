@@ -1422,7 +1422,20 @@ router.get('/:id/preview-data', async (req, res) => {
         const npv = cumulativeDCF - finalSellingPrice;
         const irr = calculateIRR(cashFlows);
 
-        const co2AvoidedKg = annualGeneration * 0.70;
+        // DCCEEW National Greenhouse Accounts (NGA) Factors 2025 Scope 2 grid emission factors
+        const ngaFactors = {
+            'NSW': 0.64, 'NEW SOUTH WALES': 0.64,
+            'ACT': 0.64, 'AUSTRALIAN CAPITAL TERRITORY': 0.64,
+            'VIC': 0.78, 'VICTORIA': 0.78,
+            'QLD': 0.67, 'QUEENSLAND': 0.67,
+            'SA': 0.22, 'SOUTH AUSTRALIA': 0.22,
+            'WA': 0.50, 'WESTERN AUSTRALIA': 0.50,
+            'TAS': 0.20, 'TASMANIA': 0.20,
+            'NT': 0.56, 'NORTHERN TERRITORY': 0.56
+        };
+        const emissionFactor = ngaFactors[state] !== undefined ? ngaFactors[state] : 0.50;
+
+        const co2AvoidedKg = annualGeneration * emissionFactor;
         const treesPlanted = co2AvoidedKg / 20;
         const coalAvoidedKg = co2AvoidedKg / 2.86;
         const fuelAvoidedLiters = co2AvoidedKg / 2.3;

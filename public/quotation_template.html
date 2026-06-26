@@ -638,6 +638,71 @@
 
                     </div>
                 </div>
+
+                <!-- Environmental Analysis Card -->
+                <div id="environmentalCard" style="margin-top:12px; background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:10px; padding:10px 12px 8px; box-shadow: 0 4px 15px rgba(31,95,91,0.2), inset 0 1px 0 rgba(255,255,255,0.1); min-height:85px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1.8fr; gap:12px; align-items: center;">
+                        
+                        <!-- Left Column: Title and Text -->
+                        <div style="display:flex; flex-direction:column; justify-content:center; color:#ffffff; padding-right:4px;">
+                            <div style="font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; letter-spacing:0.3px; line-height:1.2; color:#ffffff; text-transform:uppercase;">Environmental Analysis</div>
+                            <div style="font-size:7px; color:rgba(255,255,255,0.8); margin-top:3.5px; line-height:1.25; font-weight:400; text-align: justify;">
+                                Your solar system will generate significant environmental benefits. These come primarily from avoided power plant emissions.
+                            </div>
+                        </div>
+
+                        <!-- Right Column: 3 stats side by side -->
+                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align: center; align-items: start;">
+                            
+                            <!-- Stat 1: Trees -->
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <div style="color:#ffffff; margin-bottom:2px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2a5 5 0 0 0-5 5c0 2.2 1.3 4 3 4.6V19a2 2 0 0 0 4 0v-7.4c1.7-.6 3-2.4 3-4.6a5 5 0 0 0-5-5z"></path>
+                                        <path d="M12 12v9"></path>
+                                    </svg>
+                                </div>
+                                <div id="envTrees" style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                                <div style="width:100%; height:1.5px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                                <div style="font-size:6.2px; color:rgba(255,255,255,0.75); line-height:1.15; font-weight:500;">Trees planted equivalent per year⁶'⁷</div>
+                            </div>
+
+                            <!-- Stat 2: Fuel -->
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <div style="color:#ffffff; margin-bottom:2px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 14c0-3 3-3 3-6V3h12v5c0 3 3 3 3 6v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"></path>
+                                        <line x1="9" y1="9" x2="15" y2="9"></line>
+                                        <line x1="9" y1="13" x2="15" y2="13"></line>
+                                    </svg>
+                                </div>
+                                <div id="envFuel" style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                                <div style="width:100%; height:1.5px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                                <div style="font-size:6.2px; color:rgba(255,255,255,0.75); line-height:1.15; font-weight:500;">Avoided equivalent fuel per year (L)⁶'⁷</div>
+                            </div>
+
+                            <!-- Stat 3: Coal -->
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <div style="color:#ffffff; margin-bottom:2px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 12c-2-2.67-4-2.67-6 0a4 4 0 0 0-2 6.83A6 6 0 0 0 16 16v-2.17a4 4 0 0 0-4-1.83z"></path>
+                                        <path d="M18 10a4 4 0 0 0-7.5-2"></path>
+                                    </svg>
+                                </div>
+                                <div id="envCoal" style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                                <div style="width:100%; height:1.5px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                                <div style="font-size:6.2px; color:rgba(255,255,255,0.75); line-height:1.15; font-weight:500;">Avoided coal burnt per year (kg)⁶'⁷</div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    
+                    <!-- Compliance Footnote -->
+                    <div style="font-size:5.5px; color:rgba(255,255,255,0.55); text-align: left; margin-top:6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:4px; line-height:1.1; font-weight:400;">
+                        ⁶Environmental equivalency estimates based on greenhouse gas reduction metrics. ⁷Grid emission factors sourced from DCCEEW National Greenhouse Accounts (NGA) Factors 2025 workbook for Australian state electricity grids.
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1207,6 +1272,20 @@
                         maximumFractionDigits: 2
                     })}`;
                 }
+            })();
+
+            // ============================================================
+            // ENVIRONMENTAL ANALYSIS CARD POPULATION
+            // ============================================================
+            (function populateEnvironmental() {
+                const environmental = yieldData.environmental || {};
+                const trees = parseFloat(environmental.treesPlanted) || 0;
+                const fuel = parseFloat(environmental.fuelAvoidedLiters) || 0;
+                const coal = parseFloat(environmental.coalAvoidedKg) || 0;
+
+                setText('envTrees', Math.round(trees).toLocaleString());
+                setText('envFuel', Math.round(fuel).toLocaleString());
+                setText('envCoal', Math.round(coal).toLocaleString());
             })();
         }
     </script>
