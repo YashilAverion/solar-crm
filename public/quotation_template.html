@@ -97,17 +97,17 @@
         .brand-block {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 20px;
         }
         .brand-logo {
-            height: 55px;
+            height: 60px;
             object-fit: contain;
         }
         .accreditation-logos {
             display: flex;
             align-items: center;
-            gap: 15px;
-            height: 40px;
+            gap: 12px;
+            height: 48px;
         }
         .accreditation-logos img {
             height: 100%;
@@ -351,7 +351,7 @@
         /* Payments Block */
         .payment-block {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin-bottom: 15px;
         }
@@ -441,18 +441,17 @@
         <div class="quote-header">
             <div class="brand-block">
                 <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
-            </div>
-            
-            <!-- Accreditation Logos -->
-            <div class="accreditation-logos">
-                <img src="/netcc_approved.png" alt="NETCC Approved Seller">
-                <img src="/saa_accredited.png" alt="SAA Accredited">
+                <!-- Accreditation Logos -->
+                <div class="accreditation-logos">
+                    <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                    <img src="/saa_accredited.png" alt="SAA Accredited">
+                </div>
             </div>
 
             <div class="brand-details">
                 <strong>Ares Energy Pty Ltd</strong><br>
                 ABN: 78 631 734 506<br>
-                Phone: 1300 717 583 | Mobile: 0485 838 592<br>
+                Tollfree: 1300 717 583<br>
                 W: www.aresenergy.com.au | E: info@aresenergy.com.au
             </div>
         </div>
@@ -561,22 +560,23 @@
         <!-- Payment Details -->
         <div class="payment-block">
             <div class="payment-method">
-                <h5>🏦 EFT / Bank Transfer</h5>
+                <h5 style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l9 4H3l9-4z"></path></svg>
+                    EFT / Bank Transfer
+                </h5>
                 <strong>Account Name:</strong> Ares Energy Pty Ltd<br>
                 <strong>BSB:</strong> 086 116<br>
                 <strong>A/C:</strong> 95 879 4865 (NAB)<br>
                 <strong>Ref:</strong> <span id="lblBankRef" style="font-weight:700; color:var(--accent);">-</span>
             </div>
             <div class="payment-method">
-                <h5>💳 Credit Card</h5>
+                <h5 style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Credit Card
+                </h5>
                 <p>We accept Visa and MasterCard.</p>
-                <p>Card surcharges of 1% apply to all card transactions.</p>
+                <p>Card surcharges of 2% apply to all card transactions.</p>
                 <p>Call office on 1300 717 583 to pay.</p>
-            </div>
-            <div class="payment-method">
-                <h5>✉️ Cheque / Money Order</h5>
-                <p>Payable to ARES ENERGY PTY LTD and mail to:</p>
-                <p style="font-weight:500;">276 Kargotich Road Oakford Western Australia 6121</p>
             </div>
         </div>
 
