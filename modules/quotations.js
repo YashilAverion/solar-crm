@@ -1440,6 +1440,40 @@ router.get('/:id/preview-data', async (req, res) => {
         const coalAvoidedKg = co2AvoidedKg / 2.86;
         const fuelAvoidedLiters = co2AvoidedKg / 2.3;
 
+        // Calculate Energy Balance (Where will your power come from?)
+        let directSolarConsumed = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
+        let batteryConsumed = 0;
+        if (totalBatteryKwh > 0) {
+            const excessSolar = Math.max(0, annualGeneration - directSolarConsumed);
+            batteryConsumed = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
+        }
+        
+        // Ensure total self-consumption doesn't exceed total usage
+        const totalSelfConsumed = directSolarConsumed + batteryConsumed;
+        if (totalSelfConsumed > annualUsageKwh) {
+            const ratio = annualUsageKwh / totalSelfConsumed;
+            directSolarConsumed *= ratio;
+            batteryConsumed *= ratio;
+        }
+        
+        const gridImportCalculated = Math.max(0, annualUsageKwh - (directSolarConsumed + batteryConsumed));
+        
+        const totalSum = (directSolarConsumed + batteryConsumed + gridImportCalculated) || 1;
+        const pctSolar = (directSolarConsumed / totalSum) * 100;
+        const pctBattery = (batteryConsumed / totalSum) * 100;
+        const pctUtility = (gridImportCalculated / totalSum) * 100;
+        
+        // Round to nearest integer and ensure they sum to exactly 100
+        let rSolar = Math.round(pctSolar);
+        let rBattery = Math.round(pctBattery);
+        let rUtility = 100 - rSolar - rBattery;
+        
+        // Handle edge cases
+        if (rUtility < 0) {
+            rUtility = 0;
+            rSolar = 100 - rBattery;
+        }
+
         const yieldData = {
             summary: {
                 systemSizeKw: parseFloat(totalPanelKw.toFixed(2)),
@@ -1475,6 +1509,11 @@ router.get('/:id/preview-data', async (req, res) => {
                 treesPlanted: parseFloat(treesPlanted.toFixed(1)),
                 coalAvoidedKg: parseFloat(coalAvoidedKg.toFixed(1)),
                 fuelAvoidedLiters: parseFloat(fuelAvoidedLiters.toFixed(1))
+            },
+            energyBalance: {
+                solarPct: rSolar,
+                batteryPct: rBattery,
+                utilityPct: rUtility
             }
         };
 
