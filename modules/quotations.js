@@ -1142,6 +1142,8 @@ router.get('/:id/preview-data', async (req, res) => {
         // Rebates
         let panelRebate = 0;
         let batteryRebate = 0;
+        let panelStcQty = 0;
+        let batteryStcQty = 0;
         let zone = 3;
         let ratings = 1.1;
         let deemingPeriod = 5;
@@ -1167,7 +1169,7 @@ router.get('/:id/preview-data', async (req, res) => {
             if (rebateRow) {
                 actualRate = rebateRow.actual_rate || actualRate;
             }
-            const panelStcQty = totalPanelKw * ratings * deemingPeriod;
+            panelStcQty = totalPanelKw * ratings * deemingPeriod;
             panelRebate = panelStcQty * actualRate;
             rebatesBreakdown.push({
                 name: "STC Panels",
@@ -1188,7 +1190,7 @@ router.get('/:id/preview-data', async (req, res) => {
                 const slab2 = Math.max(0, Math.min(eligibleCapacity, 28) - 14);
                 const slab3 = Math.max(0, eligibleCapacity - 28);
                 const rawStcQty = (slab1 * batteryRatings * 1.0) + (slab2 * batteryRatings * 0.6) + (slab3 * batteryRatings * 0.15);
-                const batteryStcQty = Math.floor(rawStcQty);
+                batteryStcQty = Math.floor(rawStcQty);
                 batteryRebate = batteryStcQty * actualRate;
 
                 rebatesBreakdown.push({
