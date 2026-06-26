@@ -1549,6 +1549,62 @@ function toggleNav(event, element) {
                 safeSet('tc_war_installation', projectData.war_installation);
                 safeSet('tc_inclusions', projectData.quotation_inclusions);
 
+                // Initialize default inclusions and blackout handlers
+                const initInclusionsLogic = () => {
+                    const textarea = document.getElementById('tc_inclusions');
+                    if (!textarea) return;
+
+                    const updateInclusionsFromBlackout = () => {
+                        let text = textarea.value.trim();
+                        
+                        // Default Net Meter line
+                        const defaultNetMeter = "Net Meter - Not Included - Please contact your Electricity Retailer";
+                        if (!text.includes("Net Meter - Not Included")) {
+                            if (text) {
+                                text = defaultNetMeter + "\n" + text;
+                            } else {
+                                text = defaultNetMeter;
+                            }
+                        }
+
+                        const blackoutVal = document.querySelector('input[name="tc_blackout"]:checked')?.value || 'No';
+                        const inclusionYes = "Blackout Protection Included";
+                        const inclusionNo = "Blackout Protection Not Included";
+
+                        if (blackoutVal === 'Yes') {
+                            if (text.includes(inclusionNo)) {
+                                text = text.replace(inclusionNo, inclusionYes);
+                            } else if (!text.includes(inclusionYes)) {
+                                text += (text ? "\n" : "") + inclusionYes;
+                            }
+                        } else {
+                            if (text.includes(inclusionYes)) {
+                                text = text.replace(inclusionYes, inclusionNo);
+                            } else if (!text.includes(inclusionNo)) {
+                                text += (text ? "\n" : "") + inclusionNo;
+                            }
+                        }
+                        
+                        if (textarea.value !== text) {
+                            textarea.value = text;
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    };
+
+                    // Add listeners if not already added
+                    if (!window.inclusionsListenerAttached) {
+                        document.querySelectorAll('input[name="tc_blackout"]').forEach(radio => {
+                            radio.addEventListener('change', updateInclusionsFromBlackout);
+                        });
+                        window.inclusionsListenerAttached = true;
+                    }
+
+                    // Always run on load to ensure default values are set correctly
+                    updateInclusionsFromBlackout();
+                };
+                initInclusionsLogic();
+
                 safeSet('td_grand_total', projectData.grand_total);
                 safeSet('td_rebates', projectData.rebate_amount);
                 safeSet('td_selling_price', projectData.selling_price);
