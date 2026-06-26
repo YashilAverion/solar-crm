@@ -740,6 +740,20 @@ router.get('/:id/preview-data', async (req, res) => {
         const lead = await dbGet("SELECT * FROM leads WHERE id = ?", [leadId]);
         if (!lead) return res.status(404).json({ success: false, error: 'Lead not found' });
 
+        // Fetch the assigned advisor's contact details from users table
+        let advisor = { name: 'Yashil', email: 'info@aresenergy.com.au', phone: '0485 838 592' };
+        if (lead.assign_to) {
+            const advisorUser = await dbGet(
+                "SELECT full_name, email, voipline_outbound_line FROM users WHERE username = ? AND status = 'Active'",
+                [lead.assign_to]
+            );
+            if (advisorUser) {
+                advisor.name = advisorUser.full_name || lead.assign_to;
+                if (advisorUser.email) advisor.email = advisorUser.email;
+                if (advisorUser.voipline_outbound_line) advisor.phone = advisorUser.voipline_outbound_line;
+            }
+        }
+
         let eng = {};
         try {
             if (lead.engineering_details) {
@@ -1451,7 +1465,8 @@ router.get('/:id/preview-data', async (req, res) => {
             lead,
             engineering: eng,
             pricing,
-            yield: yieldData
+            yield: yieldData,
+            advisor
         });
 
     } catch (err) {

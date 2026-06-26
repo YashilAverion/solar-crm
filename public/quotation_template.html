@@ -474,9 +474,9 @@
                 <h4>Proposal Info</h4>
                 <p><strong>Quote#:</strong> <span id="lblRefNo">-</span></p>
                 <p><strong>Quote Date:</strong> <span id="lblDatePrepared">-</span></p>
-                <p><strong>Sales Advisor:</strong> Yashil</p>
-                <p><strong>Direct Line:</strong> 0485 838 592</p>
-                <p><strong>Email:</strong> info@aresenergy.com.au</p>
+                <p><strong>Sales Advisor:</strong> <span id="lblAdvisorName">-</span></p>
+                <p><strong>Direct Line:</strong> <span id="lblAdvisorPhone">-</span></p>
+                <p><strong>Email:</strong> <span id="lblAdvisorEmail">-</span></p>
             </div>
         </div>
 
@@ -491,7 +491,7 @@
             <!-- Left Col: Products solutions & Pricing stacked -->
             <div class="left-col">
                 <div class="products-col">
-                    <div class="products-title">Solar Power Solution Design, Supply and Installation</div>
+                    <div class="products-title"><strong>Comprehensive Solar Solutions - Tailored Design, Quality Supply, Expert Installation</strong></div>
                     <div class="products-list" id="productList">
                         <!-- Products dynamically injected here -->
                     </div>
@@ -540,6 +540,7 @@
                         <li><strong style="color: var(--text-dark);">Quote Validity</strong>: 10 Days from issue date.</li>
                         <li><strong style="color: var(--text-dark);">System Notes</strong>: The system design is provisional. A fully certified installer will complete the final panel layout tailored to your actual site conditions on the day of installation or during site visit.</li>
                         <li><strong style="color: var(--text-dark);">STC &amp; Finance</strong>: The final Balance Due may vary if there are changes to the estimated STC Rebate value or approval process. Acceptance of this quote is subject to the Terms &amp; Conditions contained in this Quotation.</li>
+                        <li><strong style="color: var(--text-dark);">Payment Term</strong>: The remaining Balance Due must be cleared at least 1 day before the installation commences.</li>
                     </ul>
                     
                     <div class="specs-title" style="margin-top: 12px; margin-bottom: 4px;">Quotation Notes</div>
@@ -780,6 +781,11 @@
             const refNo = lead.project_number || `ARE-Q-${lead.id}`;
             setText('lblRefNo', refNo);
             setText('lblDatePrepared', todayStr);
+            // Advisor contact details (dynamic from logged-in/assigned user)
+            const adv = data.advisor || {};
+            setText('lblAdvisorName', adv.name || 'Yashil');
+            setText('lblAdvisorPhone', adv.phone || '0485 838 592');
+            setText('lblAdvisorEmail', adv.email || 'info@aresenergy.com.au');
             setText('lblBankRef', refNo);
             setText('lblClientSigName', custName);
             // Ares sig date = quotation generation date (auto)
