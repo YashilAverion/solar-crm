@@ -165,173 +165,6 @@
             color: var(--primary);
         }
         #btnViewBifurcation:hover:not(:disabled) {
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Profile - Solar CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
-    <style>
-        :root {
-            --primary: #1c3557;
-            --primary-hover: #16294a;
-            --accent: #e8681e;
-            --accent-hover: #d05a14;
-            --bg: #f4f6f9;
-            --surface: #ffffff;
-            --border: #dde3ed;
-            --text-dark: #1c2b3a;
-            --text-muted: #6b7a8d;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); display: flex; }
-        button, textarea, input, select { font-family: inherit; font-size: 13px; }
-
-        /* ========== SIDEBAR ========== */
-        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
-        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
-        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
-        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
-        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
-        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
-        .menu-item:hover { color: #f8fafc; background: #1e293b; }
-        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
-        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
-        .sb-user { display: flex; align-items: center; gap: 10px; }
-        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .sb-uinfo { flex: 1; min-width: 0; }
-        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
-
-        /* ========== MAIN LAYOUT ========== */
-        .main-wrap { margin-left: 180px; width: calc(100% - 180px); height: 100vh; display: flex; flex-direction: column; }
-        
-        /* ========== HORIZONTAL METADATA STRIP ========== */
-        .metadata-strip { background: #0f172a; padding: 8px 16px; border-bottom: 1px solid #1e293b; font-size: 13px; font-weight: 600; color: #f8fafc; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; z-index: 100; flex-shrink: 0; }
-        .metadata-content { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; flex: 1; color: #e2e8f0; }
-        .metadata-strip span.pipe { color: #334155; font-weight: 400; margin: 0 4px; }
-        .edit-profile-trigger { cursor: pointer; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #1e293b; border-radius: 50%; border: 1px solid #334155; transition: 0.2s; color: var(--accent); }
-        .edit-profile-trigger:hover { background: #334155; color: var(--accent-hover); }
-        
-        .tb-btn-close { height: 28px; width: 28px; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
-        .tb-btn-close:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
-
-        /* ========== WORKSPACE CONTENT ========== */
-        .content-area { flex: 1; overflow-y: hidden; padding: 10px 16px; background: var(--bg); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
-        .content-card { background: transparent; border: none; box-shadow: none; padding: 0; display: flex; flex-direction: column; box-sizing: border-box; flex: 1; min-height: 0; overflow-y: auto; }
-        
-        /* ========== ENGINEERING GRID ========== */
-        .dashboard-workspace { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: start; width: 100%; }
-        .full-width { grid-column: 1 / -1; }
-        .ws-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        .ws-panel-title { font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 8px; }
-        .ws-panel-subtitle { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 8px 0 4px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-        .cf-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-        .cf-row label { font-size: 12px; font-weight: 700; color: var(--text-muted); width: 45%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
-        .cf-row input, .cf-row select { width: 55%; height: 32px; padding: 4px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; background: #f8fafc; color: var(--text-dark); outline: none; transition: 0.2s; text-align: center; text-align-last: center; box-sizing: border-box; }
-        .cf-row input:focus, .cf-row select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
-        .cf-textarea { width: 100%; font-size: 13px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px; background: #f8fafc; resize: none; outline: none; transition: 0.2s; box-sizing: border-box; text-align: center; }
-        .cf-textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
-        
-        .radio-group-sm { width: 55%; display: flex; gap: 6px; align-items: center; justify-content: space-between; height: 32px; box-sizing: border-box; }
-        .radio-group-sm label { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; margin: 0; background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; font-size: 11px !important; font-weight: 600 !important; color: var(--text-dark) !important; text-transform: none !important; transition: 0.2s; box-sizing: border-box; }
-        .radio-group-sm label:hover { border-color: var(--primary); background: #fff; }
-        .radio-group-sm label:has(input[type="radio"]:checked) { border-color: var(--primary); background: #eef2f8; }
-        .radio-group-sm input[type="radio"] { width: 13px; height: 13px; margin: 0; cursor: pointer; accent-color: var(--primary); }
-        
-        .product-field-group { display: flex; flex-direction: column; gap: 4px; }
-        .product-field-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 0; }
-        .product-selection-row { display: grid; grid-template-columns: 1.2fr 2.5fr 1.5fr 1.5fr 1.5fr 0.8fr 1fr auto; gap: 10px; align-items: flex-end; width: 100%; margin-bottom: 4px; }
-        .product-selection-row input, .product-selection-row select { height: 28px; line-height: 1.2; padding: 4px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; background: #f8fafc; outline: none; text-align: center; text-align-last: center; box-sizing: border-box; width: 100%; }
-        .product-selection-row input:focus, .product-selection-row select:focus { border-color: var(--primary); background: #fff; }
-        .product-selection-row .cp-del { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 6px; height: 28px; width: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: all 0.2s; }
-        .product-selection-row .cp-del:hover { background: #fecaca; color: #dc2626; border-color: #f87171; }
-        .btn-micro { background: #eef2f8; color: var(--primary); border: 1px solid #c5d3e8; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-micro:hover { background: var(--primary); color: #fff; }
-        .btn-add-micro { background: #eef2f8; color: var(--primary); border: 1px solid #c5d3e8; border-radius: 6px; height: 28px; width: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: 0.2s; }
-        .btn-add-micro:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-        
-        
-        .drag-drop-zone { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .drag-drop-zone:hover { border-color: var(--primary); background: #f1f5f9; }
-        .drag-drop-zone span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-        
-        .doc-logs { list-style: none; padding: 0; margin: 0; }
-        .doc-logs li { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .doc-logs li a { color: var(--accent); font-weight: 600; text-decoration: none; }
-        
-        .action-bar-lower { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
-        
-        .tabs-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
-        .tabs-capsules { display: flex; gap: 10px; flex-wrap: wrap; }
-        .tab-capsule { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
-        .tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
-        .tab-capsule:hover:not(.active) { background: #f1f5f9; color: var(--text-dark); }
-        
-        .status-badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); letter-spacing: 0.5px; }
-        .sb-planned { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
-        .sb-inprog { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-        .sb-won { background: #edfaf2; color: #1a6b3c; border-color: #b3e6cc; }
-        
-        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 10px; margin: 0 0 20px 0; }
-        
-        .btn-save { background: var(--accent); color: #fff; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(232,104,30,0.4); }
-        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-idle { background: var(--surface) !important; color: var(--text-dark) !important; border: 1px solid var(--border) !important; box-shadow: none !important; }
-
-        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ========== BIFURCATION MODAL STYLING ========== */
-        .bifurcation-section {
-            margin-bottom: 15px;
-        }
-        .bifurcation-section-title {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 6px;
-            border-bottom: 2px solid #eef2f8;
-            padding-bottom: 4px;
-        }
-        .bifurcation-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .bifurcation-table th {
-            background: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 0.4px;
-            padding: 6px 10px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-        .bifurcation-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f1f5f9;
-            color: var(--text-dark);
-        }
-        .bifurcation-table tr:last-child td {
-            border-bottom: none;
-        }
-        .bifurcation-total-row td {
-            font-weight: 700;
-            background: #f8fafc;
-            border-top: 1px solid var(--border);
-            border-bottom: 2px solid var(--border) !important;
-            color: var(--primary);
-        }
-        #btnViewBifurcation:hover:not(:disabled) {
             background: var(--primary) !important;
             border-color: var(--primary) !important;
         }
@@ -352,7 +185,6 @@
         #btnDownloadQuotationPDF:hover:not(:disabled) svg {
             color: #fff !important;
         }
-
 
         .cf-price-group {
             display: flex;
@@ -1041,7 +873,7 @@ function toggleNav(event, element) {
                                         <line x1="8" y1="18" x2="8" y2="18.01"></line>
                                     </svg>
                                 </button>
-                                       <button type="button" id="btnViewYield" onclick="showYieldModal()" title="View Yield & ROI Analysis" style="background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 6px; height: 26px; width: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: all 0.2s;" disabled>
+                                <button type="button" id="btnViewYield" onclick="showYieldModal()" title="View Yield & ROI Analysis" style="background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 6px; height: 26px; width: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: all 0.2s;" disabled>
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ff9800; transition: color 0.2s;">
                                         <line x1="18" y1="20" x2="18" y2="10"></line>
                                         <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -1290,6 +1122,925 @@ function toggleNav(event, element) {
         </div>
     </div>
 
+    <!-- Calculation Details Bifurcation Modal -->
+    <div id="bifurcationModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; padding: 20px 24px;">
+            <button type="button" class="modal-close" onclick="closeBifurcationModal()">X</button>
+            <div class="modal-title" style="font-size: 15px; font-weight: 700; color: var(--primary); border-bottom: 2px solid #eef2f8; padding-bottom: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Financial Calculation Bifurcation</span>
+            </div>
+            
+            <div id="bifurcationContent" style="display: flex; flex-direction: column; gap: 18px;">
+                <!-- Section: Product Pricing -->
+                <div class="bifurcation-section">
+                    <div class="bifurcation-section-title">Product Pricing (Inc. GST)</div>
+                    <table class="bifurcation-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name / Stock Code</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th style="text-align: right;">Unit Price</th>
+                                <th style="text-align: right;">Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bif_products_body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section: Installation Charges -->
+                <div class="bifurcation-section">
+                    <div class="bifurcation-section-title">Installation & Travel Charges</div>
+                    <table class="bifurcation-table">
+                        <thead>
+                            <tr>
+                                <th>Charge Item</th>
+                                <th>Calculation Formula</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bif_installations_body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section: Rebates -->
+                <div class="bifurcation-section">
+                    <div class="bifurcation-section-title">Government Rebates (STC)</div>
+                    <table class="bifurcation-table">
+                        <thead>
+                            <tr>
+                                <th>Rebate Type</th>
+                                <th>Calculation Formula</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bif_rebates_body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section: Margin -->
+                <div class="bifurcation-section">
+                    <div class="bifurcation-section-title">Gross Margin Metrics</div>
+                    <table class="bifurcation-table">
+                        <thead>
+                            <tr>
+                                <th>Margin Type</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bif_margins_body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section: Selling Price Summary Formula -->
+                <div class="bifurcation-section" style="margin-top: 5px; border-top: 2px solid #eef2f8; padding-top: 15px;">
+                    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-weight: 700; font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">Selling Price Formula Verification</div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <div style="background: #eef2f8; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; min-width: 110px;">
+                                    <span style="font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Grand Total (Out)</span>
+                                    <strong style="color: var(--primary); font-size: 13px;" id="bif_formula_grand_total">$0.00</strong>
+                                </div>
+                                <strong>-</strong>
+                                <div style="background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px solid #fecaca; text-align: center; min-width: 110px;">
+                                    <span style="font-size: 9px; color: #ef4444; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">STC Rebates (In)</span>
+                                    <strong style="color: #ef4444; font-size: 13px;" id="bif_formula_rebates">$0.00</strong>
+                                </div>
+                                <strong>+</strong>
+                                <div style="background: #fffbeb; padding: 6px 10px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; min-width: 110px;">
+                                    <span style="font-size: 9px; color: #b45309; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Company Margin</span>
+                                    <strong style="color: #b45309; font-size: 13px;" id="bif_formula_margin">$0.00</strong>
+                                </div>
+                                <strong>=</strong>
+                                <div style="background: #edfaf2; padding: 6px 10px; border-radius: 6px; border: 1px solid #b3e6cc; text-align: center; min-width: 120px; margin-left: auto;">
+                                    <span style="font-size: 9px; color: #1a6b3c; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Selling Price</span>
+                                    <strong style="color: #1a6b3c; font-size: 15px;" id="bif_formula_selling_price">$0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Application Edit Modal -->
+    <div id="masterEditModal" class="modal">
+        <div class="modal-content" style="max-width: 1100px;">
+            <button class="modal-close" onclick="closeMasterEditModal()">X</button>
+            <div class="modal-title" style="display: flex; align-items: center;">
+                <span>Edit Profile</span>
+                <label class="check-label" style="margin-left:auto;margin-right:36px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="me_quality_lead" style="width:14px;height:14px;cursor:pointer;"> Quality Lead
+                </label>
+            </div>
+            <form id="masterEditForm" onsubmit="saveMasterEdit(event)">
+                <div class="form-grid">
+                    <div class="section-divider">Basic Information</div>
+                    <div class="field"><label class="required">Type Of Lead</label>
+                        <select id="me_type_of_lead"><option value="">Select</option><option>PV</option><option>Battery</option><option>PV+Battery</option><option>Service</option></select>
+                    </div>
+                    <div class="field"><label class="required">Type Of Property</label>
+                        <select id="me_property_type" onchange="toggleMeAbnField()" required><option value="">Select</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select>
+                    </div>
+                    <div class="field" id="me_abn_div" style="display:none;"><label class="required">ABN Number</label>
+                        <input type="text" id="me_abn_number" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    <div class="field"><label class="required">Salutation</label>
+                        <select id="me_salutation"><option value="">Select</option><option>Mr</option><option>Mrs</option><option>Ms</option><option>Miss</option></select>
+                    </div>
+                    <div class="field"><label class="required">First Name</label><input type="text" id="me_first_name"></div>
+                    <div class="field"><label class="required">Last Name</label><input type="text" id="me_last_name"></div>
+                    <div class="field"><label class="required">Phone Number</label>
+                        <div class="input-group"><span class="country-code">+61</span><input type="text" id="me_phone_number" placeholder="4xx xxx xxx"></div>
+                    </div>
+                    <div class="field"><label>Phone Number 2</label>
+                        <div class="input-group"><span class="country-code">+61</span><input type="text" id="me_phone_number_2" placeholder="4xx xxx xxx"></div>
+                    </div>
+                    <div class="field"><label>Landline</label><input type="text" id="me_landline_number"></div>
+                    <div class="field"><label class="required">Email ID 1</label><input type="text" id="me_email_id_1"></div>
+                    <div class="field"><label>Email ID 2</label><input type="text" id="me_email_id_2"></div>
+                    <div class="field"><label class="required">Lead Source</label>
+                        <select id="me_lead_source"><option value="">Select</option><option>Website</option><option>Social Media</option><option>Referral</option><option>Other</option><option>SMS Campaign</option><option>Email Campaign</option></select>
+                    </div>
+                    <div class="field" id="me_sub_category_div"><label class="required">Sub Category</label>
+                        <select id="me_lead_sub_category"><option value="">Select</option></select>
+                    </div>
+                    <div class="field" id="me_referral_div" style="display:none;"><label class="required">Referral Project No.</label>
+                        <input type="text" id="me_referral_project_number" placeholder="Type project no...">
+                    </div>
+                    
+                    <div class="section-divider">Address Details</div>
+                    <div class="field"><label>Google Search</label><input type="text" id="me_google_address" placeholder="Type address to auto-fill..."></div>
+                    <div class="field"><label>Street Type</label><input type="text" id="me_street_type"></div>
+                    <div class="field"><label>Lot Number</label><input type="text" id="me_lot_number"></div>
+                    <div class="field"><label>Unit Number</label><input type="text" id="me_unit_number"></div>
+                    <div class="field"><label class="required">Address</label><input type="text" id="me_address"></div>
+                    <div class="field"><label class="required">Suburb</label><input type="text" id="me_suburb"></div>
+                    <div class="field"><label class="required">State</label><input type="text" id="me_state"></div>
+                    <div class="field"><label class="required">Postcode</label><input type="text" id="me_postcode"></div>
+                    <div class="field" style="grid-column:span 4;"><label>Message (Internal Notes)</label><textarea class="cf-textarea" style="text-align: left;" id="me_message" placeholder="Add internal notes..."></textarea></div>
+                </div>
+                <div class="bottom-actions">
+                    <div class="checkbox-group">
+                        <label class="check-label"><input type="checkbox" id="me_dnd" style="width:14px;height:14px;"> DND</label>
+                        <label class="check-label"><input type="checkbox" id="me_email_unsubscribe" style="width:14px;height:14px;"> Email Unsubscribe</label>
+                        <div style="display:flex;align-items:center;gap:8px;margin-left:10px;">
+                            <span style="font-size:13px;font-weight:700;color:#64748b;" class="required">Service</span>
+                            <label class="check-label"><input type="radio" name="me_service_option" value="Yes" style="width:14px;height:14px;"> Yes</label>
+                            <label class="check-label"><input type="radio" name="me_service_option" value="No" style="width:14px;height:14px;"> No</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save btn-idle" id="btnSaveMasterEdit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentProjectId = null;
+        let projectData = {};
+        let allActiveProducts = [];
+        const categoryMap = { "Website":["Toll Free", "Whatsapp", "Email"], "Social Media":["FB","Instagram","Whatsapp"], "Other":["Free Quote"] };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadSidebarUser();
+            const productsPromise = fetchActiveProducts();
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) {
+                Swal.fire('Error', 'No Project ID provided in the URL.', 'error');
+                document.getElementById('metadataStrip').innerText = 'Error: No Project ID';
+                return;
+            }
+            currentProjectId = id;
+            await productsPromise;
+            openProjectProfile(id);
+            
+            const salesTab = document.getElementById('tab-sales');
+            if (salesTab) {
+                salesTab.addEventListener('input', activateSaveButtons);
+                salesTab.addEventListener('change', () => {
+                    activateSaveButtons();
+                    triggerCalculation();
+                });
+            }
+
+            const pdfInput = document.getElementById('quotePdfUpload');
+            if (pdfInput) {
+                pdfInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        if (window.showAresLoader) {
+                            window.showAresLoader(2000, 'Uploading Document...');
+                        }
+                        setTimeout(() => {
+                            if (window.showToast) {
+                                window.showToast('Document uploaded successfully.', 'success');
+                            }
+                        }, 2000);
+                    }
+                });
+            }
+
+            // Add listener to phase radio buttons to clear mismatched products
+            document.querySelectorAll('input[name="tb_phase"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    validateAndSyncSelectedProductsWithPhase();
+                });
+            });
+
+            const masterEditForm = document.getElementById('masterEditForm');
+            if (masterEditForm) {
+                masterEditForm.addEventListener('input', activateMasterSaveButton);
+                masterEditForm.addEventListener('change', activateMasterSaveButton);
+            }
+            
+            // Global Omnibox Search Logic
+            const omniInput = document.getElementById('globalOmniSearchInput');
+            const omniDrop = document.getElementById('globalOmniDropdown');
+            let omniTimeout;
+
+            if (omniInput && omniDrop) {
+                omniInput.addEventListener('input', function() {
+                    clearTimeout(omniTimeout);
+                    const val = this.value.trim();
+                    omniDrop.innerHTML = '';
+                    if (val.length < 2) {
+                        omniDrop.style.display = 'none';
+                        return;
+                    }
+                    omniTimeout = setTimeout(async () => {
+                        try {
+                            const res = await fetch('/api/projects/global-search?q=' + encodeURIComponent(val));
+                            const data = await res.json();
+                            omniDrop.innerHTML = '';
+                            if (!data || data.length === 0) {
+                                omniDrop.innerHTML = '<li style="padding:8px 12px; color:var(--text-muted); font-size:13px; font-style:italic;">No matching projects found</li>';
+                                omniDrop.style.display = 'block';
+                                return;
+                            }
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.style.cssText = 'padding:8px 12px; cursor:pointer; font-size:13px; color:var(--text-dark); border-bottom:1px solid #f1f5f9; transition:0.2s; display:flex; align-items:center; gap:8px;';
+                                li.innerHTML = `<span>${item.project_number || 'N/A'} - ${item.first_name || ''} ${item.last_name || ''} | Ph: ${item.phone_number || item.phone || 'N/A'} | ${item.address || 'N/A'}</span>`;
+                                li.onmouseover = () => li.style.background = '#f1f5f9';
+                                li.onmouseout = () => li.style.background = 'transparent';
+                                li.onmousedown = (e) => {
+                                    e.preventDefault();
+                                    omniDrop.style.display = 'none';
+                                    window.open(`/project_profile.html?id=${item.id}`, '_blank');
+                                };
+                                omniDrop.appendChild(li);
+                            });
+                            omniDrop.style.display = 'block';
+                        } catch(err) {
+                            console.error('OmniSearch Error', err);
+                        }
+                    }, 300);
+                });
+
+                omniInput.addEventListener('blur', () => {
+                    setTimeout(() => { omniDrop.style.display = 'none'; }, 200);
+                });
+            }
+
+            initGoogleAutocomplete();
+            
+            document.getElementById('me_type_of_lead').addEventListener('change', function() {
+                if (this.value==='Service') {
+                    const y = document.querySelector('input[name="me_service_option"][value="Yes"]');
+                    if (y) y.checked = true;
+                }
+                else if (this.value!=='') {
+                    const n = document.querySelector('input[name="me_service_option"][value="No"]');
+                    if (n) n.checked = true;
+                }
+                activateMasterSaveButton();
+            });
+            
+            document.getElementById('me_lead_source').addEventListener('change', function() {
+                const sd = document.getElementById('me_sub_category_div'), rd = document.getElementById('me_referral_div');
+                if (this.value==='Referral') { sd.style.display='none'; rd.style.display='flex'; }
+                else {
+                    sd.style.display='flex'; rd.style.display='none';
+                    const subs = categoryMap[this.value]||[];
+                    document.getElementById('me_lead_sub_category').innerHTML = '<option value="">Select</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+                }
+                activateMasterSaveButton();
+            });
+        });
+
+        function toggleMeAbnField() { 
+            const pt = document.getElementById('me_property_type'); 
+            const div = document.getElementById('me_abn_div'); 
+            if(pt && div) div.style.display = pt.value === 'Commercial' ? '' : 'none'; 
+            activateMasterSaveButton();
+        }
+
+        async function openProjectProfile(id) {
+            try {
+                const res = await fetch('/api/projects/details/' + id);
+                if (!res.ok) throw new Error('Project not found');
+                projectData = await res.json();
+                
+                const editIdEl = document.getElementById('edit_id');
+                if (editIdEl) editIdEl.value = id;
+
+                // Populate email data for Send Email modal
+                _currentLeadEmailData = {
+                    email: projectData.email_id_1 || '',
+                    first_name: projectData.first_name || '',
+                    last_name: projectData.last_name || '',
+                    project_number: projectData.project_number || ''
+                };
+
+                const projNum = projectData.project_number || 'N/A';
+                const fName = projectData.first_name || '';
+                const lName = projectData.last_name || '';
+                const phone1 = projectData.phone_number || 'N/A';
+                const phone2 = projectData.phone_number_2 || 'N/A';
+                const email = projectData.email_id_1 || 'N/A';
+                const propType = projectData.property_type || 'Residential';
+                const fullAddress = `${projectData.unit_number ? 'Unit ' + projectData.unit_number + ', ' : ''}${projectData.lot_number ? 'Lot ' + projectData.lot_number + ', ' : ''}${projectData.address || ''}, ${projectData.suburb || ''} ${projectData.state || ''} ${projectData.postcode || ''}`.replace(/^,\s*/, '').trim() || 'N/A';
+
+                document.title = `${projectData.project_number || ''} - ${projectData.first_name || ''} ${projectData.last_name || ''}`.trim();
+
+                const phone1Html = (phone1 && phone1 !== 'N/A') ? `
+                    <span style="display:inline-flex; align-items:center; gap:4px; vertical-align:middle;">
+                        <span>${phone1}</span>
+                        <button type="button" style="width: 18px; height: 18px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 9px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${phone1.replace(/'/g, "\\\\'")}')" title="Call Number 1">📞</button>
+                    </span>
+                ` : 'N/A';
+
+                const phone2Html = (phone2 && phone2 !== 'N/A') ? `
+                    <span style="display:inline-flex; align-items:center; gap:4px; vertical-align:middle;">
+                        <span>${phone2}</span>
+                        <button type="button" style="width: 18px; height: 18px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 9px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${phone2.replace(/'/g, "\\\\'")}')" title="Call Number 2">📞</button>
+                    </span>
+                ` : 'N/A';
+
+                document.getElementById('metadataContent').innerHTML = `
+                    ${projNum} <span class="pipe">|</span> 
+                    ${fName} ${lName} <span class="pipe">|</span> 
+                    ${phone1Html} <span class="pipe">|</span> 
+                    ${phone2Html} <span class="pipe">|</span> 
+                    ${fullAddress} <span class="pipe">|</span> 
+                    ${email} <span class="pipe">|</span> 
+                    ${propType} <span class="edit-profile-trigger" onclick="openMasterEditModal()" title="Edit Profile"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span>
+                `;
+
+                // Status Badge Mapping
+                const badge = document.getElementById('projectStatusBadge');
+                const status = projectData.status || 'Planned';
+                badge.innerText = status;
+                badge.className = 'status-badge';
+                if (status === 'Planned') badge.classList.add('sb-planned');
+                else if (status === 'In Progress') badge.classList.add('sb-inprog');
+                else if (status === 'Closed Won') badge.classList.add('sb-won');
+                else badge.style.cssText = 'background: #f1f5f9; color: #6b7a8d; border-color: #cbd5e1;';
+
+                const safeSet = (id, val) => { const el = document.getElementById(id); if(el) el.value = val !== undefined && val !== null ? val : ''; };
+                const safeSetRadio = (name, val) => { 
+                    if(val === undefined || val === null) return;
+                    const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+                    if(el) el.checked = true;
+                    else if (name === 'tb_phase') {
+                        const match = document.querySelector(`input[name="${name}"][value="${String(val).charAt(0)}"]`);
+                        if (match) match.checked = true;
+                        }
+                        else if (name === 'tb_house_storey' && val === 'Multiple') {
+                            const match = document.querySelector(`input[name="${name}"][value="Multi"]`);
+                            if (match) match.checked = true;
+                    }
+                };
+
+                safeSetRadio('tb_house_storey', projectData.house_storey || 'Single');
+                safeSet('tb_roof_type', projectData.roof_type);
+                safeSet('tb_roof_angle', projectData.roof_angle);
+                safeSetRadio('tb_phase', projectData.electricity_phase || projectData.phase || '');
+                safeSet('tb_meter_number', projectData.meter_number);
+                safeSet('tb_nmi_number', projectData.nmi_number);
+                safeSet('tb_distributor', projectData.distributor);
+                safeSet('tb_retailer', projectData.retailer);
+                safeSet('tb_export_limit', projectData.export_limit);
+
+                safeSet('tc_panel_install', projectData.panel_install_type);
+                safeSetRadio('tc_battery_install', projectData.battery_install_type);
+                safeSetRadio('tc_battery_location', projectData.battery_location);
+                safeSetRadio('tc_site_visit', projectData.site_visit_req || 'No');
+                safeSetRadio('tc_strata', projectData.strata_approval || 'No');
+                safeSetRadio('tc_vpp', projectData.vpp_rebate || 'No');
+                safeSetRadio('tc_blackout', projectData.battery_blackout || 'No');
+                
+                safeSet('tc_war_panels', projectData.war_panels);
+                safeSet('tc_war_inverter', projectData.war_inverter);
+                safeSet('tc_war_battery', projectData.war_battery);
+                safeSet('tc_war_workmanship', projectData.war_workmanship);
+                safeSet('tc_war_installation', projectData.war_installation);
+                safeSet('tc_inclusions', projectData.quotation_inclusions);
+
+                safeSet('td_grand_total', projectData.grand_total);
+                safeSet('td_rebates', projectData.rebate_amount);
+                safeSet('td_selling_price', projectData.selling_price);
+                safeSet('td_deposit', projectData.deposit_amount);
+                safeSet('td_margin', projectData.margin_metrics);
+                
+                // Populate products if available
+                if (projectData.products && Array.isArray(projectData.products) && projectData.products.length > 0) {
+                    const productRowsContainer = document.getElementById('productRows');
+                    productRowsContainer.innerHTML = '';
+                    projectData.products.forEach(p => {
+                        // Heal type if mismatch exists between stored type and active products catalog category
+                        let resolvedType = p.type;
+                        const matchingProduct = allActiveProducts.find(ap => ap.stock_code === p.code || ap.prod_name === p.name);
+                        if (matchingProduct) {
+                            const pCat = matchingProduct.product_category === 'Wi-Fi & Control Devices' ? 'Wi-Component' : matchingProduct.product_category;
+                            if (pCat === 'Panel' || pCat === 'Inverter' || pCat === 'Battery' || pCat === 'Wi-Component' || pCat === 'Accessories') {
+                                resolvedType = pCat;
+                            }
+                        }
+
+                        // Skip invalid/Combo product rows that were accidentally saved
+                        const validTypes = ['Panel', 'Inverter', 'Battery', 'Wi-Component', 'Accessories'];
+                        if (resolvedType && !validTypes.includes(resolvedType)) return; // skip Combo/unknown types
+                        const row = document.createElement('div');
+                        row.className = 'product-selection-row';
+                        row.innerHTML = `
+                            <div class="product-field-group"><label>Type</label><select class="cp-type"><option ${resolvedType==='Panel'?'selected':''}>Panel</option><option ${resolvedType==='Inverter'?'selected':''}>Inverter</option><option ${resolvedType==='Battery'?'selected':''}>Battery</option><option ${resolvedType==='Wi-Component'?'selected':''}>Wi-Component</option><option ${resolvedType==='Accessories'?'selected':''}>Accessories</option></select></div>
+                            <div class="product-field-group">
+                                <label>Product Name</label>
+                                <div class="ac-wrap">
+                                    <input type="text" class="cp-name" placeholder="Product Name" value="${p.name || ''}">
+                                    <ul class="ac-drop cp-name-drop"></ul>
+                                </div>
+                            </div>
+                            <div class="product-field-group"><label>Stock Code</label><input type="text" class="cp-code" placeholder="Stock Code" value="${p.code || ''}"></div>
+                            <div class="product-field-group"><label>Model Number</label><input type="text" class="cp-model" placeholder="Model Number" value="${p.model || ''}"></div>
+                            <div class="product-field-group"><label>Wattage/Size</label><input type="text" class="cp-size" placeholder="Wattage/Size" value="${p.size || ''}"></div>
+                            <div class="product-field-group"><label>Qty</label><input type="number" class="cp-qty" placeholder="Qty" min="1" value="${p.qty || 1}"></div>
+                            <div class="product-field-group"><label>kW/kWh</label><input type="text" class="cp-kw" placeholder="kW/kWh" value="${p.kw || ''}"></div>
+                            <div class="product-field-group"><label>&nbsp;</label><button type="button" class="cp-del" onclick="this.parentElement.parentElement.remove(); activateSaveButtons(); updateTypeDropdownOptions(); checkDCPowerLimit(); updateWarrantyInfoFromRows();" title="Delete Row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button></div>
+                        `;
+                        productRowsContainer.appendChild(row);
+
+                        // Initialize last-val attributes
+                        const qtyInput = row.querySelector('.cp-qty');
+                        if (qtyInput) qtyInput.setAttribute('data-last-val', p.qty || '1');
+                        const sizeInput = row.querySelector('.cp-size');
+                        if (sizeInput) sizeInput.setAttribute('data-last-val', p.size || '');
+                        const nameInput = row.querySelector('.cp-name');
+                        if (nameInput) nameInput.setAttribute('data-last-val', p.name || '');
+                        const codeInput = row.querySelector('.cp-code');
+                        if (codeInput) codeInput.setAttribute('data-last-val', p.code || '');
+
+                        setupProductAutocomplete(row);
+                    });
+                } else {
+                    document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                        const qtyInput = row.querySelector('.cp-qty');
+                        if (qtyInput) qtyInput.setAttribute('data-last-val', qtyInput.value || '1');
+                        const sizeInput = row.querySelector('.cp-size');
+                        if (sizeInput) sizeInput.setAttribute('data-last-val', sizeInput.value || '');
+                        const nameInput = row.querySelector('.cp-name');
+                        if (nameInput) nameInput.setAttribute('data-last-val', nameInput.value || '');
+                        const codeInput = row.querySelector('.cp-code');
+                        if (codeInput) codeInput.setAttribute('data-last-val', codeInput.value || '');
+
+                        setupProductAutocomplete(row);
+                    });
+                }
+                updateTypeDropdownOptions();
+                checkDCPowerLimit(false);
+                updateWarrantyInfoFromRows();
+                await triggerCalculation();
+
+            } catch (err) {
+                Swal.fire('Error', 'Failed to load project details.', 'error');
+                document.getElementById('metadataContent').innerText = 'Error: Failed to load data';
+            }
+        }
+
+        function openMasterEditModal() {
+            if (!projectData) return;
+            const safeSet = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+            
+            safeSet('me_salutation', projectData.salutation);
+            safeSet('me_first_name', projectData.first_name);
+            safeSet('me_last_name', projectData.last_name);
+            safeSet('me_type_of_lead', projectData.type_of_lead);
+            safeSet('me_property_type', projectData.property_type);
+            safeSet('me_abn_number', projectData.abn_number);
+            safeSet('me_phone_number', projectData.phone_number);
+            safeSet('me_phone_number_2', projectData.phone_number_2);
+            safeSet('me_landline_number', projectData.landline_number);
+            safeSet('me_email_id_1', projectData.email_id_1);
+            safeSet('me_email_id_2', projectData.email_id_2);
+            safeSet('me_lead_source', projectData.lead_source);
+            document.getElementById('me_lead_source').dispatchEvent(new Event('change'));
+            safeSet('me_lead_sub_category', projectData.lead_sub_category);
+            safeSet('me_referral_project_number', projectData.referral_project_number);
+            safeSet('me_google_address', projectData.google_address);
+            safeSet('me_unit_number', projectData.unit_number);
+            safeSet('me_lot_number', projectData.lot_number);
+            safeSet('me_street_type', projectData.street_type);
+            safeSet('me_address', projectData.address);
+            safeSet('me_suburb', projectData.suburb);
+            safeSet('me_state', projectData.state);
+            safeSet('me_postcode', projectData.postcode);
+            safeSet('me_message', projectData.message);
+            
+            document.getElementById('me_quality_lead').checked = projectData.quality_lead === 'Yes';
+            document.getElementById('me_dnd').checked = projectData.dnd === 'Yes';
+            document.getElementById('me_email_unsubscribe').checked = projectData.email_unsubscribe === 'Yes';
+            if (projectData.service === 'Yes') { document.querySelector('input[name="me_service_option"][value="Yes"]').checked = true; } 
+            else { document.querySelector('input[name="me_service_option"][value="No"]').checked = true; }
+            
+            toggleMeAbnField();
+            resetMasterSaveButton();
+            
+            document.title = `Edit Profile - ${projectData.project_number || ''} - ${projectData.first_name || ''} ${projectData.last_name || ''}`.trim();
+            document.getElementById('masterEditModal').style.display = 'flex';
+        }
+
+        function closeMasterEditModal() {
+            const btn = document.getElementById('btnSaveMasterEdit');
+            if (btn && !btn.classList.contains('btn-idle')) {
+                saveMasterEdit();
+            } else {
+                document.getElementById('masterEditModal').style.display = 'none';
+                document.title = `${projectData.project_number || ''} - ${projectData.first_name || ''} ${projectData.last_name || ''}`.trim();
+            }
+        }
+
+        async function triggerCalculation() {
+            if (!currentProjectId) return;
+            
+            const safeRadioVal = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; };
+            const safeVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+
+            const products = [];
+            document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                const type = row.querySelector('.cp-type')?.value || '';
+                const name = row.querySelector('.cp-name')?.value || '';
+                const code = row.querySelector('.cp-code')?.value || '';
+                const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                const size = parseFloat(row.querySelector('.cp-size')?.value) || 0;
+                const kw = parseFloat(row.querySelector('.cp-kw')?.value) || 0;
+                if (code && qty > 0) {
+                    products.push({ type, name, code, qty, size, kw });
+                }
+            });
+
+            const payload = {
+                leadId: currentProjectId,
+                postcode: projectData?.postcode || 0,
+                state: projectData?.state || 'WA',
+                products: products,
+                blackout: safeRadioVal('tc_blackout') || 'No',
+                phase: safeRadioVal('tb_phase') || '1',
+                house_storey: safeRadioVal('tb_house_storey') || 'Single',
+                roof_type: safeVal('tb_roof_type') || '',
+                roof_angle: safeVal('tb_roof_angle') || '',
+                panel_install_type: safeVal('tc_panel_install') || 'New',
+                battery_install_type: safeRadioVal('tc_battery_install') || '',
+                battery_location: safeRadioVal('tc_battery_location') || '',
+                type_of_lead: projectData?.type_of_lead || safeVal('me_type_of_lead') || '',
+                site_visit_req: safeRadioVal('tc_site_visit') || 'No',
+                vpp_rebate: safeRadioVal('tc_vpp') || 'No'
+            };
+
+            try {
+                const res = await fetch('/api/quotations/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) {
+                        window.lastCalculationDetails = data;
+                        
+                        // Populate Table D fields on frontend
+                        const grandTotalEl = document.getElementById('td_grand_total');
+                        const rebatesEl = document.getElementById('td_rebates');
+                        const sellingPriceEl = document.getElementById('td_selling_price');
+                        const depositEl = document.getElementById('td_deposit');
+                        const marginEl = document.getElementById('td_margin');
+
+                        if (grandTotalEl) grandTotalEl.value = parseFloat(data.grandTotal).toFixed(2);
+                        if (rebatesEl) rebatesEl.value = parseFloat(data.rebates).toFixed(2);
+                        if (sellingPriceEl) sellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
+                        if (depositEl) depositEl.value = parseFloat(data.deposit).toFixed(2);
+                        if (marginEl) marginEl.value = parseFloat(data.marginVal).toFixed(2);
+
+                        // Enable View Bifurcation button
+                        const btnBif = document.getElementById('btnViewBifurcation');
+                        if (btnBif) {
+                            btnBif.disabled = false;
+                        }
+                        const btnYield = document.getElementById('btnViewYield');
+                        if (btnYield) {
+                            btnYield.disabled = false;
+                        }
+                        const btnDownload = document.getElementById('btnDownloadQuotationPDF');
+                        if (btnDownload) {
+                            btnDownload.disabled = false;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error running quotation calculations:", err);
+            }
+        }
+
+        async function showBifurcationModal() {
+            const btnBif = document.getElementById('btnViewBifurcation');
+            if (btnBif) {
+                btnBif.disabled = true;
+            }
+            try {
+                await triggerCalculation();
+            } catch (err) {
+                console.error("Error triggering calculations for modal:", err);
+            } finally {
+                if (btnBif) {
+                    btnBif.disabled = false;
+                }
+            }
+
+            const data = window.lastCalculationDetails;
+            if (!data || !data.details) {
+                Swal.fire('Error', 'No calculation details available. Please verify products are selected and fields are complete.', 'error');
+                return;
+            }
+
+            const details = data.details;
+
+            // 1. Populate Products Table
+            const productsBody = document.getElementById('bif_products_body');
+            productsBody.innerHTML = '';
+            if (details.productsBreakdown && details.productsBreakdown.length > 0) {
+                details.productsBreakdown.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="status-badge sb-planned" style="padding: 2px 8px; font-size: 10px;">${item.type}</span></td>
+                        <td><strong>${item.name}</strong><br><small style="color: var(--text-muted);">${item.code}</small></td>
+                        <td style="text-align: center;">${item.qty}</td>
+                        <td style="text-align: right;">$${parseFloat(item.rate).toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: 600;">$${parseFloat(item.total).toFixed(2)}</td>
+                    `;
+                    productsBody.appendChild(tr);
+                });
+                
+                const totalTr = document.createElement('tr');
+                totalTr.className = 'bifurcation-total-row';
+                totalTr.innerHTML = `
+                    <td colspan="4">Total Product Cost (Inc. GST)</td>
+                    <td style="text-align: right;">$${details.totalProductCost.toFixed(2)}</td>
+                `;
+                productsBody.appendChild(totalTr);
+            } else {
+                productsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No products selected</td></tr>';
+            }
+
+            // 2. Populate Installation & Travel Charges
+            const installationsBody = document.getElementById('bif_installations_body');
+            installationsBody.innerHTML = '';
+            let totalInst = 0;
+            if (details.installationsBreakdown && details.installationsBreakdown.length > 0) {
+                details.installationsBreakdown.forEach(item => {
+                    totalInst += parseFloat(item.total) || 0;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.formula || 'Flat Rate'}</td>
+                        <td style="text-align: right; font-weight: 600;">$${parseFloat(item.total).toFixed(2)}</td>
+                    `;
+                    installationsBody.appendChild(tr);
+                });
+
+                const totalTr = document.createElement('tr');
+                totalTr.className = 'bifurcation-total-row';
+                totalTr.innerHTML = `
+                    <td colspan="2">Total Installation & Travel Charges</td>
+                    <td style="text-align: right;">$${totalInst.toFixed(2)}</td>
+                `;
+                installationsBody.appendChild(totalTr);
+            } else {
+                installationsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No installation charges applied</td></tr>';
+            }
+
+            // 3. Populate Rebates Table
+            const rebatesBody = document.getElementById('bif_rebates_body');
+            rebatesBody.innerHTML = '';
+            let totalRebatesVal = 0;
+            if (details.rebatesBreakdown && details.rebatesBreakdown.length > 0) {
+                details.rebatesBreakdown.forEach(item => {
+                    totalRebatesVal += parseFloat(item.total) || 0;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.formula || 'Calculated'}</td>
+                        <td style="text-align: right; font-weight: 600; color: #ef4444;">-$${parseFloat(item.total).toFixed(2)}</td>
+                    `;
+                    rebatesBody.appendChild(tr);
+                });
+
+                const totalTr = document.createElement('tr');
+                totalTr.className = 'bifurcation-total-row';
+                totalTr.innerHTML = `
+                    <td colspan="2">Total Government Rebates</td>
+                    <td style="text-align: right; color: #ef4444;">-$${totalRebatesVal.toFixed(2)}</td>
+                `;
+                rebatesBody.appendChild(totalTr);
+            } else {
+                rebatesBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No rebates applied</td></tr>';
+            }
+
+            // 4. Populate Margins Table
+            const marginsBody = document.getElementById('bif_margins_body');
+            marginsBody.innerHTML = '';
+            let totalMarginVal = 0;
+            if (details.marginsBreakdown && details.marginsBreakdown.length > 0) {
+                details.marginsBreakdown.forEach(item => {
+                    totalMarginVal += parseFloat(item.total) || 0;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${item.name}</strong></td>
+                        <td style="text-align: right; font-weight: 600; color: #b45309;">$${parseFloat(item.total).toFixed(2)}</td>
+                    `;
+                    marginsBody.appendChild(tr);
+                });
+
+                const totalTr = document.createElement('tr');
+                totalTr.className = 'bifurcation-total-row';
+                totalTr.innerHTML = `
+                    <td>Total Gross Margin</td>
+                    <td style="text-align: right; color: #b45309;">$${totalMarginVal.toFixed(2)}</td>
+                `;
+                marginsBody.appendChild(totalTr);
+            } else {
+                marginsBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No margins calculated</td></tr>';
+            }
+
+            // 5. Formula Verification
+            document.getElementById('bif_formula_grand_total').textContent = `$${data.grandTotal.toFixed(2)}`;
+            document.getElementById('bif_formula_margin').textContent = `$${totalMarginVal.toFixed(2)}`;
+            document.getElementById('bif_formula_rebates').textContent = `$${totalRebatesVal.toFixed(2)}`;
+            document.getElementById('bif_formula_selling_price').textContent = `$${data.sellingPrice.toFixed(2)}`;
+
+            document.getElementById('bifurcationModal').style.display = 'flex';
+        }
+
+        function closeBifurcationModal() {
+            document.getElementById('bifurcationModal').style.display = 'none';
+        }
+
+        async function showYieldModal() {
+            const btnYield = document.getElementById('btnViewYield');
+            if (btnYield) {
+                btnYield.disabled = true;
+            }
+            try {
+                // Compile products list from productRows
+                const products = [];
+                document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                    const type = row.querySelector('.cp-type')?.value || '';
+                    const name = row.querySelector('.cp-name')?.value || '';
+                    const code = row.querySelector('.cp-code')?.value || '';
+                    const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                    const size = parseFloat(row.querySelector('.cp-size')?.value) || 0;
+                    const kw = parseFloat(row.querySelector('.cp-kw')?.value) || 0;
+                    if (code && qty > 0) {
+                        products.push({ type, name, code, qty, size, kw });
+                    }
+                });
+
+                const payload = {
+                    leadId: currentProjectId,
+                    postcode: projectData?.postcode || 0,
+                    products: products,
+                    sellingPrice: parseFloat(document.getElementById('td_selling_price')?.value) || 0
+                };
+
+                const res = await fetch('/api/quotes/calculate-financial-yield', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await res.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Yield calculation failed');
+                }
+
+                // 1. Update Section 1: Daily Production Matrix
+                document.getElementById('yieldSystemSize').textContent = `System: ${data.summary.systemSizeKw.toFixed(2)} kW`;
+                const monthsGrid = document.getElementById('yieldMonthsGrid');
+                monthsGrid.innerHTML = '';
+                
+                const monthLongNames = {
+                    'JAN': 'Jan', 'FEB': 'Feb', 'MAR': 'Mar', 'APR': 'Apr', 'MAY': 'May', 'JUN': 'Jun',
+                    'JUL': 'Jul', 'AUG': 'Aug', 'SEP': 'Sep', 'OCT': 'Oct', 'NOV': 'Nov', 'DEC': 'Dec'
+                };
+
+                data.monthlyProduction.forEach(m => {
+                    const cell = document.createElement('div');
+                    cell.style.background = '#0f172a';
+                    cell.style.border = '1px solid #334155';
+                    cell.style.borderRadius = '6px';
+                    cell.style.padding = '8px';
+                    cell.style.textAlign = 'center';
+                    cell.innerHTML = `
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">${monthLongNames[m.month] || m.month}</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #ff9800; margin-top: 4px;">${m.dailyAverage.toFixed(2)}</div>
+                        <div style="font-size: 8px; color: #64748b; margin-top: 2px;">${m.monthlyTotal.toFixed(0)} kWh/mo</div>
+                    `;
+                    monthsGrid.appendChild(cell);
+                });
+
+                // 2. Update Section 2: Cost Comparison
+                document.getElementById('yieldBeforeSupply').textContent = `$${data.financials.beforeSolarSupply.toFixed(2)}`;
+                document.getElementById('yieldWithSupply').textContent = `$${data.financials.withSolarSupply.toFixed(2)}`;
+                document.getElementById('yieldBeforeEnergy').textContent = `$${data.financials.beforeSolarEnergy.toFixed(2)}`;
+                document.getElementById('yieldWithEnergy').textContent = `$${data.financials.withSolarEnergy.toFixed(2)}`;
+                document.getElementById('yieldWithFiT').textContent = `($${data.financials.withSolarFiTCredit.toFixed(2)})`;
+                document.getElementById('yieldBeforeTotal').textContent = `$${data.financials.beforeSolarTotal.toFixed(2)}`;
+                document.getElementById('yieldWithTotal').textContent = `$${data.financials.withSolarTotal.toFixed(2)}`;
+
+                // Update Investment indicators
+                document.getElementById('yieldNetInvestment').textContent = `$${data.investment.netSystemCost.toFixed(2)}`;
+                document.getElementById('yieldAnnualSavings').textContent = `$${data.financials.annualSavings.toFixed(2)}`;
+                document.getElementById('yieldPayback').textContent = `${data.investment.paybackYears.toFixed(1)} Yrs`;
+                document.getElementById('yieldIRR').textContent = `${data.investment.irrPercent.toFixed(1)}%`;
+                document.getElementById('yieldNPV').textContent = `$${data.investment.npv.toFixed(2)}`;
+
+                // 3. Update Section 3: Environmental savings
+                document.getElementById('yieldTrees').textContent = data.environmental.treesPlanted.toFixed(1);
+                document.getElementById('yieldCoal').textContent = data.environmental.coalAvoidedKg.toFixed(0);
+                document.getElementById('yieldFuel').textContent = data.environmental.fuelAvoidedLiters.toFixed(0);
+                document.getElementById('yieldCO2').textContent = data.environmental.co2AvoidedKg.toFixed(0);
+
+                // Show modal
+                document.getElementById('yieldModal').style.display = 'flex';
+
+            } catch (err) {
+                console.error("Error displaying yield modal:", err);
+                Swal.fire('Error', 'Failed to retrieve yield and ROI analysis. Please ensure valid postcode and product details.', 'error');
+            } finally {
+                if (btnYield) {
+                    btnYield.disabled = false;
+                }
+            }
+        }
+
+        function closeYieldModal() {
+            document.getElementById('yieldModal').style.display = 'none';
+        }
+
+        async function downloadQuotationPDF() {
+            const btn = document.getElementById('btnDownloadQuotationPDF');
+            if (btn) {
+                btn.disabled = true;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner" style="margin: 0; display: inline-block;"></span>';
+                
+                try {
+                    // Start download by redirecting browser
+                    window.location.href = `/api/quotations/${currentProjectId}/download-pdf`;
+                    
+                    // Re-enable button after some delay so they can try again if they want
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }, 4000);
+                } catch (err) {
+                    console.error("Error downloading quotation:", err);
+                    Swal.fire('Error', 'Failed to generate and download quotation PDF.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+            }
+        }
+
+        window.addEventListener('click', function(e) {
+            const bifModal = document.getElementById('bifurcationModal');
+            if (e.target === bifModal) {
                 closeBifurcationModal();
             }
             const yieldModal = document.getElementById('yieldModal');
