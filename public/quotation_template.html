@@ -100,7 +100,7 @@
             gap: 20px;
         }
         .brand-logo {
-            height: 70px;
+            height: 72px;
             object-fit: contain;
         }
         .accreditation-logos {
@@ -528,7 +528,7 @@
                         <strong id="lblSellingPrice">$0.00</strong>
                     </div>
                     <div class="pricing-row">
-                        <span>Less Deposit Required</span>
+                        <span>Less Deposit Required <span style="font-size:8px; color:var(--text-muted); font-weight:400;">(10% Deposit)</span></span>
                         <strong id="lblDeposit" style="color:var(--accent);">-$0.00</strong>
                     </div>
 
@@ -591,9 +591,8 @@
             <div class="sig-row">
                 <!-- Ares Signature -->
                 <div class="sig-col">
-                    <div style="min-height:30px; display:flex; align-items:flex-end; justify-content:center;">
-                        <img id="aresSignatureImg" src="" alt="" style="max-height:28px; max-width:100%; object-fit:contain; display:none;">
-                        <div id="aresSignaturePlaceholder" style="height:28px;"></div>
+                    <div style="min-height:36px; display:flex; align-items:flex-end; justify-content:center;">
+                        <img id="aresSignatureImg" src="/yashil_signature.png" alt="Ares Signature" style="max-height:36px; max-width:100%; object-fit:contain; display:block;">
                     </div>
                     <div class="sig-line">Signature(s)</div>
                 </div>
@@ -822,13 +821,13 @@
             setText('lblBasicCost', `$${basicSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
             // Panel STC row: show qty × $35
-            setText('lblPanelRebateQty', panelQtyVal > 0 ? `${Math.floor(panelQtyVal)} Qty` : '');
+            setText('lblPanelRebateQty', panelQtyVal > 0 ? `${Math.floor(panelQtyVal)} Qty × $${QUOTATION_STC_RATE}` : '');
             setText('lblPanelRebate', `-$${panelRebateDisplay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
             // Battery STC row: show qty × $35
             if (batteryRebateDisplay > 0) {
                 setDisplay('rowBatteryRebate', 'flex');
-                setText('lblBatteryRebateQty', batteryQtyVal > 0 ? `${Math.floor(batteryQtyVal)} Qty` : '');
+                setText('lblBatteryRebateQty', batteryQtyVal > 0 ? `${Math.floor(batteryQtyVal)} Qty × $${QUOTATION_STC_RATE}` : '');
                 setText('lblBatteryRebate', `-$${batteryRebateDisplay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             } else {
                 setDisplay('rowBatteryRebate', 'none');
