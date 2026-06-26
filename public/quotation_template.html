@@ -806,28 +806,31 @@
             const vppRebate = rebateVpp.total || 0;
 
             // --- QUOTATION DISPLAY: Use $35 per STC certificate (internal calc uses $38) ---
-            // Selling Price remains SAME as Sales Input (from API)
-            // STC rebate displayed at $35 rate, BasicSystemCost reverse-calculated
+            // IMPORTANT: Floor the qty FIRST so that displayed "N Qty × $35 = -$Amount" is perfectly consistent.
+            // e.g. raw panelStcQty = 111.597 → floor = 111 → 111 × $35 = $3,885.00 (not 111.597 × $35 = $3,905.88)
+            // Selling Price remains SAME as Sales Input (from API) — only BasicSystemCost is reverse-calculated.
             const QUOTATION_STC_RATE = 35;
-            const panelRebateDisplay = panelQtyVal * QUOTATION_STC_RATE;
-            const batteryRebateDisplay = batteryQtyVal * QUOTATION_STC_RATE;
+            const panelQtyDisplay = Math.floor(panelQtyVal);
+            const batteryQtyDisplay = Math.floor(batteryQtyVal);
+            const panelRebateDisplay = panelQtyDisplay * QUOTATION_STC_RATE;
+            const batteryRebateDisplay = batteryQtyDisplay * QUOTATION_STC_RATE;
             const totalRebatesDisplay = panelRebateDisplay + batteryRebateDisplay + vppRebate;
 
-            // Reverse calc: BasicSystemCost = SellingPrice + TotalRebatesDisplay
+            // Reverse calc: BasicSystemCost = SellingPrice + TotalRebatesDisplay (all at $35)
             const basicSystemCost = sellingPrice + totalRebatesDisplay;
             const balanceDue = sellingPrice - deposit;
 
             // Render pricing numbers
             setText('lblBasicCost', `$${basicSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
-            // Panel STC row: show qty × $35
-            setText('lblPanelRebateQty', panelQtyVal > 0 ? `${Math.floor(panelQtyVal)} Qty × $${QUOTATION_STC_RATE}` : '');
+            // Panel STC row: "111 Qty × $35" → "-$3,885.00"  (perfectly consistent)
+            setText('lblPanelRebateQty', panelQtyDisplay > 0 ? `${panelQtyDisplay} Qty × $${QUOTATION_STC_RATE}` : '');
             setText('lblPanelRebate', `-$${panelRebateDisplay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
-            // Battery STC row: show qty × $35
+            // Battery STC row: "148 Qty × $35" → "-$5,180.00"
             if (batteryRebateDisplay > 0) {
                 setDisplay('rowBatteryRebate', 'flex');
-                setText('lblBatteryRebateQty', batteryQtyVal > 0 ? `${Math.floor(batteryQtyVal)} Qty × $${QUOTATION_STC_RATE}` : '');
+                setText('lblBatteryRebateQty', batteryQtyDisplay > 0 ? `${batteryQtyDisplay} Qty × $${QUOTATION_STC_RATE}` : '');
                 setText('lblBatteryRebate', `-$${batteryRebateDisplay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             } else {
                 setDisplay('rowBatteryRebate', 'none');
