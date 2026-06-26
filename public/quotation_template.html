@@ -44,7 +44,7 @@
             flex-direction: column;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             page-break-after: always;
-            padding: 25px 35px;
+            padding: 20px 30px;
         }
 
         @media print {
@@ -91,41 +91,41 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px dashed var(--border);
-            padding-bottom: 12px;
-            margin-bottom: 15px;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
         .brand-block {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .brand-logo {
-            height: 48px;
+            height: 44px;
             object-fit: contain;
         }
         .brand-name {
             font-family: 'Outfit', sans-serif;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             color: var(--teal);
             letter-spacing: 0.5px;
         }
         .brand-details {
             text-align: right;
-            font-size: 10px;
-            line-height: 1.4;
+            font-size: 9.5px;
+            line-height: 1.35;
             color: var(--text-muted);
         }
 
         .meta-section {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
-            gap: 25px;
-            font-size: 11px;
-            margin-bottom: 15px;
+            gap: 20px;
+            font-size: 10.5px;
+            margin-bottom: 12px;
         }
         .meta-block h4 {
-            font-size: 9px;
+            font-size: 8.5px;
             text-transform: uppercase;
             color: var(--text-muted);
             letter-spacing: 1px;
@@ -134,70 +134,74 @@
             padding-bottom: 2px;
         }
         .meta-block p {
-            line-height: 1.45;
+            line-height: 1.4;
         }
 
         /* Banner styling */
         .blue-banner {
             background: var(--primary);
             color: #fff;
-            padding: 8px 15px;
+            padding: 6px 12px;
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             letter-spacing: 1px;
             text-transform: uppercase;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border-radius: 3px;
-            border-right: 15px solid var(--accent);
+            border-right: 12px solid var(--accent);
         }
 
         /* Two column grid */
         .solutions-grid {
             display: grid;
-            grid-template-columns: 1.15fr 0.85fr;
+            grid-template-columns: 1.05fr 0.95fr;
             gap: 20px;
             flex: 1;
             min-height: 0;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
-        .products-col {
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 12px;
-            background: var(--bg-light);
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .right-col {
             display: flex;
             flex-direction: column;
         }
+
+        .products-col {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            background: var(--bg-light);
+        }
         .products-title {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--teal);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             border-bottom: 1.5px solid var(--teal);
-            padding-bottom: 3px;
-        }
-        .products-list {
-            flex: 1;
-            overflow: hidden;
+            padding-bottom: 2px;
         }
 
         .pricing-col {
             display: flex;
             flex-direction: column;
-            gap: 2.5px;
+            gap: 2px;
         }
         .pricing-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 10px;
-            padding: 4px 6px;
+            font-size: 9.5px;
+            padding: 3.5px 6px;
             border-bottom: 1px solid var(--border);
         }
         .pricing-row:nth-child(odd) {
@@ -207,9 +211,9 @@
             background: var(--teal-light) !important;
             border: 1px solid var(--teal);
             font-weight: 700;
-            font-size: 10.5px;
+            font-size: 10px;
             color: var(--teal);
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .pricing-row-rebate {
             color: #10b981;
@@ -219,23 +223,80 @@
         .balance-banner {
             background: var(--primary);
             color: #fff;
-            padding: 10px 15px;
+            padding: 8px 12px;
             font-family: 'Outfit', sans-serif;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 800;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-radius: 3px;
-            margin-top: 5px;
-            border-right: 15px solid var(--accent);
+            margin-top: 4px;
+            border-right: 12px solid var(--accent);
+        }
+
+        /* Specs section styling */
+        .specs-title {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 6px;
+            border-bottom: 1.5px solid var(--teal);
+            padding-bottom: 2px;
+        }
+        .specs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+        }
+        .spec-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 38px;
+        }
+        .spec-icon-box {
+            width: 24px;
+            height: 24px;
+            background: var(--teal-light);
+            border: 1px solid rgba(31,95,91,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--teal);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .spec-content {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+        }
+        .spec-label {
+            font-size: 7.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .spec-value {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dark);
         }
 
         .quote-note-text {
-            font-size: 8px;
+            font-size: 7.5px;
             color: var(--text-muted);
-            line-height: 1.35;
-            margin-top: 8px;
+            line-height: 1.3;
+            margin-top: 5px;
             display: flex;
             justify-content: space-between;
             gap: 15px;
@@ -245,49 +306,49 @@
         .installation-banner {
             background: var(--teal);
             color: #fff;
-            padding: 6px 15px;
+            padding: 5px 12px;
             font-family: 'Outfit', sans-serif;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 700;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-radius: 3px;
-            margin-bottom: 8px;
-            border-right: 15px solid var(--accent);
+            margin-bottom: 6px;
+            border-right: 12px solid var(--accent);
         }
         .installation-meta-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 8px;
             background: var(--bg-light);
             border: 1px solid var(--border);
-            padding: 8px 12px;
-            font-size: 9.5px;
+            padding: 6px 10px;
+            font-size: 9px;
             border-radius: 3px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         /* Payments Block */
         .payment-block {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
         .payment-method {
             border: 1px solid var(--border);
             border-radius: 4px;
-            padding: 10px;
-            font-size: 8.5px;
-            line-height: 1.4;
+            padding: 8px;
+            font-size: 8px;
+            line-height: 1.35;
             background: var(--bg-light);
         }
         .payment-method h5 {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 700;
             color: var(--accent);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -296,29 +357,29 @@
         /* Acceptance block */
         .acceptance-block {
             border-top: 2px dashed var(--border);
-            padding-top: 12px;
+            padding-top: 10px;
             text-align: center;
         }
         .acceptance-block p {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 600;
             color: var(--teal);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .sig-row {
             display: grid;
             grid-template-columns: 1fr 1.2fr 1fr;
             gap: 20px;
-            margin-top: 5px;
+            margin-top: 3px;
         }
         .sig-col {
             text-align: center;
-            font-size: 9px;
+            font-size: 8.5px;
         }
         .sig-line {
             border-top: 1px solid var(--text-dark);
-            margin-top: 28px;
-            padding-top: 3px;
+            margin-top: 22px;
+            padding-top: 2px;
             color: var(--text-muted);
             font-weight: 500;
         }
@@ -378,7 +439,7 @@
         <div class="meta-section">
             <div class="meta-block">
                 <h4>Quotation To</h4>
-                <p style="font-size:12.5px; font-weight:700; color:var(--teal);" id="lblCustomerName">-</p>
+                <p style="font-size:12px; font-weight:700; color:var(--teal);" id="lblCustomerName">-</p>
                 <p><strong>A:</strong> <span id="lblCustomerAddress">-</span></p>
                 <p><strong>P:</strong> <span id="lblCustomerPhone">-</span></p>
                 <p><strong>E:</strong> <span id="lblCustomerEmail">-</span></p>
@@ -396,75 +457,68 @@
         <!-- Quotation Title Banner -->
         <div class="blue-banner">
             <span>Quotation</span>
-            <span style="font-size:10px;" id="lblSystemSizeHeader">-</span>
+            <span style="font-size:9.5px;" id="lblSystemSizeHeader">-</span>
         </div>
 
         <!-- Two Column solutions grid -->
         <div class="solutions-grid">
-            <!-- Left Col: Products solutions -->
-            <div class="products-col">
-                <div class="products-title">Solar Power Solution Design, Supply and Installation</div>
-                <div class="products-list" id="productList">
-                    <!-- Products dynamically injected here -->
+            <!-- Left Col: Products solutions & Pricing stacked -->
+            <div class="left-col">
+                <div class="products-col">
+                    <div class="products-title">Solar Power Solution Design, Supply and Installation</div>
+                    <div class="products-list" id="productList">
+                        <!-- Products dynamically injected here -->
+                    </div>
+                </div>
+
+                <div class="pricing-col">
+                    <div class="pricing-row">
+                        <span>Basic System Cost</span>
+                        <strong id="lblBasicCost">$0.00</strong>
+                    </div>
+                    <div class="pricing-row" id="rowDiscount" style="display:none;">
+                        <span>Special Discount</span>
+                        <strong id="lblDiscount" style="color:var(--accent);">-</strong>
+                    </div>
+                    <div class="pricing-row">
+                        <span>Other / Surcharges</span>
+                        <strong>$0.00</strong>
+                    </div>
+
+                    <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px;">
+                        <span style="font-size:9px; font-weight:600;">Less STC Panels Rebate</span>
+                        <strong id="lblPanelRebate" class="pricing-row-rebate">-$0.00</strong>
+                    </div>
+                    <div class="pricing-row" id="rowBatteryRebate" style="display:none;">
+                        <span style="font-size:9px; font-weight:600;">Less STC Battery Rebate</span>
+                        <strong id="lblBatteryRebate" class="pricing-row-rebate">-$0.00</strong>
+                    </div>
+                    <div class="pricing-row" id="rowVppRebate" style="display:none;">
+                        <span style="font-size:9px; font-weight:600;">Less WA Battery Rebate</span>
+                        <strong id="lblVppRebate" class="pricing-row-rebate">-$0.00</strong>
+                    </div>
+
+                    <div class="pricing-row pricing-row-total">
+                        <span>Selling Price Total (Inc. GST)</span>
+                        <strong id="lblSellingPrice">$0.00</strong>
+                    </div>
+                    <div class="pricing-row">
+                        <span>Less Deposit Required</span>
+                        <strong id="lblDeposit" style="color:var(--accent);">-$0.00</strong>
+                    </div>
+
+                    <div class="balance-banner">
+                        <span style="font-size:11px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
+                        <span id="lblBalanceDue">$0.00</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Col: Pricing -->
-            <div class="pricing-col">
-                <div class="pricing-row">
-                    <span>Basic System Cost</span>
-                    <strong id="lblBasicCost">$0.00</strong>
-                </div>
-                <div class="pricing-row">
-                    <span>House Type</span>
-                    <span id="lblHouseType">-</span>
-                </div>
-                <div class="pricing-row">
-                    <span>Roof Type</span>
-                    <span id="lblRoofType">-</span>
-                </div>
-                <div class="pricing-row">
-                    <span>Roof Angle</span>
-                    <span id="lblRoofAngle">-</span>
-                </div>
-                <div class="pricing-row">
-                    <span>Net Meter / Phase</span>
-                    <span id="lblNetMeter">-</span>
-                </div>
-                <div class="pricing-row" id="rowDiscount" style="display:none;">
-                    <span>Special Discount</span>
-                    <strong id="lblDiscount" style="color:var(--accent);">-</strong>
-                </div>
-                <div class="pricing-row">
-                    <span>Other</span>
-                    <strong>$0.00</strong>
-                </div>
-
-                <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px;">
-                    <span style="font-size:9.5px; font-weight:600;">Less STC Panels Rebate</span>
-                    <strong id="lblPanelRebate" class="pricing-row-rebate">-$0.00</strong>
-                </div>
-                <div class="pricing-row" id="rowBatteryRebate" style="display:none;">
-                    <span style="font-size:9.5px; font-weight:600;">Less STC Battery Rebate</span>
-                    <strong id="lblBatteryRebate" class="pricing-row-rebate">-$0.00</strong>
-                </div>
-                <div class="pricing-row" id="rowVppRebate" style="display:none;">
-                    <span style="font-size:9.5px; font-weight:600;">Less WA Battery Rebate</span>
-                    <strong id="lblVppRebate" class="pricing-row-rebate">-$0.00</strong>
-                </div>
-
-                <div class="pricing-row pricing-row-total">
-                    <span>Selling Price Total (Inc. GST)</span>
-                    <strong id="lblSellingPrice">$0.00</strong>
-                </div>
-                <div class="pricing-row">
-                    <span>Less Deposit Required</span>
-                    <strong id="lblDeposit" style="color:var(--accent);">-$0.00</strong>
-                </div>
-
-                <div class="balance-banner">
-                    <span style="font-size:12px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
-                    <span id="lblBalanceDue">$0.00</span>
+            <!-- Right Col: Specs dynamically represented in horizontal cards -->
+            <div class="right-col">
+                <div class="specs-title">Property &amp; Installation Specifications</div>
+                <div class="specs-grid" id="specsGrid">
+                    <!-- Cards dynamically injected here -->
                 </div>
             </div>
         </div>
@@ -476,15 +530,12 @@
         </div>
 
         <!-- Installation details row -->
-        <div class="installation-banner" style="margin-top:10px;">
+        <div class="installation-banner" style="margin-top:5px;">
             <span>Installation Details</span>
-            <span style="font-size:9.5px;">Target Delivery Date: <strong style="color:#fff;" id="lblTargetDeliveryDate">-</strong></span>
+            <span style="font-size:9px;">Target Delivery Date: <strong style="color:#fff;" id="lblTargetDeliveryDate">-</strong></span>
         </div>
-        <div class="installation-meta-row">
-            <div><strong>Elec. Retailer:</strong> <span id="lblRetailer">-</span></div>
-            <div><strong>Meter Phase:</strong> <span id="lblPhase">-</span></div>
-            <div><strong>Inst. Type:</strong> <span id="lblInstType">-</span></div>
-            <div><strong>Payment Modes:</strong> EFT / Credit Card</div>
+        <div class="installation-meta-row" id="installMetaRow">
+            <!-- Meta row items dynamically populated -->
         </div>
 
         <!-- Payment Details -->
@@ -514,15 +565,15 @@
             <p>See Additional Terms &amp; Conditions overleaf. I have read the terms and conditions herein and I accept and confirm the System order as detailed above:</p>
             <div class="sig-row">
                 <div class="sig-col">
-                    <div style="font-weight:700; font-size:11px; font-family:'Outfit';" id="lblClientSigName">-</div>
+                    <div style="font-weight:700; font-size:10px; font-family:'Outfit';" id="lblClientSigName">-</div>
                     <div class="sig-line">Name(s)</div>
                 </div>
                 <div class="sig-col">
-                    <div style="height:15px;"></div>
+                    <div style="height:12px;"></div>
                     <div class="sig-line">Signature(s)</div>
                 </div>
                 <div class="sig-col">
-                    <div style="font-weight:700; font-size:11px; font-family:'Outfit';" id="lblSigDate">-</div>
+                    <div style="font-weight:700; font-size:10px; font-family:'Outfit';" id="lblSigDate">-</div>
                     <div class="sig-line">Date</div>
                 </div>
             </div>
@@ -668,7 +719,7 @@
             deliveryDate.setDate(deliveryDate.getDate() + 60);
             const targetDeliveryStr = formatDate(deliveryDate.toISOString().split('T')[0]);
 
-            // Page 1: Customer Details
+            // Customer Details
             const custName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Valued Customer';
             setText('lblCustomerName', custName);
             
@@ -694,14 +745,6 @@
                 : `${sysKw.toFixed(2)}kW Solar System`;
             setText('lblSystemSizeHeader', sizeLabel);
 
-            // Specs
-            setText('lblHouseType', eng.house_storey ? `${eng.house_storey} Storey` : 'Single Storey');
-            setText('lblRoofType', eng.roof_type || 'Metal / Tin');
-            setText('lblRoofAngle', eng.roof_angle || '0 - 16');
-            
-            const meterPhase = eng.phase || '1';
-            setText('lblNetMeter', `${meterPhase} Phase`);
-
             // Pricing extraction
             const sellingPrice = pricing.sellingPrice || 0;
             const deposit = pricing.deposit || 0;
@@ -719,7 +762,7 @@
             const basicSystemCost = sellingPrice + totalRebates;
             const balanceDue = sellingPrice - deposit;
 
-            // Render right col pricing numbers
+            // Render pricing numbers
             setText('lblBasicCost', `$${basicSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             setText('lblPanelRebate', `-$${panelRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             
@@ -741,22 +784,69 @@
             setText('lblDeposit', `-$${deposit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             setText('lblBalanceDue', `$${balanceDue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
-            // Installation details
+            // Specs right column horizontal cards population
+            const specsGrid = document.getElementById('specsGrid');
+            if (specsGrid) {
+                specsGrid.innerHTML = '';
+                const specItems = [
+                    { label: 'House Type', value: eng.house_storey ? `${eng.house_storey} Storey` : 'Single Storey', emoji: '🏠' },
+                    { label: 'Roof Type', value: eng.roof_type || 'Tin / Metal', emoji: '🧱' },
+                    { label: 'Roof Pitch / Angle', value: eng.roof_angle || '0° to 16°', emoji: '📐' },
+                    { label: 'Electricity Phase', value: eng.phase ? `${eng.phase} Phase` : '1 Phase', emoji: '⚡' },
+                    { label: 'Energy Retailer', value: eng.retailer || 'Synergy', emoji: '🏢' },
+                    { label: 'Installation Type', value: eng.panel_install_type || 'New', emoji: '🚚' }
+                ];
+                
+                // Add battery items if battery is present
+                if (batKwh > 0) {
+                    specItems.push({ label: 'Battery Install Type', value: eng.battery_install_type || 'Hybrid / DC couple', emoji: '🔋' });
+                    specItems.push({ label: 'Battery Location', value: eng.battery_location || 'Inside', emoji: '📍' });
+                }
+
+                specItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'spec-card';
+                    card.innerHTML = `
+                        <div class="spec-icon-box">${item.emoji}</div>
+                        <div class="spec-content">
+                            <span class="spec-label">${item.label}</span>
+                            <span class="spec-value">${item.value}</span>
+                        </div>
+                    `;
+                    specsGrid.appendChild(card);
+                });
+            }
+
+            // Installation details metadata row at bottom
+            const meterPhase = eng.phase || '1';
             setText('lblTargetDeliveryDate', targetDeliveryStr);
-            setText('lblRetailer', eng.retailer || 'Synergy');
-            setText('lblPhase', `${meterPhase} Phase`);
-            setText('lblInstType', eng.panel_install_type || 'New');
+            const installMetaRow = document.getElementById('installMetaRow');
+            if (installMetaRow) {
+                let html = `
+                    <div><strong>Elec. Retailer:</strong> ${eng.retailer || 'Synergy'}</div>
+                    <div><strong>Meter Phase:</strong> ${meterPhase} Phase</div>
+                    <div><strong>Inst. Type:</strong> ${eng.panel_install_type || 'New'}</div>
+                    <div><strong>Payment Modes:</strong> EFT / Credit Card</div>
+                `;
+                if (batKwh > 0) {
+                    html += `
+                        <div><strong>Battery Install:</strong> ${eng.battery_install_type || 'Hybrid'}</div>
+                        <div><strong>Battery Location:</strong> ${eng.battery_location || 'Inside'}</div>
+                    `;
+                }
+                installMetaRow.innerHTML = html;
+                const colCount = batKwh > 0 ? 6 : 4;
+                installMetaRow.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
+            }
 
             // Render product breakdown on Left Column
             const productListContainer = document.getElementById('productList');
             if (productListContainer && pDetails.productsBreakdown) {
                 productListContainer.innerHTML = '';
-                
-                // Group products or render them directly
                 pDetails.productsBreakdown.forEach(prod => {
                     const itemRow = document.createElement('div');
                     itemRow.style.display = 'flex';
-                    itemRow.style.padding = '6px 0';
+                    itemRow.style.padding = '5px 0';
                     itemRow.style.fontSize = '10.5px';
                     itemRow.style.borderBottom = '1px solid var(--border)';
                     
