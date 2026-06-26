@@ -794,6 +794,9 @@ function toggleNav(event, element) {
                                 <option value="5 kW">5 kW</option>
                             </select>
                         </div>
+                        <div class="cf-row"><label>Avg Daily Usage (kWh)</label>
+                            <input type="number" id="tb_daily_usage" step="0.1" min="0" placeholder="e.g. 18.0">
+                        </div>
                     </div>
 
                     <!-- TABLE C: PRODUCT & WARRANTY SUMMARY -->
@@ -1533,6 +1536,7 @@ function toggleNav(event, element) {
                 safeSet('tb_distributor', projectData.distributor);
                 safeSet('tb_retailer', projectData.retailer);
                 safeSet('tb_export_limit', projectData.export_limit);
+                safeSet('tb_daily_usage', projectData.daily_usage || '18.0');
 
                 safeSet('tc_panel_install', projectData.panel_install_type);
                 safeSetRadio('tc_battery_install', projectData.battery_install_type);
@@ -1987,7 +1991,8 @@ function toggleNav(event, element) {
                     leadId: currentProjectId,
                     postcode: projectData?.postcode || 0,
                     products: products,
-                    sellingPrice: parseFloat(document.getElementById('td_selling_price')?.value) || 0
+                    sellingPrice: parseFloat(document.getElementById('td_selling_price')?.value) || 0,
+                    daily_usage: parseFloat(document.getElementById('tb_daily_usage')?.value) || 18.0
                 };
 
                 const res = await fetch('/api/quotes/calculate-financial-yield', {
@@ -2381,6 +2386,7 @@ function toggleNav(event, element) {
                 distributor: safeVal('tb_distributor'),
                 retailer: safeVal('tb_retailer'),
                 export_limit: safeVal('tb_export_limit'),
+                daily_usage: safeVal('tb_daily_usage'),
                 panel_install_type: safeVal('tc_panel_install'),
                 battery_install_type: safeRadioVal('tc_battery_install'),
                 battery_location: safeRadioVal('tc_battery_location'),

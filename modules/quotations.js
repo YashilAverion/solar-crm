@@ -1368,7 +1368,12 @@ router.get('/:id/preview-data', async (req, res) => {
         const electricityUnitRate = utilityRates.electricity_unit_rate;
         const feedInTariff = utilityRates.feed_in_tariff;
 
-        const annualUsageKwh = parseFloat(eng.annualUsageKwh) || 6500;
+        let annualUsageKwh = 6500;
+        if (eng.daily_usage !== undefined && !isNaN(parseFloat(eng.daily_usage))) {
+            annualUsageKwh = parseFloat(eng.daily_usage) * 365;
+        } else if (eng.annualUsageKwh !== undefined && !isNaN(parseFloat(eng.annualUsageKwh))) {
+            annualUsageKwh = parseFloat(eng.annualUsageKwh);
+        }
         const beforeSolarAnnualSupply = supplyChargeDay * 365;
         const beforeSolarAnnualEnergy = annualUsageKwh * electricityUnitRate;
         const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;

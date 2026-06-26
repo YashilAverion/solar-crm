@@ -2017,6 +2017,8 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         let leadPostcode = '';
         let leadOrientation = '';
         let dbSystemSize = 0;
+        let leadDailyUsage = null;
+        let leadAnnualUsage = null;
 
         if (leadId) {
             const lead = await new Promise((resolve) => {
@@ -2032,6 +2034,12 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
                         const eng = JSON.parse(lead.engineering_details);
                         if (eng.orientation) {
                             leadOrientation = eng.orientation;
+                        }
+                        if (eng.daily_usage) {
+                            leadDailyUsage = eng.daily_usage;
+                        }
+                        if (eng.annualUsageKwh) {
+                            leadAnnualUsage = eng.annualUsageKwh;
                         }
                     } catch (e) {}
                 }
@@ -2157,20 +2165,33 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         const electricityUnitRate = utilityRates.electricity_unit_rate;
         const feedInTariff = utilityRates.feed_in_tariff;
 
+        let finalAnnualUsage = 6500;
+        if (req.body.daily_usage !== undefined && !isNaN(parseFloat(req.body.daily_usage))) {
+            finalAnnualUsage = parseFloat(req.body.daily_usage) * 365;
+        } else if (req.body.annualUsageKwh !== undefined && !isNaN(parseFloat(req.body.annualUsageKwh))) {
+            finalAnnualUsage = parseFloat(req.body.annualUsageKwh);
+        } else if (leadDailyUsage !== null && !isNaN(parseFloat(leadDailyUsage))) {
+            finalAnnualUsage = parseFloat(leadDailyUsage) * 365;
+        } else if (leadAnnualUsage !== null && !isNaN(parseFloat(leadAnnualUsage))) {
+            finalAnnualUsage = parseFloat(leadAnnualUsage);
+        } else {
+            finalAnnualUsage = parseFloat(annualUsageKwh) || 6500;
+        }
+
         const beforeSolarAnnualSupply = supplyChargeDay * 365;
-        const beforeSolarAnnualEnergy = annualUsageKwh * electricityUnitRate;
+        const beforeSolarAnnualEnergy = finalAnnualUsage * electricityUnitRate;
         const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;
 
-        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
+        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, finalAnnualUsage * 0.45));
         if (totalBatteryKwh > 0) {
             const excessSolar = Math.max(0, annualGeneration - selfConsumedSolar);
             const storedEnergy = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
             selfConsumedSolar += storedEnergy;
         }
-        selfConsumedSolar = Math.min(selfConsumedSolar, annualUsageKwh);
+        selfConsumedSolar = Math.min(selfConsumedSolar, finalAnnualUsage);
 
         const exportedSolar = Math.max(0, annualGeneration - selfConsumedSolar);
-        const gridImport = Math.max(0, annualUsageKwh - selfConsumedSolar);
+        const gridImport = Math.max(0, finalAnnualUsage - selfConsumedSolar);
 
         const withSolarAnnualSupply = supplyChargeDay * 365;
         const withSolarAnnualEnergy = gridImport * electricityUnitRate;
