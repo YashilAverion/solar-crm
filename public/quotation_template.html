@@ -576,6 +576,68 @@
                     </div>
                     <div id="solarProductionChart" style="width:100%; display:block; line-height:0;"></div>
                 </div>
+
+                <!-- Utility Costs / Savings Card -->
+                <div id="utilityCostCard" style="margin-top:12px; background:#ffffff; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px 12px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); min-height:85px; display:flex; align-items:stretch;">
+                    <div style="display:grid; grid-template-columns:1fr 1px 0.8fr 1px 1.2fr; gap:8px; width:100%; align-items:stretch;">
+                        
+                        <!-- Column 1: Icon and Title -->
+                        <div style="display:flex; flex-direction:column; justify-content:center; padding-right:2px;">
+                            <div style="background:var(--teal-light); border:1px solid rgba(31,95,91,0.15); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; margin-bottom:5px; color:var(--teal); flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                                    <rect x="7" y="9" width="14" height="10" rx="2"></rect>
+                                    <circle cx="14" cy="14" r="2"></circle>
+                                </svg>
+                            </div>
+                            <div style="font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; color:var(--teal); letter-spacing:0.3px; line-height:1.2;">Utility costs</div>
+                            <div style="font-size:7.5px; color:var(--text-muted); margin-top:2px; line-height:1.25;">How much will I save after installing solar?</div>
+                        </div>
+
+                        <!-- Divider 1 -->
+                        <div style="background:#e2e8f0; width:1px; margin:4px 0;"></div>
+
+                        <!-- Column 2: Before Solar -->
+                        <div style="display:flex; flex-direction:column; gap:6px; padding:0 2px; justify-content:center;">
+                            <div style="font-size:7.5px; font-weight:700; color:var(--text-dark); text-transform:uppercase; letter-spacing:0.3px; border-bottom:1.5px solid var(--text-dark); padding-bottom:1px; margin-bottom:2px; width:fit-content; line-height:1;">Before solar</div>
+                            
+                            <div>
+                                <div id="uMonthlyBefore" style="font-size:11.5px; font-weight:800; color:var(--text-dark); line-height:1.1;">—</div>
+                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">Average monthly bill</div>
+                            </div>
+                            
+                            <div>
+                                <div id="uAnnualBefore" style="font-size:10.5px; font-weight:700; color:var(--text-dark); line-height:1.1;">—</div>
+                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">Annual bill</div>
+                            </div>
+                        </div>
+
+                        <!-- Divider 2 -->
+                        <div style="background:#e2e8f0; width:1px; margin:4px 0;"></div>
+
+                        <!-- Column 3: With Solar -->
+                        <div style="display:flex; flex-direction:column; gap:6px; padding-left:2px; justify-content:center;">
+                            <div style="font-size:7.5px; font-weight:700; color:#0f9f90; text-transform:uppercase; letter-spacing:0.3px; border-bottom:1.5px solid #0f9f90; padding-bottom:1px; margin-bottom:2px; width:fit-content; line-height:1;">With solar</div>
+                            
+                            <div>
+                                <div style="display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; line-height:1.1;">
+                                    <div id="uMonthlyAfter" style="font-size:11.5px; font-weight:800; color:#0e9e90;">—</div>
+                                    <div id="uMonthlyPct" style="font-size:8px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
+                                </div>
+                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">First year average</div>
+                            </div>
+                            
+                            <div>
+                                <div style="display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; line-height:1.1;">
+                                    <div id="uAnnualAfter" style="font-size:10.5px; font-weight:800; color:#0e9e90;">—</div>
+                                    <div id="uAnnualPct" style="font-size:8px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
+                                </div>
+                                <div id="uSavingsNote" style="font-size:7px; color:var(--text-muted); margin-top:1px; font-weight:600; line-height:1;">Est. annual savings —</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1095,6 +1157,56 @@
                 parts.push(`<text x="${(W-pR+3)}" y="${(pT-5)}" fill="rgba(180,220,235,0.45)" font-size="5.5" font-family="Arial,sans-serif" text-anchor="start">kWh</text>`);
 
                 container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;">${parts.join('')}</svg>`;
+            })();
+
+            // ============================================================
+            // UTILITY COSTS CARD POPULATION
+            // ============================================================
+            (function populateUtilityCosts() {
+                const financials = yieldData.financials || {};
+                const beforeSolarTotal = parseFloat(financials.beforeSolarTotal) || 0;
+                const withSolarTotal = parseFloat(financials.withSolarTotal) || 0;
+                const annualSavings = parseFloat(financials.annualSavings) || 0;
+
+                const beforeSolarMonthly = beforeSolarTotal / 12;
+                const withSolarMonthly = withSolarTotal / 12;
+
+                const savingsPct = beforeSolarTotal > 0 ? (annualSavings / beforeSolarTotal) * 100 : 0;
+
+                // Formatter helper
+                const formatVal = (val) => {
+                    const isCredit = val < 0;
+                    const absVal = Math.abs(val);
+                    const formattedNum = absVal.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    return `$${formattedNum}${isCredit ? ' CR' : ''}`;
+                };
+
+                const formatSavingsPct = (pct) => {
+                    const roundedPct = Math.round(pct);
+                    return `↓ ${roundedPct}%`;
+                };
+
+                // Populating before solar
+                setText('uMonthlyBefore', formatVal(beforeSolarMonthly));
+                setText('uAnnualBefore', formatVal(beforeSolarTotal));
+
+                // Populating with solar
+                setText('uMonthlyAfter', formatVal(withSolarMonthly));
+                setText('uMonthlyPct', formatSavingsPct(savingsPct));
+
+                setText('uAnnualAfter', formatVal(withSolarTotal));
+                setText('uAnnualPct', formatSavingsPct(savingsPct));
+
+                const uSavingsNote = document.getElementById('uSavingsNote');
+                if (uSavingsNote) {
+                    uSavingsNote.textContent = `Est. annual savings $${annualSavings.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`;
+                }
             })();
         }
     </script>

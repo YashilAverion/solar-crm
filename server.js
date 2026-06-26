@@ -2175,7 +2175,7 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         const withSolarAnnualSupply = supplyChargeDay * 365;
         const withSolarAnnualEnergy = gridImport * electricityUnitRate;
         const withSolarFiTCredit = exportedSolar * feedInTariff;
-        const withSolarAnnualTotal = Math.max(0, withSolarAnnualSupply + withSolarAnnualEnergy - withSolarFiTCredit);
+        const withSolarAnnualTotal = withSolarAnnualSupply + withSolarAnnualEnergy - withSolarFiTCredit;
 
         const annualSavings = Math.max(0, beforeSolarAnnualTotal - withSolarAnnualTotal);
 
