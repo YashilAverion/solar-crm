@@ -235,7 +235,7 @@
             border-right: 12px solid var(--accent);
         }
 
-        /* Specs section styling */
+        /* Specs section styling (3 column horizontal boxes) */
         .specs-title {
             font-size: 9.5px;
             font-weight: 700;
@@ -246,24 +246,26 @@
             padding-bottom: 2px;
         }
         .specs-grid {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
             overflow: hidden;
         }
         .spec-card {
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 10px;
+            border-radius: 5px;
+            padding: 5px 6px;
             background: var(--bg-light);
             display: flex;
+            flex-direction: row;
             align-items: center;
-            gap: 10px;
-            min-height: 38px;
+            justify-content: flex-start;
+            gap: 6px;
+            min-height: 40px;
         }
         .spec-icon-box {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             background: var(--teal-light);
             border: 1px solid rgba(31,95,91,0.15);
             border-radius: 50%;
@@ -271,25 +273,28 @@
             align-items: center;
             justify-content: center;
             color: var(--teal);
-            font-size: 12px;
+            font-size: 10.5px;
             flex-shrink: 0;
         }
         .spec-content {
             display: flex;
             flex-direction: column;
-            line-height: 1.25;
+            align-items: flex-start;
+            line-height: 1.15;
+            min-width: 0;
         }
         .spec-label {
-            font-size: 7.5px;
+            font-size: 6.5px;
             text-transform: uppercase;
             color: var(--text-muted);
             font-weight: 600;
             letter-spacing: 0.2px;
         }
         .spec-value {
-            font-size: 10px;
+            font-size: 8.5px;
             font-weight: 700;
             color: var(--text-dark);
+            word-break: break-word;
         }
 
         .quote-note-text {
@@ -480,10 +485,6 @@
                         <span>Special Discount</span>
                         <strong id="lblDiscount" style="color:var(--accent);">-</strong>
                     </div>
-                    <div class="pricing-row">
-                        <span>Other / Surcharges</span>
-                        <strong>$0.00</strong>
-                    </div>
 
                     <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px;">
                         <span style="font-size:9px; font-weight:600;">Less STC Panels Rebate</span>
@@ -514,7 +515,7 @@
                 </div>
             </div>
 
-            <!-- Right Col: Specs dynamically represented in horizontal cards -->
+            <!-- Right Col: Specs dynamically represented in horizontal cards (3 columns) -->
             <div class="right-col">
                 <div class="specs-title">Property &amp; Installation Specifications</div>
                 <div class="specs-grid" id="specsGrid">
@@ -784,7 +785,7 @@
             setText('lblDeposit', `-$${deposit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             setText('lblBalanceDue', `$${balanceDue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
-            // Specs right column horizontal cards population
+            // Specs right column horizontal cards population (3 columns)
             const specsGrid = document.getElementById('specsGrid');
             if (specsGrid) {
                 specsGrid.innerHTML = '';
