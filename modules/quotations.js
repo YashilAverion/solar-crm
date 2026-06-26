@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const { requireAuth } = require('../helpers');
+const puppeteer = require('puppeteer');
 
 // Helper to query single row as Promise
 function dbGet(sql, params = []) {
@@ -693,6 +694,818 @@ router.post('/calculate', requireAuth, async (req, res) => {
     } catch (err) {
         console.error("Calculator logic error:", err);
         res.status(500).json({ error: "Calculations error: " + err.message });
+    }
+});
+
+// ── HELPER IRR FUNCTION ──────────────────────────────────────
+function calculateIRR(cashFlows) {
+    if (!cashFlows || cashFlows.length === 0) return 0;
+    const hasNegative = cashFlows.some(cf => cf < 0);
+    const hasPositive = cashFlows.some(cf => cf > 0);
+    if (!hasNegative || !hasPositive) return 0;
+
+    let guess = 0.1;
+    const maxIterations = 100;
+    const precision = 1e-6;
+    
+    for (let i = 0; i < maxIterations; i++) {
+        let npv = 0;
+        let dNpv = 0;
+        for (let t = 0; t < cashFlows.length; t++) {
+            const factor = Math.pow(1 + guess, t);
+            npv += cashFlows[t] / factor;
+            if (t > 0) {
+                dNpv -= t * cashFlows[t] / (factor * (1 + guess));
+            }
+        }
+        
+        if (Math.abs(dNpv) < 1e-12) break;
+        
+        const nextGuess = guess - npv / dNpv;
+        if (Math.abs(nextGuess - guess) < precision) {
+            if (isNaN(nextGuess) || nextGuess === Infinity || nextGuess === -Infinity) {
+                return 0;
+            }
+            return nextGuess;
+        }
+        guess = nextGuess;
+    }
+    return isNaN(guess) ? 0 : guess;
+}
+
+// ── GET PREVIEW DATA FOR QUOTATION TEMPLATE ──────────────────
+router.get('/:id/preview-data', async (req, res) => {
+    try {
+        const leadId = req.params.id;
+        const lead = await dbGet("SELECT * FROM leads WHERE id = ?", [leadId]);
+        if (!lead) return res.status(404).json({ success: false, error: 'Lead not found' });
+
+        let eng = {};
+        try {
+            if (lead.engineering_details) {
+                eng = JSON.parse(lead.engineering_details);
+            }
+        } catch (e) {
+            console.error("Error parsing engineering details:", e);
+        }
+
+        const postcode = (lead.postcode || '').trim() || '6000';
+        const state = (lead.state || 'WA').toUpperCase().trim();
+        const products = eng.products || [];
+        const blackout = eng.battery_blackout || 'No';
+        let phase = eng.phase || lead.electricity_phase || '1';
+        if (phase) phase = phase.toString().trim().charAt(0);
+        if (!['1', '2', '3'].includes(phase)) phase = '1';
+
+        const house_storey = eng.house_storey || '';
+        const roof_type = eng.roof_type || '';
+        const roof_angle = eng.roof_angle || '';
+        const panel_install_type = eng.panel_install_type || '';
+        const battery_install_type = eng.battery_install_type || '';
+        const battery_location = eng.battery_location || '';
+        const type_of_lead = lead.type_of_lead || '';
+        const site_visit_req = eng.site_visit_req || 'No';
+        const vpp_rebate = eng.vpp_rebate || 'No';
+        const sellingPrice = parseFloat(eng.selling_price) || 0;
+
+        // --- 1. PRICING & REBATES CALCULATIONS ---
+        const dbCharges = await dbAll(
+            "SELECT charge_name, rate, state FROM installation_charge_items WHERE (state = ? OR state = 'WA') AND is_active = 'Yes'",
+            [state]
+        );
+        const chargeRates = {};
+        dbCharges.forEach(c => {
+            if (!chargeRates[c.charge_name] || c.state === state) {
+                chargeRates[c.charge_name] = parseFloat(c.rate) || 0;
+            }
+        });
+
+        let totalProductCost = 0;
+        let totalPanelKw = 0;
+        let totalBatteryKwh = 0;
+        let hasExtraRoofInstallation = false;
+        const productsBreakdown = [];
+
+        if (products && Array.isArray(products) && products.length > 0) {
+            for (const item of products) {
+                const qty = parseFloat(item.qty) || 0;
+                if (qty <= 0) continue;
+
+                let dbProduct = null;
+                if (item.code) {
+                    dbProduct = await dbGet(
+                        "SELECT prod_name, purchase_price, purchase_price_ex_gst, panels_capacity_w, usable_battery_kwh, nominal_battery_capacity_kwh, product_category, inv_mppt FROM products WHERE stock_code = ? AND product_status = 'Active'",
+                        [item.code.trim()]
+                    );
+                }
+
+                if (dbProduct) {
+                    const priceIncGst = parseFloat(dbProduct.purchase_price) || (parseFloat(dbProduct.purchase_price_ex_gst) * 1.1) || 0;
+                    const productTotal = priceIncGst * qty;
+                    totalProductCost += productTotal;
+
+                    productsBreakdown.push({
+                        type: dbProduct.product_category || item.type,
+                        name: dbProduct.prod_name || item.name,
+                        code: item.code ? item.code.trim() : '',
+                        qty: qty,
+                        rate: priceIncGst,
+                        total: productTotal
+                    });
+
+                    if (dbProduct.product_category === 'Panel') {
+                        const capacityW = parseFloat(item.size) || parseFloat(dbProduct.panels_capacity_w) || 0;
+                        totalPanelKw += (capacityW * qty) / 1000;
+                    } else if (dbProduct.product_category === 'Battery') {
+                        const capacityKwh = parseFloat(item.kw) || parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
+                        totalBatteryKwh += capacityKwh * qty;
+                    } else if (dbProduct.product_category === 'Inverter') {
+                        const mpptCount = parseInt(dbProduct.inv_mppt) || 0;
+                        if (mpptCount > 2) {
+                            hasExtraRoofInstallation = true;
+                        }
+                    }
+                } else {
+                    const itemType = (item.type || '').trim();
+                    const itemSize = parseFloat(item.size) || parseFloat(item.kw) || 0;
+                    const itemKw = parseFloat(item.kw) || 0;
+
+                    if (item.name && item.name.trim()) {
+                        productsBreakdown.push({
+                            type: itemType || 'Unknown',
+                            name: item.name,
+                            code: item.code || '—',
+                            qty: qty,
+                            rate: 0,
+                            total: 0
+                        });
+
+                        if (itemType === 'Panel' && itemSize > 0) {
+                            totalPanelKw += (itemSize * qty) / 1000;
+                        } else if (itemType === 'Panel' && itemKw > 0) {
+                            totalPanelKw += itemKw * qty;
+                        } else if (itemType === 'Battery' && itemSize > 0) {
+                            totalBatteryKwh += itemSize * qty;
+                        } else if (itemType === 'Battery' && itemKw > 0) {
+                            totalBatteryKwh += itemKw * qty;
+                        }
+                    }
+                }
+            }
+        }
+
+        let totalInstallationFee = 0;
+        const installationsBreakdown = [];
+
+        // A. Panels PV
+        if (totalPanelKw > 0) {
+            const solarPVRate = chargeRates['Installed Solar PV System with 1 X Inverter'] !== undefined ? chargeRates['Installed Solar PV System with 1 X Inverter'] : 0.26;
+            const solarPVRateIncGst = solarPVRate * 1.10;
+            const panelInstallationCharge = totalPanelKw * 1000 * solarPVRateIncGst;
+            totalInstallationFee += panelInstallationCharge;
+            installationsBreakdown.push({
+                name: "Panels PV Installation",
+                formula: `${(totalPanelKw * 1000).toFixed(0)} W X $${solarPVRateIncGst.toFixed(3)}`,
+                total: parseFloat(panelInstallationCharge.toFixed(2))
+            });
+        }
+        
+        // B. Battery Installation
+        if (totalBatteryKwh > 0) {
+            if (totalBatteryKwh <= 30) {
+                const batteryBaseRate = chargeRates['Battery Installation Upto 30 kWh'] !== undefined ? chargeRates['Battery Installation Upto 30 kWh'] : 2350.00;
+                const batteryBaseRateIncGst = batteryBaseRate * 1.10;
+                totalInstallationFee += batteryBaseRateIncGst;
+                installationsBreakdown.push({
+                    name: "Battery Installation Upto 30 kWh",
+                    formula: `Flat Rate`,
+                    total: parseFloat(batteryBaseRateIncGst.toFixed(2))
+                });
+            } else if (totalBatteryKwh <= 42) {
+                const batteryMidRate = chargeRates['Battery Installation 30 kWh to 42 kWh'] !== undefined ? chargeRates['Battery Installation 30 kWh to 42 kWh'] : 3100.00;
+                const batteryMidRateIncGst = batteryMidRate * 1.10;
+                totalInstallationFee += batteryMidRateIncGst;
+                installationsBreakdown.push({
+                    name: "Battery Installation 30 kWh to 42 kWh",
+                    formula: `Flat Rate`,
+                    total: parseFloat(batteryMidRateIncGst.toFixed(2))
+                });
+            } else {
+                const batteryMidRate = chargeRates['Battery Installation 30 kWh to 42 kWh'] !== undefined ? chargeRates['Battery Installation 30 kWh to 42 kWh'] : 3100.00;
+                const batteryMidRateIncGst = batteryMidRate * 1.10;
+                const batteryExcessRate = chargeRates['Battery Installation Above 42 kWh - Per kWh'] !== undefined ? chargeRates['Battery Installation Above 42 kWh - Per kWh'] : 100.00;
+                const batteryExcessRateIncGst = batteryExcessRate * 1.10;
+                
+                const batteryInstallationCharge = batteryMidRateIncGst;
+                const batteryExcessCharge = (totalBatteryKwh - 42) * batteryExcessRateIncGst;
+                totalInstallationFee += batteryInstallationCharge + batteryExcessCharge;
+                
+                installationsBreakdown.push({
+                    name: "Battery Installation 30 kWh to 42 kWh",
+                    formula: `Flat Rate`,
+                    total: parseFloat(batteryInstallationCharge.toFixed(2))
+                });
+                installationsBreakdown.push({
+                    name: "Battery Installation Above 42 kWh",
+                    formula: `${(totalBatteryKwh - 42).toFixed(2)} kWh X $${batteryExcessRateIncGst.toFixed(2)}`,
+                    total: parseFloat(batteryExcessCharge.toFixed(2))
+                });
+            }
+        }
+
+        // C. Battery Backup / Blackout Protection
+        if (blackout === 'Yes') {
+            const backupRate = chargeRates['Battery Backup / Blackout Protection'] !== undefined ? chargeRates['Battery Backup / Blackout Protection'] : 1200.00;
+            const backupRateIncGst = backupRate * 1.10;
+            totalInstallationFee += backupRateIncGst;
+            installationsBreakdown.push({
+                name: "Battery Backup / Blackout Protection",
+                formula: `Flat Rate`,
+                total: parseFloat(backupRateIncGst.toFixed(2))
+            });
+        }
+
+        // D. Smart Meter (Note: bypass if battery present)
+        if (totalPanelKw > 0 && totalBatteryKwh === 0) {
+            const isMultiPhase = phase === '2' || phase === '3';
+            const smartMeterName = isMultiPhase ? 'Export Control Device 3 Phase / Smart Meter' : 'Export Control Device 1 Phase / Smart Meter';
+            const smartMeterRate = chargeRates[smartMeterName] !== undefined ? chargeRates[smartMeterName] : (isMultiPhase ? 250.00 : 150.00);
+            const smartMeterRateIncGst = smartMeterRate * 1.10;
+            totalInstallationFee += smartMeterRateIncGst;
+            installationsBreakdown.push({
+                name: `Smart Meter (${phase} Phase)`,
+                formula: `Flat Rate`,
+                total: parseFloat(smartMeterRateIncGst.toFixed(2))
+            });
+        }
+
+        // E. Main Switch (Note: bypass if battery present)
+        if (totalPanelKw > 0 && totalBatteryKwh === 0) {
+            const mainSwitchRate = chargeRates['Main Switch 1P / 3P'] !== undefined ? chargeRates['Main Switch 1P / 3P'] : 109.09;
+            const mainSwitchRateIncGst = mainSwitchRate * 1.10;
+            totalInstallationFee += mainSwitchRateIncGst;
+            installationsBreakdown.push({
+                name: "Main Switch 1P / 3P",
+                formula: `Flat Rate`,
+                total: parseFloat(mainSwitchRateIncGst.toFixed(2))
+            });
+        }
+
+        // G. Storeys
+        if (house_storey === 'Double' || house_storey === 'Multi') {
+            const doubleStoreyRate = chargeRates['Double House Storey'] !== undefined ? chargeRates['Double House Storey'] : 1000.00;
+            const doubleStoreyRateIncGst = doubleStoreyRate * 1.10;
+            totalInstallationFee += doubleStoreyRateIncGst;
+            installationsBreakdown.push({
+                name: "Double/Multi Storey Installation",
+                formula: `Flat Rate`,
+                total: parseFloat(doubleStoreyRateIncGst.toFixed(2))
+            });
+        }
+
+        // H. Roof type
+        if (roof_type === 'Clay' || roof_type === 'Terracotta') {
+            const terracottaRate = chargeRates['Terra Cotta or Clay Tiles'] !== undefined ? chargeRates['Terra Cotta or Clay Tiles'] : 100.00;
+            const terracottaRateIncGst = terracottaRate * 1.10;
+            totalInstallationFee += terracottaRateIncGst;
+            installationsBreakdown.push({
+                name: "Terra Cotta/Clay Tiles Installation",
+                formula: `Flat Rate`,
+                total: parseFloat(terracottaRateIncGst.toFixed(2))
+            });
+        }
+
+        // I. Roof angle
+        if (roof_angle === '24° to 30°') {
+            const steelRoofRate = chargeRates['Steel Roof Over 28 Degree'] !== undefined ? chargeRates['Steel Roof Over 28 Degree'] : 200.00;
+            const steelRoofRateIncGst = steelRoofRate * 1.10;
+            totalInstallationFee += steelRoofRateIncGst;
+            installationsBreakdown.push({
+                name: "Steel Roof Over 28 Degree Installation",
+                formula: `Flat Rate`,
+                total: parseFloat(steelRoofRateIncGst.toFixed(2))
+            });
+        }
+
+        // J. Panel Install capacity brackets
+        if (totalPanelKw > 0 && (panel_install_type === 'New' || panel_install_type === 'Add-On' || panel_install_type === 'Replacement')) {
+            let extraChargeName = '';
+            let fallbackRate = 0;
+            if (totalPanelKw <= 6.6) {
+                extraChargeName = 'Extra upto 6.6 kW';
+                fallbackRate = 500.00;
+            } else if (totalPanelKw <= 10.0) {
+                extraChargeName = 'Extra upto 10 kW';
+                fallbackRate = 1000.00;
+            } else if (totalPanelKw <= 15.0) {
+                extraChargeName = 'Extra upto 15 kW';
+                fallbackRate = 1200.00;
+            } else if (totalPanelKw <= 20.0) {
+                extraChargeName = 'Extra upto 20 kW';
+                fallbackRate = 1500.00;
+            } else if (totalPanelKw <= 25.0) {
+                extraChargeName = 'Extra upto 25 kW';
+                fallbackRate = 1800.00;
+            } else if (totalPanelKw <= 30.0) {
+                extraChargeName = 'Extra upto 30 kW';
+                fallbackRate = 1800.00;
+            }
+
+            if (extraChargeName) {
+                const extraRate = chargeRates[extraChargeName] !== undefined ? chargeRates[extraChargeName] : fallbackRate;
+                const extraRateIncGst = extraRate * 1.10;
+                totalInstallationFee += extraRateIncGst;
+                installationsBreakdown.push({
+                    name: `${extraChargeName} (${panel_install_type} Panel)`,
+                    formula: `Flat Rate`,
+                    total: parseFloat(extraRateIncGst.toFixed(2))
+                });
+            }
+        }
+
+        if (panel_install_type === 'Replacement') {
+            const removalRate = chargeRates['Existing System Removal and Disposal'] !== undefined ? chargeRates['Existing System Removal and Disposal'] : 300.00;
+            const removalRateIncGst = removalRate * 1.10;
+            totalInstallationFee += removalRateIncGst;
+            installationsBreakdown.push({
+                name: "Existing System Removal and Disposal",
+                formula: `Flat Rate`,
+                total: parseFloat(removalRateIncGst.toFixed(2))
+            });
+        }
+
+        // K. AC Couple Rewiring
+        if (battery_install_type === 'AC Couple') {
+            const rewiringRate = chargeRates['Rewiring'] !== undefined ? chargeRates['Rewiring'] : 600.00;
+            const rewiringRateIncGst = rewiringRate * 1.10;
+            totalInstallationFee += rewiringRateIncGst;
+            installationsBreakdown.push({
+                name: "Rewiring",
+                formula: `Flat Rate`,
+                total: parseFloat(rewiringRateIncGst.toFixed(2))
+            });
+        }
+
+        // L. Battery Location
+        if (battery_location === 'Inside') {
+            const bollardRate = chargeRates['Bollard Installation Per Unit'] !== undefined ? chargeRates['Bollard Installation Per Unit'] : 150.00;
+            const bollardRateIncGst = bollardRate * 1.10;
+            const bollardTotal = bollardRateIncGst * 2;
+            totalInstallationFee += bollardTotal;
+            installationsBreakdown.push({
+                name: "Bollard Installation (Qty 2)",
+                formula: `2 X $${bollardRateIncGst.toFixed(2)}`,
+                total: parseFloat(bollardTotal.toFixed(2))
+            });
+        } else if (battery_location === 'Outside') {
+            const enclosureRate = chargeRates['Weather Enclosure 12 Pole'] !== undefined ? chargeRates['Weather Enclosure 12 Pole'] : 250.00;
+            const enclosureRateIncGst = enclosureRate * 1.10;
+            totalInstallationFee += enclosureRateIncGst;
+            installationsBreakdown.push({
+                name: "Weather Enclosure 12 Pole",
+                formula: `Flat Rate`,
+                total: parseFloat(enclosureRateIncGst.toFixed(2))
+            });
+        }
+
+        // M. Lead type Inverter Replacement
+        if (type_of_lead === 'Battery') {
+            const invReplacementRate = chargeRates['Inverter Replacement'] !== undefined ? chargeRates['Inverter Replacement'] : 150.00;
+            const invReplacementRateIncGst = invReplacementRate * 1.10;
+            totalInstallationFee += invReplacementRateIncGst;
+            installationsBreakdown.push({
+                name: "Inverter Replacement",
+                formula: `Flat Rate`,
+                total: parseFloat(invReplacementRateIncGst.toFixed(2))
+            });
+        }
+
+        // N. Site Inspection
+        if (site_visit_req === 'Yes') {
+            const siteInspectionRate = chargeRates['Site Inspection'] !== undefined ? chargeRates['Site Inspection'] : 150.00;
+            const siteInspectionRateIncGst = siteInspectionRate * 1.10;
+            totalInstallationFee += siteInspectionRateIncGst;
+            installationsBreakdown.push({
+                name: "Site Inspection",
+                formula: `Flat Rate`,
+                total: parseFloat(siteInspectionRateIncGst.toFixed(2))
+            });
+        }
+
+        // O. Battery Stack
+        if (totalBatteryKwh > 20) {
+            const secondStackRate = chargeRates['Add on 2nd Stack of Battery (Suitable according to Height)'] !== undefined
+                ? chargeRates['Add on 2nd Stack of Battery (Suitable according to Height)']
+                : 250.00;
+            const secondStackRateIncGst = secondStackRate * 1.10;
+            totalInstallationFee += secondStackRateIncGst;
+            installationsBreakdown.push({
+                name: 'Add on 2nd Stack of Battery',
+                formula: `Flat Rate`,
+                total: parseFloat(secondStackRateIncGst.toFixed(2))
+            });
+        }
+
+        // P. Extra Roof
+        if (hasExtraRoofInstallation) {
+            const extraRoofRate = chargeRates['Extra Roof Installation'] !== undefined ? chargeRates['Extra Roof Installation'] : 100.00;
+            const extraRoofRateIncGst = extraRoofRate * 1.10;
+            totalInstallationFee += extraRoofRateIncGst;
+            installationsBreakdown.push({
+                name: "Extra Roof Installation",
+                formula: `Flat Rate`,
+                total: parseFloat(extraRoofRateIncGst.toFixed(2))
+            });
+        }
+
+        // F. Travel
+        let travelDistance = 0;
+        let travelCharges = 0;
+        if (lead.project_number) {
+            const installation = await dbGet("SELECT travel_distance_km FROM installations WHERE project_number = ?", [lead.project_number]);
+            if (installation && installation.travel_distance_km) {
+                travelDistance = parseFloat(installation.travel_distance_km) || 0;
+            }
+        }
+        const travelRate = chargeRates['Travel Charges'] !== undefined ? chargeRates['Travel Charges'] : 1.30;
+        const travelRateIncGst = travelRate * 1.10;
+        const billableDistance = Math.max(0, travelDistance - 50);
+        travelCharges = billableDistance * travelRateIncGst;
+        if (travelCharges > 0) {
+            installationsBreakdown.push({
+                name: "Travel Charges",
+                formula: `${billableDistance.toFixed(0)} km X $${travelRateIncGst.toFixed(2)}`,
+                total: parseFloat(travelCharges.toFixed(2))
+            });
+        }
+
+        // Rebates
+        let panelRebate = 0;
+        let batteryRebate = 0;
+        let zone = 3;
+        let ratings = 1.1;
+        let deemingPeriod = 5;
+        let actualRate = 38.00;
+        
+        let batteryRatings = 0;
+        const rebatesBreakdown = [];
+
+        if (totalPanelKw > 0) {
+            const stcRow = await dbGet(
+                "SELECT zone, ratings, deeming_period FROM stc_master WHERE (type = 'Solar PV' OR type = 'Solar' OR type IS NULL OR type = '') AND (postcode = ? OR (state = ? AND (postcode IS NULL OR postcode = ''))) LIMIT 1",
+                [postcode, state]
+            );
+            if (stcRow) {
+                zone = stcRow.zone || zone;
+                ratings = stcRow.ratings || ratings;
+                deemingPeriod = stcRow.deeming_period || deemingPeriod;
+            }
+            const rebateRow = await dbGet(
+                "SELECT actual_rate FROM rebate_live_master_v2 WHERE (zone = ? OR state = ?) AND status = 'Active' LIMIT 1",
+                [zone, state]
+            );
+            if (rebateRow) {
+                actualRate = rebateRow.actual_rate || actualRate;
+            }
+            const panelStcQty = totalPanelKw * ratings * deemingPeriod;
+            panelRebate = panelStcQty * actualRate;
+            rebatesBreakdown.push({
+                name: "STC Panels",
+                formula: `${panelStcQty.toFixed(2)} Qty X $${actualRate.toFixed(2)}`,
+                total: parseFloat(panelRebate.toFixed(2))
+            });
+        }
+
+        if (totalBatteryKwh > 0) {
+            const batStcRow = await dbGet(
+                "SELECT zone, ratings, deeming_period FROM stc_master WHERE type = 'Battery' AND (postcode = ? OR (state = ? AND (postcode IS NULL OR postcode = ''))) LIMIT 1",
+                [postcode, state]
+            );
+            if (batStcRow) {
+                batteryRatings = batStcRow.ratings || 0;
+                const eligibleCapacity = Math.min(totalBatteryKwh, 50);
+                const slab1 = Math.min(eligibleCapacity, 14);
+                const slab2 = Math.max(0, Math.min(eligibleCapacity, 28) - 14);
+                const slab3 = Math.max(0, eligibleCapacity - 28);
+                const rawStcQty = (slab1 * batteryRatings * 1.0) + (slab2 * batteryRatings * 0.6) + (slab3 * batteryRatings * 0.15);
+                const batteryStcQty = Math.floor(rawStcQty);
+                batteryRebate = batteryStcQty * actualRate;
+
+                rebatesBreakdown.push({
+                    name: "STC Battery",
+                    formula: `${batteryStcQty.toFixed(2)} Qty X $${actualRate.toFixed(2)}`,
+                    total: parseFloat(batteryRebate.toFixed(2))
+                });
+            }
+        }
+
+        if (vpp_rebate === 'Yes') {
+            rebatesBreakdown.push({
+                name: "VPP Rebate",
+                formula: `Flat Rate`,
+                total: 1300.00
+            });
+        }
+
+        const totalRebates = panelRebate + batteryRebate + (vpp_rebate === 'Yes' ? 1300.00 : 0);
+
+        // Margins
+        let customerArea = lead.area || 'Metro';
+        let pvMargin = 0;
+        let batteryMargin = 0;
+        const marginsBreakdown = [];
+
+        let marginRows = await dbAll(
+            "SELECT margin_type, margins, state, area FROM margin_master_v2 WHERE (state = ? OR state = 'WA') AND (area = ? OR area = 'Metro')",
+            [state, customerArea]
+        );
+        const hasCustomerStateRows = marginRows.some(row => row.state === state);
+        if (hasCustomerStateRows) {
+            marginRows = marginRows.filter(row => row.state === state);
+        } else {
+            marginRows = marginRows.filter(row => row.state === 'WA');
+        }
+        const hasCustomerAreaRows = marginRows.some(row => row.area === customerArea);
+        if (hasCustomerAreaRows) {
+            marginRows = marginRows.filter(row => row.area === customerArea);
+        } else {
+            marginRows = marginRows.filter(row => row.area === 'Metro');
+        }
+
+        marginRows.forEach(row => {
+            try {
+                const bracketArray = JSON.parse(row.margins);
+                if (Array.isArray(bracketArray)) {
+                    bracketArray.forEach(bracket => {
+                        const valFrom = parseFloat(bracket.from);
+                        const valTo = parseFloat(bracket.to);
+                        const marginVal = parseFloat(bracket.margin);
+
+                        if (row.margin_type === 'PV' && totalPanelKw > 0) {
+                            const checkVal = Math.round(totalPanelKw * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) {
+                                pvMargin = marginVal;
+                            }
+                        } else if (row.margin_type === 'Battery' && totalBatteryKwh > 0) {
+                            const checkVal = Math.round(totalBatteryKwh * 10) / 10;
+                            if (checkVal >= valFrom && checkVal <= valTo) {
+                                batteryMargin = marginVal;
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error parsing margins JSON bracket:", e);
+            }
+        });
+
+        if (pvMargin > 0) marginsBreakdown.push({ name: "PV System Margin", total: parseFloat(pvMargin.toFixed(2)) });
+        if (batteryMargin > 0) marginsBreakdown.push({ name: "Battery System Margin", total: parseFloat(batteryMargin.toFixed(2)) });
+
+        const totalMargin = pvMargin + batteryMargin;
+        const grandTotal = totalProductCost + totalInstallationFee + travelCharges;
+        const calcSellingPrice = (grandTotal + totalMargin) - totalRebates;
+        const finalSellingPrice = sellingPrice || calcSellingPrice;
+        const deposit = finalSellingPrice * 0.10;
+
+        const pricing = {
+            grandTotal: parseFloat(grandTotal.toFixed(2)),
+            rebates: parseFloat(totalRebates.toFixed(2)),
+            sellingPrice: parseFloat(finalSellingPrice.toFixed(2)),
+            deposit: parseFloat(deposit.toFixed(2)),
+            marginVal: parseFloat(totalMargin.toFixed(2)),
+            details: {
+                totalProductCost: parseFloat(totalProductCost.toFixed(2)),
+                totalInstallationFee: parseFloat(totalInstallationFee.toFixed(2)),
+                travelCharges: parseFloat(travelCharges.toFixed(2)),
+                travelDistance: parseFloat(travelDistance.toFixed(2)),
+                totalPanelKw: parseFloat(totalPanelKw.toFixed(4)),
+                totalBatteryKwh: parseFloat(totalBatteryKwh.toFixed(4)),
+                stcZone: zone,
+                stcRatings: ratings,
+                stcDeemingPeriod: deemingPeriod,
+                rebateRate: actualRate,
+                pvMargin: parseFloat(pvMargin.toFixed(2)),
+                batteryMargin: parseFloat(batteryMargin.toFixed(2)),
+                productsBreakdown,
+                installationsBreakdown,
+                rebatesBreakdown,
+                marginsBreakdown
+            }
+        };
+
+        // --- 2. YIELD & ROI CALCULATIONS ---
+        const prefix2 = postcode.substring(0, 2);
+        let yieldFactors = await dbGet("SELECT * FROM postcode_yield_factors WHERE postcode_prefix = ?", [prefix2]);
+        if (!yieldFactors) {
+            yieldFactors = await dbGet("SELECT * FROM postcode_yield_factors WHERE postcode_prefix = 'default'");
+        }
+        if (!yieldFactors) {
+            yieldFactors = {
+                jan: 5.5, feb: 5.2, mar: 4.5, apr: 3.8, may: 3.0, jun: 2.5,
+                jul: 2.7, aug: 3.2, sep: 4.0, oct: 4.8, nov: 5.2, dec: 5.5,
+                provider: 'Default'
+            };
+        }
+
+        const providerName = yieldFactors.provider || 'Default';
+        let utilityRates = await dbGet("SELECT * FROM utility_rate_assumptions WHERE provider = ?", [providerName]);
+        if (!utilityRates) {
+            utilityRates = await dbGet("SELECT * FROM utility_rate_assumptions WHERE provider = 'Default'");
+        }
+        if (!utilityRates) {
+            utilityRates = {
+                supply_charge_per_day: 1.00,
+                electricity_unit_rate: 0.28,
+                feed_in_tariff: 0.05
+            };
+        }
+
+        const orientation = eng.orientation || 'North';
+        const degradationFactor = 0.87;
+        const orientationMultipliers = {
+            'North': 1.0, 'East': 0.85, 'West': 0.85, 'South': 0.60,
+            'North-East': 0.93, 'North-West': 0.93
+        };
+        const orientMult = orientationMultipliers[orientation] || 1.0;
+
+        const monthsList = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        const monthlyProduction = [];
+        let annualGeneration = 0;
+
+        monthsList.forEach((m, idx) => {
+            const factor = parseFloat(yieldFactors[m]) || 5.0;
+            const dailyAvg = totalPanelKw * factor * orientMult * degradationFactor;
+            monthlyProduction.push({
+                month: m.toUpperCase(),
+                dailyAverage: parseFloat(dailyAvg.toFixed(2)),
+                monthlyTotal: parseFloat((dailyAvg * daysInMonths[idx]).toFixed(2))
+            });
+            annualGeneration += dailyAvg * daysInMonths[idx];
+        });
+
+        const supplyChargeDay = utilityRates.supply_charge_per_day;
+        const electricityUnitRate = utilityRates.electricity_unit_rate;
+        const feedInTariff = utilityRates.feed_in_tariff;
+
+        const annualUsageKwh = parseFloat(eng.annualUsageKwh) || 6500;
+        const beforeSolarAnnualSupply = supplyChargeDay * 365;
+        const beforeSolarAnnualEnergy = annualUsageKwh * electricityUnitRate;
+        const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;
+
+        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
+        if (totalBatteryKwh > 0) {
+            const excessSolar = Math.max(0, annualGeneration - selfConsumedSolar);
+            const storedEnergy = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
+            selfConsumedSolar += storedEnergy;
+        }
+        selfConsumedSolar = Math.min(selfConsumedSolar, annualUsageKwh);
+
+        const exportedSolar = Math.max(0, annualGeneration - selfConsumedSolar);
+        const gridImport = Math.max(0, annualUsageKwh - selfConsumedSolar);
+
+        const withSolarAnnualSupply = supplyChargeDay * 365;
+        const withSolarAnnualEnergy = gridImport * electricityUnitRate;
+        const withSolarFiTCredit = exportedSolar * feedInTariff;
+        const withSolarAnnualTotal = Math.max(0, withSolarAnnualSupply + withSolarAnnualEnergy - withSolarFiTCredit);
+
+        const annualSavings = Math.max(0, beforeSolarAnnualTotal - withSolarAnnualTotal);
+
+        const cashFlows = [-finalSellingPrice];
+        const discountRateVal = 0.05;
+        let cumulativeDCF = 0;
+        let paybackPeriod = null;
+
+        for (let t = 1; t <= 20; t++) {
+            const savingsInYearT = annualSavings * Math.pow(1.03, t - 1) * Math.pow(0.995, t - 1);
+            cashFlows.push(savingsInYearT);
+            
+            const dcf = savingsInYearT / Math.pow(1 + discountRateVal, t);
+            if (paybackPeriod === null) {
+                if (cumulativeDCF + dcf >= finalSellingPrice) {
+                    const fraction = (finalSellingPrice - cumulativeDCF) / dcf;
+                    paybackPeriod = t - 1 + fraction;
+                }
+            }
+            cumulativeDCF += dcf;
+        }
+
+        if (paybackPeriod === null) {
+            paybackPeriod = finalSellingPrice / (annualSavings || 1);
+        }
+
+        const npv = cumulativeDCF - finalSellingPrice;
+        const irr = calculateIRR(cashFlows);
+
+        const co2AvoidedKg = annualGeneration * 0.70;
+        const treesPlanted = co2AvoidedKg / 20;
+        const coalAvoidedKg = co2AvoidedKg / 2.86;
+        const fuelAvoidedLiters = co2AvoidedKg / 2.3;
+
+        const yieldData = {
+            summary: {
+                systemSizeKw: parseFloat(totalPanelKw.toFixed(2)),
+                batteryCapacityKwh: parseFloat(totalBatteryKwh.toFixed(2)),
+                postcode,
+                provider: providerName,
+                orientation,
+                annualGenerationKwh: parseFloat(annualGeneration.toFixed(2)),
+                selfConsumptionKwh: parseFloat(selfConsumedSolar.toFixed(2)),
+                exportedSolarKwh: parseFloat(exportedSolar.toFixed(2)),
+                gridImportKwh: parseFloat(gridImport.toFixed(2))
+            },
+            monthlyProduction,
+            financials: {
+                beforeSolarSupply: parseFloat(beforeSolarAnnualSupply.toFixed(2)),
+                beforeSolarEnergy: parseFloat(beforeSolarAnnualEnergy.toFixed(2)),
+                beforeSolarTotal: parseFloat(beforeSolarAnnualTotal.toFixed(2)),
+                withSolarSupply: parseFloat(withSolarAnnualSupply.toFixed(2)),
+                withSolarEnergy: parseFloat(withSolarAnnualEnergy.toFixed(2)),
+                withSolarFiTCredit: parseFloat(withSolarFiTCredit.toFixed(2)),
+                withSolarTotal: parseFloat(withSolarAnnualTotal.toFixed(2)),
+                annualSavings: parseFloat(annualSavings.toFixed(2))
+            },
+            investment: {
+                netSystemCost: parseFloat(finalSellingPrice.toFixed(2)),
+                paybackYears: parseFloat(paybackPeriod.toFixed(1)),
+                roiPercent: parseFloat(((annualSavings / finalSellingPrice) * 100).toFixed(1)),
+                npv: parseFloat(npv.toFixed(2)),
+                irrPercent: parseFloat((irr * 100).toFixed(1))
+            },
+            environmental: {
+                co2AvoidedKg: parseFloat(co2AvoidedKg.toFixed(1)),
+                treesPlanted: parseFloat(treesPlanted.toFixed(1)),
+                coalAvoidedKg: parseFloat(coalAvoidedKg.toFixed(1)),
+                fuelAvoidedLiters: parseFloat(fuelAvoidedLiters.toFixed(1))
+            }
+        };
+
+        res.json({
+            success: true,
+            lead,
+            engineering: eng,
+            pricing,
+            yield: yieldData
+        });
+
+    } catch (err) {
+        console.error("Preview data endpoint error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ── DOWNLOAD PDF QUOTATION ────────────────────────────────────
+router.get('/:id/download-pdf', async (req, res) => {
+    let browser;
+    try {
+        const leadId = req.params.id;
+        const lead = await dbGet("SELECT project_number FROM leads WHERE id = ?", [leadId]);
+        if (!lead) return res.status(404).send('Lead not found');
+
+        // 1. Launch Puppeteer (Server-side rendering)
+        browser = await puppeteer.launch({ 
+            headless: true, 
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
+        });
+        const page = await browser.newPage();
+
+        // 2. Enable request interception to inject secret auth bypass header
+        await page.setRequestInterception(true);
+        page.on('request', interceptedRequest => {
+            const headers = Object.assign({}, interceptedRequest.headers(), {
+                'x-pdf-render-secret': process.env.SESSION_SECRET || 'solar-crm-secret-key-2024'
+            });
+            interceptedRequest.continue({ headers });
+        });
+
+        // 3. Construct local URL
+        const PORT = process.env.PORT || 3000;
+        const quotationUrl = `http://localhost:${PORT}/quotation_template.html?id=${leadId}`;
+
+        // 4. Wait for all network calls to load
+        await page.goto(quotationUrl, { waitUntil: 'networkidle0', timeout: 35000 });
+
+        // 5. Generate PDF
+        const pdfBuffer = await page.pdf({ 
+            format: 'A4', 
+            printBackground: true,
+            margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' }
+        });
+        await browser.close();
+        browser = null;
+
+        // 6. Return PDF stream
+        const filename = `Quotation_${lead.project_number || leadId}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(pdfBuffer);
+
+    } catch (err) {
+        console.error("PDF generation route error:", err);
+        if (browser) await browser.close().catch(() => {});
+        res.status(500).send("Quotation PDF generation failed: " + err.message);
     }
 });
 

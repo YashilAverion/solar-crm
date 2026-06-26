@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar & Storage Proposal - Ares Energy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1c3557;
+            --primary-hover: #16294a;
+            --accent: #e8681e;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+            --teal: #1f5f5b;
+            --teal-light: #eefdfd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-dark);
+            background: #cbd5e1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Page definitions for print & screen preview */
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: #fff;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                margin: 0;
+                padding: 0;
+            }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Action bar for manual view */
+        .action-bar {
+            width: 210mm;
+            margin: 10px auto 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-secondary {
+            background: var(--text-muted);
+        }
+
+        /* --- PAGE 1: COVER PAGE --- */
+        .cover-bg {
+            background-color: var(--teal);
+            height: 100%;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: #fff;
+        }
+
+        .cover-cubes {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 320px;
+            height: auto;
+            opacity: 0.15;
+            z-index: 1;
+        }
+
+        .brand-block {
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo-white {
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            width: 80px;
+            height: 80px;
+            align-items: center;
+            justify-content: center;
+        }
+        .brand-logo-white img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .cover-card {
+            background: #fff;
+            color: var(--text-dark);
+            width: 85%;
+            padding: 45px;
+            margin-top: 60px;
+            z-index: 10;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .cover-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        .cover-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 35px;
+            font-weight: 500;
+        }
+
+        .cover-meta {
+            font-size: 12.5px;
+            line-height: 1.6;
+        }
+        .cover-meta strong {
+            color: var(--primary);
+        }
+
+        .cover-footer {
+            z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 20px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: space-between;
+        }
+        .cover-footer strong {
+            color: #fff;
+        }
+
+        /* --- STANDARD HEADER & FOOTER FOR INSIDE PAGES --- */
+        .page-header {
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .page-header-logo {
+            height: 30px;
+            object-fit: contain;
+        }
+        .page-content {
+            flex: 1;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+        .page-footer {
+            padding: 15px 40px 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .page-number {
+            background: var(--teal);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        /* --- TYPOGRAPHY & LAYOUT UTILITIES --- */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 20px;
+        }
+        .section-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* --- PAGE 2: ABOUT US --- */
+        .about-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+        .about-quote {
+            font-size: 60px;
+            color: rgba(31, 95, 91, 0.15);
+            font-family: serif;
+            position: absolute;
+            right: 40px;
+            top: 150px;
+            line-height: 1;
+        }
+
+        /* --- PAGE 3: PROPOSED LAYOUT --- */
+        .map-container {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 480px;
+            width: 100%;
+            background: #e2e8f0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .map-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .badge-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 40px;
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .badge-row svg, .badge-row img {
+            height: 45px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+
+        /* --- PAGE 4: SPECS & PRODUCTION --- */
+        .chart-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+        .table-specs {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .table-specs th {
+            text-align: left;
+            background: var(--teal);
+            color: #fff;
+            padding: 8px 12px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        .table-specs td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dark);
+        }
+        .table-specs tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+        
+        /* Pricing Cards */
+        .utility-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .utility-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .utility-card h4 {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .utility-card-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        .utility-card-total {
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            margin-top: 8px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* --- PAGE 5: SELF CONSUMPTION & BATTERY FLOW --- */
+        .energy-balance-bar {
+            height: 35px;
+            width: 100%;
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+            margin: 20px 0;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            text-align: center;
+        }
+        .eb-solar { background: var(--teal); display: flex; align-items: center; justify-content: center; }
+        .eb-battery { background: var(--accent); display: flex; align-items: center; justify-content: center; }
+        .eb-utility { background: #64748b; display: flex; align-items: center; justify-content: center; }
+        
+        .flow-diagrams {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .flow-day-section {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            background: var(--bg-light);
+        }
+        .flow-day-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 10px;
+        }
+        .flow-nodes {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            text-align: center;
+        }
+        .flow-node {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .flow-node-active {
+            border-color: var(--teal);
+            box-shadow: 0 0 10px rgba(31,95,91,0.2);
+        }
+        .flow-node-battery-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(232,104,30,0.2);
+        }
+        .flow-node-inactive {
+            opacity: 0.4;
+        }
+        .flow-arrow {
+            flex: 1;
+            height: 2px;
+            background: #cbd5e1;
+            position: relative;
+            margin: 0 10px;
+        }
+        .flow-arrow-active-right::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            border: 5px solid transparent;
+            border-left-color: var(--teal);
+        }
+        .flow-arrow-active-right {
+            background: var(--teal);
+        }
+        .flow-arrow-active-left::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: -4px;
+            border: 5px solid transparent;
+            border-right-color: var(--accent);
+        }
+        .flow-arrow-active-left {
+            background: var(--accent);
+        }
+
+        /* --- PAGE 6: FINANCIAL SUMMARY --- */
+        .financial-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .fin-card {
+            border-radius: 8px;
+            padding: 30px;
+            color: #fff;
+            background: var(--teal);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .fin-card:nth-child(even) {
+            background: var(--primary);
+        }
+        .fin-card-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            opacity: 0.85;
+        }
+        .fin-card-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        .fin-card-desc {
+            font-size: 11px;
+            line-height: 1.5;
+            opacity: 0.8;
+        }
+        .quote-box-testimonial {
+            background: var(--bg-light);
+            border-left: 4px solid var(--teal);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            font-size: 13px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        /* --- PAGE 8: ENVIRONMENTAL ANALYSIS --- */
+        .eco-bg {
+            background: linear-gradient(180deg, rgba(31,95,91,0.02) 0%, rgba(31,95,91,0.1) 100%);
+            border-radius: 12px;
+            padding: 40px;
+            border: 1px solid rgba(31,95,91,0.15);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .eco-card {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+        .eco-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(31, 95, 91, 0.1);
+            color: var(--teal);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .eco-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--teal);
+        }
+        .eco-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* --- PAGE 9: QUOTATION SUMMARY TABLE --- */
+        .table-quote {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        .table-quote th {
+            background: var(--teal);
+            color: #fff;
+            padding: 10px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        .table-quote td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-quote-totals {
+            margin-left: auto;
+            width: 320px;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .table-quote-totals td {
+            padding: 8px 12px;
+        }
+        .table-quote-totals tr.grand-total-row {
+            background: var(--teal);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* --- PAGE 10: ACCEPTANCE --- */
+        .contract-sig-block {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .sig-box {
+            border: 1px solid var(--border);
+            height: 100px;
+            margin: 15px 0;
+            background: var(--bg-light);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* --- TERMS & CONDITIONS STYLING --- */
+        .terms-text {
+            font-size: 10.5px;
+            line-height: 1.6;
+            color: #334155;
+            text-align: justify;
+        }
+        .terms-text p {
+            margin-bottom: 12px;
+        }
+        .terms-text h4 {
+            color: var(--teal);
+            font-size: 12px;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2px;
+        }
+
+        /* --- SVG CHART STYLING --- */
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chart-bar {
+            fill: var(--teal);
+            transition: height 0.5s;
+        }
+        .chart-bar:hover {
+            fill: var(--accent);
+        }
+        .chart-grid {
+            stroke: var(--border);
+            stroke-width: 1;
+            stroke-dasharray: 4;
+        }
+        .chart-axis {
+            stroke: var(--text-muted);
+            stroke-width: 1;
+        }
+        .chart-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            fill: var(--text-muted);
+            text-anchor: middle;
+        }
+        .chart-value-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            fill: var(--text-dark);
+            text-anchor: middle;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar no-print">
+        <button class="btn" onclick="window.print()">🖨️ Print Proposal</button>
+        <button class="btn btn-secondary" onclick="window.close()">✕ Close</button>
+    </div>
+
+    <!-- ================= PAGE 1: COVER PAGE ================= -->
+    <div class="page" id="page-1">
+        <div class="cover-bg">
+            <!-- Cubic visual background in SVG -->
+            <svg class="cover-cubes" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <!-- Isometric Cube grid path -->
+                <path d="M50,0 L70,10 L50,20 L30,10 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M70,10 L90,0 L90,15 L70,25 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M50,20 L70,10 L70,25 L50,35 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M30,10 L50,20 L50,35 L30,25 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M70,25 L90,15 L90,30 L70,40 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M50,35 L70,25 L70,40 L50,50 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
+                <path d="M30,25 L50,35 L50,50 L30,40 Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.1)"/>
+            </svg>
+
+            <div class="brand-block">
+                <div class="brand-logo-white">
+                    <img src="/ares_energy_logo.png" alt="Ares Energy Logo">
+                </div>
+                <div>
+                    <h2 style="font-family:'Outfit'; font-size:24px; font-weight:800; letter-spacing:0.5px;">ARES ENERGY</h2>
+                    <p style="font-size:11px; text-transform:uppercase; letter-spacing:1px; opacity:0.8;">&amp; Electricals</p>
+                </div>
+            </div>
+
+            <div class="cover-card">
+                <h1 class="cover-title" id="lblCoverSystemSize">Solar system</h1>
+                <h3 class="cover-subtitle" id="lblCoverBatterySize">with battery storage</h3>
+                
+                <div class="cover-meta">
+                    <p><strong>Addressed to:</strong></p>
+                    <p style="font-size: 15px; font-weight: 700; margin-bottom:5px;" id="lblCoverCustomerName">-</p>
+                    <p id="lblCoverCustomerPhone">-</p>
+                    <p id="lblCoverCustomerEmail">-</p>
+                    <p id="lblCoverCustomerAddress" style="margin-bottom:20px;">-</p>
+
+                    <p>Prepared by <strong>Yashil Patel</strong> on <span id="lblCoverDatePrepared">-</span></p>
+                    <p>Offer valid until: <strong style="color: var(--accent);" id="lblCoverDateExpiry">-</strong></p>
+                    <p>Reference #: <strong id="lblCoverRef">-</strong></p>
+                </div>
+            </div>
+
+            <div class="cover-footer">
+                <div>
+                    <strong>Ares Energy Pty Ltd</strong> (ABN: 78 631 734 506)<br>
+                    Email: yashil@aresenergy.com.au | Web: www.aresenergy.com.au
+                </div>
+                <div style="text-align: right;">
+                    Office: 1300 717 583 | Mobile: 0485 838 592<br>
+                    Address: 276 Kargotich Road Oakford Western Australia 6121
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 2: ABOUT US ================= -->
+    <div class="page" id="page-2">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Ares Energy Pty Ltd</h2>
+            <p class="section-subtitle">About Us</p>
+            
+            <div class="about-text" style="width:70%;">
+                <p style="margin-bottom:15px;">Ares Energy &amp; Electricals is Perth's trusted expert solar, battery, electrical and air conditioning specialist. We are a family-owned and operated business committed to delivering top-tier renewable energy systems and professional electrical installations across Western Australia.</p>
+                <p style="margin-bottom:15px;">We hold all relevant industry accreditations, including SAA (Solar Accreditation Australia) certification, NETCC (New Energy Tech Consumer Code) approval, and ARC accreditation. This ensures your system is designed, supplied, and installed strictly in accordance with Australian Standards.</p>
+                <p style="margin-bottom:15px;">Our in-house team of SAA accredited solar installers and licensed electricians manage every stage of your transition to clean energy—from initial consultation and structural analysis to post-installation grid approvals and lifetime performance monitoring.</p>
+            </div>
+            
+            <span class="about-quote">”</span>
+            
+            <div class="quote-box-testimonial" style="margin-top:auto;">
+                <p><strong>"Our Mission"</strong></p>
+                <p style="font-size:12px; margin-top:5px; color:var(--text-muted);">To empower Western Australian homeowners with highly engineered, reliable solar and battery systems that reduce utility reliance, lower electricity bills, and contribute to a carbon-neutral future.</p>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">2</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 3: PROPOSED LAYOUT ================= -->
+    <div class="page" id="page-3">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Proposed panel layout</h2>
+            <p class="section-subtitle">Design for your roof</p>
+            
+            <div class="map-container">
+                <img id="imgSatelliteMap" class="map-img" src="" alt="Google Satellite Roof View">
+                <div class="map-overlay" id="lblLayoutAddress">Address</div>
+            </div>
+
+            <div class="badge-row">
+                <!-- Badges Drawn as SVG placeholders matching Document 1 -->
+                <div style="text-align:center; font-size:10px; font-weight:700; color:var(--teal);">
+                    <div style="border:2px solid var(--teal); padding:8px 12px; border-radius:4px;">CLEAN ENERGY COUNCIL</div>
+                    <span style="display:block; margin-top:4px;">MEMBER</span>
+                </div>
+                <div style="text-align:center; font-size:10px; font-weight:700; color:var(--accent);">
+                    <div style="border:2px solid var(--accent); padding:8px 12px; border-radius:4px;">APPROVED SELLER</div>
+                    <span style="display:block; margin-top:4px;">NETCC APPROVED</span>
+                </div>
+                <div style="text-align:center; font-size:10px; font-weight:700; color:var(--primary);">
+                    <div style="border:2px solid var(--primary); padding:8px 12px; border-radius:4px;">SOLAR ACCREDITATION</div>
+                    <span style="display:block; margin-top:4px;">AUSTRALIA</span>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">3</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 4: SPECS & PRODUCTION ================= -->
+    <div class="page" id="page-4">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <div class="grid-2" style="flex:1;">
+                <div>
+                    <h2 class="section-title" style="font-size:22px; margin-bottom:10px;">Daily production</h2>
+                    <p style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">How much electricity will my system generate per day, on average?</p>
+                    
+                    <div class="chart-box" id="divProductionChart">
+                        <!-- SVG chart injected dynamically -->
+                    </div>
+
+                    <div class="utility-cards">
+                        <div class="utility-card">
+                            <h4>Before Solar</h4>
+                            <div class="utility-card-row"><span>Average Monthly Bill</span><strong id="lblBeforeBillMonth">-</strong></div>
+                            <div class="utility-card-total utility-card-row"><span>Annual Cost</span><strong id="lblBeforeBillYear">-</strong></div>
+                        </div>
+                        <div class="utility-card" style="border-color: var(--teal);">
+                            <h4 style="color: var(--teal);">With Solar</h4>
+                            <div class="utility-card-row"><span>Average Monthly Bill</span><strong id="lblWithBillMonth">-</strong></div>
+                            <div class="utility-card-total utility-card-row" style="color: var(--teal); border-color:var(--teal);"><span>Annual Cost</span><strong id="lblWithBillYear">-</strong></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="section-title" style="font-size:22px; margin-bottom:10px;">System details</h2>
+                    <p style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">Your custom engineered design specifications</p>
+                    
+                    <table class="table-specs">
+                        <thead>
+                            <tr>
+                                <th style="width:40%;">Parameter</th>
+                                <th style="width:60%;">Specification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Solar System Size</strong></td><td id="lblSpecSystemSize">-</td></tr>
+                            <tr><td><strong>Battery Storage Size</strong></td><td id="lblSpecBatterySize">-</td></tr>
+                            <tr><td><strong>Estimated Annual Gen</strong></td><td id="lblSpecAnnualGen">-</td></tr>
+                            <tr><td><strong>Solar Panels</strong></td><td id="lblSpecPanels">-</td></tr>
+                            <tr><td><strong>Inverter</strong></td><td id="lblSpecInverter">-</td></tr>
+                            <tr><td><strong>Battery Storage</strong></td><td id="lblSpecBattery">-</td></tr>
+                            <tr><td><strong>System Efficiency</strong></td><td>87% (System Loss Factor Applied)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:20px; border:1px solid var(--border); padding:15px; border-radius:8px;">
+                        <h4 style="font-size:12px; color:var(--teal); font-weight:700; margin-bottom:5px;">Included Services</h4>
+                        <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">A 5 year workmanship warranty applies to this solar system installation. For product-specific warranties, refer to the technical sheet at the end of this proposal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">4</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 5: SELF CONSUMPTION & BATTERY FLOW ================= -->
+    <div class="page" id="page-5">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Self-consumption</h2>
+            <p class="section-subtitle">How much solar energy is consumed on-site</p>
+
+            <div class="grid-2" style="margin-bottom: 20px;">
+                <div style="background:var(--bg-light); border:1px solid var(--border); padding:20px; border-radius:8px; text-align:center;">
+                    <div style="font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Solar Self-Consumption (Solar Only)</div>
+                    <div style="font-size:28px; font-weight:800; color:var(--text-dark); margin-top:5px;">30%</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Remaining 70% exported to Grid</div>
+                </div>
+                <div style="background:rgba(31,95,91,0.05); border:1px solid rgba(31,95,91,0.15); padding:20px; border-radius:8px; text-align:center;">
+                    <div style="font-size:11px; text-transform:uppercase; color:var(--teal); font-weight:600;">Solar Self-Consumption (With Battery)</div>
+                    <div style="font-size:28px; font-weight:800; color:var(--teal); margin-top:5px;" id="lblSelfConsumptionWithBattery">75%</div>
+                    <div style="font-size:10px; color:var(--teal); margin-top:2px;">Only 25% exported to Grid</div>
+                </div>
+            </div>
+
+            <h3 style="font-size:14px; font-weight:700; color:var(--teal); margin-top:10px; margin-bottom:5px;">Energy Balance</h3>
+            <p style="font-size:11px; color:var(--text-muted);">Where will your household power come from on an annual basis?</p>
+            
+            <div class="energy-balance-bar">
+                <div class="eb-solar" style="width: 48%;">Solar (48%)</div>
+                <div class="eb-battery" style="width: 47%;">Battery (47%)</div>
+                <div class="eb-utility" style="width: 5%;">Grid (5%)</div>
+            </div>
+
+            <h3 style="font-size:14px; font-weight:700; color:var(--teal); margin-top:15px; margin-bottom:5px;">Battery performance cycles</h3>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">How you make the most of your battery storage throughout the day</p>
+
+            <div class="flow-diagrams">
+                <div class="flow-day-section">
+                    <div class="flow-day-title">Morning (Solar ramps up, powers Home)</div>
+                    <div class="flow-nodes">
+                        <div class="flow-node flow-node-inactive">Grid</div>
+                        <div class="flow-arrow"></div>
+                        <div class="flow-node flow-node-active">Home</div>
+                        <div class="flow-arrow flow-arrow-active-left"></div>
+                        <div class="flow-node flow-node-active" style="border-color:var(--teal);">Solar</div>
+                        <div class="flow-arrow"></div>
+                        <div class="flow-node flow-node-inactive">Battery</div>
+                    </div>
+                </div>
+                <div class="flow-day-section">
+                    <div class="flow-day-title">Afternoon (Solar excess charges Battery)</div>
+                    <div class="flow-nodes">
+                        <div class="flow-node flow-node-inactive">Grid</div>
+                        <div class="flow-arrow"></div>
+                        <div class="flow-node flow-node-active">Home</div>
+                        <div class="flow-arrow flow-arrow-active-left"></div>
+                        <div class="flow-node flow-node-active" style="border-color:var(--teal);">Solar</div>
+                        <div class="flow-arrow flow-arrow-active-right"></div>
+                        <div class="flow-node flow-node-battery-active">Battery</div>
+                    </div>
+                </div>
+                <div class="flow-day-section">
+                    <div class="flow-day-title">Night (Battery discharges, powers Home)</div>
+                    <div class="flow-nodes">
+                        <div class="flow-node flow-node-inactive">Grid</div>
+                        <div class="flow-arrow"></div>
+                        <div class="flow-node flow-node-active">Home</div>
+                        <div class="flow-arrow"></div>
+                        <div class="flow-node flow-node-inactive">Solar</div>
+                        <div class="flow-arrow flow-arrow-active-left"></div>
+                        <div class="flow-node flow-node-battery-active">Battery</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">5</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 6: FINANCIAL SUMMARY ================= -->
+    <div class="page" id="page-6">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">20 year financial summary</h2>
+            <p class="section-subtitle">Financial performance indicators of your investment</p>
+            
+            <div class="financial-cards">
+                <div class="fin-card">
+                    <div class="fin-card-label">Net Present Value (NPV)</div>
+                    <div class="fin-card-val" id="lblFinNPV">$0.00</div>
+                    <div class="fin-card-desc">The Net Present Value (NPV) is the present day value of all future cash savings minus the system cost. A positive NPV indicates a highly profitable investment.</div>
+                </div>
+                <div class="fin-card">
+                    <div class="fin-card-label">Discounted Payback</div>
+                    <div class="fin-card-val" id="lblFinPayback">0.0 Yrs</div>
+                    <div class="fin-card-desc">Unlike a simple payback calculation, the Discounted Payback Period accounts for utility inflation, system degradation, and the time-value of money.</div>
+                </div>
+                <div class="fin-card">
+                    <div class="fin-card-label">Internal Rate of Return (IRR)</div>
+                    <div class="fin-card-val" id="lblFinIRR">0.0%</div>
+                    <div class="fin-card-desc">Internal Rate of Return is the compound annual growth rate of your investment. A higher IRR compared to standard bank deposits represents a strong return.</div>
+                </div>
+                <div class="fin-card">
+                    <div class="fin-card-label">Total Return on Investment</div>
+                    <div class="fin-card-val" id="lblFinROI">0.0%</div>
+                    <div class="fin-card-desc">ROI represents the yearly financial yield percentage calculated as first year net bill savings divided by the out-of-pocket system cost.</div>
+                </div>
+            </div>
+
+            <div class="quote-box-testimonial">
+                <p>“Energy-efficient homes with solar and battery storage can sell for as much as 10 per cent more compared to houses reliant solely on the grid.”</p>
+                <p style="text-align:right; font-weight:700; font-size:11px; margin-top:5px; color:var(--teal);">— Dr Daniel Daly, Sustainable Buildings Researcher</p>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">6</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 7: FINANCIAL CHARTS ================= -->
+    <div class="page" id="page-7">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Projected financial performance</h2>
+            <p class="section-subtitle">20-year bill projection and savings comparison</p>
+
+            <div style="flex:1; display:flex; flex-direction:column; gap:30px;">
+                <div style="flex:1; border:1px solid var(--border); border-radius:8px; padding:20px; display:flex; flex-direction:column;">
+                    <h3 style="font-size:12px; font-weight:700; color:var(--teal); margin-bottom:10px; text-transform:uppercase;">Annual Utility Costs (20 Year Forecast)</h3>
+                    <div style="flex:1;" id="divLineChart">
+                        <!-- SVG line chart injected dynamically -->
+                    </div>
+                </div>
+                <div style="flex:1; border:1px solid var(--border); border-radius:8px; padding:20px; display:flex; flex-direction:column;">
+                    <h3 style="font-size:12px; font-weight:700; color:var(--teal); margin-bottom:10px; text-transform:uppercase;">Average Monthly Bill Comparison</h3>
+                    <div style="flex:1;" id="divBarChart">
+                        <!-- SVG bar chart injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">7</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 8: ENVIRONMENTAL ANALYSIS ================= -->
+    <div class="page" id="page-8">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Environmental Analysis</h2>
+            <p class="section-subtitle">Your system's direct impact on reducing carbon emissions</p>
+            
+            <div class="eco-bg">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h3 style="font-family:'Outfit'; font-size:22px; color:var(--teal); font-weight:800; margin-bottom:10px;">Carbon Offset Projection</h3>
+                    <p style="font-size:13px; color:var(--text-muted); max-width:500px; margin:0 auto;">By generating clean electricity from the sun and storing it for night use, your system significantly reduces Western Australia's grid emissions.</p>
+                </div>
+
+                <div class="eco-card">
+                    <div class="eco-icon">🌳</div>
+                    <div>
+                        <div class="eco-val" id="lblEcoTrees">0</div>
+                        <div class="eco-label">Trees planted equivalent per year</div>
+                    </div>
+                </div>
+
+                <div class="eco-card">
+                    <div class="eco-icon">⛽</div>
+                    <div>
+                        <div class="eco-val" id="lblEcoFuel">0 L</div>
+                        <div class="eco-label">Avoided equivalent petrol fuel per year</div>
+                    </div>
+                </div>
+
+                <div class="eco-card">
+                    <div class="eco-icon">🪵</div>
+                    <div>
+                        <div class="eco-val" id="lblEcoCoal">0 kg</div>
+                        <div class="eco-label">Avoided coal burnt per year</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">8</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 9: QUOTATION SUMMARY ================= -->
+    <div class="page" id="page-9">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Itemized quotation</h2>
+            <p class="section-subtitle">Scope of works and pricing breakdown</p>
+
+            <table class="table-quote">
+                <thead>
+                    <tr>
+                        <th style="width:65%;">Description</th>
+                        <th style="width:10%; text-align:center;">Qty</th>
+                        <th style="width:25%; text-align:right;">Total (Inc GST)</th>
+                    </tr>
+                </thead>
+                <tbody id="tblQuoteLines">
+                    <!-- Lines injected dynamically -->
+                </tbody>
+            </table>
+
+            <table class="table-quote-totals">
+                <tbody>
+                    <tr>
+                        <td><strong>Subtotal Incl GST:</strong></td>
+                        <td style="text-align: right;" id="lblQuoteSubtotal">-</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#10b981;"><strong>STC Solar Rebate:</strong></td>
+                        <td style="text-align: right; color:#10b981;" id="lblQuoteSTC">-</td>
+                    </tr>
+                    <tr id="rowQuoteBatterySTC" style="display:none;">
+                        <td style="color:#10b981;"><strong>STC Battery Rebate:</strong></td>
+                        <td style="text-align: right; color:#10b981;" id="lblQuoteBatterySTC">-</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td><strong>Total Price Payable:</strong></td>
+                        <td style="text-align: right;" id="lblQuoteTotal">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">9</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 10: ACCEPTANCE ================= -->
+    <div class="page" id="page-10">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Acceptance &amp; Payment</h2>
+            <p class="section-subtitle">Formal agreement and BSB bank details</p>
+
+            <div style="background:var(--bg-light); border:1px solid var(--border); padding:20px; border-radius:8px; font-size:12px; line-height:1.6; margin-bottom:25px;">
+                <p><strong>Acceptance of Quotation:</strong></p>
+                <p style="margin-top:5px; color:var(--text-muted);">Please sign and return this document to Ares Energy to proceed with your installation. A 40% deposit is required to order components and initiate grid approvals. The remaining 60% balance is payable prior to installation or as agreed in payment milestones.</p>
+                <p style="margin-top:5px; color:var(--text-muted);">Offer valid until: <strong id="lblAcceptValidUntil">-</strong>. Reference #: <strong id="lblAcceptRef">-</strong>.</p>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:8px; padding:20px; font-size:12px; line-height:1.6; margin-bottom:25px;">
+                <h4 style="font-size:12px; color:var(--teal); font-weight:700; margin-bottom:10px; text-transform:uppercase;">Bank EFT Details</h4>
+                <div style="display:grid; grid-template-columns: 120px 1fr; gap:5px;">
+                    <strong>Account Name:</strong><span>Ares Energy Pty Ltd</span>
+                    <strong>BSB:</strong><span>086 116</span>
+                    <strong>Account Number:</strong><span>95 879 4865</span>
+                    <strong>Bank Name:</strong><span>National Australian Bank (NAB)</span>
+                    <strong>Reference:</strong><span id="lblAcceptBankRef">-</span>
+                </div>
+            </div>
+
+            <div class="contract-sig-block">
+                <div>
+                    <strong>Contractor Name:</strong>
+                    <div style="font-size:14px; font-weight:700; margin-top:5px; border-bottom:1px solid var(--border); padding-bottom:5px;">Yashil Patel</div>
+                    <strong>Contractor Signature:</strong>
+                    <div class="sig-box" style="font-family:'Outfit'; font-size:24px; color:#1f5f5b;">Yashil Patel</div>
+                    <strong>Date Signed:</strong>
+                    <div style="font-size:12px; margin-top:5px;" id="lblAcceptDateSigned">-</div>
+                </div>
+                <div>
+                    <strong>Client Name:</strong>
+                    <div style="font-size:14px; font-weight:700; margin-top:5px; border-bottom:1px solid var(--border); padding-bottom:5px;" id="lblAcceptClientName">-</div>
+                    <strong>Client Signature:</strong>
+                    <div class="sig-box">Sign Here</div>
+                    <strong>Date Signed:</strong>
+                    <div style="font-size:12px; margin-top:5px; border-bottom:1px solid var(--border); padding-bottom:5px;">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">10</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 11: TECHNICAL SPECS ================= -->
+    <div class="page" id="page-11">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Additional Information</h2>
+            <p class="section-subtitle">Property and grid technical details</p>
+
+            <table class="table-specs" style="margin-top:20px;">
+                <thead>
+                    <tr>
+                        <th style="width:40%;">Field</th>
+                        <th style="width:60%;">Property Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Roof Material</strong></td><td id="lblTechRoofMaterial">-</td></tr>
+                    <tr><td><strong>House Storeys</strong></td><td id="lblTechStoreys">-</td></tr>
+                    <tr><td><strong>Electrical Phase</strong></td><td id="lblTechPhases">-</td></tr>
+                    <tr><td><strong>Energy Retailer</strong></td><td id="lblTechRetailer">-</td></tr>
+                    <tr><td><strong>Distribution Network</strong></td><td id="lblTechDistributor">-</td></tr>
+                    <tr><td><strong>Meter Number</strong></td><td id="lblTechMeterNo">-</td></tr>
+                    <tr><td><strong>NMI Number</strong></td><td id="lblTechNmiNo">-</td></tr>
+                    <tr><td><strong>Export Limit</strong></td><td id="lblTechExportLimit">-</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">11</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 12: CONSUMER INFO ================= -->
+    <div class="page" id="page-12">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Consumer Information</h2>
+            <p class="section-subtitle">NETCC standards and consumer guides</p>
+
+            <div class="about-text">
+                <p style="margin-bottom:15px;"><strong>New Energy Tech Consumer Code (NETCC):</strong></p>
+                <p style="margin-bottom:15px; color:var(--text-muted); font-size:12px;">As an Approved Seller under the NETCC, Ares Energy is committed to meeting high consumer protection standards. We ensure clear and accurate pricing, honest advertising, high-quality hardware selection, and professional installation practices.</p>
+                
+                <h4 style="font-size:13px; color:var(--teal); font-weight:700; margin-top:20px; margin-bottom:10px;">Recommended Consumer Guides:</h4>
+                <div style="display:flex; flex-direction:column; gap:12px; font-size:12px; color:var(--primary); font-weight:600;">
+                    <div>📥 Guide to Installing Solar PV (Developed by Energy Consumers Australia)</div>
+                    <div>📥 Guide to Using Solar PV Systems</div>
+                    <div>📥 Guide to Battery Storage and Home Safety</div>
+                    <div>📥 Consumer Protections and Cooling-Off Rights</div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">12</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 13: ASSUMED VALUES ================= -->
+    <div class="page" id="page-13">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Assumed values</h2>
+            <p class="section-subtitle">Mathematical parameters utilized in yield projections</p>
+
+            <table class="table-specs" style="font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Assumed Value</th>
+                        <th>Parameter</th>
+                        <th>Assumed Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>System Efficiency</strong></td><td>87%</td>
+                        <td><strong>Electricity Inflation</strong></td><td>3.0% per annum</td>
+                    </tr>
+                    <tr>
+                        <td><strong>System Lifetime</strong></td><td>20 Years</td>
+                        <td><strong>Discount Rate</strong></td><td>5.0% per annum</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Daily Supply Charge</strong></td><td id="lblAssumedSupply">-</td>
+                        <td><strong>PV Degradation Rate</strong></td><td>0.5% per annum</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Electricity Unit Rate</strong></td><td id="lblAssumedUnitRate">-</td>
+                        <td><strong>Battery Depth of Discharge</strong></td><td>90%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Feed-in Tariff (FiT)</strong></td><td id="lblAssumedFiT">-</td>
+                        <td><strong>Battery Round-trip Eff.</strong></td><td>95%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">13</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 14: DISCLAIMER ================= -->
+    <div class="page" id="page-14">
+        <div class="page-header">
+            <div>SOLAR &amp; STORAGE PROPOSAL</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content">
+            <h2 class="section-title">Assumptions and Disclaimer</h2>
+            <p class="section-subtitle">Footnotes and legal disclaimers</p>
+
+            <div style="font-size:11px; line-height:1.7; color:var(--text-muted); display:flex; flex-direction:column; gap:12px;">
+                <p><strong>1. Estimated Generation:</strong> Generation estimates are based on historical solar irradiance datasets for the Western Australia region. Actual generation may vary depending on local weather variations, dirt/shading accumulations, and component degradation.</p>
+                <p><strong>2. Financial Projections:</strong> Savings projections are modeled based on your historical electricity bills or assumed daily usage profiles. Future utility rates and regulatory changes regarding Feed-in Tariffs are subject to change and may alter payback periods.</p>
+                <p><strong>3. Grid Approval:</strong> Grid connection is subject to Western Power or local distributor network approval. Any export limits imposed by the distributor are beyond the control of Ares Energy.</p>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">14</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 15+: TERMS & CONDITIONS ================= -->
+    <div class="page" id="page-15">
+        <div class="page-header">
+            <div>CONTRACT TERMS &amp; CONDITIONS</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content terms-text">
+            <h4>1. INTERPRETATION &amp; DEFINITIONS</h4>
+            <p><strong>1.1. Agreement:</strong> Consists of this Quotation, the Special Conditions (if any), and the Contract Terms &amp; Conditions.</p>
+            <p><strong>1.2. Retailer:</strong> Refers to Ares Energy Pty Ltd (ABN: 78 631 734 506).</p>
+            <p><strong>1.3. Owner:</strong> Refers to the customer identified in the Quotation sheet.</p>
+            <p><strong>1.4. STC:</strong> Small-scale Technology Certificate created under the Renewable Energy (Electricity) Act 2000 (Cth).</p>
+
+            <h4>2. PERFORMANCE OBLIGATIONS</h4>
+            <p><strong>2.1. Retailer Responsibilities:</strong> The Retailer will design, supply, and arrange installation of the energy system in accordance with the specifications. Work will be carried out by a CEC/SAA accredited installer.</p>
+            <p><strong>2.2. Owner Responsibilities:</strong> The Owner warrants that they are the property owner, the roof has structural integrity to support the system, and safe access to the premises will be provided on the scheduled installation date.</p>
+
+            <h4>3. SITE CONDITIONS &amp; PRICE ADJUSTMENTS</h4>
+            <p><strong>3.1.</strong> If unforeseen site conditions requiring structural modifications or electrical upgrades (e.g., switchboard replacements) are discovered on site, the Retailer will provide a written variation notice. If the Owner rejects the variation, the contract may be terminated with a full refund of deposit.</p>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">15</div>
+        </div>
+    </div>
+
+    <div class="page" id="page-16">
+        <div class="page-header">
+            <div>CONTRACT TERMS &amp; CONDITIONS</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content terms-text">
+            <h4>4. STCS &amp; REBATES ASSIGNMENT</h4>
+            <p><strong>4.1.</strong> The Quotation price is calculated based on the assumption that the Owner assigns all rights to create STCs generated by the solar system to the Retailer.</p>
+            <p><strong>4.2.</strong> If the STCs application is rejected due to Owner ineligibility, or the Owner chooses to retain ownership of the STCs, the Owner agrees to pay the value of the STC discount back to the Retailer within 10 business days of invoice.</p>
+
+            <h4>5. REFUNDS AND COOLING-OFF PERIOD</h4>
+            <p><strong>5.1.</strong> The Owner is protected by the Australian Consumer Law. The Owner has a right to cancel this contract and receive a 100% refund of deposit within 10 business days of signing (Cooling-off period).</p>
+            <p><strong>5.2.</strong> A full refund will also be issued if the system design is significantly altered from the Quotation, if installation cannot be completed within 6 weeks of target date, or if grid connection approval is refused by the distributor.</p>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">16</div>
+        </div>
+    </div>
+
+    <div class="page" id="page-17">
+        <div class="page-header">
+            <div>CONTRACT TERMS &amp; CONDITIONS</div>
+            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+        </div>
+        <div class="page-content terms-text">
+            <h4>6. COMPLAINTS &amp; DISPUTE RESOLUTION</h4>
+            <p><strong>6.1.</strong> Complaints may be submitted in writing via email to yashil@aresenergy.com.au or by calling 1300 717 583. We follow standard procedures outlined in AS ISO 10002-2006.</p>
+            <p><strong>6.2.</strong> We will acknowledge receipt of your complaint within 2 business days and provide a full resolution timeline within 15 days.</p>
+
+            <h4>7. WARRANTIES AND GUARANTEES</h4>
+            <p><strong>7.1.</strong> A 5 year workmanship warranty applies to the installation. Manufacturer warranties apply for solar panels (25 years), inverter (5/10 years), and battery (10 years) as per manufacturer warranty documents.</p>
+        </div>
+        <div class="page-footer">
+            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
+            <div class="page-number">17</div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                console.error("No ID provided");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/quotations/${id}/preview-data`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    populateTemplate(data);
+                } else {
+                    console.error("Failed to load details:", data.error);
+                }
+            } catch (e) {
+                console.error("Network error fetching details:", e);
+            }
+        });
+
+        function populateTemplate(data) {
+            const lead = data.lead || {};
+            const eng = data.engineering || {};
+            const pricing = data.pricing || {};
+            const pDetails = pricing.details || {};
+            const yieldData = data.yield || {};
+            const ySummary = yieldData.summary || {};
+
+            // Format date helper
+            const formatDate = (ds) => {
+                if (!ds) return '-';
+                const parts = ds.split('T')[0].split('-');
+                if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return ds;
+            };
+
+            const todayStr = formatDate(new Date().toISOString().split('T')[0]);
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 10);
+            const expiryStr = formatDate(expiryDate.toISOString().split('T')[0]);
+
+            // Page 1: Cover Page
+            document.getElementById('lblCoverSystemSize').textContent = `${ySummary.systemSizeKw.toFixed(2)}kW Solar system`;
+            document.getElementById('lblCoverBatterySize').textContent = ySummary.batteryCapacityKwh > 0 
+                ? `with ${ySummary.batteryCapacityKwh.toFixed(0)}kWh battery storage` 
+                : 'without battery storage';
+            
+            const custName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Valued Customer';
+            document.getElementById('lblCoverCustomerName').textContent = custName;
+            document.getElementById('lblCoverCustomerPhone').textContent = lead.phone_number || '-';
+            document.getElementById('lblCoverCustomerEmail').textContent = lead.email_id_1 || '-';
+            
+            const addressParts = [lead.address, lead.suburb, lead.state, lead.postcode].filter(Boolean);
+            const fullAddress = addressParts.join(', ') || 'Western Australia';
+            document.getElementById('lblCoverCustomerAddress').textContent = fullAddress;
+            
+            document.getElementById('lblCoverDatePrepared').textContent = todayStr;
+            document.getElementById('lblCoverDateExpiry').textContent = expiryStr;
+            
+            const refNo = lead.project_number || `ARE-Q-${lead.id}`;
+            document.getElementById('lblCoverRef').textContent = refNo;
+
+            // Page 3: Proposed layout static map image from geocoding
+            document.getElementById('lblLayoutAddress').textContent = fullAddress;
+            const geocodeUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(fullAddress)}&zoom=20&size=750x450&maptype=satellite&key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4`;
+            document.getElementById('imgSatelliteMap').src = geocodeUrl;
+
+            // Page 4: Specifications & Production
+            document.getElementById('lblSpecSystemSize').textContent = `${ySummary.systemSizeKw.toFixed(2)} kW DC (STC)`;
+            document.getElementById('lblSpecBatterySize').textContent = ySummary.batteryCapacityKwh > 0 ? `${ySummary.batteryCapacityKwh.toFixed(1)} kWh` : 'No Battery';
+            document.getElementById('lblSpecAnnualGen').textContent = `${ySummary.annualGenerationKwh.toLocaleString(undefined, {maximumFractionDigits:0})} kWh`;
+
+            // Panel model name
+            const panelProd = pDetails.productsBreakdown.find(p => p.type === 'Panel');
+            document.getElementById('lblSpecPanels').textContent = panelProd ? `${panelProd.qty} x ${panelProd.name}` : '-';
+
+            // Inverter model name
+            const invProd = pDetails.productsBreakdown.find(p => p.type === 'Inverter');
+            document.getElementById('lblSpecInverter').textContent = invProd ? `${invProd.qty} x ${invProd.name}` : '-';
+
+            // Battery model name
+            const batProd = pDetails.productsBreakdown.find(p => p.type === 'Battery');
+            document.getElementById('lblSpecBattery').textContent = batProd ? `${batProd.qty} x ${batProd.name}` : 'None';
+
+            // Utility costs comparisons (convert to monthly averages)
+            const beforeAnnTotal = yieldData.financials.beforeSolarTotal;
+            const withAnnTotal = yieldData.financials.withSolarTotal;
+            document.getElementById('lblBeforeBillMonth').textContent = `$${(beforeAnnTotal / 12).toFixed(2)}`;
+            document.getElementById('lblBeforeBillYear').textContent = `$${beforeAnnTotal.toFixed(2)}`;
+            document.getElementById('lblWithBillMonth').textContent = `$${(withAnnTotal / 12).toFixed(2)}`;
+            document.getElementById('lblWithBillYear').textContent = `$${withAnnTotal.toFixed(2)}`;
+
+            // Page 5: Energy Balance & battery flow
+            const panelKw = ySummary.systemSizeKw;
+            const batKwh = ySummary.batteryCapacityKwh;
+            const selfConsumptionWithBattery = ySummary.batteryCapacityKwh > 0 ? 75 : 30;
+            document.getElementById('lblSelfConsumptionWithBattery').textContent = `${selfConsumptionWithBattery}%`;
+
+            // Page 6: Financial metrics cards
+            document.getElementById('lblFinNPV').textContent = `$${yieldData.investment.npv.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('lblFinPayback').textContent = `${yieldData.investment.paybackYears.toFixed(1)} Yrs`;
+            document.getElementById('lblFinIRR').textContent = `${yieldData.investment.irrPercent.toFixed(1)}%`;
+            document.getElementById('lblFinROI').textContent = `${yieldData.investment.roiPercent.toFixed(1)}%`;
+
+            // Page 8: Environmental
+            document.getElementById('lblEcoTrees').textContent = yieldData.environmental.treesPlanted.toFixed(0);
+            document.getElementById('lblEcoFuel').textContent = `${yieldData.environmental.fuelAvoidedLiters.toLocaleString(undefined, {maximumFractionDigits:0})} L`;
+            document.getElementById('lblEcoCoal').textContent = `${yieldData.environmental.coalAvoidedKg.toLocaleString(undefined, {maximumFractionDigits:0})} kg`;
+
+            // Page 9: Quote itemized table
+            const tblQuoteLines = document.getElementById('tblQuoteLines');
+            tblQuoteLines.innerHTML = '';
+            
+            // Build descriptions
+            let isBattery = ySummary.batteryCapacityKwh > 0;
+            const descName = isBattery 
+                ? `${ySummary.systemSizeKw.toFixed(2)}kW Solar system with ${ySummary.batteryCapacityKwh.toFixed(0)}kWh battery storage` 
+                : `${ySummary.systemSizeKw.toFixed(2)}kW Solar system without battery`;
+
+            // Row 1: System Base Item
+            const r1 = document.createElement('tr');
+            r1.innerHTML = `
+                <td>
+                    <strong>${descName}</strong><br>
+                    <span style="font-size:10px; color:var(--text-muted);">
+                        ${panelProd ? `Solar Panel: ${panelProd.name} (${panelProd.qty} Qty)<br>` : ''}
+                        ${invProd ? `Inverter: ${invProd.name} (${invProd.qty} Qty)<br>` : ''}
+                        ${batProd ? `Battery storage: ${batProd.name} (${batProd.qty} Qty)` : ''}
+                    </span>
+                </td>
+                <td style="text-align:center;">1</td>
+                <td style="text-align:right;">$${pricing.grandTotal.toFixed(2)}</td>
+            `;
+            tblQuoteLines.appendChild(r1);
+
+            // Add installation charges if any extra charges (double storey, etc.)
+            pDetails.installationsBreakdown.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.name} <span style="font-size:10px; color:var(--text-muted);">(${c.formula})</span></td>
+                    <td style="text-align:center;">1</td>
+                    <td style="text-align:right;">$${c.total.toFixed(2)}</td>
+                `;
+                tblQuoteLines.appendChild(tr);
+            });
+
+            // Set totals
+            document.getElementById('lblQuoteSubtotal').textContent = `$${pricing.grandTotal.toFixed(2)}`;
+            
+            // STC Panels Rebate
+            const rebatePV = pDetails.rebatesBreakdown.find(r => r.name.includes("Panels"));
+            document.getElementById('lblQuoteSTC').textContent = rebatePV ? `-$${rebatePV.total.toFixed(2)}` : '$0.00';
+
+            // STC battery Rebate (if battery exists)
+            const rebateBat = pDetails.rebatesBreakdown.find(r => r.name.includes("Battery"));
+            const rowBatterySTC = document.getElementById('rowQuoteBatterySTC');
+            if (rebateBat && rebateBat.total > 0) {
+                rowBatterySTC.style.display = 'table-row';
+                document.getElementById('lblQuoteBatterySTC').textContent = `-$${rebateBat.total.toFixed(2)}`;
+            } else {
+                rowBatterySTC.style.display = 'none';
+            }
+
+            document.getElementById('lblQuoteTotal').textContent = `$${pricing.sellingPrice.toFixed(2)}`;
+
+            // Page 10: Acceptance
+            document.getElementById('lblAcceptValidUntil').textContent = expiryStr;
+            document.getElementById('lblAcceptRef').textContent = refNo;
+            document.getElementById('lblAcceptBankRef').textContent = refNo;
+            document.getElementById('lblAcceptDateSigned').textContent = todayStr;
+            document.getElementById('lblAcceptClientName').textContent = custName;
+
+            // Page 11: Technical Specs
+            document.getElementById('lblTechRoofMaterial').textContent = eng.roof_type || '-';
+            document.getElementById('lblTechStoreys').textContent = eng.house_storey || '-';
+            document.getElementById('lblTechPhases').textContent = eng.phase ? `${eng.phase} Phase` : '-';
+            document.getElementById('lblTechRetailer').textContent = eng.retailer || '-';
+            document.getElementById('lblTechDistributor').textContent = eng.distributor || '-';
+            document.getElementById('lblTechMeterNo').textContent = eng.meter_number || '-';
+            document.getElementById('lblTechNmiNo').textContent = eng.nmi_number || '-';
+            document.getElementById('lblTechExportLimit').textContent = eng.export_limit || '-';
+
+            // Page 13: Assumed values
+            document.getElementById('lblAssumedSupply').textContent = `$${yieldData.financials.beforeSolarSupply / 365}/day`;
+            document.getElementById('lblAssumedUnitRate').textContent = `$${(yieldData.financials.beforeSolarEnergy / annualUsageKwh).toFixed(2)}/kWh`;
+            document.getElementById('lblAssumedFiT').textContent = `$${(yieldData.financials.withSolarFiTCredit / ySummary.exportedSolarKwh || 0.05).toFixed(2)}/kWh`;
+
+            // Draw Charts
+            drawProductionChart(yieldData.monthlyProduction);
+            drawFinancialCharts(yieldData);
+        }
+
+        // Render dynamic SVGs for charts
+        function drawProductionChart(monthlyData) {
+            const chartBox = document.getElementById('divProductionChart');
+            if (!chartBox) return;
+
+            const maxVal = Math.max(...monthlyData.map(m => m.dailyAverage)) * 1.15 || 10;
+            const labels = monthlyData.map(m => m.month.substring(0,3));
+            const vals = monthlyData.map(m => m.dailyAverage);
+            const monthlyTotals = monthlyData.map(m => m.monthlyTotal);
+
+            let barsHtml = '';
+            const width = 360;
+            const height = 240;
+            const barWidth = 18;
+            const spacing = 10;
+            const startX = 35;
+            const startY = 20;
+            const graphHeight = 180;
+            const graphWidth = 310;
+
+            // Vertical grid lines
+            for (let i = 0; i <= 4; i++) {
+                const yPos = startY + (graphHeight * i / 4);
+                const gridVal = maxVal * (4 - i) / 4;
+                barsHtml += `
+                    <line x1="${startX}" y1="${yPos}" x2="${startX + graphWidth}" y2="${yPos}" class="chart-grid"/>
+                    <text x="${startX - 8}" y="${yPos + 3}" style="text-anchor: end; font-size: 8px; fill: var(--text-muted); font-weight: 500;">${gridVal.toFixed(1)}</text>
+                `;
+            }
+
+            // Draw bars
+            vals.forEach((v, idx) => {
+                const x = startX + 10 + idx * (barWidth + spacing);
+                const barHeight = (v / maxVal) * graphHeight;
+                const y = startY + graphHeight - barHeight;
+                barsHtml += `
+                    <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="3" class="chart-bar"/>
+                    <text x="${x + barWidth / 2}" y="${y - 4}" class="chart-value-label">${v.toFixed(1)}</text>
+                    <text x="${x + barWidth / 2}" y="${startY + graphHeight + 14}" class="chart-label">${labels[idx]}</text>
+                    <text x="${x + barWidth / 2}" y="${startY + graphHeight + 24}" style="font-size:6px; fill:var(--text-muted); text-anchor:middle;">${monthlyTotals[idx].toFixed(0)}</text>
+                `;
+            });
+
+            chartBox.innerHTML = `
+                <svg class="chart-svg" viewBox="0 0 380 250">
+                    <!-- Y Axis -->
+                    <line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY + graphHeight}" class="chart-axis"/>
+                    <!-- X Axis -->
+                    <line x1="${startX}" y1="${startY + graphHeight}" x2="${startX + graphWidth}" y2="${startY + graphHeight}" class="chart-axis"/>
+                    ${barsHtml}
+                    <!-- Title label for Y axis -->
+                    <text x="12" y="15" style="font-size:7px; fill:var(--text-muted); font-weight:700; transform: rotate(-90deg); transform-origin: 12px 15px;">Daily Avg (kWh)</text>
+                </svg>
+            `;
+        }
+
+        function drawFinancialCharts(yieldData) {
+            // Line Chart: Annual cost over 20 years
+            const divLine = document.getElementById('divLineChart');
+            if (divLine) {
+                const beforeAnn = yieldData.financials.beforeSolarTotal;
+                const withAnn = yieldData.financials.withSolarTotal;
+                
+                let beforePoints = [];
+                let withPoints = [];
+                
+                const startX = 35;
+                const startY = 15;
+                const w = 310;
+                const h = 180;
+                
+                // Project 20 year values
+                let maxBill = 0;
+                let beforeValues = [];
+                let withValues = [];
+                
+                for (let t = 1; t <= 20; t++) {
+                    const beforeVal = beforeAnn * Math.pow(1.03, t - 1);
+                    const withVal = withAnn * Math.pow(1.03, t - 1) * Math.pow(0.995, t - 1);
+                    beforeValues.push(beforeVal);
+                    withValues.push(withVal);
+                    if (beforeVal > maxBill) maxBill = beforeVal;
+                }
+                maxBill = maxBill * 1.1;
+
+                beforeValues.forEach((v, idx) => {
+                    const x = startX + (idx * (w / 19));
+                    const y = startY + h - (v / maxBill * h);
+                    beforePoints.push(`${x},${y}`);
+                });
+
+                withValues.forEach((v, idx) => {
+                    const x = startX + (idx * (w / 19));
+                    const y = startY + h - (v / maxBill * h);
+                    withPoints.push(`${x},${y}`);
+                });
+
+                let grids = '';
+                for (let i = 0; i <= 4; i++) {
+                    const yPos = startY + (h * i / 4);
+                    const gridVal = maxBill * (4 - i) / 4;
+                    grids += `
+                        <line x1="${startX}" y1="${yPos}" x2="${startX + w}" y2="${yPos}" class="chart-grid"/>
+                        <text x="${startX - 6}" y="${yPos + 3}" style="text-anchor: end; font-size: 8px; fill: var(--text-muted); font-weight: 500;">$${gridVal.toFixed(0)}</text>
+                    `;
+                }
+
+                // Year labels on X axis
+                let yearLabels = '';
+                for (let t = 1; t <= 20; t += 3) {
+                    const x = startX + ((t - 1) * (w / 19));
+                    yearLabels += `<text x="${x}" y="${startY + h + 13}" class="chart-label">Yr${t}</text>`;
+                }
+
+                divLine.innerHTML = `
+                    <svg class="chart-svg" viewBox="0 0 380 215">
+                        ${grids}
+                        ${yearLabels}
+                        <!-- Before Solar Line -->
+                        <polyline points="${beforePoints.join(' ')}" fill="none" stroke="#64748b" stroke-width="2.5" />
+                        <!-- With Solar Line -->
+                        <polyline points="${withPoints.join(' ')}" fill="none" stroke="var(--teal)" stroke-width="3" />
+                        
+                        <!-- Axis lines -->
+                        <line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY + h}" class="chart-axis"/>
+                        <line x1="${startX}" y1="${startY + h}" x2="${startX + w}" y2="${startY + h}" class="chart-axis"/>
+                        
+                        <!-- Legends -->
+                        <circle cx="240" cy="10" r="4" fill="#64748b"/>
+                        <text x="248" y="13" style="font-size:7px; fill:var(--text-muted); font-weight:600;">Without Solar</text>
+                        <circle cx="300" cy="10" r="4" fill="var(--teal)"/>
+                        <text x="308" y="13" style="font-size:7px; fill:var(--text-muted); font-weight:600;">With Solar</text>
+                    </svg>
+                `;
+            }
+
+            // Bar Chart: Monthly comparison
+            const divBar = document.getElementById('divBarChart');
+            if (divBar) {
+                const beforeMonth = yieldData.financials.beforeSolarTotal / 12;
+                const withMonth = yieldData.financials.withSolarTotal / 12;
+                const savingsMonth = yieldData.financials.annualSavings / 12;
+
+                const startX = 40;
+                const startY = 15;
+                const w = 300;
+                const h = 180;
+                
+                const maxVal = beforeMonth * 1.2;
+                
+                const beforeHeight = (beforeMonth / maxVal) * h;
+                const withHeight = (withMonth / maxVal) * h;
+                const savingsHeight = (savingsMonth / maxVal) * h;
+
+                let grids = '';
+                for (let i = 0; i <= 4; i++) {
+                    const yPos = startY + (h * i / 4);
+                    const gridVal = maxVal * (4 - i) / 4;
+                    grids += `
+                        <line x1="${startX}" y1="${yPos}" x2="${startX + w}" y2="${yPos}" class="chart-grid"/>
+                        <text x="${startX - 6}" y="${yPos + 3}" style="text-anchor: end; font-size: 8px; fill: var(--text-muted); font-weight: 500;">$${gridVal.toFixed(0)}</text>
+                    `;
+                }
+
+                divBar.innerHTML = `
+                    <svg class="chart-svg" viewBox="0 0 380 215">
+                        ${grids}
+                        
+                        <!-- Before Solar Bar -->
+                        <rect x="70" y="${startY + h - beforeHeight}" width="40" height="${beforeHeight}" rx="4" fill="#64748b"/>
+                        <text x="90" y="${startY + h - beforeHeight - 4}" class="chart-value-label">$${beforeMonth.toFixed(0)}</text>
+                        <text x="90" y="${startY + h + 14}" class="chart-label">Without Solar</text>
+
+                        <!-- With Solar Bar -->
+                        <rect x="160" y="${startY + h - withHeight}" width="40" height="${withHeight}" rx="4" fill="var(--teal)"/>
+                        <text x="180" y="${startY + h - withHeight - 4}" class="chart-value-label">$${withMonth.toFixed(0)}</text>
+                        <text x="180" y="${startY + h + 14}" class="chart-label">With Solar</text>
+
+                        <!-- Savings Bar -->
+                        <rect x="250" y="${startY + h - savingsHeight}" width="40" height="${savingsHeight}" rx="4" fill="var(--accent)"/>
+                        <text x="270" y="${startY + h - savingsHeight - 4}" class="chart-value-label" style="fill:var(--accent);">$${savingsMonth.toFixed(0)}</text>
+                        <text x="270" y="${startY + h + 14}" class="chart-label" style="fill:var(--accent); font-weight:700;">Net Savings</text>
+
+                        <!-- Axis lines -->
+                        <line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY + h}" class="chart-axis"/>
+                        <line x1="${startX}" y1="${startY + h}" x2="${startX + w}" y2="${startY + h}" class="chart-axis"/>
+                    </svg>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
