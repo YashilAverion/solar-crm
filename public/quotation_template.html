@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar & Storage Proposal - Ares Energy</title>
+    <title>Quotation - Ares Energy</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -44,6 +44,7 @@
             flex-direction: column;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             page-break-after: always;
+            padding: 25px 35px;
         }
 
         @media print {
@@ -84,207 +85,242 @@
             background: var(--text-muted);
         }
 
-        /* --- PAGE 1: COVER PAGE --- */
-        .cover-bg {
-            background-color: var(--teal);
-            height: 100%;
-            width: 100%;
-            position: relative;
+        /* Brand & Meta Info */
+        .quote-header {
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
-            padding: 50px 60px;
-            color: #fff;
+            align-items: center;
+            border-bottom: 2px dashed var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
         }
-
-        .cover-cubes {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 320px;
-            height: auto;
-            opacity: 0.15;
-            z-index: 1;
-        }
-
         .brand-block {
-            z-index: 10;
             display: flex;
             align-items: center;
+            gap: 12px;
+        }
+        .brand-logo {
+            height: 48px;
+            object-fit: contain;
+        }
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--teal);
+            letter-spacing: 0.5px;
+        }
+        .brand-details {
+            text-align: right;
+            font-size: 10px;
+            line-height: 1.4;
+            color: var(--text-muted);
+        }
+
+        .meta-section {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+        .meta-block h4 {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2px;
+        }
+        .meta-block p {
+            line-height: 1.45;
+        }
+
+        /* Banner styling */
+        .blue-banner {
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 15px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            border-right: 15px solid var(--accent);
+        }
+
+        /* Two column grid */
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 15px;
+        }
+        
+        .products-col {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            background: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+        }
+        .products-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 8px;
+            border-bottom: 1.5px solid var(--teal);
+            padding-bottom: 3px;
+        }
+        .products-list {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .pricing-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5px;
+        }
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .pricing-row:nth-child(odd) {
+            background: var(--bg-light);
+        }
+        .pricing-row-total {
+            background: var(--teal-light) !important;
+            border: 1px solid var(--teal);
+            font-weight: 700;
+            font-size: 10.5px;
+            color: var(--teal);
+            margin-top: 3px;
+        }
+        .pricing-row-rebate {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .balance-banner {
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 15px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 3px;
+            margin-top: 5px;
+            border-right: 15px solid var(--accent);
+        }
+
+        .quote-note-text {
+            font-size: 8px;
+            color: var(--text-muted);
+            line-height: 1.35;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
             gap: 15px;
         }
 
-        .brand-logo-white {
-            background: #fff;
-            padding: 8px;
-            border-radius: 6px;
-            display: inline-flex;
-            width: 70px;
-            height: 70px;
-            align-items: center;
-            justify-content: center;
-        }
-        .brand-logo-white img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .cover-card {
-            background: #fff;
-            color: var(--text-dark);
-            width: 100%;
-            padding: 35px 40px;
-            margin-top: 30px;
-            z-index: 10;
-            border-radius: 6px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .cover-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1.1;
-            color: var(--text-dark);
-            margin-bottom: 6px;
-        }
-        .cover-subtitle {
-            font-size: 18px;
-            color: var(--text-muted);
-            margin-bottom: 25px;
-            font-weight: 500;
-        }
-
-        .cover-meta {
-            font-size: 12px;
-            line-height: 1.6;
-        }
-        .cover-meta strong {
-            color: var(--primary);
-        }
-
-        .trust-badges-row {
-            z-index: 10;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 25px;
-            border-radius: 6px;
-            margin-top: 20px;
-            gap: 20px;
-        }
-        .trust-badge-item {
-            height: 45px;
-            max-width: 130px;
-            object-fit: contain;
-        }
-
-        .cover-footer {
-            z-index: 10;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding-top: 15px;
-            font-size: 10px;
-            line-height: 1.5;
-            color: rgba(255,255,255,0.9);
-            display: flex;
-            justify-content: space-between;
-        }
-        .cover-footer strong {
-            color: #fff;
-        }
-
-        /* --- STANDARD HEADER & FOOTER FOR INSIDE PAGES --- */
-        .page-header {
-            padding: 20px 40px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            font-size: 10px;
-            color: var(--text-muted);
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        .page-header-logo {
-            height: 25px;
-            object-fit: contain;
-        }
-        .page-content {
-            flex: 1;
-            padding: 25px 40px;
-            display: flex;
-            flex-direction: column;
-        }
-        .page-footer {
-            padding: 12px 40px 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 9px;
-            color: var(--text-muted);
-        }
-        .page-number {
+        /* Installation row */
+        .installation-banner {
             background: var(--teal);
             color: #fff;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-
-        /* --- TYPOGRAPHY & LAYOUT UTILITIES --- */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        .table-specs {
-            width: 100%;
-            border-collapse: collapse;
+            padding: 6px 15px;
+            font-family: 'Outfit', sans-serif;
             font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            border-right: 15px solid var(--accent);
         }
-        .table-specs td {
-            padding: 7px 10px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-dark);
+        .installation-meta-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            font-size: 9.5px;
+            border-radius: 3px;
+            margin-bottom: 15px;
         }
-        .table-specs tr:nth-child(even) {
+
+        /* Payments Block */
+        .payment-block {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .payment-method {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 8.5px;
+            line-height: 1.4;
             background: var(--bg-light);
         }
-
-        .table-quote {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin: 10px 0;
-        }
-        .table-quote th {
-            background: var(--teal);
-            color: #fff;
-            padding: 8px 10px;
-            text-align: left;
-            text-transform: uppercase;
+        .payment-method h5 {
             font-size: 9px;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .table-quote td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: top;
+
+        /* Acceptance block */
+        .acceptance-block {
+            border-top: 2px dashed var(--border);
+            padding-top: 12px;
+            text-align: center;
         }
-        
-        .table-quote-totals {
-            margin-left: auto;
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
+        .acceptance-block p {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--teal);
+            margin-bottom: 12px;
         }
-        .table-quote-totals td {
-            padding: 6px 10px;
-            border-bottom: 1px solid var(--border);
+        .sig-row {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        .sig-col {
+            text-align: center;
+            font-size: 9px;
+        }
+        .sig-line {
+            border-top: 1px solid var(--text-dark);
+            margin-top: 28px;
+            padding-top: 3px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         /* --- TERMS & CONDITIONS STYLING --- */
@@ -310,41 +346,6 @@
             margin-bottom: 5px;
             text-align: justify;
         }
-
-        /* --- SVG CHART STYLING --- */
-        .chart-svg {
-            width: 100%;
-            height: 100%;
-        }
-        .chart-bar {
-            fill: var(--teal);
-            transition: fill 0.3s;
-        }
-        .chart-bar:hover {
-            fill: var(--accent);
-        }
-        .chart-grid {
-            stroke: var(--border);
-            stroke-width: 1;
-            stroke-dasharray: 3;
-        }
-        .chart-axis {
-            stroke: var(--text-muted);
-            stroke-width: 1;
-        }
-        .chart-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 8px;
-            fill: var(--text-muted);
-            text-anchor: middle;
-        }
-        .chart-value-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 8px;
-            fill: var(--text-dark);
-            text-anchor: middle;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
@@ -356,301 +357,188 @@
 
     <!-- ================= PAGE 1: COVER PAGE ================= -->
     <div class="page" id="page-1">
-        <div class="cover-bg">
-            <!-- Cubic visual background in SVG -->
-            <svg class="cover-cubes" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M50,0 L70,10 L50,20 L30,10 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M70,10 L90,0 L90,15 L70,25 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M50,20 L70,10 L70,25 L50,35 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M30,10 L50,20 L50,35 L30,25 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M70,25 L90,15 L90,30 L70,40 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M50,35 L70,25 L70,40 L50,50 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
-                <path d="M30,25 L50,35 L50,50 L30,40 Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.1)"/>
-            </svg>
-
+        <!-- Brand Header -->
+        <div class="quote-header">
             <div class="brand-block">
-                <div class="brand-logo-white">
-                    <img src="/ares_energy_logo.png" alt="Ares Energy Logo">
-                </div>
+                <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
                 <div>
-                    <h2 style="font-family:'Outfit'; font-size:22px; font-weight:800; letter-spacing:0.5px;">ARES ENERGY</h2>
-                    <p style="font-size:10px; text-transform:uppercase; letter-spacing:1px; opacity:0.85;">&amp; Electricals</p>
+                    <h1 class="brand-name">ARES ENERGY</h1>
+                    <p style="font-size:8px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700;">&amp; Electricals</p>
+                </div>
+            </div>
+            <div class="brand-details">
+                <strong>Ares Energy Pty Ltd</strong><br>
+                ABN: 78 631 734 506<br>
+                Phone: 1300 717 583 | Mobile: 0485 838 592<br>
+                W: www.aresenergy.com.au | E: yashil@aresenergy.com.au
+            </div>
+        </div>
+
+        <!-- Meta info columns -->
+        <div class="meta-section">
+            <div class="meta-block">
+                <h4>Quotation To</h4>
+                <p style="font-size:12.5px; font-weight:700; color:var(--teal);" id="lblCustomerName">-</p>
+                <p><strong>A:</strong> <span id="lblCustomerAddress">-</span></p>
+                <p><strong>P:</strong> <span id="lblCustomerPhone">-</span></p>
+                <p><strong>E:</strong> <span id="lblCustomerEmail">-</span></p>
+            </div>
+            <div class="meta-block">
+                <h4>Proposal Info</h4>
+                <p><strong>Quote#:</strong> <span id="lblRefNo">-</span></p>
+                <p><strong>Quote Date:</strong> <span id="lblDatePrepared">-</span></p>
+                <p><strong>Sales Advisor:</strong> Yashil Patel</p>
+                <p><strong>Direct Line:</strong> 0485 838 592</p>
+                <p><strong>Email:</strong> yashil@aresenergy.com.au</p>
+            </div>
+        </div>
+
+        <!-- Quotation Title Banner -->
+        <div class="blue-banner">
+            <span>Quotation</span>
+            <span style="font-size:10px;" id="lblSystemSizeHeader">-</span>
+        </div>
+
+        <!-- Two Column solutions grid -->
+        <div class="solutions-grid">
+            <!-- Left Col: Products solutions -->
+            <div class="products-col">
+                <div class="products-title">Solar Power Solution Design, Supply and Installation</div>
+                <div class="products-list" id="productList">
+                    <!-- Products dynamically injected here -->
                 </div>
             </div>
 
-            <div class="cover-card">
-                <h1 class="cover-title" id="lblCoverSystemSize">Solar system</h1>
-                <h3 class="cover-subtitle" id="lblCoverBatterySize">with battery storage</h3>
-                
-                <div class="cover-meta">
-                    <p style="margin-bottom:2px; color: var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600;">Addressed to:</p>
-                    <p style="font-size: 16px; font-weight: 700; color:var(--teal); margin-bottom:4px;" id="lblCoverCustomerName">-</p>
-                    <p id="lblCoverCustomerPhone" style="font-weight:500;">-</p>
-                    <p id="lblCoverCustomerEmail" style="font-weight:500;">-</p>
-                    <p id="lblCoverCustomerAddress" style="margin-bottom:18px; font-weight:500;">-</p>
+            <!-- Right Col: Pricing -->
+            <div class="pricing-col">
+                <div class="pricing-row">
+                    <span>Basic System Cost</span>
+                    <strong id="lblBasicCost">$0.00</strong>
+                </div>
+                <div class="pricing-row">
+                    <span>House Type</span>
+                    <span id="lblHouseType">-</span>
+                </div>
+                <div class="pricing-row">
+                    <span>Roof Type</span>
+                    <span id="lblRoofType">-</span>
+                </div>
+                <div class="pricing-row">
+                    <span>Roof Angle</span>
+                    <span id="lblRoofAngle">-</span>
+                </div>
+                <div class="pricing-row">
+                    <span>Net Meter / Phase</span>
+                    <span id="lblNetMeter">-</span>
+                </div>
+                <div class="pricing-row" id="rowDiscount" style="display:none;">
+                    <span>Special Discount</span>
+                    <strong id="lblDiscount" style="color:var(--accent);">-</strong>
+                </div>
+                <div class="pricing-row">
+                    <span>Other</span>
+                    <strong>$0.00</strong>
+                </div>
 
-                    <p style="font-size:11px;">Prepared by <strong>Yashil Patel</strong> on <span id="lblCoverDatePrepared">-</span></p>
-                    <p style="font-size:11px;">Offer valid until: <strong style="color: var(--accent);" id="lblCoverDateExpiry">-</strong></p>
-                    <p style="font-size:11px;">Reference #: <strong id="lblCoverRef">-</strong></p>
+                <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px;">
+                    <span style="font-size:9.5px; font-weight:600;">Less STC Panels Rebate</span>
+                    <strong id="lblPanelRebate" class="pricing-row-rebate">-$0.00</strong>
+                </div>
+                <div class="pricing-row" id="rowBatteryRebate" style="display:none;">
+                    <span style="font-size:9.5px; font-weight:600;">Less STC Battery Rebate</span>
+                    <strong id="lblBatteryRebate" class="pricing-row-rebate">-$0.00</strong>
+                </div>
+                <div class="pricing-row" id="rowVppRebate" style="display:none;">
+                    <span style="font-size:9.5px; font-weight:600;">Less WA Battery Rebate</span>
+                    <strong id="lblVppRebate" class="pricing-row-rebate">-$0.00</strong>
+                </div>
+
+                <div class="pricing-row pricing-row-total">
+                    <span>Selling Price Total (Inc. GST)</span>
+                    <strong id="lblSellingPrice">$0.00</strong>
+                </div>
+                <div class="pricing-row">
+                    <span>Less Deposit Required</span>
+                    <strong id="lblDeposit" style="color:var(--accent);">-$0.00</strong>
+                </div>
+
+                <div class="balance-banner">
+                    <span style="font-size:12px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
+                    <span id="lblBalanceDue">$0.00</span>
                 </div>
             </div>
+        </div>
 
-            <div class="trust-badges-row">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Clean_Energy_Council_logo.png" class="trust-badge-item" alt="Clean Energy Council Member">
-                <img src="/netcc_approved.png" class="trust-badge-item" alt="NETCC Approved Seller">
-                <img src="/saa_accredited.png" class="trust-badge-item" alt="Solar Accreditation Australia">
+        <!-- Note details -->
+        <div class="quote-note-text">
+            <span style="width:50%;">Note: This Quote is valid for 10 days from the issue date. System layout is provisional. SAA Accredited Installer will design and install system based on actual site conditions.</span>
+            <span style="width:50%; text-align:right;">The Balance Due may change if the Proposed STC Rebates change or are not formalised. Please read the terms and conditions contained on pages 2-3 of this Quotation.</span>
+        </div>
+
+        <!-- Installation details row -->
+        <div class="installation-banner" style="margin-top:10px;">
+            <span>Installation Details</span>
+            <span style="font-size:9.5px;">Target Delivery Date: <strong style="color:#fff;" id="lblTargetDeliveryDate">-</strong></span>
+        </div>
+        <div class="installation-meta-row">
+            <div><strong>Elec. Retailer:</strong> <span id="lblRetailer">-</span></div>
+            <div><strong>Meter Phase:</strong> <span id="lblPhase">-</span></div>
+            <div><strong>Inst. Type:</strong> <span id="lblInstType">-</span></div>
+            <div><strong>Payment Modes:</strong> EFT / Credit Card</div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="payment-block">
+            <div class="payment-method">
+                <h5>🏦 EFT / Bank Transfer</h5>
+                <strong>Account Name:</strong> Ares Energy Pty Ltd<br>
+                <strong>BSB:</strong> 086 116<br>
+                <strong>A/C:</strong> 95 879 4865 (NAB)<br>
+                <strong>Ref:</strong> <span id="lblBankRef" style="font-weight:700; color:var(--accent);">-</span>
             </div>
+            <div class="payment-method">
+                <h5>💳 Credit Card</h5>
+                <p>We accept Visa and MasterCard.</p>
+                <p>Card surcharges of 1% apply to all card transactions.</p>
+                <p>Call office on 1300 717 583 to pay.</p>
+            </div>
+            <div class="payment-method">
+                <h5>✉️ Cheque / Money Order</h5>
+                <p>Payable to ARES ENERGY PTY LTD and mail to:</p>
+                <p style="font-weight:500;">276 Kargotich Road Oakford Western Australia 6121</p>
+            </div>
+        </div>
 
-            <div class="cover-footer">
-                <div>
-                    <strong>Ares Energy Pty Ltd</strong> (ABN: 78 631 734 506)<br>
-                    Email: yashil@aresenergy.com.au | Web: www.aresenergy.com.au
+        <!-- Acceptance -->
+        <div class="acceptance-block">
+            <p>See Additional Terms &amp; Conditions overleaf. I have read the terms and conditions herein and I accept and confirm the System order as detailed above:</p>
+            <div class="sig-row">
+                <div class="sig-col">
+                    <div style="font-weight:700; font-size:11px; font-family:'Outfit';" id="lblClientSigName">-</div>
+                    <div class="sig-line">Name(s)</div>
                 </div>
-                <div style="text-align: right;">
-                    Office: 1300 717 583 | Mobile: 0485 838 592<br>
-                    Address: 276 Kargotich Road Oakford Western Australia 6121
+                <div class="sig-col">
+                    <div style="height:15px;"></div>
+                    <div class="sig-line">Signature(s)</div>
+                </div>
+                <div class="sig-col">
+                    <div style="font-weight:700; font-size:11px; font-family:'Outfit';" id="lblSigDate">-</div>
+                    <div class="sig-line">Date</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= PAGE 2: SPECS, LAYOUT & YIELD ================= -->
+    <!-- ================= PAGE 2: TERMS & CONDITIONS (PART 1) ================= -->
     <div class="page" id="page-2">
-        <div class="page-header">
-            <div>SOLAR &amp; STORAGE PROPOSAL — SYSTEM SPECIFICATIONS</div>
-            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
-        </div>
-        <div class="page-content" style="padding: 20px 40px;">
-            <div class="grid-2" style="flex:1; gap: 25px;">
-                <!-- Left column -->
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:5px;">Proposed Roof Layout</h3>
-                        <div style="border:1px solid var(--border); border-radius:6px; height:180px; width:100%; position:relative; overflow:hidden;">
-                            <img id="imgSatelliteMap" style="width:100%; height:100%; object-fit:cover;" src="" alt="Google Satellite Roof View">
-                            <div style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.65); color:#fff; padding:4px 8px; border-radius:4px; font-size:8.5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="lblLayoutAddress">Address</div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:5px;">Estimated Monthly Generation (Daily Avg)</h3>
-                        <div id="divProductionChart" style="border:1px solid var(--border); border-radius:6px; height:180px; padding:10px; background:#fff;">
-                            <!-- SVG chart injected dynamically -->
-                        </div>
-                    </div>
-                    <div style="background:var(--bg-light); border:1px solid var(--border); padding:10px; border-radius:6px;">
-                        <h4 style="font-size:10.5px; color:var(--teal); font-weight:700; margin-bottom:4px;">Self-Consumption Analysis</h4>
-                        <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:3px;">
-                            <span>Without Battery:</span><strong>30% solar used on-site (70% exported)</strong>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--teal);">
-                            <span>With Battery:</span><strong id="lblSelfConsumptionWithBattery">75% solar used on-site (25% exported)</strong>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Right column -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:5px;">System Specifications</h3>
-                        <table class="table-specs" style="font-size:10.5px;">
-                            <tbody>
-                                <tr style="background:var(--bg-light);"><td style="padding:6px 8px;"><strong>Solar System Size</strong></td><td id="lblSpecSystemSize" style="padding:6px 8px;">-</td></tr>
-                                <tr><td style="padding:6px 8px;"><strong>Battery Storage Size</strong></td><td id="lblSpecBatterySize" style="padding:6px 8px;">-</td></tr>
-                                <tr style="background:var(--bg-light);"><td style="padding:6px 8px;"><strong>Est. Annual Gen</strong></td><td id="lblSpecAnnualGen" style="padding:6px 8px;">-</td></tr>
-                                <tr><td style="padding:6px 8px;"><strong>Solar Panels</strong></td><td id="lblSpecPanels" style="padding:6px 8px;">-</td></tr>
-                                <tr style="background:var(--bg-light);"><td style="padding:6px 8px;"><strong>Inverter</strong></td><td id="lblSpecInverter" style="padding:6px 8px;">-</td></tr>
-                                <tr><td style="padding:6px 8px;"><strong>Battery Storage</strong></td><td id="lblSpecBattery" style="padding:6px 8px;">-</td></tr>
-                                <tr style="background:var(--bg-light);"><td style="padding:6px 8px;"><strong>System Efficiency</strong></td><td style="padding:6px 8px;">87% (Loss Factor Applied)</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:14px; color:var(--teal); margin-bottom:4px;">Warranty &amp; Support</h3>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:11px; color:var(--accent); display:block;">25 Years</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted);">Panel Warranty</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:11px; color:var(--accent); display:block;">10 Years</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted);">Inverter Warranty</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:11px; color:var(--accent); display:block;">10 Years</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted);">Battery Warranty</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:11px; color:var(--accent); display:block;">5 Years</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted);">Workmanship</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:14px; color:var(--teal); margin-bottom:4px;">Environmental Offset</h3>
-                        <div style="background:rgba(31,95,91,0.04); border:1px solid rgba(31,95,91,0.1); border-radius:6px; padding:8px 10px; display:flex; justify-content:space-around; align-items:center; text-align:center;">
-                            <div>
-                                <span style="font-size:14px; display:block; margin-bottom:2px;">🌳</span>
-                                <div id="lblEcoTrees" style="font-weight:700; font-size:11px; color:var(--teal);">0</div>
-                                <div style="font-size:8px; color:var(--text-muted);">Trees</div>
-                            </div>
-                            <div>
-                                <span style="font-size:14px; display:block; margin-bottom:2px;">⛽</span>
-                                <div id="lblEcoFuel" style="font-weight:700; font-size:11px; color:var(--teal);">0 L</div>
-                                <div style="font-size:8px; color:var(--text-muted);">Petrol Saved</div>
-                            </div>
-                            <div>
-                                <span style="font-size:14px; display:block; margin-bottom:2px;">🪵</span>
-                                <div id="lblEcoCoal" style="font-weight:700; font-size:11px; color:var(--teal);">0 kg</div>
-                                <div style="font-size:8px; color:var(--text-muted);">Coal Saved</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="quote-header" style="border-bottom: 1.5px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;">
+            <div class="brand-block">
+                <img src="/ares_energy_logo.png" class="brand-logo" style="height:30px;" alt="Logo">
+                <span class="brand-name" style="font-size:15px;">ARES ENERGY</span>
             </div>
+            <span style="font-size:9px; color:var(--text-muted); font-weight:700;">CONTRACT TERMS &amp; CONDITIONS (1/2)</span>
         </div>
-        <div class="page-footer">
-            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
-            <div class="page-number">2</div>
-        </div>
-    </div>
-
-    <!-- ================= PAGE 3: PRICING, ROI & AGREEMENT ================= -->
-    <div class="page" id="page-3">
-        <div class="page-header">
-            <div>SOLAR &amp; STORAGE PROPOSAL — PRICING &amp; FINANCE</div>
-            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
-        </div>
-        <div class="page-content" style="padding: 20px 40px;">
-            <div class="grid-2" style="flex:1; gap: 25px;">
-                <!-- Left column: Commercials & Finance -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:4px;">Investment Summary</h3>
-                        <table class="table-quote" style="font-size:10px; margin:0; width:100%;">
-                            <thead>
-                                <tr>
-                                    <th style="padding:5px; font-size:8.5px;">Description</th>
-                                    <th style="width:10%; text-align:center; padding:5px; font-size:8.5px;">Qty</th>
-                                    <th style="width:25%; text-align:right; padding:5px; font-size:8.5px;">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tblQuoteLines">
-                                <!-- Lines injected dynamically -->
-                            </tbody>
-                        </table>
-                        <table class="table-quote-totals" style="font-size:10px; width:100%; margin-top:4px;">
-                            <tbody>
-                                <tr>
-                                    <td style="padding:3px 5px;">Subtotal Incl GST:</td>
-                                    <td style="text-align: right; padding:3px 5px;" id="lblQuoteSubtotal">-</td>
-                                </tr>
-                                <tr>
-                                    <td style="color:#10b981; padding:3px 5px;">STC Solar Rebate:</td>
-                                    <td style="text-align: right; color:#10b981; padding:3px 5px;" id="lblQuoteSTC">-</td>
-                                </tr>
-                                <tr id="rowQuoteBatterySTC" style="display:none;">
-                                    <td style="color:#10b981; padding:3px 5px;">STC Battery Rebate:</td>
-                                    <td style="text-align: right; color:#10b981; padding:3px 5px;" id="lblQuoteBatterySTC">-</td>
-                                </tr>
-                                <tr style="background:var(--teal); color:#fff; font-weight:700;">
-                                    <td style="padding:5px;">Total Price Payable:</td>
-                                    <td style="text-align: right; padding:5px;" id="lblQuoteTotal">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:4px;">Financial Yield (20-Year Analysis)</h3>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:12px; color:var(--teal); display:block;" id="lblFinNPV">$0.00</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted); font-weight:600;">NPV Benefit</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:12px; color:var(--teal); display:block;" id="lblFinPayback">0.0 Yrs</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted); font-weight:600;">Payback Period</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:12px; color:var(--teal); display:block;" id="lblFinIRR">0.0%</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted); font-weight:600;">Compound IRR</span>
-                            </div>
-                            <div style="border:1px solid var(--border); padding:6px; border-radius:4px; background:var(--bg-light); text-align:center;">
-                                <strong style="font-size:12px; color:var(--teal); display:block;" id="lblFinROI">0.0%</strong>
-                                <span style="font-size:8.5px; color:var(--text-muted); font-weight:600;">Annual ROI %</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:14px; color:var(--teal); margin-bottom:4px;">Average Monthly Bill Comparison</h3>
-                        <div id="divBarChart" style="border:1px solid var(--border); border-radius:6px; height:140px; padding:5px; background:#fff;">
-                            <!-- SVG comparison chart injected dynamically -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right column: Payments, BSB & Signature Acceptance -->
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div>
-                        <h3 style="font-family:'Outfit'; font-size:15px; color:var(--teal); margin-bottom:4px;">Bank EFT Payment Details</h3>
-                        <div style="border:1px solid var(--border); border-radius:6px; padding:12px; font-size:10px; line-height:1.5; background:var(--bg-light);">
-                            <div style="display:grid; grid-template-columns: 85px 1fr; gap:3px; margin-bottom:5px;">
-                                <strong>Account Name:</strong><span>Ares Energy Pty Ltd</span>
-                                <strong>BSB:</strong><span>086 116</span>
-                                <strong>Account Number:</strong><span>95 879 4865</span>
-                                <strong>Bank Name:</strong><span>National Australia Bank (NAB)</span>
-                                <strong>Reference:</strong><span id="lblAcceptBankRef" style="font-weight:700; color:var(--accent);">-</span>
-                            </div>
-                            <div style="border-top:1px solid var(--border); padding-top:5px; margin-top:5px; font-size:8.5px; color:var(--text-muted); line-height:1.3;">
-                                <p><strong>Electricity rates assumed:</strong> Supply: <span id="lblAssumedSupply">-</span> | Rate: <span id="lblAssumedUnitRate">-</span> | FiT: <span id="lblAssumedFiT">-</span></p>
-                                <p style="margin-top:3px;">* A 10% deposit is required to initiate grid connection approvals and order hardware components. Balance is due on or before installation day.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="border:1px solid var(--border); border-radius:6px; padding:10px; font-size:9.5px; background:var(--bg-light); line-height:1.4;">
-                        <strong style="color:var(--teal); display:block; margin-bottom:2px;">Acceptance of Proposal:</strong>
-                        <p style="color:var(--text-muted);">By signing below, the customer accepts this quotation, payment schedule, and terms &amp; conditions on pages 4-5. Offer valid until <span id="lblAcceptValidUntil" style="font-weight:600;">-</span>. Ref #: <span id="lblAcceptRef" style="font-weight:600;">-</span>.</p>
-                    </div>
-
-                    <div style="display:flex; flex-direction:column; gap:10px;">
-                        <div>
-                            <strong style="font-size:10.5px; color:var(--text-dark);">Ares Energy Representative:</strong>
-                            <div style="display:flex; justify-content:space-between; margin-top:1px; font-size:9px; border-bottom:1px solid var(--border); padding-bottom:1px; margin-bottom:3px;">
-                                <strong>Name:</strong><span>Yashil Patel</span>
-                                <strong>Date Signed:</strong><span id="lblAcceptDateSigned">-</span>
-                            </div>
-                            <div style="border:1px solid var(--border); height:40px; background:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-size:16px; color:var(--teal); font-style:italic;">Yashil Patel</div>
-                        </div>
-
-                        <div>
-                            <strong style="font-size:10.5px; color:var(--text-dark);">Customer Acceptance Signature:</strong>
-                            <div style="display:flex; justify-content:space-between; margin-top:1px; font-size:9px; border-bottom:1px solid var(--border); padding-bottom:1px; margin-bottom:3px;">
-                                <strong>Name:</strong><span id="lblAcceptClientName">-</span>
-                                <strong>Date Signed:</strong><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                            </div>
-                            <div style="border:1px dashed var(--accent); height:40px; background:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:10px; font-style:italic;">Sign Here</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="page-footer">
-            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
-            <div class="page-number">3</div>
-        </div>
-    </div>
-
-    <!-- ================= PAGE 4: TERMS & CONDITIONS (PART 1) ================= -->
-    <div class="page" id="page-4">
-        <div class="page-header">
-            <div>CONTRACT TERMS &amp; CONDITIONS (1/2)</div>
-            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
-        </div>
-        <div class="page-content">
+        <div class="page-content" style="padding:0;">
             <div class="terms-columns">
                 <div>
                     <h4>1. INTERPRETATION &amp; DEFINITIONS</h4>
@@ -673,19 +561,22 @@
                 </div>
             </div>
         </div>
-        <div class="page-footer">
-            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
-            <div class="page-number">4</div>
+        <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
+            <div>Ares Energy | ABN: 78 631 734 506</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 5px; border-radius:2px; font-weight:700;">Page 2</div>
         </div>
     </div>
 
-    <!-- ================= PAGE 5: TERMS & CONDITIONS (PART 2) ================= -->
-    <div class="page" id="page-5">
-        <div class="page-header">
-            <div>CONTRACT TERMS &amp; CONDITIONS (2/2)</div>
-            <img src="/ares_energy_logo.png" class="page-header-logo" alt="Logo">
+    <!-- ================= PAGE 3: TERMS & CONDITIONS (PART 2) ================= -->
+    <div class="page" id="page-3">
+        <div class="quote-header" style="border-bottom: 1.5px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;">
+            <div class="brand-block">
+                <img src="/ares_energy_logo.png" class="brand-logo" style="height:30px;" alt="Logo">
+                <span class="brand-name" style="font-size:15px;">ARES ENERGY</span>
+            </div>
+            <span style="font-size:9px; color:var(--text-muted); font-weight:700;">CONTRACT TERMS &amp; CONDITIONS (2/2)</span>
         </div>
-        <div class="page-content">
+        <div class="page-content" style="padding:0;">
             <div class="terms-columns">
                 <div>
                     <h4>5. REFUNDS AND COOLING-OFF PERIOD</h4>
@@ -706,9 +597,9 @@
                 </div>
             </div>
         </div>
-        <div class="page-footer">
-            <div>Ares Energy | ABN: 78 631 734 506 | 1300 717 583</div>
-            <div class="page-number">5</div>
+        <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
+            <div>Ares Energy | ABN: 78 631 734 506</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 5px; border-radius:2px; font-weight:700;">Page 3</div>
         </div>
     </div>
 
@@ -772,255 +663,115 @@
             expiryDate.setDate(expiryDate.getDate() + 10);
             const expiryStr = formatDate(expiryDate.toISOString().split('T')[0]);
 
-            // Define annualUsageKwh inside template to prevent ReferenceErrors
-            const annualUsageKwh = parseFloat(eng.annualUsageKwh) || 6500;
+            // Date 60 days from now for target delivery
+            const deliveryDate = new Date();
+            deliveryDate.setDate(deliveryDate.getDate() + 60);
+            const targetDeliveryStr = formatDate(deliveryDate.toISOString().split('T')[0]);
 
-            // Page 1: Cover Page
-            const systemSizeStr = `${ySummary.systemSizeKw.toFixed(2)}kW Solar system`;
-            const batterySizeStr = ySummary.batteryCapacityKwh > 0 
-                ? `with ${ySummary.batteryCapacityKwh.toFixed(0)}kWh battery storage` 
-                : 'without battery storage';
-            
-            setText('lblCoverSystemSize', systemSizeStr);
-            setText('lblCoverBatterySize', batterySizeStr);
-            
+            // Page 1: Customer Details
             const custName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Valued Customer';
-            setText('lblCoverCustomerName', custName);
-            setText('lblCoverCustomerPhone', lead.phone_number || '-');
-            setText('lblCoverCustomerEmail', lead.email_id_1 || '-');
+            setText('lblCustomerName', custName);
             
             const addressParts = [lead.address, lead.suburb, lead.state, lead.postcode].filter(Boolean);
             const fullAddress = addressParts.join(', ') || 'Western Australia';
-            setText('lblCoverCustomerAddress', fullAddress);
-            
-            setText('lblCoverDatePrepared', todayStr);
-            setText('lblCoverDateExpiry', expiryStr);
-            
+            setText('lblCustomerAddress', fullAddress);
+            setText('lblCustomerPhone', lead.phone_number || '-');
+            setText('lblCustomerEmail', lead.email_id_1 || '-');
+
+            // Proposal details
             const refNo = lead.project_number || `ARE-Q-${lead.id}`;
-            setText('lblCoverRef', refNo);
+            setText('lblRefNo', refNo);
+            setText('lblDatePrepared', todayStr);
+            setText('lblBankRef', refNo);
+            setText('lblClientSigName', custName);
+            setText('lblSigDate', todayStr);
 
-            // Page 2: Proposed layout static map image from geocoding
-            setText('lblLayoutAddress', fullAddress);
-            const geocodeUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(fullAddress)}&zoom=20&size=750x450&maptype=satellite&key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4`;
-            setSrc('imgSatelliteMap', geocodeUrl);
+            // Solution details header
+            const sysKw = ySummary.systemSizeKw || 0;
+            const batKwh = ySummary.batteryCapacityKwh || 0;
+            const sizeLabel = batKwh > 0 
+                ? `${sysKw.toFixed(2)}kW Solar System with ${batKwh.toFixed(0)}kWh Battery`
+                : `${sysKw.toFixed(2)}kW Solar System`;
+            setText('lblSystemSizeHeader', sizeLabel);
 
-            // Page 2: Specifications & Production
-            setText('lblSpecSystemSize', `${ySummary.systemSizeKw.toFixed(2)} kW DC (STC)`);
-            setText('lblSpecBatterySize', ySummary.batteryCapacityKwh > 0 ? `${ySummary.batteryCapacityKwh.toFixed(1)} kWh` : 'No Battery');
-            setText('lblSpecAnnualGen', `${ySummary.annualGenerationKwh.toLocaleString(undefined, {maximumFractionDigits:0})} kWh`);
-
-            // Panel model name
-            const panelProd = pDetails.productsBreakdown.find(p => p.type === 'Panel');
-            setText('lblSpecPanels', panelProd ? `${panelProd.qty} x ${panelProd.name}` : '-');
-
-            // Inverter model name
-            const invProd = pDetails.productsBreakdown.find(p => p.type === 'Inverter');
-            setText('lblSpecInverter', invProd ? `${invProd.qty} x ${invProd.name}` : '-');
-
-            // Battery model name
-            const batProd = pDetails.productsBreakdown.find(p => p.type === 'Battery');
-            setText('lblSpecBattery', batProd ? `${batProd.qty} x ${batProd.name}` : 'None');
-
-            // Page 2: Self Consumption
-            const selfConsumptionWithBattery = ySummary.batteryCapacityKwh > 0 ? 75 : 30;
-            setText('lblSelfConsumptionWithBattery', `${selfConsumptionWithBattery}%`);
-
-            // Page 2: Environmental
-            setText('lblEcoTrees', yieldData.environmental.treesPlanted.toFixed(0));
-            setText('lblEcoFuel', `${yieldData.environmental.fuelAvoidedLiters.toLocaleString(undefined, {maximumFractionDigits:0})} L`);
-            setText('lblEcoCoal', `${yieldData.environmental.coalAvoidedKg.toLocaleString(undefined, {maximumFractionDigits:0})} kg`);
-
-            // Page 3: Financial metrics cards
-            setText('lblFinNPV', `$${yieldData.investment.npv.toLocaleString(undefined, {maximumFractionDigits:0})}`);
-            setText('lblFinPayback', `${yieldData.investment.paybackYears.toFixed(1)} Yrs`);
-            setText('lblFinIRR', `${yieldData.investment.irrPercent.toFixed(1)}%`);
-            setText('lblFinROI', `${yieldData.investment.roiPercent.toFixed(1)}%`);
-
-            // Page 3: Assumed values rates
-            const supplyRateStr = `$${(yieldData.financials.beforeSolarSupply / 365).toFixed(2)}/day`;
-            const unitRateStr = `$${(yieldData.financials.beforeSolarEnergy / annualUsageKwh).toFixed(2)}/kWh`;
-            const fitRateStr = `$${(yieldData.financials.withSolarFiTCredit / ySummary.exportedSolarKwh || 0.05).toFixed(2)}/kWh`;
-            setText('lblAssumedSupply', supplyRateStr);
-            setText('lblAssumedUnitRate', unitRateStr);
-            setText('lblAssumedFiT', fitRateStr);
-
-            // Page 3: Quote itemized table
-            const tblQuoteLines = document.getElementById('tblQuoteLines');
-            if (tblQuoteLines) {
-                tblQuoteLines.innerHTML = '';
-                
-                // Build descriptions
-                let isBattery = ySummary.batteryCapacityKwh > 0;
-                const descName = isBattery 
-                    ? `${ySummary.systemSizeKw.toFixed(2)}kW Solar system with ${ySummary.batteryCapacityKwh.toFixed(0)}kWh battery storage` 
-                    : `${ySummary.systemSizeKw.toFixed(2)}kW Solar system without battery`;
-
-                // Row 1: System Base Item
-                const r1 = document.createElement('tr');
-                r1.innerHTML = `
-                    <td style="padding:6px; font-size:10px;">
-                        <strong>${descName}</strong><br>
-                        <span style="font-size:8px; color:var(--text-muted);">
-                            ${panelProd ? `Solar Panel: ${panelProd.name} (${panelProd.qty} Qty)<br>` : ''}
-                            ${invProd ? `Inverter: ${invProd.name} (${invProd.qty} Qty)<br>` : ''}
-                            ${batProd ? `Battery storage: ${batProd.name} (${batProd.qty} Qty)` : ''}
-                        </span>
-                    </td>
-                    <td style="text-align:center; padding:6px; font-size:10px;">1</td>
-                    <td style="text-align:right; padding:6px; font-size:10px;">$${pricing.grandTotal.toFixed(2)}</td>
-                `;
-                tblQuoteLines.appendChild(r1);
-
-                // Add installation charges if any extra charges (double storey, etc.)
-                pDetails.installationsBreakdown.forEach(c => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="padding:6px; font-size:10px;">${c.name} <span style="font-size:8px; color:var(--text-muted);">(${c.formula})</span></td>
-                        <td style="text-align:center; padding:6px; font-size:10px;">1</td>
-                        <td style="text-align:right; padding:6px; font-size:10px;">$${c.total.toFixed(2)}</td>
-                    `;
-                    tblQuoteLines.appendChild(tr);
-                });
-            }
-
-            // Set totals
-            setText('lblQuoteSubtotal', `$${pricing.grandTotal.toFixed(2)}`);
+            // Specs
+            setText('lblHouseType', eng.house_storey ? `${eng.house_storey} Storey` : 'Single Storey');
+            setText('lblRoofType', eng.roof_type || 'Metal / Tin');
+            setText('lblRoofAngle', eng.roof_angle || '0 - 16');
             
-            // STC Panels Rebate
-            const rebatePV = pDetails.rebatesBreakdown.find(r => r.name.includes("Panels"));
-            setText('lblQuoteSTC', rebatePV ? `-$${rebatePV.total.toFixed(2)}` : '$0.00');
+            const meterPhase = eng.phase || '1';
+            setText('lblNetMeter', `${meterPhase} Phase`);
 
-            // STC battery Rebate (if battery exists)
-            const rebateBat = pDetails.rebatesBreakdown.find(r => r.name.includes("Battery"));
-            if (rebateBat && rebateBat.total > 0) {
-                setDisplay('rowQuoteBatterySTC', 'table-row');
-                setText('lblQuoteBatterySTC', `-$${rebateBat.total.toFixed(2)}`);
+            // Pricing extraction
+            const sellingPrice = pricing.sellingPrice || 0;
+            const deposit = pricing.deposit || 0;
+            
+            const rebatePV = pDetails.rebatesBreakdown.find(r => r.name.includes("Panels")) || { total: 0 };
+            const rebateBat = pDetails.rebatesBreakdown.find(r => r.name.includes("Battery")) || { total: 0 };
+            const rebateVpp = pDetails.rebatesBreakdown.find(r => r.name.includes("VPP")) || { total: 0 };
+
+            const panelRebate = rebatePV.total || 0;
+            const batteryRebate = rebateBat.total || 0;
+            const vppRebate = rebateVpp.total || 0;
+            const totalRebates = panelRebate + batteryRebate + vppRebate;
+
+            // Reverse Calculation
+            const basicSystemCost = sellingPrice + totalRebates;
+            const balanceDue = sellingPrice - deposit;
+
+            // Render right col pricing numbers
+            setText('lblBasicCost', `$${basicSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            setText('lblPanelRebate', `-$${panelRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            
+            if (batteryRebate > 0) {
+                setDisplay('rowBatteryRebate', 'flex');
+                setText('lblBatteryRebate', `-$${batteryRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
             } else {
-                setDisplay('rowQuoteBatterySTC', 'none');
+                setDisplay('rowBatteryRebate', 'none');
             }
 
-            setText('lblQuoteTotal', `$${pricing.sellingPrice.toFixed(2)}`);
-
-            // Page 3: Acceptance
-            setText('lblAcceptValidUntil', expiryStr);
-            setText('lblAcceptRef', refNo);
-            setText('lblAcceptBankRef', refNo);
-            setText('lblAcceptDateSigned', todayStr);
-            setText('lblAcceptClientName', custName);
-
-            // Draw Charts
-            drawProductionChart(yieldData.monthlyProduction);
-            drawFinancialCharts(yieldData);
-        }
-
-        // Render dynamic SVGs for charts
-        function drawProductionChart(monthlyData) {
-            const chartBox = document.getElementById('divProductionChart');
-            if (!chartBox || !monthlyData || monthlyData.length === 0) return;
-
-            const maxVal = Math.max(...monthlyData.map(m => m.dailyAverage)) * 1.15 || 10;
-            const labels = monthlyData.map(m => m.month.substring(0,3));
-            const vals = monthlyData.map(m => m.dailyAverage);
-            const monthlyTotals = monthlyData.map(m => m.monthlyTotal);
-
-            let barsHtml = '';
-            const width = 340;
-            const height = 160;
-            const barWidth = 15;
-            const spacing = 8;
-            const startX = 25;
-            const startY = 15;
-            const graphHeight = 120;
-            const graphWidth = 290;
-
-            // Vertical grid lines
-            for (let i = 0; i <= 4; i++) {
-                const yPos = startY + (graphHeight * i / 4);
-                const gridVal = maxVal * (4 - i) / 4;
-                barsHtml += `
-                    <line x1="${startX}" y1="${yPos}" x2="${startX + graphWidth}" y2="${yPos}" class="chart-grid"/>
-                    <text x="${startX - 5}" y="${yPos + 3}" style="text-anchor: end; font-size: 7.5px; fill: var(--text-muted); font-weight: 500;">${gridVal.toFixed(1)}</text>
-                `;
+            if (vppRebate > 0) {
+                setDisplay('rowVppRebate', 'flex');
+                setText('lblVppRebate', `-$${vppRebate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            } else {
+                setDisplay('rowVppRebate', 'none');
             }
 
-            // Draw bars
-            vals.forEach((v, idx) => {
-                const x = startX + 8 + idx * (barWidth + spacing);
-                const barHeight = (v / maxVal) * graphHeight;
-                const y = startY + graphHeight - barHeight;
-                barsHtml += `
-                    <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="2" class="chart-bar"/>
-                    <text x="${x + barWidth / 2}" y="${y - 3}" class="chart-value-label" style="font-size:7px;">${v.toFixed(1)}</text>
-                    <text x="${x + barWidth / 2}" y="${startY + graphHeight + 11}" class="chart-label">${labels[idx]}</text>
-                `;
-            });
+            setText('lblSellingPrice', `$${sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            setText('lblDeposit', `-$${deposit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+            setText('lblBalanceDue', `$${balanceDue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
 
-            chartBox.innerHTML = `
-                <svg class="chart-svg" viewBox="0 0 340 160">
-                    <!-- Y Axis -->
-                    <line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY + graphHeight}" class="chart-axis"/>
-                    <!-- X Axis -->
-                    <line x1="${startX}" y1="${startY + graphHeight}" x2="${startX + graphWidth}" y2="${startY + graphHeight}" class="chart-axis"/>
-                    ${barsHtml}
-                    <!-- Title label for Y axis -->
-                    <text x="8" y="10" style="font-size:6.5px; fill:var(--text-muted); font-weight:700; transform: rotate(-90deg); transform-origin: 8px 10px;">Daily Avg (kWh)</text>
-                </svg>
-            `;
-        }
+            // Installation details
+            setText('lblTargetDeliveryDate', targetDeliveryStr);
+            setText('lblRetailer', eng.retailer || 'Synergy');
+            setText('lblPhase', `${meterPhase} Phase`);
+            setText('lblInstType', eng.panel_install_type || 'New');
 
-        function drawFinancialCharts(yieldData) {
-            // Bar Chart: Monthly comparison
-            const divBar = document.getElementById('divBarChart');
-            if (divBar && yieldData.financials) {
-                const beforeMonth = yieldData.financials.beforeSolarTotal / 12;
-                const withMonth = yieldData.financials.withSolarTotal / 12;
-                const savingsMonth = yieldData.financials.annualSavings / 12;
-
-                const startX = 35;
-                const startY = 12;
-                const w = 270;
-                const h = 100;
+            // Render product breakdown on Left Column
+            const productListContainer = document.getElementById('productList');
+            if (productListContainer && pDetails.productsBreakdown) {
+                productListContainer.innerHTML = '';
                 
-                const maxVal = beforeMonth * 1.25 || 100;
-                
-                const beforeHeight = (beforeMonth / maxVal) * h;
-                const withHeight = (withMonth / maxVal) * h;
-                const savingsHeight = (savingsMonth / maxVal) * h;
+                // Group products or render them directly
+                pDetails.productsBreakdown.forEach(prod => {
+                    const itemRow = document.createElement('div');
+                    itemRow.style.display = 'flex';
+                    itemRow.style.padding = '6px 0';
+                    itemRow.style.fontSize = '10.5px';
+                    itemRow.style.borderBottom = '1px solid var(--border)';
+                    
+                    let qtyLabel = `${prod.qty} x ${prod.type}`;
+                    if (prod.type === 'Panel') qtyLabel = `${prod.qty} x Panels`;
+                    if (prod.type === 'Inverter') qtyLabel = `${prod.qty} x Inverter`;
+                    if (prod.type === 'Battery') qtyLabel = `${prod.qty} x Battery`;
+                    if (prod.type === 'Wi-Fi' || prod.type === 'Monitoring' || prod.type === 'Unknown') qtyLabel = `${prod.qty} x Accessory`;
 
-                let grids = '';
-                for (let i = 0; i <= 4; i++) {
-                    const yPos = startY + (h * i / 4);
-                    const gridVal = maxVal * (4 - i) / 4;
-                    grids += `
-                        <line x1="${startX}" y1="${yPos}" x2="${startX + w}" y2="${yPos}" class="chart-grid"/>
-                        <text x="${startX - 5}" y="${yPos + 3}" style="text-anchor: end; font-size: 7.5px; fill: var(--text-muted); font-weight: 500;">$${gridVal.toFixed(0)}</text>
+                    itemRow.innerHTML = `
+                        <span style="font-weight:600; width:30%; color:var(--teal);">${qtyLabel}</span>
+                        <span style="width:70%; color:var(--text-dark);">${prod.name}</span>
                     `;
-                }
-
-                divBar.innerHTML = `
-                    <svg class="chart-svg" viewBox="0 0 320 130">
-                        ${grids}
-                        
-                        <!-- Before Solar Bar -->
-                        <rect x="55" y="${startY + h - beforeHeight}" width="35" height="${beforeHeight}" rx="3" fill="#64748b"/>
-                        <text x="72.5" y="${startY + h - beforeHeight - 3}" class="chart-value-label" style="font-size:7.5px;">$${beforeMonth.toFixed(0)}</text>
-                        <text x="72.5" y="${startY + h + 11}" class="chart-label">Without Solar</text>
-
-                        <!-- With Solar Bar -->
-                        <rect x="135" y="${startY + h - withHeight}" width="35" height="${withHeight}" rx="3" fill="var(--teal)"/>
-                        <text x="152.5" y="${startY + h - withHeight - 3}" class="chart-value-label" style="font-size:7.5px;">$${withMonth.toFixed(0)}</text>
-                        <text x="152.5" y="${startY + h + 11}" class="chart-label">With Solar</text>
-
-                        <!-- Savings Bar -->
-                        <rect x="215" y="${startY + h - savingsHeight}" width="35" height="${savingsHeight}" rx="3" fill="var(--accent)"/>
-                        <text x="232.5" y="${startY + h - savingsHeight - 3}" class="chart-value-label" style="fill:var(--accent); font-size:7.5px;">$${savingsMonth.toFixed(0)}</text>
-                        <text x="232.5" y="${startY + h + 11}" class="chart-label" style="fill:var(--accent); font-weight:700;">Net Savings</text>
-
-                        <!-- Axis lines -->
-                        <line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY + h}" class="chart-axis"/>
-                        <line x1="${startX}" y1="${startY + h}" x2="${startX + w}" y2="${startY + h}" class="chart-axis"/>
-                    </svg>
-                `;
+                    productListContainer.appendChild(itemRow);
+                });
             }
         }
     </script>
