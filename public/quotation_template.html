@@ -100,7 +100,17 @@
             gap: 10px;
         }
         .brand-logo {
-            height: 44px;
+            height: 55px;
+            object-fit: contain;
+        }
+        .accreditation-logos {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            height: 40px;
+        }
+        .accreditation-logos img {
+            height: 100%;
             object-fit: contain;
         }
         .brand-name {
@@ -431,16 +441,19 @@
         <div class="quote-header">
             <div class="brand-block">
                 <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
-                <div>
-                    <h1 class="brand-name">ARES ENERGY</h1>
-                    <p style="font-size:8px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700;">&amp; Electricals</p>
-                </div>
             </div>
+            
+            <!-- Accreditation Logos -->
+            <div class="accreditation-logos">
+                <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                <img src="/saa_accredited.png" alt="SAA Accredited">
+            </div>
+
             <div class="brand-details">
                 <strong>Ares Energy Pty Ltd</strong><br>
                 ABN: 78 631 734 506<br>
                 Phone: 1300 717 583 | Mobile: 0485 838 592<br>
-                W: www.aresenergy.com.au | E: yashil@aresenergy.com.au
+                W: www.aresenergy.com.au | E: info@aresenergy.com.au
             </div>
         </div>
 
@@ -457,9 +470,9 @@
                 <h4>Proposal Info</h4>
                 <p><strong>Quote#:</strong> <span id="lblRefNo">-</span></p>
                 <p><strong>Quote Date:</strong> <span id="lblDatePrepared">-</span></p>
-                <p><strong>Sales Advisor:</strong> Yashil Patel</p>
+                <p><strong>Sales Advisor:</strong> Yashil</p>
                 <p><strong>Direct Line:</strong> 0485 838 592</p>
-                <p><strong>Email:</strong> yashil@aresenergy.com.au</p>
+                <p><strong>Email:</strong> info@aresenergy.com.au</p>
             </div>
         </div>
 
@@ -912,7 +925,13 @@
 
             // Render Quotation Notes
             const inclusionsText = lead.quotation_inclusions || `Net Meter - Not Included - Please contact your Electricity Retailer\nBlackout Protection ${lead.battery_blackout === 'Yes' ? 'Included' : 'Not Included'}`;
-            setText('lblQuotationNotes', inclusionsText);
+            const inclusionLines = inclusionsText.split('\n').map(l => l.trim()).filter(Boolean);
+            const notesContainer = document.getElementById('lblQuotationNotes');
+            if (notesContainer) {
+                notesContainer.innerHTML = `<ul style="margin: 0; padding-left: 12px; list-style-type: disc;">` + 
+                    inclusionLines.map(line => `<li style="margin-bottom: 2px;">${line}</li>`).join('') + 
+                    `</ul>`;
+            }
         }
     </script>
 </body>
