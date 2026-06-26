@@ -48,7 +48,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const db = require('./database/db');
-const { requireManager, isoToDisplay, isStrongPassword, getPasswordStrengthMessage } = require('./helpers');
+const { requireAuth, requireManager, isoToDisplay, isStrongPassword, getPasswordStrengthMessage } = require('./helpers');
 
 // ── GLOBAL OFFICE IP CACHE & HELPER ─────────────────────────
 let globalOfficeIpCache = '';
@@ -1999,6 +1999,298 @@ app.use('/combos', comboRoutes);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/quotations', quotationRoutes);
+
+// ── DYNAMIC FINANCIAL & YIELD ANALYTICS ENGINE ──────────────────
+app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) => {
+    try {
+        const {
+            leadId,
+            postcode,
+            products,
+            orientation = 'North',
+            annualUsageKwh = 6500,
+            daytimeShare = 0.30,
+            sellingPrice = 0
+        } = req.body;
+
+        let rawPostcode = postcode ? String(postcode).trim() : '';
+        let leadPostcode = '';
+        let leadOrientation = '';
+        let dbSystemSize = 0;
+
+        if (leadId) {
+            const lead = await new Promise((resolve) => {
+                db.get("SELECT postcode, engineering_details, system_size FROM leads WHERE id = ?", [leadId], (err, row) => {
+                    resolve(row || {});
+                });
+            });
+            if (lead) {
+                leadPostcode = lead.postcode ? String(lead.postcode).trim() : '';
+                dbSystemSize = parseFloat(lead.system_size) || 0;
+                if (lead.engineering_details) {
+                    try {
+                        const eng = JSON.parse(lead.engineering_details);
+                        if (eng.orientation) {
+                            leadOrientation = eng.orientation;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+        
+        const finalPostcode = rawPostcode || leadPostcode || '6000';
+        const finalOrientation = orientation || leadOrientation || 'North';
+
+        const prefix2 = finalPostcode.substring(0, 2);
+        
+        let yieldFactors = await new Promise((resolve) => {
+            db.get(
+                "SELECT * FROM postcode_yield_factors WHERE postcode_prefix = ?",
+                [prefix2],
+                (err, row) => {
+                    if (!err && row) resolve(row);
+                    else {
+                        db.get(
+                            "SELECT * FROM postcode_yield_factors WHERE postcode_prefix = 'default'",
+                            [],
+                            (err2, row2) => {
+                                resolve(row2 || {
+                                    jan: 5.5, feb: 5.2, mar: 4.5, apr: 3.8, may: 3.0, jun: 2.5,
+                                    jul: 2.7, aug: 3.2, sep: 4.0, oct: 4.8, nov: 5.2, dec: 5.5,
+                                    provider: 'Default'
+                                });
+                            }
+                        );
+                    }
+                }
+            );
+        });
+
+        const providerName = yieldFactors.provider || 'Default';
+        let utilityRates = await new Promise((resolve) => {
+            db.get(
+                "SELECT * FROM utility_rate_assumptions WHERE provider = ?",
+                [providerName],
+                (err, row) => {
+                    if (!err && row) resolve(row);
+                    else {
+                        db.get(
+                            "SELECT * FROM utility_rate_assumptions WHERE provider = 'Default'",
+                            [],
+                            (err2, row2) => {
+                                resolve(row2 || {
+                                    supply_charge_per_day: 1.00,
+                                    electricity_unit_rate: 0.28,
+                                    feed_in_tariff: 0.05
+                                });
+                            }
+                        );
+                    }
+                }
+            );
+        });
+
+        let totalPanelKw = 0;
+        let totalBatteryKwh = 0;
+
+        if (products && Array.isArray(products) && products.length > 0) {
+            for (const item of products) {
+                const qty = parseFloat(item.qty) || 0;
+                if (qty <= 0) continue;
+
+                let itemType = '';
+                let itemSize = 0;
+
+                if (item.item) {
+                    itemType = item.item.product_category || '';
+                    itemSize = parseFloat(item.item.panels_capacity_w) || parseFloat(item.item.usable_battery_kwh) || parseFloat(item.item.nominal_battery_capacity_kwh) || 0;
+                } else {
+                    itemType = item.type || '';
+                    itemSize = parseFloat(item.size) || parseFloat(item.kw) || 0;
+                }
+
+                if (itemType === 'Panel') {
+                    if (itemSize > 100) {
+                        totalPanelKw += (itemSize * qty) / 1000;
+                    } else {
+                        totalPanelKw += itemSize * qty;
+                    }
+                } else if (itemType === 'Battery') {
+                    totalBatteryKwh += itemSize * qty;
+                }
+            }
+        }
+
+        if (totalPanelKw === 0) {
+            totalPanelKw = dbSystemSize || 6.6;
+        }
+
+        const degradationFactor = 0.87;
+        const orientationMultipliers = {
+            'North': 1.0,
+            'East': 0.85,
+            'West': 0.85,
+            'South': 0.60,
+            'North-East': 0.93,
+            'North-West': 0.93
+        };
+        const orientMult = orientationMultipliers[finalOrientation] || 1.0;
+
+        const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        const monthlyAverageProduction = [];
+        let annualGeneration = 0;
+
+        months.forEach((m, idx) => {
+            const factor = parseFloat(yieldFactors[m]) || 5.0;
+            const dailyAvg = totalPanelKw * factor * orientMult * degradationFactor;
+            monthlyAverageProduction.push({
+                month: m.toUpperCase(),
+                dailyAverage: parseFloat(dailyAvg.toFixed(2)),
+                monthlyTotal: parseFloat((dailyAvg * daysInMonths[idx]).toFixed(2))
+            });
+            annualGeneration += dailyAvg * daysInMonths[idx];
+        });
+
+        const supplyChargeDay = utilityRates.supply_charge_per_day;
+        const electricityUnitRate = utilityRates.electricity_unit_rate;
+        const feedInTariff = utilityRates.feed_in_tariff;
+
+        const beforeSolarAnnualSupply = supplyChargeDay * 365;
+        const beforeSolarAnnualEnergy = annualUsageKwh * electricityUnitRate;
+        const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;
+
+        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
+        if (totalBatteryKwh > 0) {
+            const excessSolar = Math.max(0, annualGeneration - selfConsumedSolar);
+            const storedEnergy = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
+            selfConsumedSolar += storedEnergy;
+        }
+        selfConsumedSolar = Math.min(selfConsumedSolar, annualUsageKwh);
+
+        const exportedSolar = Math.max(0, annualGeneration - selfConsumedSolar);
+        const gridImport = Math.max(0, annualUsageKwh - selfConsumedSolar);
+
+        const withSolarAnnualSupply = supplyChargeDay * 365;
+        const withSolarAnnualEnergy = gridImport * electricityUnitRate;
+        const withSolarFiTCredit = exportedSolar * feedInTariff;
+        const withSolarAnnualTotal = Math.max(0, withSolarAnnualSupply + withSolarAnnualEnergy - withSolarFiTCredit);
+
+        const annualSavings = Math.max(0, beforeSolarAnnualTotal - withSolarAnnualTotal);
+
+        const netCost = parseFloat(sellingPrice) || (totalPanelKw * 950 + totalBatteryKwh * 900) || 5000;
+        
+        const cashFlows = [-netCost];
+        const r = 0.05; // 5% discount rate
+        let cumulativeDCF = 0;
+        let paybackPeriod = null;
+        
+        for (let t = 1; t <= 20; t++) {
+            const savingsInYearT = annualSavings * Math.pow(1.03, t - 1) * Math.pow(0.995, t - 1);
+            cashFlows.push(savingsInYearT);
+            
+            const dcf = savingsInYearT / Math.pow(1 + r, t);
+            if (paybackPeriod === null) {
+                if (cumulativeDCF + dcf >= netCost) {
+                    const fraction = (netCost - cumulativeDCF) / dcf;
+                    paybackPeriod = t - 1 + fraction;
+                }
+            }
+            cumulativeDCF += dcf;
+        }
+        
+        if (paybackPeriod === null) {
+            paybackPeriod = netCost / (annualSavings || 1);
+        }
+        
+        const npv = cumulativeDCF - netCost;
+        const irr = calculateIRR(cashFlows);
+
+        const co2AvoidedKg = annualGeneration * 0.70;
+        const treesPlanted = co2AvoidedKg / 20;
+        const coalAvoidedKg = co2AvoidedKg / 2.86;
+        const fuelAvoidedLiters = co2AvoidedKg / 2.3;
+
+        res.json({
+            success: true,
+            summary: {
+                systemSizeKw: parseFloat(totalPanelKw.toFixed(2)),
+                batteryCapacityKwh: parseFloat(totalBatteryKwh.toFixed(2)),
+                postcode: finalPostcode,
+                provider: providerName,
+                orientation: finalOrientation,
+                annualGenerationKwh: parseFloat(annualGeneration.toFixed(2)),
+                selfConsumptionKwh: parseFloat(selfConsumedSolar.toFixed(2)),
+                exportedSolarKwh: parseFloat(exportedSolar.toFixed(2)),
+                gridImportKwh: parseFloat(gridImport.toFixed(2))
+            },
+            monthlyProduction: monthlyAverageProduction,
+            financials: {
+                beforeSolarSupply: parseFloat(beforeSolarAnnualSupply.toFixed(2)),
+                beforeSolarEnergy: parseFloat(beforeSolarAnnualEnergy.toFixed(2)),
+                beforeSolarTotal: parseFloat(beforeSolarAnnualTotal.toFixed(2)),
+                withSolarSupply: parseFloat(withSolarAnnualSupply.toFixed(2)),
+                withSolarEnergy: parseFloat(withSolarAnnualEnergy.toFixed(2)),
+                withSolarFiTCredit: parseFloat(withSolarFiTCredit.toFixed(2)),
+                withSolarTotal: parseFloat(withSolarAnnualTotal.toFixed(2)),
+                annualSavings: parseFloat(annualSavings.toFixed(2))
+            },
+            investment: {
+                netSystemCost: parseFloat(netCost.toFixed(2)),
+                paybackYears: parseFloat(paybackPeriod.toFixed(1)),
+                roiPercent: parseFloat(((annualSavings / netCost) * 100).toFixed(1)),
+                npv: parseFloat(npv.toFixed(2)),
+                irrPercent: parseFloat((irr * 100).toFixed(1))
+            },
+            environmental: {
+                co2AvoidedKg: parseFloat(co2AvoidedKg.toFixed(1)),
+                treesPlanted: parseFloat(treesPlanted.toFixed(1)),
+                coalAvoidedKg: parseFloat(coalAvoidedKg.toFixed(1)),
+                fuelAvoidedLiters: parseFloat(fuelAvoidedLiters.toFixed(1))
+            }
+        });
+
+    } catch (err) {
+        console.error("Calculate financial yield error:", err);
+        res.status(500).json({ error: "Yield calculation failed: " + err.message });
+    }
+});
+
+function calculateIRR(cashFlows) {
+    if (!cashFlows || cashFlows.length === 0) return 0;
+    const hasNegative = cashFlows.some(cf => cf < 0);
+    const hasPositive = cashFlows.some(cf => cf > 0);
+    if (!hasNegative || !hasPositive) return 0;
+
+    let guess = 0.1;
+    const maxIterations = 100;
+    const precision = 1e-6;
+    
+    for (let i = 0; i < maxIterations; i++) {
+        let npv = 0;
+        let dNpv = 0;
+        for (let t = 0; t < cashFlows.length; t++) {
+            const factor = Math.pow(1 + guess, t);
+            npv += cashFlows[t] / factor;
+            if (t > 0) {
+                dNpv -= t * cashFlows[t] / (factor * (1 + guess));
+            }
+        }
+        
+        if (Math.abs(dNpv) < 1e-12) break;
+        
+        const nextGuess = guess - npv / dNpv;
+        if (Math.abs(nextGuess - guess) < precision) {
+            if (isNaN(nextGuess) || nextGuess === Infinity || nextGuess === -Infinity) {
+                return 0;
+            }
+            return nextGuess;
+        }
+        guess = nextGuess;
+    }
+    return isNaN(guess) ? 0 : guess;
+}
 
 const applyAdvancedFilters = (req, baseQuery, params) => {
     let query = baseQuery;

@@ -964,6 +964,67 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_user_id ON system_file_operations(user_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_time ON system_file_operations(timestamp)", () => {});
 
+    // ── POSTCODE YIELD FACTORS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS postcode_yield_factors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            postcode_prefix TEXT UNIQUE,
+            provider TEXT,
+            jan REAL, feb REAL, mar REAL, apr REAL, may REAL, jun REAL,
+            jul REAL, aug REAL, sep REAL, oct REAL, nov REAL, dec REAL
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating postcode_yield_factors table:', err.message);
+        else {
+            console.log('[DB] postcode_yield_factors table ready.');
+            // Seed postcode yield factors for WA postcodes starting with 60, 61, 62, 67, and default
+            db.serialize(() => {
+                const seedStmt = db.prepare(`
+                    INSERT OR IGNORE INTO postcode_yield_factors (postcode_prefix, provider, jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `);
+                // WA standard (Perth - Synergy)
+                seedStmt.run('60', 'Synergy', 7.5, 7.2, 6.3, 4.8, 3.5, 2.9, 3.1, 3.9, 5.0, 6.2, 7.0, 7.4);
+                seedStmt.run('61', 'Synergy', 7.5, 7.2, 6.3, 4.8, 3.5, 2.9, 3.1, 3.9, 5.0, 6.2, 7.0, 7.4);
+                seedStmt.run('62', 'Synergy', 7.2, 6.8, 5.8, 4.4, 3.2, 2.7, 2.9, 3.6, 4.7, 5.8, 6.6, 7.1);
+                // Regional WA (Horizon Power)
+                seedStmt.run('67', 'Horizon Power', 8.2, 7.8, 7.2, 6.2, 5.2, 4.8, 5.0, 5.8, 6.8, 7.6, 8.0, 8.3);
+                // Default fallback
+                seedStmt.run('default', 'Default', 5.5, 5.2, 4.5, 3.8, 3.0, 2.5, 2.7, 3.2, 4.0, 4.8, 5.2, 5.5);
+                seedStmt.finalize();
+            });
+        }
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_postcode_yield_prefix ON postcode_yield_factors(postcode_prefix)", () => {});
+
+    // ── UTILITY RATE ASSUMPTIONS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS utility_rate_assumptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT UNIQUE,
+            supply_charge_per_day REAL,
+            electricity_unit_rate REAL,
+            feed_in_tariff REAL
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating utility_rate_assumptions table:', err.message);
+        else {
+            console.log('[DB] utility_rate_assumptions table ready.');
+            db.serialize(() => {
+                const seedStmt = db.prepare(`
+                    INSERT OR IGNORE INTO utility_rate_assumptions (provider, supply_charge_per_day, electricity_unit_rate, feed_in_tariff)
+                    VALUES (?, ?, ?, ?)
+                `);
+                seedStmt.run('Synergy', 1.05, 0.30, 0.08);
+                seedStmt.run('Western Power', 1.05, 0.30, 0.08);
+                seedStmt.run('Horizon Power', 1.15, 0.35, 0.10);
+                seedStmt.run('Default', 1.00, 0.28, 0.05);
+                seedStmt.finalize();
+            });
+        }
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_utility_rate_provider ON utility_rate_assumptions(provider)", () => {});
+
     // ── SAFE MIGRATION: Add is_voip_enabled to existing users tables ───
     db.all("PRAGMA table_info(users)", [], (pragmaErr, cols) => {
         if (pragmaErr) { console.error('[DB Migration] Could not inspect users table:', pragmaErr.message); return; }
