@@ -106,9 +106,21 @@ db.serialize(() => {
             show_in_detailed_reports TEXT DEFAULT 'Yes', child_products TEXT DEFAULT '[]',
             dynamic_documents TEXT DEFAULT '[]', datasheet TEXT, installation_manual TEXT,
             wifi_manual TEXT, warranty_document TEXT, created_at TEXT,
-            last_update_on TEXT, last_updated_by TEXT
+            last_update_on TEXT, last_updated_by TEXT,
+            show_in_ext_install TEXT DEFAULT 'No'
         )
     `);
+
+    // Migration: Add show_in_ext_install column to products table if it doesn't exist
+    db.run("ALTER TABLE products ADD COLUMN show_in_ext_install TEXT DEFAULT 'No'", (err) => {
+        if (err) {
+            if (!err.message.includes('duplicate column name') && !err.message.includes('already exists')) {
+                console.error("Error adding column show_in_ext_install:", err.message);
+            }
+        } else {
+            console.log("Successfully added column show_in_ext_install to products table.");
+        }
+    });
 
     // 3b. Products History Table (both names for compatibility)
     db.run(`

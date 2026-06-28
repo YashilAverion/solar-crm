@@ -609,8 +609,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="field"><label id="lbl_purchase_price">Purchase Price (Inc. GST $)</label><input type="text" name="purchase_price" id="purchase_price" oninput="calculateExGST()"></div>
                 <div class="field"><label>Purchase Price (Ex. GST $)</label><input type="text" name="purchase_price_ex_gst" id="purchase_price_ex_gst" oninput="calculateIncGST()"></div>
             </div>
-            <div class="form-grid-3">
-                <div class="section-divider-3">Product Settings</div>
+            <div class="form-grid">
+                <div class="section-divider">Product Settings</div>
                 <div class="field"><label id="lbl_product_status">Product Status</label>
                     <div class="radio-group">
                         <label class="radio-label"><input type="radio" name="product_status" value="Active" checked> Active</label>
@@ -627,6 +627,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="radio-group">
                         <label class="radio-label"><input type="radio" name="show_in_detailed_reports" value="Yes" checked> Yes</label>
                         <label class="radio-label"><input type="radio" name="show_in_detailed_reports" value="No"> No</label>
+                    </div>
+                </div>
+                <div class="field"><label id="lbl_show_in_ext_install">Show in Ext. Install.</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="show_in_ext_install" value="Yes"> Yes</label>
+                        <label class="radio-label"><input type="radio" name="show_in_ext_install" value="No" checked> No</label>
                     </div>
                 </div>
             </div>
@@ -1391,6 +1397,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(p.product_status){const r=document.querySelector(`input[name="product_status"][value="${p.product_status}"]`);if(r)r.checked=true;}
         if(p.show_in_quotation){const r=document.querySelector(`input[name="show_in_quotation"][value="${p.show_in_quotation}"]`);if(r)r.checked=true;}
         if(p.show_in_detailed_reports){const r=document.querySelector(`input[name="show_in_detailed_reports"][value="${p.show_in_detailed_reports}"]`);if(r)r.checked=true;}
+        if(p.show_in_ext_install){const r=document.querySelector(`input[name="show_in_ext_install"][value="${p.show_in_ext_install}"]`);if(r)r.checked=true;}
         const cc=document.getElementById('childProductsContainer');cc.innerHTML='';
         if(p.child_products){try{JSON.parse(p.child_products).forEach(cp=>addChildRow(cp.name,cp.code,cp.qty));}catch(e){}}
         if(!cc.children.length)addChildRow();

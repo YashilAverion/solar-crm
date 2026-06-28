@@ -790,8 +790,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="field"><label>Purchase Price (Ex. GST $)</label><input type="number" step="any" name="purchase_price_ex_gst" id="ap_purchase_price_ex_gst" oninput="apCalculateIncGST()"></div>
             </div>
 
-            <div class="form-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px 12px; margin-top: 10px;">
-                <div class="section-divider" style="grid-column: span 3;">Product Settings</div>
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px 12px; margin-top: 10px;">
+                <div class="section-divider" style="grid-column: span 4;">Product Settings</div>
                 <div class="field"><label>Product Status</label>
                     <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
                         <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="product_status" value="Active" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> Active</label>
@@ -808,6 +808,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
                         <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_detailed_reports" value="Yes" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> Yes</label>
                         <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_detailed_reports" value="No" style="width: 14px; height: 14px; accent-color: var(--primary);"> No</label>
+                    </div>
+                </div>
+                <div class="field"><label>Show in Ext. Install.</label>
+                    <div style="display: flex; gap: 16px; align-items: center; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; background: var(--surface);">
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_ext_install" value="Yes" style="width: 14px; height: 14px; accent-color: var(--primary);"> Yes</label>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="radio" name="show_in_ext_install" value="No" checked style="width: 14px; height: 14px; accent-color: var(--primary);"> No</label>
                     </div>
                 </div>
             </div>
@@ -1499,7 +1505,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const val = this.value.trim().toLowerCase();
             prodDrop.innerHTML = '';
             if (val.length < 1) { prodDrop.style.display = 'none'; return; }
-            const matches = allMasterProducts.filter(p => p.product_category === currentType && p.product_status === 'Active' && (p.prod_name && p.prod_name.toLowerCase().includes(val)));
+            const matches = allMasterProducts.filter(p => p.product_category === currentType && p.product_status === 'Active' && p.show_in_ext_install === 'Yes' && (p.prod_name && p.prod_name.toLowerCase().includes(val)));
             if (matches.length === 0) { 
                 prodDrop.innerHTML = `<li class="ac-empty" style="display:flex; flex-direction:column; gap:6px; padding:10px;">No products found <a href="javascript:void(0)" onclick="openAddProductMasterModal('${currentType}', '${val.replace(/'/g, "\\'")}')" style="background:var(--primary); color:#fff; text-decoration:none; padding:6px 12px; border-radius:4px; font-weight:600; font-size:11px; text-align:center; display:inline-block; margin-top:4px; transition:0.2s;">+ Add Product</a></li>`; 
                 prodDrop.style.display = 'block'; 

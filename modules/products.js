@@ -148,8 +148,8 @@ router.post('/bulk', async (req, res) => {
                 panels_linear_warranty_years, purchase_price, purchase_price_ex_gst, product_status,
                 show_in_quotation, show_in_detailed_reports, child_products, dynamic_documents,
                 datasheet, installation_manual, wifi_manual, warranty_document,
-                created_at, last_update_on, last_updated_by
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`; 
+                created_at, last_update_on, last_updated_by, show_in_ext_install
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`; 
             
             let id = await runQuery(sql, [
                 d.product_category || 'Other', d.prod_name || '', d.manufacturer_name || '', d.brand_name || '', d.model_number || '',
@@ -157,7 +157,7 @@ router.post('/bulk', async (req, res) => {
                 d.type_of_inverter || '', d.panels_capacity_w || '', d.inv_rt_ac_out_w || '', d.inv_rt_dc_power_kw || '', d.inv_mppt || '',
                 d.nominal_battery_capacity_kwh || '', d.usable_battery_kwh || '', d.no_of_battery_modules || '', d.pro_warranty_years || '',
                 d.panels_linear_warranty_years || '', d.purchase_price || '', exGst, 'Active', 'Yes', 'Yes', 
-                '[]', '[]', '', '', '', '', currentTime, currentTime, currentUser
+                '[]', '[]', '', '', '', '', currentTime, currentTime, currentUser, 'No'
             ]);
 
             await runQuery(`INSERT INTO products_history (record_id, action, details, user_name, created_at) VALUES (?,?,?,?,?)`, 
@@ -200,8 +200,8 @@ router.post('/', requireAuth, upload.none(), (req, res) => {
             panels_linear_warranty_years, purchase_price, purchase_price_ex_gst, product_status,
             show_in_quotation, show_in_detailed_reports, child_products, dynamic_documents,
             datasheet, installation_manual, wifi_manual, warranty_document,
-            created_at, last_update_on, last_updated_by
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`; 
+            created_at, last_update_on, last_updated_by, show_in_ext_install
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`; 
 
         const params = [
             d.product_category, d.prod_name, d.manufacturer_name, d.brand_name, d.model_number,
@@ -211,7 +211,7 @@ router.post('/', requireAuth, upload.none(), (req, res) => {
             d.panels_linear_warranty_years, d.purchase_price, d.purchase_price_ex_gst, d.product_status,
             d.show_in_quotation, d.show_in_detailed_reports, d.child_products, d.dynamic_documents,
             '', '', '', '',
-            currentTime, currentTime, d.last_updated_by
+            currentTime, currentTime, d.last_updated_by, d.show_in_ext_install || 'No'
         ];
 
         db.run(sql, params, function(err) {
@@ -251,7 +251,7 @@ router.put('/:id', requireAuth, upload.none(), (req, res) => {
                 panels_linear_warranty_years=?, purchase_price=?, purchase_price_ex_gst=?, product_status=?,
                 show_in_quotation=?, show_in_detailed_reports=?, child_products=?, dynamic_documents=?,
                 datasheet=?, installation_manual=?, wifi_manual=?, warranty_document=?,
-                last_update_on=?, last_updated_by=? WHERE id=?`;
+                last_update_on=?, last_updated_by=?, show_in_ext_install=? WHERE id=?`;
             
             const params = [
                 d.product_category, d.prod_name, d.manufacturer_name, d.brand_name, d.model_number,
@@ -260,7 +260,7 @@ router.put('/:id', requireAuth, upload.none(), (req, res) => {
                 d.nominal_battery_capacity_kwh, d.usable_battery_kwh, d.no_of_battery_modules, d.pro_warranty_years,
                 d.panels_linear_warranty_years, d.purchase_price, d.purchase_price_ex_gst, d.product_status,
                 d.show_in_quotation, d.show_in_detailed_reports, d.child_products, d.dynamic_documents,
-                ds, im, wm, wd, currentTime, d.last_updated_by, id
+                ds, im, wm, wd, currentTime, d.last_updated_by, d.show_in_ext_install || 'No', id
             ];
 
             db.run(sql, params, (err) => {
