@@ -517,7 +517,9 @@ router.post('/workers', requireAuth, (req, res) => {
         employee_group, holiday_group, include_holidays_in_payslips,
         ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
         company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
-        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
+        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state,
+        compliance_documents, cl_balance, sl_balance, ml_balance, bank_account_type,
+        basic_salary, hra, special_allowance, epf_opt_in, esic_opt_in, pt_opt_in
     } = req.body;
     
     if (!first_name) {
@@ -536,8 +538,10 @@ router.post('/workers', requireAuth, (req, res) => {
             employee_group, holiday_group, include_holidays_in_payslips,
             ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
             company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
-            pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
-         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state,
+            compliance_documents, cl_balance, sl_balance, ml_balance, bank_account_type,
+            basic_salary, hra, special_allowance, epf_opt_in, esic_opt_in, pt_opt_in
+         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             first_name.trim(), last_name ? last_name.trim() : '', email ? email.trim() : '', phone || '', role || 'Worker', pay_frequency || 'Fortnightly',
             title || '', middle_name || '', dob || '', job_title || '', gender || '', google_address || '',
@@ -558,7 +562,18 @@ router.post('/workers', requireAuth, (req, res) => {
             tax_regime || 'New',
             uan_number || '',
             esic_number || '',
-            pt_state || 'Maharashtra'
+            pt_state || 'Maharashtra',
+            compliance_documents || '[]',
+            parseFloat(cl_balance) || 0.0,
+            parseFloat(sl_balance) || 0.0,
+            parseFloat(ml_balance) || 0.0,
+            bank_account_type || 'Savings',
+            parseFloat(basic_salary) || 0.0,
+            parseFloat(hra) || 0.0,
+            parseFloat(special_allowance) || 0.0,
+            parseInt(epf_opt_in, 10) === 0 ? 0 : 1,
+            parseInt(esic_opt_in, 10) === 0 ? 0 : 1,
+            parseInt(pt_opt_in, 10) === 0 ? 0 : 1
         ],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
@@ -625,7 +640,9 @@ router.put('/workers/:id', requireAuth, (req, res) => {
         employee_group, holiday_group, include_holidays_in_payslips,
         ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
         company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
-        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
+        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state,
+        compliance_documents, cl_balance, sl_balance, ml_balance, bank_account_type,
+        basic_salary, hra, special_allowance, epf_opt_in, esic_opt_in, pt_opt_in
     } = req.body;
     const workerId = req.params.id;
 
@@ -648,6 +665,8 @@ router.put('/workers/:id', requireAuth, (req, res) => {
                  company_name = ?, tfn_exemption = ?, residency_status = ?, visa_document_path = ?, weekly_hours_limit = ?, per_hour_wages_inc_tax = ?, custom_holidays = ?,
                  break_hours_limit = ?,
                  pan_number = ?, aadhaar_number = ?, tax_regime = ?, uan_number = ?, esic_number = ?, pt_state = ?,
+                 compliance_documents = ?, cl_balance = ?, sl_balance = ?, ml_balance = ?, bank_account_type = ?,
+                 basic_salary = ?, hra = ?, special_allowance = ?, epf_opt_in = ?, esic_opt_in = ?, pt_opt_in = ?,
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
             [
@@ -671,6 +690,17 @@ router.put('/workers/:id', requireAuth, (req, res) => {
                 uan_number || '',
                 esic_number || '',
                 pt_state || 'Maharashtra',
+                compliance_documents || '[]',
+                parseFloat(cl_balance) || 0.0,
+                parseFloat(sl_balance) || 0.0,
+                parseFloat(ml_balance) || 0.0,
+                bank_account_type || 'Savings',
+                parseFloat(basic_salary) || 0.0,
+                parseFloat(hra) || 0.0,
+                parseFloat(special_allowance) || 0.0,
+                parseInt(epf_opt_in, 10) === 0 ? 0 : 1,
+                parseInt(esic_opt_in, 10) === 0 ? 0 : 1,
+                parseInt(pt_opt_in, 10) === 0 ? 0 : 1,
                 workerId
             ],
             function(err) {

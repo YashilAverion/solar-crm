@@ -5565,7 +5565,180 @@ function viewEmployeeLogs(name) {
     }, 100);
 }
 
+const COMPLIANCE_DOC_TYPES = [
+    "Aadhaar Card",
+    "PAN Card",
+    "EPF Form 11 (UAN Declaration)",
+    "Form 12B (Tax Declaration)",
+    "Offer Letter / Employment Agreement",
+    "Previous Employer Relieving Letter",
+    "Academic Certificates (Graduation/PG)",
+    "Cancelled Cheque / Bank Passbook Copy",
+    "Other compliance document"
+];
+let currentComplianceDocs = [];
+
+function renderComplianceDocs() {
+    const container = document.getElementById('ind-doc-rows-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (currentComplianceDocs.length === 0) {
+        container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">No compliance documents added yet.</div>';
+        return;
+    }
+    
+    currentComplianceDocs.forEach((doc, idx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '12px';
+        row.style.width = '100%';
+        row.style.background = '#f8fafc';
+        row.style.border = '1px solid #cbd5e1';
+        row.style.padding = '8px 10px';
+        row.style.borderRadius = '6px';
+        row.style.boxSizing = 'border-box';
+        
+        const typeSelect = document.createElement('select');
+        typeSelect.style.height = '32px';
+        typeSelect.style.fontSize = '12px';
+        typeSelect.style.flex = '2';
+        typeSelect.style.borderRadius = '4px';
+        typeSelect.style.border = '1px solid #cbd5e1';
+        typeSelect.style.padding = '0 6px';
+        typeSelect.style.boxSizing = 'border-box';
+        typeSelect.onchange = (e) => {
+            doc.type = e.target.value;
+        };
+        
+        COMPLIANCE_DOC_TYPES.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t;
+            if (doc.type === t) opt.selected = true;
+            typeSelect.appendChild(opt);
+        });
+        
+        const statusSpan = document.createElement('span');
+        statusSpan.style.fontSize = '12px';
+        statusSpan.style.flex = '3';
+        statusSpan.style.color = '#475569';
+        statusSpan.style.overflow = 'hidden';
+        statusSpan.style.textOverflow = 'ellipsis';
+        statusSpan.style.whiteSpace = 'nowrap';
+        statusSpan.style.maxWidth = '250px';
+        
+        const uploadBtn = document.createElement('button');
+        uploadBtn.type = 'button';
+        uploadBtn.className = 'btn-xero-secondary';
+        uploadBtn.style.height = '28px';
+        uploadBtn.style.fontSize = '11px';
+        uploadBtn.style.padding = '0 10px';
+        uploadBtn.style.display = 'inline-flex';
+        uploadBtn.style.alignItems = 'center';
+        uploadBtn.style.gap = '4px';
+        uploadBtn.style.cursor = 'pointer';
+        uploadBtn.innerHTML = '📁 Upload';
+        
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.style.display = 'none';
+        fileInput.accept = '.pdf,.png,.jpg,.jpeg,.doc,.docx';
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('File Too Large', 'Maximum file size is 5MB.', 'warning');
+                return;
+            }
+            statusSpan.innerHTML = '<span style="color: #0078C1;">Uploading...</span>';
+            const fd = new FormData();
+            fd.append('document', file);
+            fetch('/api/attendance/workers/upload-document', {
+                method: 'POST',
+                body: fd
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    doc.path = data.fileUrl;
+                    renderComplianceDocs();
+                    showXeroToast('Document uploaded.', 'success');
+                } else {
+                    statusSpan.textContent = 'Upload failed';
+                }
+            })
+            .catch(() => {
+                statusSpan.textContent = 'Upload failed';
+            });
+        };
+        
+        uploadBtn.onclick = () => fileInput.click();
+        
+        if (doc.path) {
+            statusSpan.innerHTML = `<a href="${doc.path}" target="_blank" style="color: #0078C1; font-weight: 600; text-decoration: underline;">View File</a>`;
+        } else {
+            statusSpan.textContent = 'No file uploaded';
+        }
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.style.background = 'none';
+        removeBtn.style.border = 'none';
+        removeBtn.style.color = '#ef4444';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.fontSize = '14px';
+        removeBtn.style.padding = '4px';
+        removeBtn.title = 'Remove Row';
+        removeBtn.innerHTML = '❌';
+        removeBtn.onclick = () => {
+            currentComplianceDocs.splice(idx, 1);
+            renderComplianceDocs();
+        };
+        
+        row.appendChild(typeSelect);
+        row.appendChild(uploadBtn);
+        row.appendChild(fileInput);
+        row.appendChild(statusSpan);
+        row.appendChild(removeBtn);
+        
+        container.appendChild(row);
+    });
+}
+
+function addComplianceDocRow(type = 'Aadhaar Card', path = '') {
+    currentComplianceDocs.push({
+        type: type,
+        path: path
+    });
+    renderComplianceDocs();
+}
+
+function syncIndianCtcSummary() {
+    const basic = parseFloat(document.getElementById('emp_basic_salary').value) || 0;
+    const hra = parseFloat(document.getElementById('emp_hra').value) || 0;
+    const sa = parseFloat(document.getElementById('emp_special_allowance').value) || 0;
+    const total = basic + hra + sa;
+    const summaryVal = document.getElementById('indian_ctc_summary_val');
+    if (summaryVal) {
+        summaryVal.textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+}
+
 const HOLIDAY_DEFAULTS = {
+    'Gujarat Public Holidays': [
+        { date: '14-01-2026', name: "Uttarayan (Makar Sankranti)" },
+        { date: '26-01-2026', name: "Republic Day" },
+        { date: '06-03-2026', name: "Holi (Dhuleti)" },
+        { date: '15-08-2026', name: "Independence Day" },
+        { date: '04-09-2026', name: "Janmashtami" },
+        { date: '02-10-2026', name: "Mahatma Gandhi Jayanti" },
+        { date: '08-11-2026', name: "Diwali" },
+        { date: '09-11-2026', name: "Vikram Samvat New Year" },
+        { date: '10-11-2026', name: "Bhai Dooj" },
+        { date: '25-12-2026', name: "Christmas Day" }
+    ],
     'WA Public Holidays': [
         { date: '01-01-2026', name: "New Year's Day" },
         { date: '26-01-2026', name: "Australia Day" },
@@ -5755,6 +5928,60 @@ function syncTaxFieldsByCompany() {
     const ausTax = document.getElementById('aus-tax-fields');
     const indTax = document.getElementById('ind-tax-fields');
     
+    const ausDocField = document.getElementById('aus-doc-upload-field');
+    const indDocField = document.getElementById('ind-doc-upload-field');
+    const superContainer = document.getElementById('superannuation-membership-container');
+    const ausLeaveField = document.getElementById('aus-leave-fields');
+    const indLeaveField = document.getElementById('ind-leave-fields');
+    const bankTypeField = document.getElementById('bank_account_type_container');
+    const ausPayField = document.getElementById('aus-pay-template-fields');
+    const indPayField = document.getElementById('ind-pay-template-fields');
+    
+    const holidayGroupSelect = document.getElementById('emp_holiday_group');
+    if (holidayGroupSelect) {
+        const prevGroupVal = holidayGroupSelect.value;
+        holidayGroupSelect.innerHTML = '';
+        if (company === 'Averion Global LLP') {
+            holidayGroupSelect.innerHTML = `
+                <option value="">Select group</option>
+                <option value="Gujarat Public Holidays">Gujarat Public Holidays</option>
+            `;
+            holidayGroupSelect.value = prevGroupVal === 'Gujarat Public Holidays' ? 'Gujarat Public Holidays' : 'Gujarat Public Holidays';
+        } else {
+            holidayGroupSelect.innerHTML = `
+                <option value="">Select group</option>
+                <option value="WA Public Holidays">WA Public Holidays</option>
+                <option value="NSW Public Holidays">NSW Public Holidays</option>
+                <option value="VIC Public Holidays">VIC Public Holidays</option>
+            `;
+            if (['WA Public Holidays', 'NSW Public Holidays', 'VIC Public Holidays'].includes(prevGroupVal)) {
+                holidayGroupSelect.value = prevGroupVal;
+            } else {
+                holidayGroupSelect.value = '';
+            }
+        }
+    }
+    
+    if (company === 'Averion Global LLP') {
+        if (ausDocField) ausDocField.style.display = 'none';
+        if (indDocField) indDocField.style.display = 'block';
+        if (superContainer) superContainer.style.display = 'none';
+        if (ausLeaveField) ausLeaveField.style.display = 'none';
+        if (indLeaveField) indLeaveField.style.display = 'grid';
+        if (bankTypeField) bankTypeField.style.display = 'block';
+        if (ausPayField) ausPayField.style.display = 'none';
+        if (indPayField) indPayField.style.display = 'grid';
+    } else {
+        if (ausDocField) ausDocField.style.display = 'block';
+        if (indDocField) indDocField.style.display = 'none';
+        if (superContainer) superContainer.style.display = 'block';
+        if (ausLeaveField) ausLeaveField.style.display = 'flex';
+        if (indLeaveField) indLeaveField.style.display = 'none';
+        if (bankTypeField) bankTypeField.style.display = 'none';
+        if (ausPayField) ausPayField.style.display = 'grid';
+        if (indPayField) indPayField.style.display = 'none';
+    }
+
     // 1. Employment type dropdown options
     const empTypeSelect = document.getElementById('emp_employment_type');
     const prevTypeVal = empTypeSelect ? empTypeSelect.value : '';
@@ -5798,23 +6025,20 @@ function syncTaxFieldsByCompany() {
         if (personalLabel) personalLabel.textContent = 'Casual & Sick Leave Balance (Days)';
         
         // 3. Bank Account tab BSB to IFSC conversion
-        const bsbLabel = document.querySelector('label[for="emp_bank_bsb"]');
+        const bsbLabel = document.getElementById('lbl_emp_bank_bsb');
         if (bsbLabel) bsbLabel.textContent = 'IFSC Code';
         const bsbInput = document.getElementById('emp_bank_bsb');
         if (bsbInput) bsbInput.placeholder = 'e.g. SBIN0001234';
-        
     } else {
         if (ausTax) ausTax.style.display = 'flex';
         if (indTax) indTax.style.display = 'none';
         
-        // 2. Leaves tab labels
         const annualLabel = document.querySelector('label[for="emp_annual_leave_balance"]');
         if (annualLabel) annualLabel.textContent = 'Annual Leave Balance (Hours)';
         const personalLabel = document.querySelector('label[for="emp_personal_leave_balance"]');
         if (personalLabel) personalLabel.textContent = 'Personal / Sick Leave Balance (Hours)';
         
-        // 3. Bank Account tab BSB to IFSC conversion
-        const bsbLabel = document.querySelector('label[for="emp_bank_bsb"]');
+        const bsbLabel = document.getElementById('lbl_emp_bank_bsb');
         if (bsbLabel) bsbLabel.textContent = 'BSB';
         const bsbInput = document.getElementById('emp_bank_bsb');
         if (bsbInput) bsbInput.placeholder = 'e.g. 062-900';
@@ -5920,7 +6144,29 @@ function openEmployeeModal(editId = null) {
             document.getElementById('emp_tax_regime').value = u.tax_regime || 'New';
             document.getElementById('emp_uan_number').value = u.uan_number || '';
             document.getElementById('emp_esic_number').value = u.esic_number || '';
-            document.getElementById('emp_pt_state').value = u.pt_state || 'Maharashtra';
+            document.getElementById('emp_pt_state').value = u.pt_state || 'Gujarat';
+            
+            document.getElementById('emp_el_balance').value = u.annual_leave_balance !== undefined && u.annual_leave_balance !== null ? u.annual_leave_balance : '0.0';
+            document.getElementById('emp_cl_balance').value = u.cl_balance !== undefined && u.cl_balance !== null ? u.cl_balance : '0.0';
+            document.getElementById('emp_sl_balance').value = u.sl_balance !== undefined && u.sl_balance !== null ? u.sl_balance : '0.0';
+            document.getElementById('emp_ml_balance').value = u.ml_balance !== undefined && u.ml_balance !== null ? u.ml_balance : '0.0';
+            
+            document.getElementById('emp_bank_account_type').value = u.bank_account_type || 'Savings';
+            
+            document.getElementById('emp_basic_salary').value = u.basic_salary !== undefined && u.basic_salary !== null ? u.basic_salary : '0';
+            document.getElementById('emp_hra').value = u.hra !== undefined && u.hra !== null ? u.hra : '0';
+            document.getElementById('emp_special_allowance').value = u.special_allowance !== undefined && u.special_allowance !== null ? u.special_allowance : '0';
+            document.getElementById('emp_epf_opt_in').checked = u.epf_opt_in !== 0;
+            document.getElementById('emp_esic_opt_in').checked = u.esic_opt_in !== 0;
+            document.getElementById('emp_pt_opt_in').checked = u.pt_opt_in !== 0;
+            syncIndianCtcSummary();
+            
+            try {
+                currentComplianceDocs = u.compliance_documents ? JSON.parse(u.compliance_documents) : [];
+            } catch(e) {
+                currentComplianceDocs = [];
+            }
+            renderComplianceDocs();
             
             // Leaves fields
             document.getElementById('emp_annual_leave_balance').value = u.annual_leave_balance !== undefined && u.annual_leave_balance !== null ? u.annual_leave_balance : '0.00';
@@ -5981,7 +6227,25 @@ function openEmployeeModal(editId = null) {
         document.getElementById('emp_tax_regime').value = 'New';
         document.getElementById('emp_uan_number').value = '';
         document.getElementById('emp_esic_number').value = '';
-        document.getElementById('emp_pt_state').value = 'Maharashtra';
+        document.getElementById('emp_pt_state').value = 'Gujarat';
+        
+        document.getElementById('emp_el_balance').value = '0.0';
+        document.getElementById('emp_cl_balance').value = '0.0';
+        document.getElementById('emp_sl_balance').value = '0.0';
+        document.getElementById('emp_ml_balance').value = '0.0';
+        
+        document.getElementById('emp_bank_account_type').value = 'Savings';
+        
+        document.getElementById('emp_basic_salary').value = '0';
+        document.getElementById('emp_hra').value = '0';
+        document.getElementById('emp_special_allowance').value = '0';
+        document.getElementById('emp_epf_opt_in').checked = true;
+        document.getElementById('emp_esic_opt_in').checked = true;
+        document.getElementById('emp_pt_opt_in').checked = true;
+        syncIndianCtcSummary();
+        
+        currentComplianceDocs = [];
+        renderComplianceDocs();
         currentWorkerHolidays = globalCustomHolidays;
         if (currentWorkerHolidays.length === 0 && globalHolidayGroup && HOLIDAY_DEFAULTS[globalHolidayGroup]) {
             currentWorkerHolidays = [...HOLIDAY_DEFAULTS[globalHolidayGroup]];
@@ -6195,10 +6459,21 @@ function saveEmployeeForm(event) {
         uan_number: document.getElementById('emp_uan_number').value.trim(),
         esic_number: document.getElementById('emp_esic_number').value.trim(),
         pt_state: document.getElementById('emp_pt_state').value,
+        compliance_documents: JSON.stringify(currentComplianceDocs),
+        cl_balance: parseFloat(document.getElementById('emp_cl_balance').value) || 0.0,
+        sl_balance: parseFloat(document.getElementById('emp_sl_balance').value) || 0.0,
+        ml_balance: parseFloat(document.getElementById('emp_ml_balance').value) || 0.0,
+        bank_account_type: document.getElementById('emp_bank_account_type').value,
+        basic_salary: parseFloat(document.getElementById('emp_basic_salary').value) || 0.0,
+        hra: parseFloat(document.getElementById('emp_hra').value) || 0.0,
+        special_allowance: parseFloat(document.getElementById('emp_special_allowance').value) || 0.0,
+        epf_opt_in: document.getElementById('emp_epf_opt_in').checked ? 1 : 0,
+        esic_opt_in: document.getElementById('emp_esic_opt_in').checked ? 1 : 0,
+        pt_opt_in: document.getElementById('emp_pt_opt_in').checked ? 1 : 0,
 
         // Leaves tab
-        annual_leave_balance: parseFloat(document.getElementById('emp_annual_leave_balance').value) || 0.0,
-        personal_leave_balance: parseFloat(document.getElementById('emp_personal_leave_balance').value) || 0.0,
+        annual_leave_balance: parseFloat(document.getElementById('emp_company_name').value === 'Averion Global LLP' ? document.getElementById('emp_el_balance').value : document.getElementById('emp_annual_leave_balance').value) || 0.0,
+        personal_leave_balance: parseFloat(document.getElementById('emp_company_name').value === 'Averion Global LLP' ? (parseFloat(document.getElementById('emp_cl_balance').value) + parseFloat(document.getElementById('emp_sl_balance').value)) : document.getElementById('emp_personal_leave_balance').value) || 0.0,
 
         // Bank Account tab
         bank_account_name: document.getElementById('emp_bank_account_name').value.trim(),
@@ -7038,7 +7313,7 @@ function updateSelectedWeeksOrFortnights() {
                     </div>
                     
                     <!-- Superannuation memberships -->
-                    <div class="field" style="grid-column: span 4; margin-top: 10px;">
+                    <div class="field" id="superannuation-membership-container" style="grid-column: span 4; margin-top: 10px;">
                         <div class="section-divider" style="margin-top: 0; border-bottom: 1px solid #c5d3e8;">Superannuation memberships</div>
                         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
                             <!-- Display active Superannuation details from Taxes tab -->
@@ -7210,19 +7485,17 @@ function updateSelectedWeeksOrFortnights() {
                             <div class="field">
                                 <label for="emp_pt_state" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Professional Tax State</label>
                                 <select id="emp_pt_state" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
-                                    <option value="Maharashtra">Maharashtra</option>
-                                    <option value="Karnataka">Karnataka</option>
-                                    <option value="Tamil Nadu">Tamil Nadu</option>
-                                    <option value="West Bengal">West Bengal</option>
+                                    <option value="Gujarat">Gujarat</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Common Compliance Upload & Portal Settings (Restored) -->
-                    <div class="section-divider" style="grid-column: span 4;">Document Upload & Portal Settings</div>
+                    <!-- Document Upload & Portal Settings (Common / Swapped dynamically) -->
+                    <div class="section-divider" style="grid-column: span 4;" id="document_upload_header">Document Upload & Portal Settings</div>
                     
-                    <div class="field" style="grid-column: span 2;">
+                    <!-- Australian Single Document Upload -->
+                    <div class="field" style="grid-column: span 2;" id="aus-doc-upload-field">
                         <label>Visa/Tax/Compliance Document (Max 5MB)</label>
                         <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; height: 32px;">
                             <!-- Hidden input to store document URL -->
@@ -7246,8 +7519,19 @@ function updateSelectedWeeksOrFortnights() {
                             </button>
                         </div>
                     </div>
+
+                    <!-- Indian Compliance Multi-Documents Upload -->
+                    <div class="field" style="grid-column: span 4; display: none;" id="ind-doc-upload-field">
+                        <label style="font-weight: 700; font-size: 12px; margin-bottom: 8px;">Indian Statutory & Onboarding Documents</label>
+                        <div id="ind-doc-rows-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; width: 100%;">
+                            <!-- Rows will be injected here dynamically -->
+                        </div>
+                        <button type="button" onclick="addComplianceDocRow()" class="btn-xero-secondary" style="height: 32px; padding: 0 12px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 600; color: #0078C1; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;">
+                            <span style="font-size: 14px; font-weight: 700;">+</span> Add Document Row
+                        </button>
+                    </div>
                     
-                    <div class="field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; height: 100%; margin-top: auto; padding-top: 14px; grid-column: span 2;">
+                    <div class="field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; height: 100%; margin-top: auto; padding-top: 14px; grid-column: span 2;" id="common-portal-settings-field">
                         <input type="checkbox" id="emp_invite_xero" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
                         <label for="emp_invite_xero" style="margin: 0; cursor: pointer; text-transform: none; font-size: 11px; font-weight: 700; color: var(--text-dark);">Invite employee to Ares Me</label>
                     </div>
@@ -7256,68 +7540,137 @@ function updateSelectedWeeksOrFortnights() {
             <!-- Leaves Tab -->
             <div id="modal-tab-pane-leaves" class="modal-tab-pane">
                 <div class="form-grid">
-                    <div class="section-divider">Leave Balances</div>
-                    <div class="field">
-                        <label>Annual Leave Balance (hours)</label>
-                        <input type="number" id="emp_annual_leave_balance" step="0.01" value="0.00">
+                    <!-- Australian Leave Layout -->
+                    <div id="aus-leave-fields" style="display: flex; flex-direction: row; gap: 16px; grid-column: span 4; width: 100%;">
+                        <div class="field" style="flex: 1;">
+                            <label for="emp_annual_leave_balance">Annual Leave Balance (Hours)</label>
+                            <input type="number" id="emp_annual_leave_balance" step="0.01" value="0.00" style="width:100%;">
+                        </div>
+                        <div class="field" style="flex: 1;">
+                            <label for="emp_personal_leave_balance">Personal/Sick Leave Balance (Hours)</label>
+                            <input type="number" id="emp_personal_leave_balance" step="0.01" value="0.00" style="width:100%;">
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Personal/Sick Leave Balance (hours)</label>
-                        <input type="number" id="emp_personal_leave_balance" step="0.01" value="0.00">
+                    
+                    <!-- Indian Leave Layout -->
+                    <div id="ind-leave-fields" style="display: none; grid-template-columns: repeat(4, 1fr); gap: 16px; grid-column: span 4; width: 100%;">
+                        <div class="field">
+                            <label for="emp_el_balance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Earned/Privilege Leave (EL/PL) (Days)</label>
+                            <input type="number" id="emp_el_balance" step="0.1" value="0.0" style="width:100%; box-sizing: border-box; height: 36px;">
+                        </div>
+                        <div class="field">
+                            <label for="emp_cl_balance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Casual Leave (CL) (Days)</label>
+                            <input type="number" id="emp_cl_balance" step="0.1" value="0.0" style="width:100%; box-sizing: border-box; height: 36px;">
+                        </div>
+                        <div class="field">
+                            <label for="emp_sl_balance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Sick Leave (SL) (Days)</label>
+                            <input type="number" id="emp_sl_balance" step="0.1" value="0.0" style="width:100%; box-sizing: border-box; height: 36px;">
+                        </div>
+                        <div class="field">
+                            <label for="emp_ml_balance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Maternity Leave (ML) (Days)</label>
+                            <input type="number" id="emp_ml_balance" step="0.1" value="0.0" style="width:100%; box-sizing: border-box; height: 36px;">
+                        </div>
                     </div>
                 </div>
             </div>
-            
             <!-- Bank Account Tab -->
             <div id="modal-tab-pane-bank" class="modal-tab-pane">
                 <div class="form-grid">
-                    <div class="section-divider">Bank Account details</div>
+                    <div class="section-divider">Bank Account Details</div>
                     <div class="field" style="grid-column: span 2;">
                         <label>Account Name</label>
-                        <input type="text" id="emp_bank_account_name" placeholder="e.g. John Smith">
+                        <input type="text" id="emp_bank_account_name">
                     </div>
                     <div class="field">
-                        <label>BSB</label>
+                        <label for="emp_bank_bsb" id="lbl_emp_bank_bsb">BSB</label>
                         <input type="text" id="emp_bank_bsb" placeholder="XXX-XXX">
                     </div>
                     <div class="field">
                         <label>Account Number</label>
                         <input type="text" id="emp_bank_account_number" placeholder="XXXXXX">
                     </div>
+                    <!-- Account Type (Indian specific) -->
+                    <div class="field" id="bank_account_type_container" style="display: none;">
+                        <label for="emp_bank_account_type">Account Type</label>
+                        <select id="emp_bank_account_type" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                            <option value="Savings">Savings Account</option>
+                            <option value="Current">Current Account</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            
             <!-- Pay Templates Tab -->
             <div id="modal-tab-pane-templates" class="modal-tab-pane">
                 <div class="form-grid">
-                    <div class="section-divider">Earning Templates</div>
-                    <div class="field">
-                        <label>Earnings Rate / Category</label>
-                        <select id="emp_pay_template_earnings_rate">
-                            <option value="Ordinary Hours">Ordinary Hours</option>
-                            <option value="Overtime 1.5x">Overtime 1.5x</option>
-                            <option value="Overtime 2.0x">Overtime 2.0x</option>
-                        </select>
+                    <!-- Australian Earning Templates -->
+                    <div id="aus-pay-template-fields" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; grid-column: span 4; width: 100%;">
+                        <div class="section-divider" style="grid-column: span 4; margin-top: 0;">Earning Templates (Australia)</div>
+                        <div class="field" style="grid-column: span 2;">
+                            <label>Earnings Rate / Category</label>
+                            <select id="emp_pay_template_earnings_rate" style="width:100%;">
+                                <option value="Ordinary Hours">Ordinary Hours</option>
+                                <option value="Overtime 1.5x">Overtime 1.5x</option>
+                                <option value="Overtime 2.0x">Overtime 2.0x</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Standard Template Hours</label>
+                            <input type="number" id="emp_pay_template_hours" step="0.1" value="76.0" style="width:100%;">
+                        </div>
+                        <div class="field">
+                            <label>Weekly Working Hours Limit</label>
+                            <input type="number" id="emp_weekly_hours_limit" step="0.1" placeholder="e.g. 38.0" style="width:100%;">
+                        </div>
+                        <div class="field" style="grid-column: span 2;">
+                            <label>Per-Hour Wages Rate (inc. Tax)</label>
+                            <input type="number" id="emp_per_hour_wages_inc_tax" step="0.01" placeholder="AUD Rate" style="width:100%;">
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Standard Template Hours</label>
-                        <input type="number" id="emp_pay_template_hours" step="0.1" value="76.0">
-                    </div>
-                    <div class="field">
-                        <label>Weekly Working Hours Limit</label>
-                        <input type="number" id="emp_weekly_hours_limit" step="0.1" placeholder="e.g. 38.0">
-                    </div>
-                    <div class="field">
-                        <label>Per Hour Wages Inc Tax</label>
-                        <input type="number" id="emp_per_hour_wages_inc_tax" step="0.01" placeholder="e.g. 35.00">
-                    </div>
-                    <div class="field">
-                        <label>Break Hours Limit</label>
-                        <input type="text" id="emp_break_hours_limit" placeholder="HH:MM" maxlength="5">
+                    
+                    <!-- Indian Monthly Earning Templates -->
+                    <div id="ind-pay-template-fields" style="display: none; grid-template-columns: repeat(3, 1fr); gap: 16px; grid-column: span 4; width: 100%;">
+                        <div class="section-divider" style="grid-column: span 3; margin-top: 0;">Monthly Salary Breakdown & CTC (India)</div>
+                        
+                        <div class="field">
+                            <label for="emp_basic_salary" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Basic Salary (INR)</label>
+                            <input type="number" id="emp_basic_salary" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                        </div>
+                        <div class="field">
+                            <label for="emp_hra" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly HRA (INR)</label>
+                            <input type="number" id="emp_hra" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                        </div>
+                        <div class="field">
+                            <label for="emp_special_allowance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Special Allowance (INR)</label>
+                            <input type="number" id="emp_special_allowance" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                        </div>
+
+                        <!-- Statutory Contribution Checkboxes -->
+                        <div class="field" style="grid-column: span 3; margin-top: 10px;">
+                            <label style="font-weight: 700; font-size: 12px; margin-bottom: 8px;">Statutory Deductions & Contributions</label>
+                            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; background: #fff; border: 1px solid #dde3ed; padding: 6px 12px; border-radius: 6px;">
+                                    <input type="checkbox" id="emp_epf_opt_in" checked style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                    <span>Provident Fund (EPF) Deduction</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; background: #fff; border: 1px solid #dde3ed; padding: 6px 12px; border-radius: 6px;">
+                                    <input type="checkbox" id="emp_esic_opt_in" checked style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                    <span>ESIC Deduction</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; background: #fff; border: 1px solid #dde3ed; padding: 6px 12px; border-radius: 6px;">
+                                    <input type="checkbox" id="emp_pt_opt_in" checked style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                    <span>Professional Tax (PT) Deduction</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- CTC summary box -->
+                        <div style="grid-column: span 3; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <span style="font-size: 13px; font-weight: 700; color: #15803d;">Gross Monthly Salary (CTC Base)</span>
+                            <span style="font-size: 16px; font-weight: 800; color: #166534;" id="indian_ctc_summary_val">₹0.00</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            
             <!-- Notes Tab -->
             <div id="modal-tab-pane-notes" class="modal-tab-pane">
                 <div class="form-grid">

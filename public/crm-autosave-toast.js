@@ -543,8 +543,8 @@
                            target.innerText === 'X' || 
                            target.closest('.cp-del') || 
                            onclickAttr.includes('none') || 
-                           target.id.toLowerCase().includes('cancel') || 
-                           target.className.toLowerCase().includes('cancel') || 
+                           (target.id || '').toLowerCase().includes('cancel') || 
+                           (typeof target.className === 'string' ? target.className : (target.className?.baseVal || '')).toLowerCase().includes('cancel') || 
                            target.classList.contains('btn-reset') || 
                            target.closest('.modal-close');
         if (isCloseBtn) {

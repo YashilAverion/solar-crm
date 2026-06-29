@@ -645,7 +645,18 @@ db.serialize(() => {
         "ALTER TABLE attendance_workers ADD COLUMN tax_regime TEXT DEFAULT 'New'",
         "ALTER TABLE attendance_workers ADD COLUMN uan_number TEXT",
         "ALTER TABLE attendance_workers ADD COLUMN esic_number TEXT",
-        "ALTER TABLE attendance_workers ADD COLUMN pt_state TEXT DEFAULT 'Maharashtra'"
+        "ALTER TABLE attendance_workers ADD COLUMN pt_state TEXT DEFAULT 'Maharashtra'",
+        "ALTER TABLE attendance_workers ADD COLUMN compliance_documents TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN cl_balance REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN sl_balance REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN ml_balance REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN bank_account_type TEXT DEFAULT 'Savings'",
+        "ALTER TABLE attendance_workers ADD COLUMN basic_salary REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN hra REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN special_allowance REAL DEFAULT 0.0",
+        "ALTER TABLE attendance_workers ADD COLUMN epf_opt_in INTEGER DEFAULT 1",
+        "ALTER TABLE attendance_workers ADD COLUMN esic_opt_in INTEGER DEFAULT 1",
+        "ALTER TABLE attendance_workers ADD COLUMN pt_opt_in INTEGER DEFAULT 1"
     ];
     workerAlterStatements.forEach(sql => {
         db.run(sql, (err) => {
