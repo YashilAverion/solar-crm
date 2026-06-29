@@ -603,7 +603,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="field"><label class="required">Phone Number</label><div class="input-group"><span class="country-code">+61</span><input type="text" id="proj_phone" placeholder="4xx xxx xxx"></div></div>
                 <div class="field"><label>Email ID</label><input type="text" id="proj_email"></div>
                 <div></div>
-                <div class="field"><label>Project Number Reference</label><input type="text" id="proj_project_number" placeholder="Leave blank to auto-generate"></div>
+                <div class="field"><label>Project Number Reference</label><input type="text" id="proj_project_number" placeholder="Type reference number if any"></div>
                 
                 <div class="section-divider">Address Details</div>
                 <div class="field full-width"><label class="required">Google Search</label><input type="text" id="google_address" placeholder="Type address to auto-fill..."></div>
@@ -1114,16 +1114,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Reset cert table with a proper dynamic first row (contains eq_meter_no and eq_phase)
         document.getElementById('certTableBody').innerHTML = '';
-        addCertRow(true);
+        
+        let certs = [];
+        if (p && p.certificate_details) {
+            certs = typeof p.certificate_details === 'string' ? JSON.parse(p.certificate_details) : p.certificate_details;
+        }
+
+        if (certs && certs.length > 0) {
+            certs.forEach((c, idx) => {
+                document.getElementById('certTableBody').appendChild(renderCertRow(c, idx === 0));
+            });
+        } else {
+            addCertRow(true);
+        }
 
         const ecc = document.getElementById('extraCertsContainer');
         if(ecc) ecc.innerHTML = '';
-
-        // Dynamic row uses classes not IDs for cert fields
-        const certEl = document.querySelector('#certTableBody .eq_cert');
-        if (certEl) certEl.value = '';
-        const certNoEl = document.querySelector('#certTableBody .eq_cert_no');
-        if (certNoEl) certNoEl.value = '';
 
         document.getElementById('eq_meter_no').value = p.meter_number || '';
         document.getElementById('eq_phase').value = p.electricity_phase || '';
@@ -1177,10 +1183,24 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('addEquipmentModal').style.display = 'flex';
     }
 
+    function getNextCertDefaultType() {
+        const selectedTypes = Array.from(document.querySelectorAll('.cert-row')).map(row => row.querySelector('.eq_cert')?.value).filter(val => val);
+        if (!selectedTypes.includes('ESC')) {
+            return 'ESC';
+        } else if (!selectedTypes.includes('NOC')) {
+            return 'NOC';
+        } else {
+            return 'Other';
+        }
+    }
+
     // New helper function to render a single certificate row
     function renderCertRow(certData = {}, isFirstRow = false) {
         const certId = certData.id || 'cert_' + Date.now(); // Use existing ID or generate new
-        const type = certData.type || '';
+        let type = certData.type || '';
+        if (!type) {
+            type = getNextCertDefaultType();
+        }
         const number = certData.number || '';
         const fileUrl = certData.fileUrl || '';
 
@@ -1461,7 +1481,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // --- Add Equipment Dynamic Tables ---
-    function addEquipRow(type = 'Panel', existingData = {}) {
+    function addEquipRow(type = null, existingData = {}) {
+        if (!type) {
+            const currentTypes = Array.from(document.querySelectorAll('.equip-row')).map(row => row.querySelector('.eq-type')?.value);
+            const hasPV = currentTypes.includes('Panel') || currentTypes.includes('PV');
+            const hasInverter = currentTypes.includes('Inverter');
+            if (hasPV && hasInverter) {
+                type = 'Battery';
+            } else {
+                type = 'Panel';
+            }
+        }
         const tbody = document.getElementById('equipTableBody');
         const tr = document.createElement('tr');
         tr.className = 'equip-row';
@@ -1491,7 +1521,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <td><input type="text" class="eq-size" readonly placeholder="Size" value="${size}"></td>
             <td>
                 <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
-                    <button type="button" class="btn-add-row" onclick="addEquipRow('Panel')" title="Add Equipment Row" style="margin:0; padding:2px 6px; font-size:12px;">➕</button>
+                    <button type="button" class="btn-add-row" onclick="addEquipRow()" title="Add Equipment Row" style="margin:0; padding:2px 6px; font-size:12px;">➕</button>
                     <button type="button" class="btn-del-row" onclick="if(document.querySelectorAll('.equip-row').length > 1) { this.closest('tr').remove(); calcEquip(); evaluateSmartCharges(); } else { Swal.fire('Warning', 'At least one equipment row is required.', 'warning'); }" style="margin:0; font-size:12px;">🗑️</button>
                 </div>
             </td>

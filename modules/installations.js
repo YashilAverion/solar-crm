@@ -263,33 +263,24 @@ router.get('/search-suggestions', (req, res) => {
 router.post('/', (req, res) => {
     const d = req.body;
     const currentUser = d.currentUser || 'System';
-    
-    const saveWithProjectNumber = (projNum) => {
-        const sql = `INSERT INTO installations (
-            type, company, first_name, last_name, phone, email,
-            google_address, unit_number, lot_number, street_type, address, suburb, state, postcode,
-            created_date, status, cert_status, project_number
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [
-            d.type || '', d.company || '', d.first_name || '', d.last_name || '',
-            d.phone || '', d.email || '', d.google_address || '',
-            d.unit_number || '', d.lot_number || '', d.street_type || '',
-            d.address || '', d.suburb || '', d.state || '', d.postcode || '',
-            getSydneyISO(), 'Pending', 'Pending', projNum
-        ], function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            addHistory(this.lastID, 'Created', `Installation added with Reference #${projNum} for ${d.first_name} ${d.last_name}.`, currentUser);
-            res.json({ id: this.lastID, project_number: projNum, success: true });
-        });
-    };
+    const projNum = (d.project_number && d.project_number.trim() !== '') ? d.project_number.trim() : '';
 
-    if (d.project_number && d.project_number.trim() !== '') {
-        saveWithProjectNumber(d.project_number.trim());
-    } else {
-        generateProjectNumber(d.type || 'Other', (newProjectNumber) => {
-            saveWithProjectNumber(newProjectNumber);
-        });
-    }
+    const sql = `INSERT INTO installations (
+        type, company, first_name, last_name, phone, email,
+        google_address, unit_number, lot_number, street_type, address, suburb, state, postcode,
+        created_date, status, cert_status, project_number
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    db.run(sql, [
+        d.type || '', d.company || '', d.first_name || '', d.last_name || '',
+        d.phone || '', d.email || '', d.google_address || '',
+        d.unit_number || '', d.lot_number || '', d.street_type || '',
+        d.address || '', d.suburb || '', d.state || '', d.postcode || '',
+        getSydneyISO(), 'Pending', 'Pending', projNum
+    ], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        addHistory(this.lastID, 'Created', `Installation added${projNum ? ` with Reference #${projNum}` : ''} for ${d.first_name} ${d.last_name}.`, currentUser);
+        res.json({ id: this.lastID, project_number: projNum, success: true });
+    });
 });
 
 // ── EDIT INSTALLATION ─────────────────────────────────────
