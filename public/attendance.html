@@ -2589,9 +2589,9 @@ function renderHashTab() {
         titleStr = "Leave Management - NES Standards";
         
         // Show tabs for Ares/Gills
-        const tabs = document.getElementById('leaveCompanyTabs');
+        const tabs = document.querySelector('#leaveManagerApprovals .company-tabs-container');
         if (tabs) tabs.style.display = 'flex';
-        activeLeaveCompanyFilter = document.querySelector('#leaveCompanyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        activeLeaveCompanyFilter = document.querySelector('#leaveManagerApprovals .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
         
         loadLeaveModuleData();
     } else if (hash === '#timesheets') {
@@ -2627,7 +2627,7 @@ function renderHashTab() {
         titleStr = "Employees Database - Averion Global LLP";
         
         // Hide company tabs, filter by Averion
-        const tabs = document.getElementById('companyTabs');
+        const tabs = document.querySelector('#employeesManagerConsole .company-tabs-container');
         if (tabs) tabs.style.display = 'none';
         activeCompanyFilter = 'Averion Global LLP';
         filterAndRenderXeroEmployees();
@@ -2636,7 +2636,7 @@ function renderHashTab() {
         activeMenuItemId = 'menu-averion-leave';
         titleStr = "Leave Management - Averion Global LLP";
         
-        const tabs = document.getElementById('leaveCompanyTabs');
+        const tabs = document.querySelector('#leaveManagerApprovals .company-tabs-container');
         if (tabs) tabs.style.display = 'none';
         activeLeaveCompanyFilter = 'Averion Global LLP';
         loadLeaveModuleData();
@@ -2675,9 +2675,9 @@ function renderHashTab() {
         activeMenuItemId = 'menu-emp-employees';
         titleStr = "Employee Shift logger & Database";
         
-        const tabs = document.getElementById('companyTabs');
+        const tabs = document.querySelector('#employeesManagerConsole .company-tabs-container');
         if (tabs) tabs.style.display = 'flex';
-        activeCompanyFilter = document.querySelector('#companyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        activeCompanyFilter = document.querySelector('#employeesManagerConsole .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
         filterAndRenderXeroEmployees();
         
         // Refresh shift history on return
@@ -3487,7 +3487,11 @@ function loadTimesheetsModuleData() {
     const isMgr = currentUser.role === 'Admin' || currentUser.role === 'Manager' || currentUser.role.includes('Manager');
     
     if (isMgr) {
-        document.getElementById('tsCompanyTabs').style.display = 'flex';
+        if (activeTsCompanyFilter === 'Averion Global LLP') {
+            document.getElementById('tsCompanyTabs').style.display = 'none';
+        } else {
+            document.getElementById('tsCompanyTabs').style.display = 'flex';
+        }
         document.getElementById('tsFilterBlock').style.display = 'block';
         document.getElementById('tsActionsBar').style.display = 'flex';
         document.getElementById('tsThCheckbox').style.display = 'table-cell';
