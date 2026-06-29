@@ -1553,6 +1553,17 @@
 
             <!-- Excel-Style Spreadsheet Panel (opens on + Add Timesheet) -->
             <div id="tsSheetPanel" class="ts-sheet-panel">
+                <!-- Company Brand Filter Tabs for Editor -->
+                <div class="company-tabs-container" id="tsSheetCompanyTabs" style="margin-bottom: 20px; padding: 4px 6px;">
+                    <button class="company-tab-btn active" id="tsSheetCompanyTabAres" onclick="switchTsSheetCompany('Ares Energy')">
+                        <span class="company-tab-dot" style="background: #e8681e;"></span>
+                        Ares Energy
+                    </button>
+                    <button class="company-tab-btn" id="tsSheetCompanyTabGills" onclick="switchTsSheetCompany('Gill\'s Electrical')">
+                        <span class="company-tab-dot" style="background: #10b981;"></span>
+                        Gill's Electrical
+                    </button>
+                </div>
                 <div class="ts-sheet-toolbar">
                     <div style="display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap;">
                         <div class="ts-field">
@@ -1657,6 +1668,17 @@
 
         <!-- ==================== 4. PAYROLL PROCESSING PANEL ==================== -->
         <div id="payPanel" class="tab-panel" style="display: none;">
+            <!-- Company Brand Filter Tabs -->
+            <div class="company-tabs-container" id="payrollCompanyTabs" style="margin-bottom: 20px;">
+                <button class="company-tab-btn active" id="payrollCompanyTabAres" onclick="switchPayrollCompany('Ares Energy')">
+                    <span class="company-tab-dot" style="background: #e8681e;"></span>
+                    Ares Energy
+                </button>
+                <button class="company-tab-btn" id="payrollCompanyTabGills" onclick="switchPayrollCompany('Gill\'s Electrical')">
+                    <span class="company-tab-dot" style="background: #10b981;"></span>
+                    Gill's Electrical
+                </button>
+            </div>
             <div class="panel-card">
                 <div class="panel-header">
                     <span>Fair Work compliance payroll processing</span>
@@ -2573,6 +2595,8 @@ function loadAdminEmployeesList() {
 let activeCompanyFilter = 'Ares Energy';
 let activeLeaveCompanyFilter = 'Ares Energy';
 let activeTsCompanyFilter = 'Ares Energy';
+let activeTsSheetCompanyFilter = 'Ares Energy';
+let activePayrollCompanyFilter = 'Ares Energy';
 
 function filterAndRenderXeroEmployees() {
     const searchQuery = document.getElementById('employeeSearchInput').value.toLowerCase();
@@ -2812,6 +2836,63 @@ function editXeroEmployee(userId) {
 }
 
 // Populate supervisor selection filters
+function populateFilterEmployeeDropdown(companyName) {
+    const filterEmployeeSelect = document.getElementById('filterEmployee');
+    if (!filterEmployeeSelect) return;
+    
+    const filterOptionsHtml = ['<option value="all">(all)</option>'];
+    (window.allWorkers || []).forEach(u => {
+        const workerCompany = u.company_name || 'Ares Energy';
+        if (u.status === 'Active' && workerCompany === companyName) {
+            filterOptionsHtml.push('<option value="' + u.id + '">' + u.full_name + '</option>');
+        }
+    });
+    filterEmployeeSelect.innerHTML = filterOptionsHtml.join('');
+}
+
+function populatePayrollEmployeeDropdown(companyName) {
+    const paySelect = document.getElementById('payrollEmployeeSelect');
+    if (!paySelect) return;
+    
+    const optionsHtml = ['<option value="">-- Select Employee --</option>'];
+    (window.allWorkers || []).forEach(u => {
+        const workerCompany = u.company_name || 'Ares Energy';
+        if (u.status === 'Active' && workerCompany === companyName) {
+            optionsHtml.push('<option value="' + u.id + '">' + u.full_name + ' (' + u.role + ')</option>');
+        }
+    });
+    paySelect.innerHTML = optionsHtml.join('');
+}
+
+function switchPayrollCompany(companyName) {
+    activePayrollCompanyFilter = companyName;
+    document.querySelectorAll('#payrollCompanyTabs .company-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (companyName === 'Ares Energy') {
+        const tab = document.getElementById('payrollCompanyTabAres');
+        if (tab) tab.classList.add('active');
+    } else {
+        const tab = document.getElementById('payrollCompanyTabGills');
+        if (tab) tab.classList.add('active');
+    }
+    
+    populatePayrollEmployeeDropdown(companyName);
+    
+    const paySelect = document.getElementById('payrollEmployeeSelect');
+    if (paySelect) paySelect.value = '';
+    
+    const historyBody = document.getElementById('payrollHistoryBody');
+    if (historyBody) {
+        historyBody.innerHTML = '<tr><td colspan="9" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
+    }
+    const summaryBox = document.getElementById('payrollSummaryBox');
+    if (summaryBox) {
+        summaryBox.classList.remove('visible');
+    }
+}
+
+// Populate supervisor selection filters
 function loadManagerDropdowns() {
     const tsSelect = document.getElementById('tsEmployeeSelect');
     const paySelect = document.getElementById('payrollEmployeeSelect');
@@ -2821,23 +2902,22 @@ function loadManagerDropdowns() {
     fetch('/api/attendance/workers')
         .then(res => res.json())
         .then(users => {
-            const optionsHtml = ['<option value="">-- Select Employee --</option>'];
-            const filterOptionsHtml = ['<option value="all">(all)</option>'];
+            window.allWorkers = users;
             
+            populateFilterEmployeeDropdown(activeTsCompanyFilter);
+            populatePayrollEmployeeDropdown(activePayrollCompanyFilter);
+            
+            const optionsHtml = ['<option value="">-- Select Employee --</option>'];
             users.forEach(u => {
                 if (u.status === 'Active') {
-                    optionsHtml.push(`<option value="${u.id}">${u.full_name} (${u.role})</option>`);
-                    filterOptionsHtml.push(`<option value="${u.id}">${u.full_name}</option>`);
+                    optionsHtml.push('<option value="' + u.id + '">' + u.full_name + ' (' + u.role + ')</option>');
                 }
             });
             
             const rawOptions = optionsHtml.join('');
-            const rawFilterOptions = filterOptionsHtml.join('');
             
             if (tsSelect) tsSelect.innerHTML = rawOptions;
-            if (paySelect) paySelect.innerHTML = rawOptions;
             if (superSelect) superSelect.innerHTML = rawOptions;
-            if (filterEmployeeSelect) filterEmployeeSelect.innerHTML = rawFilterOptions;
         })
         .catch(err => console.error(err));
 }
@@ -3168,6 +3248,12 @@ function switchTsCompanyFilter(companyName) {
     } else {
         document.getElementById('tsCompanyTabGills').classList.add('active');
     }
+    
+    populateFilterEmployeeDropdown(companyName);
+    
+    const filterEmp = document.getElementById('filterEmployee');
+    if (filterEmp) filterEmp.value = 'all';
+    
     applyTimesheetFilters();
 }
 
@@ -3506,8 +3592,8 @@ function editTsMonth(userId, yearMonth) {
         const endOfMonth = new Date(yearNum, monthNum + 1, 0);
 
         const padZero = num => String(num).padStart(2, '0');
-        const startStr = `${yearNum}-${padZero(monthNum + 1)}-01`;
-        const endStr = `${yearNum}-${padZero(monthNum + 1)}-${padZero(endOfMonth.getDate())}`;
+        const startStr = yearNum + '-' + padZero(monthNum + 1) + '-01';
+        const endStr = yearNum + '-' + padZero(monthNum + 1) + '-' + padZero(endOfMonth.getDate());
 
         // Show panel
         const panel = document.getElementById('tsSheetPanel');
@@ -3515,6 +3601,8 @@ function editTsMonth(userId, yearMonth) {
             panel.classList.add('open');
             updateTimesheetViews(true);
         }
+
+        updateTsSheetCompanyTabs(userId);
 
         // Set inputs
         sel.value = userId;
@@ -3526,15 +3614,11 @@ function editTsMonth(userId, yearMonth) {
         generateTsGrid();
     };
 
-    if (sel.options.length === 0) {
+    if (sel.options.length === 0 || !window.allWorkers || window.allWorkers.length === 0) {
         fetch('/api/attendance/workers')
             .then(r => r.json())
             .then(users => {
-                sel.innerHTML = '';
-                const activeUsers = users.filter(u => u.status === 'Active');
-                activeUsers.forEach(u => {
-                    sel.innerHTML += `<option value="${u.id}" data-name="${u.full_name}">${u.full_name} (${u.role})</option>`;
-                });
+                window.allWorkers = users;
                 proceed();
             });
     } else {
@@ -3673,6 +3757,67 @@ function updateTimesheetViews(isEditing) {
     }
 }
 
+function switchTsSheetCompany(companyName) {
+    activeTsSheetCompanyFilter = companyName;
+    document.querySelectorAll('#tsSheetCompanyTabs .company-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (companyName === 'Ares Energy') {
+        const tab = document.getElementById('tsSheetCompanyTabAres');
+        if (tab) tab.classList.add('active');
+    } else {
+        const tab = document.getElementById('tsSheetCompanyTabGills');
+        if (tab) tab.classList.add('active');
+    }
+
+    const sel = document.getElementById('tsSheetEmployee');
+    if (!sel) return;
+    sel.innerHTML = '';
+    const activeUsers = (window.allWorkers || []).filter(u => u.status === 'Active');
+    const filteredUsers = activeUsers.filter(u => {
+        const company = u.company_name || 'Ares Energy';
+        return company === activeTsSheetCompanyFilter;
+    });
+    filteredUsers.forEach(u => {
+        sel.innerHTML += '<option value="' + u.id + '" data-name="' + u.full_name + '">' + u.full_name + ' (' + u.role + ')</option>';
+    });
+    if (filteredUsers.length > 0) {
+        generateTsGrid();
+    } else {
+        document.getElementById('tsSheetBody').innerHTML = '<tr><td colspan="17" style="text-align:center; color:#888; padding:24px; font-style:italic;">No active employees in this company.</td></tr>';
+    }
+}
+
+function updateTsSheetCompanyTabs(userId) {
+    const user = (window.allWorkers || []).find(u => u.id == userId);
+    const company = user ? (user.company_name || 'Ares Energy') : 'Ares Energy';
+    activeTsSheetCompanyFilter = company;
+    
+    document.querySelectorAll('#tsSheetCompanyTabs .company-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (company === 'Ares Energy') {
+        const tab = document.getElementById('tsSheetCompanyTabAres');
+        if (tab) tab.classList.add('active');
+    } else {
+        const tab = document.getElementById('tsSheetCompanyTabGills');
+        if (tab) tab.classList.add('active');
+    }
+    
+    const sel = document.getElementById('tsSheetEmployee');
+    if (sel) {
+        sel.innerHTML = '';
+        const activeUsers = (window.allWorkers || []).filter(u => u.status === 'Active');
+        const filteredUsers = activeUsers.filter(u => {
+            const comp = u.company_name || 'Ares Energy';
+            return comp === company;
+        });
+        filteredUsers.forEach(u => {
+            sel.innerHTML += '<option value="' + u.id + '" data-name="' + u.full_name + '">' + u.full_name + ' (' + u.role + ')</option>';
+        });
+    }
+}
+
 function openAddTimesheetModal() {
     const panel = document.getElementById('tsSheetPanel');
     if (panel.classList.contains('open')) {
@@ -3692,34 +3837,54 @@ function openAddTimesheetModal() {
     const endOfMonth = new Date(year, month + 1, 0);
 
     const padZero = num => String(num).padStart(2, '0');
-    const startStr = `${year}-${padZero(month + 1)}-01`;
-    const endStr = `${year}-${padZero(month + 1)}-${padZero(endOfMonth.getDate())}`;
+    const startStr = year + '-' + padZero(month + 1) + '-01';
+    const endStr = year + '-' + padZero(month + 1) + '-' + padZero(endOfMonth.getDate());
 
     document.getElementById('tsSheetStart').value = startStr;
     document.getElementById('tsSheetEnd').value = endStr;
     syncMonthYearFromDateFilters();
 
-    // Populate employee dropdown based on activeTsCompanyFilter
+    activeTsSheetCompanyFilter = activeTsCompanyFilter;
+    
+    document.querySelectorAll('#tsSheetCompanyTabs .company-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (activeTsSheetCompanyFilter === 'Ares Energy') {
+        const tab = document.getElementById('tsSheetCompanyTabAres');
+        if (tab) tab.classList.add('active');
+    } else {
+        const tab = document.getElementById('tsSheetCompanyTabGills');
+        if (tab) tab.classList.add('active');
+    }
+
     const sel = document.getElementById('tsSheetEmployee');
-    fetch('/api/attendance/workers')
-        .then(r => r.json())
-        .then(users => {
-            allXeroEmployees = users;
-            sel.innerHTML = '';
-            const activeUsers = users.filter(u => u.status === 'Active');
-            const filteredUsers = activeUsers.filter(u => {
-                const company = u.company_name || 'Ares Energy';
-                return company === activeTsCompanyFilter;
-            });
-            filteredUsers.forEach(u => {
-                sel.innerHTML += `<option value="${u.id}" data-name="${u.full_name}">${u.full_name} (${u.role})</option>`;
-            });
-            if (filteredUsers.length > 0) {
-                generateTsGrid();
-            } else {
-                document.getElementById('tsSheetBody').innerHTML = '<tr><td colspan="17" style="text-align:center; color:#888; padding:24px; font-style:italic;">No active employees in this company.</td></tr>';
-            }
+    const loadAndFilter = (users) => {
+        sel.innerHTML = '';
+        const activeUsers = users.filter(u => u.status === 'Active');
+        const filteredUsers = activeUsers.filter(u => {
+            const company = u.company_name || 'Ares Energy';
+            return company === activeTsSheetCompanyFilter;
         });
+        filteredUsers.forEach(u => {
+            sel.innerHTML += '<option value="' + u.id + '" data-name="' + u.full_name + '">' + u.full_name + ' (' + u.role + ')</option>';
+        });
+        if (filteredUsers.length > 0) {
+            generateTsGrid();
+        } else {
+            document.getElementById('tsSheetBody').innerHTML = '<tr><td colspan="17" style="text-align:center; color:#888; padding:24px; font-style:italic;">No active employees in this company.</td></tr>';
+        }
+    };
+
+    if (!window.allWorkers || window.allWorkers.length === 0) {
+        fetch('/api/attendance/workers')
+            .then(r => r.json())
+            .then(users => {
+                window.allWorkers = users;
+                loadAndFilter(users);
+            });
+    } else {
+        loadAndFilter(window.allWorkers);
+    }
 }
 
 function closeTsSheet() {
