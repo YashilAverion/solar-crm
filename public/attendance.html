@@ -2116,30 +2116,30 @@ function initGeolocation() {
     const gpsText = document.getElementById('gpsStatusText');
     
     if (!navigator.geolocation) {
-        gpsDot.className = "gps-dot failed";
-        gpsText.textContent = "GPS Not Supported";
+        if (gpsDot) gpsDot.className = "gps-dot failed";
+        if (gpsText) gpsText.textContent = "GPS Not Supported";
         return;
     }
     
     navigator.geolocation.getCurrentPosition(
         (position) => {
             currentGpsCoords = `${position.coords.latitude.toFixed(6)},${position.coords.longitude.toFixed(6)}`;
-            gpsDot.className = "gps-dot synced";
-            gpsText.textContent = "GPS Synced: Resolving Address...";
+            if (gpsDot) gpsDot.className = "gps-dot synced";
+            if (gpsText) gpsText.textContent = "GPS Synced: Resolving Address...";
             
             geocodeLatLng(position.coords.latitude, position.coords.longitude, (address) => {
                 if (address) {
                     currentGpsAddress = address;
-                    gpsText.textContent = `GPS Synced: ${address}`;
+                    if (gpsText) gpsText.textContent = `GPS Synced: ${address}`;
                 } else {
                     currentGpsAddress = "GPS Address Sync";
-                    gpsText.textContent = `GPS Synced: ${currentGpsCoords}`;
+                    if (gpsText) gpsText.textContent = `GPS Synced: ${currentGpsCoords}`;
                 }
             });
         },
         (error) => {
-            gpsDot.className = "gps-dot failed";
-            gpsText.textContent = "GPS Blocked / Unavailable";
+            if (gpsDot) gpsDot.className = "gps-dot failed";
+            if (gpsText) gpsText.textContent = "GPS Blocked / Unavailable";
             console.warn("Geolocation warning:", error.message);
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
