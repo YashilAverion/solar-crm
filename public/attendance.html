@@ -2021,6 +2021,24 @@
 </div>
 
 <script>
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Captured JS Error:', message, 'at', source, ':', lineno, ':', colno);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'JS Error Detected',
+            html: '<div style="text-align: left; font-family: monospace; font-size: 12px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; max-height: 200px; overflow-y: auto;">' +
+                    '<b>Msg:</b> ' + message + '<br>' +
+                    '<b>File:</b> ' + source + '<br>' +
+                    '<b>Line:</b> ' + lineno + ' | <b>Col:</b> ' + colno +
+                   '</div>',
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert('JS Error: ' + message + '\nLine: ' + lineno + '\nCol: ' + colno);
+    }
+    return false;
+};
 let currentUser = null;
 let currentGpsCoords = "GPS Unavailable";
 let currentGpsAddress = "GPS Address Sync";
