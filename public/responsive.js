@@ -267,7 +267,13 @@ async function enforceSidebarPermissions() {
             { selector: 'a[href="/attendance.html#leave"]', module: 'Attendance & Payroll', feature: 'Leave' },
             { selector: 'a[href="/attendance.html#timesheets"]', module: 'Attendance & Payroll', feature: 'Timesheets' },
             { selector: 'a[href="/attendance.html#pay"]', module: 'Attendance & Payroll', feature: 'Pay Employee' },
-            { selector: 'a[href="/attendance.html#super"]', module: 'Attendance & Payroll', feature: 'Superannuation' }
+            { selector: 'a[href="/attendance.html#super"]', module: 'Attendance & Payroll', feature: 'Superannuation' },
+            { selector: 'a[href="/attendance.html#averion-employees"]', module: 'Attendance & Payroll', feature: 'Employees' },
+            { selector: 'a[href="/attendance.html#averion-leave"]', module: 'Attendance & Payroll', feature: 'Leave' },
+            { selector: 'a[href="/attendance.html#averion-timesheets"]', module: 'Attendance & Payroll', feature: 'Timesheets' },
+            { selector: 'a[href="/attendance.html#averion-pay"]', module: 'Attendance & Payroll', feature: 'Pay Employee' },
+            { selector: 'a[href="/attendance.html#averion-pt"]', module: 'Attendance & Payroll', feature: 'Professional Tax' },
+            { selector: 'a[href="/attendance.html#averion-tax-slab"]', module: 'Attendance & Payroll', feature: 'Income Tax Slab' }
         ];
 
         // Process each link visibility

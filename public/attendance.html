@@ -1191,25 +1191,61 @@
             <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
         </div>
         <div class="sub-menu" style="display: none;">
-            <!-- Employees Management -->
+            <!-- Ares Energy & Gill's Electrical -->
             <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
-                <span>Employees Management</span>
+                <span>Ares & Gill's</span>
                 <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
             </div>
             <div class="sub-menu" style="display: none;">
-                <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 36px;">Employees</a>
-                <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 36px;">Leave</a>
-                <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 36px;">Timesheets</a>
+                <!-- Employees Management -->
+                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
+                    <span>Employees Management</span>
+                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+                </div>
+                <div class="sub-menu" style="display: none;">
+                    <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 48px;">Employees</a>
+                    <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 48px;">Leave</a>
+                    <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 48px;">Timesheets</a>
+                </div>
+
+                <!-- Payroll Processing -->
+                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
+                    <span>Payroll Processing</span>
+                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+                </div>
+                <div class="sub-menu" style="display: none;">
+                    <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 48px;">Pay Employees</a>
+                    <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 48px;">Superannuation</a>
+                </div>
             </div>
 
-            <!-- Payroll Processing -->
+            <!-- Averion Global LLP -->
             <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
-                <span>Payroll Processing</span>
+                <span>Averion Global LLP</span>
                 <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
             </div>
             <div class="sub-menu" style="display: none;">
-                <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 36px;">Pay Employee</a>
-                <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 36px;">Superannuation</a>
+                <!-- Employees Management -->
+                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
+                    <span>Employees Management</span>
+                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+                </div>
+                <div class="sub-menu" style="display: none;">
+                    <a href="/attendance.html#averion-employees" class="menu-item" id="menu-averion-employees" data-target="averion-employees" style="padding-left: 48px;">Employees</a>
+                    <a href="/attendance.html#averion-leave" class="menu-item" id="menu-averion-leave" data-target="averion-leave" style="padding-left: 48px;">Leave</a>
+                    <a href="/attendance.html#averion-timesheets" class="menu-item" id="menu-averion-timesheets" data-target="averion-timesheets" style="padding-left: 48px;">Timesheet</a>
+                </div>
+
+                <!-- Payroll Processing -->
+                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
+                    <span>Payroll Processing</span>
+                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+                </div>
+                <div class="sub-menu" style="display: none;">
+                    <a href="/attendance.html#averion-pay" class="menu-item" id="menu-averion-pay" data-target="averion-pay" style="padding-left: 48px;">Pay Employees</a>
+                    <a href="/attendance.html#averion-pt" class="menu-item" id="menu-averion-pt" data-target="averion-pt" style="padding-left: 48px;">Professional Tax</a>
+                    <a href="/attendance.html#averion-tax-slab" class="menu-item" id="menu-averion-tax-slab" data-target="averion-tax-slab" style="padding-left: 48px;">Income Tax Slab</a>
+                </div>
             </div>
         </div>
     </div>
@@ -1908,6 +1944,79 @@
             </div>
         </div>
 
+        <!-- ==================== 6. AVERION PROFESSIONAL TAX PANEL ==================== -->
+        <div id="averionPtPanel" class="tab-panel" style="display: none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <span>Professional Tax Compliance (India)</span>
+                    <span style="font-weight: 500; font-size: 11px; text-transform: none;">Averion Global LLP - State-wise Slabs</span>
+                </div>
+                <div class="panel-body">
+                    <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Select State</label>
+                            <select class="filter-select" id="ptStateSelect" onchange="renderAverionPtSlabs()" style="height:36px; min-width: 200px;">
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="West Bengal">West Bengal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Salary Range (Monthly Gross)</th>
+                                    <th>Gender</th>
+                                    <th>Professional Tax Rate (per month)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ptSlabsTableBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 7. AVERION INCOME TAX SLABS PANEL ==================== -->
+        <div id="averionTaxPanel" class="tab-panel" style="display: none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <span>Income Tax Slab Configurations (India)</span>
+                    <span style="font-weight: 500; font-size: 11px; text-transform: none;">Averion Global LLP - FY 2026-27 (Assessment Year 2027-28)</span>
+                </div>
+                <div class="panel-body">
+                    <!-- Tax Regime Selection tabs inside panel -->
+                    <div class="company-tabs-container" id="taxRegimeTabs" style="margin-bottom: 20px;">
+                        <button class="company-tab-btn active" id="taxRegimeTabNew" onclick="switchTaxRegime('New')">
+                            New Tax Regime (Section 115BAC)
+                        </button>
+                        <button class="company-tab-btn" id="taxRegimeTabOld" onclick="switchTaxRegime('Old')">
+                            Old Tax Regime
+                        </button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Income Tax Slab (Annual Gross Income)</th>
+                                    <th>Tax Rate</th>
+                                    <th>Rebate Eligibility (U/S 87A)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taxSlabsTableBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -2276,6 +2385,190 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', renderHashTab);
 });
 
+let activeTaxRegime = 'New';
+
+function loadAverionPtData() {
+    renderAverionPtSlabs();
+}
+
+function renderAverionPtSlabs() {
+    const state = document.getElementById('ptStateSelect').value;
+    const tbody = document.getElementById('ptSlabsTableBody');
+    if (!tbody) return;
+    
+    let html = '';
+    if (state === 'Maharashtra') {
+        html = `
+            <tr>
+                <td>Up to ₹7,500</td>
+                <td>All</td>
+                <td>Nil</td>
+            </tr>
+            <tr>
+                <td>₹7,501 to ₹10,000</td>
+                <td>Female</td>
+                <td>Nil</td>
+            </tr>
+            <tr>
+                <td>₹7,501 to ₹10,000</td>
+                <td>Male</td>
+                <td>₹175</td>
+            </tr>
+            <tr>
+                <td>Above ₹10,000</td>
+                <td>All</td>
+                <td>₹200 (₹300 in February)</td>
+            </tr>
+        `;
+    } else if (state === 'Karnataka') {
+        html = `
+            <tr>
+                <td>Up to ₹25,000</td>
+                <td>All</td>
+                <td>Nil</td>
+            </tr>
+            <tr>
+                <td>Above ₹25,000</td>
+                <td>All</td>
+                <td>₹200</td>
+            </tr>
+        `;
+    } else if (state === 'Tamil Nadu') {
+        html = `
+            <tr>
+                <td>Up to ₹12,000</td>
+                <td>All</td>
+                <td>Nil</td>
+            </tr>
+            <tr>
+                <td>₹12,001 to ₹17,000</td>
+                <td>All</td>
+                <td>₹1.25 per day (~₹37.50)</td>
+            </tr>
+            <tr>
+                <td>₹17,001 to ₹30,000</td>
+                <td>All</td>
+                <td>₹2.50 per day (~₹75)</td>
+            </tr>
+            <tr>
+                <td>Above ₹30,000</td>
+                <td>All</td>
+                <td>₹10.25 per day (~₹300 max)</td>
+            </tr>
+        `;
+    } else if (state === 'West Bengal') {
+        html = `
+            <tr>
+                <td>Up to ₹10,000</td>
+                <td>All</td>
+                <td>Nil</td>
+            </tr>
+            <tr>
+                <td>₹10,001 to ₹15,000</td>
+                <td>All</td>
+                <td>₹110</td>
+            </tr>
+            <tr>
+                <td>₹15,001 to ₹25,000</td>
+                <td>All</td>
+                <td>₹130</td>
+            </tr>
+            <tr>
+                <td>₹25,001 to ₹40,000</td>
+                <td>All</td>
+                <td>₹150</td>
+            </tr>
+            <tr>
+                <td>Above ₹40,000</td>
+                <td>All</td>
+                <td>₹200</td>
+            </tr>
+        `;
+    }
+    tbody.innerHTML = html;
+}
+
+function loadAverionTaxData() {
+    switchTaxRegime(activeTaxRegime);
+}
+
+function switchTaxRegime(regime) {
+    activeTaxRegime = regime;
+    document.querySelectorAll('#taxRegimeTabs .company-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (regime === 'New') {
+        const tab = document.getElementById('taxRegimeTabNew');
+        if (tab) tab.classList.add('active');
+    } else {
+        const tab = document.getElementById('taxRegimeTabOld');
+        if (tab) tab.classList.add('active');
+    }
+    
+    const tbody = document.getElementById('taxSlabsTableBody');
+    if (!tbody) return;
+    
+    let html = '';
+    if (regime === 'New') {
+        html = `
+            <tr>
+                <td>Up to ₹3,00,000</td>
+                <td style="color:var(--success); font-weight:700;">Nil</td>
+                <td>Eligible (Full tax rebate up to ₹7L income)</td>
+            </tr>
+            <tr>
+                <td>₹3,00,001 to ₹7,00,000</td>
+                <td>5%</td>
+                <td>Eligible (Full tax rebate up to ₹7L income)</td>
+            </tr>
+            <tr>
+                <td>₹7,00,001 to ₹10,00,000</td>
+                <td>10%</td>
+                <td>Not Eligible</td>
+            </tr>
+            <tr>
+                <td>₹10,00,001 to ₹12,00,000</td>
+                <td>15%</td>
+                <td>Not Eligible</td>
+            </tr>
+            <tr>
+                <td>₹12,00,001 to ₹15,00,000</td>
+                <td>20%</td>
+                <td>Not Eligible</td>
+            </tr>
+            <tr>
+                <td>Above ₹15,00,000</td>
+                <td style="color:var(--danger); font-weight:700;">30%</td>
+                <td>Not Eligible</td>
+            </tr>
+        `;
+    } else {
+        html = `
+            <tr>
+                <td>Up to ₹2,50,000</td>
+                <td style="color:var(--success); font-weight:700;">Nil</td>
+                <td>Eligible (Full tax rebate up to ₹5L income)</td>
+            </tr>
+            <tr>
+                <td>₹2,50,001 to ₹5,00,000</td>
+                <td>5%</td>
+                <td>Eligible (Full tax rebate up to ₹5L income)</td>
+            </tr>
+            <tr>
+                <td>₹5,00,001 to ₹10,00,000</td>
+                <td>20%</td>
+                <td>Not Eligible</td>
+            </tr>
+            <tr>
+                <td>Above ₹10,00,000</td>
+                <td style="color:var(--danger); font-weight:700;">30%</td>
+                <td>Not Eligible</td>
+            </tr>
+        `;
+    }
+    tbody.innerHTML = html;
+}
+
 // SPA hash-based view router
 function renderHashTab() {
     const hash = window.location.hash || '#employees';
@@ -2294,26 +2587,98 @@ function renderHashTab() {
         targetPanelId = 'leavePanel';
         activeMenuItemId = 'menu-emp-leave';
         titleStr = "Leave Management - NES Standards";
+        
+        // Show tabs for Ares/Gills
+        const tabs = document.getElementById('leaveCompanyTabs');
+        if (tabs) tabs.style.display = 'flex';
+        activeLeaveCompanyFilter = document.querySelector('#leaveCompanyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        
         loadLeaveModuleData();
     } else if (hash === '#timesheets') {
         targetPanelId = 'timesheetsPanel';
         activeMenuItemId = 'menu-emp-timesheets';
         titleStr = "Supervisor Timesheet Matrix";
+        
+        const tabs = document.getElementById('tsCompanyTabs');
+        if (tabs) tabs.style.display = 'flex';
+        activeTsCompanyFilter = document.querySelector('#tsCompanyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        populateFilterEmployeeDropdown(activeTsCompanyFilter);
+        
         loadTimesheetsModuleData();
     } else if (hash === '#pay') {
         targetPanelId = 'payPanel';
         activeMenuItemId = 'menu-pay-employee';
         titleStr = "Fair Work Period Payroll Calculator";
+        
+        const tabs = document.getElementById('payrollCompanyTabs');
+        if (tabs) tabs.style.display = 'flex';
+        activePayrollCompanyFilter = document.querySelector('#payrollCompanyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        populatePayrollEmployeeDropdown(activePayrollCompanyFilter);
+        
         loadPayrollModuleData();
     } else if (hash === '#super') {
         targetPanelId = 'superPanel';
         activeMenuItemId = 'menu-superannuation';
         titleStr = "Superannuation Guarantee (12% SG) Logs";
         loadSuperannuationData();
+    } else if (hash === '#averion-employees') {
+        targetPanelId = 'employeesPanel';
+        activeMenuItemId = 'menu-averion-employees';
+        titleStr = "Employees Database - Averion Global LLP";
+        
+        // Hide company tabs, filter by Averion
+        const tabs = document.getElementById('companyTabs');
+        if (tabs) tabs.style.display = 'none';
+        activeCompanyFilter = 'Averion Global LLP';
+        filterAndRenderXeroEmployees();
+    } else if (hash === '#averion-leave') {
+        targetPanelId = 'leavePanel';
+        activeMenuItemId = 'menu-averion-leave';
+        titleStr = "Leave Management - Averion Global LLP";
+        
+        const tabs = document.getElementById('leaveCompanyTabs');
+        if (tabs) tabs.style.display = 'none';
+        activeLeaveCompanyFilter = 'Averion Global LLP';
+        loadLeaveModuleData();
+    } else if (hash === '#averion-timesheets') {
+        targetPanelId = 'timesheetsPanel';
+        activeMenuItemId = 'menu-averion-timesheets';
+        titleStr = "Timesheet Matrix - Averion Global LLP";
+        
+        const tabs = document.getElementById('tsCompanyTabs');
+        if (tabs) tabs.style.display = 'none';
+        activeTsCompanyFilter = 'Averion Global LLP';
+        populateFilterEmployeeDropdown('Averion Global LLP');
+        loadTimesheetsModuleData();
+    } else if (hash === '#averion-pay') {
+        targetPanelId = 'payPanel';
+        activeMenuItemId = 'menu-averion-pay';
+        titleStr = "Payroll Calculator - Averion Global LLP";
+        
+        const tabs = document.getElementById('payrollCompanyTabs');
+        if (tabs) tabs.style.display = 'none';
+        activePayrollCompanyFilter = 'Averion Global LLP';
+        populatePayrollEmployeeDropdown('Averion Global LLP');
+        loadPayrollModuleData();
+    } else if (hash === '#averion-pt') {
+        targetPanelId = 'averionPtPanel';
+        activeMenuItemId = 'menu-averion-pt';
+        titleStr = "Professional Tax Compliance - Averion Global LLP";
+        loadAverionPtData();
+    } else if (hash === '#averion-tax-slab') {
+        targetPanelId = 'averionTaxPanel';
+        activeMenuItemId = 'menu-averion-tax-slab';
+        titleStr = "Income Tax Slab Configuration - Averion Global LLP";
+        loadAverionTaxData();
     } else {
         targetPanelId = 'employeesPanel';
         activeMenuItemId = 'menu-emp-employees';
         titleStr = "Employee Shift logger & Database";
+        
+        const tabs = document.getElementById('companyTabs');
+        if (tabs) tabs.style.display = 'flex';
+        activeCompanyFilter = document.querySelector('#companyTabs .company-tab-btn.active')?.innerText.trim() || 'Ares Energy';
+        filterAndRenderXeroEmployees();
         
         // Refresh shift history on return
         if (currentUser) {
@@ -5104,13 +5469,15 @@ function toggleCheckbox(checkboxId) {
 
 function switchCompanyFilter(companyName) {
     activeCompanyFilter = companyName;
-    document.querySelectorAll('.company-tab-btn').forEach(btn => {
+    document.querySelectorAll('#companyTabs .company-tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     if (companyName === 'Ares Energy') {
-        document.getElementById('companyTabAres').classList.add('active');
+        const tab = document.getElementById('companyTabAres');
+        if (tab) tab.classList.add('active');
     } else {
-        document.getElementById('companyTabGills').classList.add('active');
+        const tab = document.getElementById('companyTabGills');
+        if (tab) tab.classList.add('active');
     }
     filterAndRenderXeroEmployees();
 }
@@ -6477,6 +6844,7 @@ function updateSelectedWeeksOrFortnights() {
                         <select id="emp_company_name" required>
                             <option value="Ares Energy">Ares Energy</option>
                             <option value="Gill's Electrical">Gill's Electrical</option>
+                            <option value="Averion Global LLP">Averion Global LLP</option>
                         </select>
                     </div>
 
