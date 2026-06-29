@@ -588,6 +588,12 @@ db.serialize(() => {
             per_hour_wages_inc_tax REAL,
             custom_holidays TEXT,
             break_hours_limit TEXT,
+            pan_number TEXT,
+            aadhaar_number TEXT,
+            tax_regime TEXT DEFAULT 'New',
+            uan_number TEXT,
+            esic_number TEXT,
+            pt_state TEXT DEFAULT 'Maharashtra',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -633,7 +639,13 @@ db.serialize(() => {
         "ALTER TABLE attendance_workers ADD COLUMN weekly_hours_limit REAL",
         "ALTER TABLE attendance_workers ADD COLUMN per_hour_wages_inc_tax REAL",
         "ALTER TABLE attendance_workers ADD COLUMN custom_holidays TEXT",
-        "ALTER TABLE attendance_workers ADD COLUMN break_hours_limit TEXT"
+        "ALTER TABLE attendance_workers ADD COLUMN break_hours_limit TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN pan_number TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN aadhaar_number TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN tax_regime TEXT DEFAULT 'New'",
+        "ALTER TABLE attendance_workers ADD COLUMN uan_number TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN esic_number TEXT",
+        "ALTER TABLE attendance_workers ADD COLUMN pt_state TEXT DEFAULT 'Maharashtra'"
     ];
     workerAlterStatements.forEach(sql => {
         db.run(sql, (err) => {

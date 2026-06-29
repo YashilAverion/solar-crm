@@ -221,7 +221,7 @@
 
         // Inject standard search container if it's missing (and not the login page)
         const hasExistingSearch = tier2.querySelector('input[type="text"]') || tier2.querySelector('input[type="search"]') || tier2.querySelector('.search-wrap');
-        if (!hasExistingSearch && !window.location.pathname.includes('login.html')) {
+        if (!hasExistingSearch && !window.location.pathname.includes('login.html') && !window.location.pathname.includes('attendance.html')) {
             const searchWrap = document.createElement('div');
             searchWrap.className = 'search-wrap';
             searchWrap.innerHTML = `

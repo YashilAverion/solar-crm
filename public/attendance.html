@@ -5729,6 +5729,80 @@ function switchModalTab(tabId) {
     if (activePane) activePane.classList.add('active');
 }
 
+function syncTaxFieldsByCompany() {
+    const compSelect = document.getElementById('emp_company_name');
+    if (!compSelect) return;
+    const company = compSelect.value;
+    
+    const ausTax = document.getElementById('aus-tax-fields');
+    const indTax = document.getElementById('ind-tax-fields');
+    
+    // 1. Employment type dropdown options
+    const empTypeSelect = document.getElementById('emp_employment_type');
+    const prevTypeVal = empTypeSelect ? empTypeSelect.value : '';
+    
+    if (empTypeSelect) {
+        empTypeSelect.innerHTML = '';
+        if (company === 'Averion Global LLP') {
+            empTypeSelect.innerHTML = `
+                <option value="Permanent">Permanent / Regular</option>
+                <option value="Contractual">Contractual (Fixed Term)</option>
+                <option value="Probationer">Probationer</option>
+                <option value="Trainee">Trainee / Apprentice</option>
+            `;
+            if (['Permanent', 'Contractual', 'Probationer', 'Trainee'].includes(prevTypeVal)) {
+                empTypeSelect.value = prevTypeVal;
+            } else {
+                empTypeSelect.value = 'Permanent';
+            }
+        } else {
+            empTypeSelect.innerHTML = `
+                <option value="Full-Time">Full-time</option>
+                <option value="Part-Time">Part-time</option>
+                <option value="Casual">Casual</option>
+            `;
+            if (['Full-Time', 'Part-Time', 'Casual'].includes(prevTypeVal)) {
+                empTypeSelect.value = prevTypeVal;
+            } else {
+                empTypeSelect.value = 'Casual';
+            }
+        }
+    }
+    
+    if (company === 'Averion Global LLP') {
+        if (ausTax) ausTax.style.display = 'none';
+        if (indTax) indTax.style.display = 'flex';
+        
+        // 2. Leaves tab labels
+        const annualLabel = document.querySelector('label[for="emp_annual_leave_balance"]');
+        if (annualLabel) annualLabel.textContent = 'Earned / Privilege Leave Balance (Days)';
+        const personalLabel = document.querySelector('label[for="emp_personal_leave_balance"]');
+        if (personalLabel) personalLabel.textContent = 'Casual & Sick Leave Balance (Days)';
+        
+        // 3. Bank Account tab BSB to IFSC conversion
+        const bsbLabel = document.querySelector('label[for="emp_bank_bsb"]');
+        if (bsbLabel) bsbLabel.textContent = 'IFSC Code';
+        const bsbInput = document.getElementById('emp_bank_bsb');
+        if (bsbInput) bsbInput.placeholder = 'e.g. SBIN0001234';
+        
+    } else {
+        if (ausTax) ausTax.style.display = 'flex';
+        if (indTax) indTax.style.display = 'none';
+        
+        // 2. Leaves tab labels
+        const annualLabel = document.querySelector('label[for="emp_annual_leave_balance"]');
+        if (annualLabel) annualLabel.textContent = 'Annual Leave Balance (Hours)';
+        const personalLabel = document.querySelector('label[for="emp_personal_leave_balance"]');
+        if (personalLabel) personalLabel.textContent = 'Personal / Sick Leave Balance (Hours)';
+        
+        // 3. Bank Account tab BSB to IFSC conversion
+        const bsbLabel = document.querySelector('label[for="emp_bank_bsb"]');
+        if (bsbLabel) bsbLabel.textContent = 'BSB';
+        const bsbInput = document.getElementById('emp_bank_bsb');
+        if (bsbInput) bsbInput.placeholder = 'e.g. 062-900';
+    }
+}
+
 function openEmployeeModal(editId = null) {
     const modal = document.getElementById('employeeModal');
     const form = document.getElementById('employeeForm');
@@ -5796,6 +5870,8 @@ function openEmployeeModal(editId = null) {
             document.getElementById('emp_authorised_to_approve_timesheets').checked = u.authorised_to_approve_timesheets === 1;
             document.getElementById('emp_company_name').value = u.company_name || 'Ares Energy';
             
+            syncTaxFieldsByCompany();
+            
             // Sync super display details
             document.getElementById('display_super_fund_name').textContent = u.super_fund_name || 'No fund configured';
             document.getElementById('display_super_member_number').textContent = u.super_member_number || 'No membership number';
@@ -5821,6 +5897,12 @@ function openEmployeeModal(editId = null) {
             document.getElementById('emp_super_fund_name').value = u.super_fund_name || '';
             document.getElementById('emp_super_usi').value = u.super_usi || '';
             document.getElementById('emp_super_member_number').value = u.super_member_number || '';
+            document.getElementById('emp_pan_number').value = u.pan_number || '';
+            document.getElementById('emp_aadhaar_number').value = u.aadhaar_number || '';
+            document.getElementById('emp_tax_regime').value = u.tax_regime || 'New';
+            document.getElementById('emp_uan_number').value = u.uan_number || '';
+            document.getElementById('emp_esic_number').value = u.esic_number || '';
+            document.getElementById('emp_pt_state').value = u.pt_state || 'Maharashtra';
             
             // Leaves fields
             document.getElementById('emp_annual_leave_balance').value = u.annual_leave_balance !== undefined && u.annual_leave_balance !== null ? u.annual_leave_balance : '0.00';
@@ -5876,6 +5958,12 @@ function openEmployeeModal(editId = null) {
             }
         }
         document.getElementById('emp_holiday_group').value = globalHolidayGroup;
+        document.getElementById('emp_pan_number').value = '';
+        document.getElementById('emp_aadhaar_number').value = '';
+        document.getElementById('emp_tax_regime').value = 'New';
+        document.getElementById('emp_uan_number').value = '';
+        document.getElementById('emp_esic_number').value = '';
+        document.getElementById('emp_pt_state').value = 'Maharashtra';
         currentWorkerHolidays = globalCustomHolidays;
         if (currentWorkerHolidays.length === 0 && globalHolidayGroup && HOLIDAY_DEFAULTS[globalHolidayGroup]) {
             currentWorkerHolidays = [...HOLIDAY_DEFAULTS[globalHolidayGroup]];
@@ -5885,6 +5973,8 @@ function openEmployeeModal(editId = null) {
         document.getElementById('emp_authorised_to_approve_leave').checked = false;
         document.getElementById('emp_authorised_to_approve_timesheets').checked = false;
         document.getElementById('emp_company_name').value = activeCompanyFilter;
+        
+        syncTaxFieldsByCompany();
         
         document.getElementById('display_super_fund_name').textContent = 'No fund configured';
         document.getElementById('display_super_member_number').textContent = 'No membership number';
@@ -6081,6 +6171,12 @@ function saveEmployeeForm(event) {
         super_fund_name: document.getElementById('emp_super_fund_name').value.trim(),
         super_usi: document.getElementById('emp_super_usi').value.trim(),
         super_member_number: document.getElementById('emp_super_member_number').value.trim(),
+        pan_number: document.getElementById('emp_pan_number').value.trim(),
+        aadhaar_number: document.getElementById('emp_aadhaar_number').value.trim(),
+        tax_regime: document.getElementById('emp_tax_regime').value,
+        uan_number: document.getElementById('emp_uan_number').value.trim(),
+        esic_number: document.getElementById('emp_esic_number').value.trim(),
+        pt_state: document.getElementById('emp_pt_state').value,
 
         // Leaves tab
         annual_leave_balance: parseFloat(document.getElementById('emp_annual_leave_balance').value) || 0.0,
@@ -6845,7 +6941,7 @@ function updateSelectedWeeksOrFortnights() {
                     <!-- Company selection -->
                     <div class="field">
                         <label for="emp_company_name" class="required">Company</label>
-                        <select id="emp_company_name" required>
+                        <select id="emp_company_name" required onchange="syncTaxFieldsByCompany()">
                             <option value="Ares Energy">Ares Energy</option>
                             <option value="Gill's Electrical">Gill's Electrical</option>
                             <option value="Averion Global LLP">Averion Global LLP</option>
@@ -6948,126 +7044,161 @@ function updateSelectedWeeksOrFortnights() {
             <!-- Taxes Tab -->
             <div id="modal-tab-pane-taxes" class="modal-tab-pane">
                 <div class="form-grid">
-                    <!-- Tax details container spanning 4 columns -->
-                    <div style="grid-column: span 4; display: flex; flex-direction: column; gap: 16px;">
+                    
+                    <!-- Australian Tax & Super Fields -->
+                    <div id="aus-tax-fields" style="display: flex; flex-direction: column; gap: 16px; grid-column: span 4;">
+                        <!-- Tax details container spanning 4 columns -->
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            
+                            <!-- Tax Details Header Row -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #dde3ed; padding-bottom: 8px; margin-bottom: 4px;">
+                                <span style="font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px;">Tax details</span>
+                                <span style="font-size: 11px; color: var(--text-muted);">
+                                    Tax details are included when you file a pay run. 
+                                    <a href="https://www.ato.gov.au/" target="_blank" style="color: #0078C1; text-decoration: underline; display: inline-flex; align-items: center; gap: 3px;">
+                                        Learn more
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    </a>
+                                </span>
+                            </div>
+                            
+                            <!-- TFN / Exemption Horizontal Row -->
+                            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                                <div class="field" style="flex: 1; min-width: 200px;">
+                                    <label for="emp_tax_file_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">Tax File Number (TFN)</label>
+                                    <input type="text" id="emp_tax_file_number" placeholder="XXX XXX XXX" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box;">
+                                </div>
+                                
+                                <div style="font-weight: 600; color: #64748b; font-size: 12px; margin-top: 14px;">OR</div>
+                                
+                                <div class="field" style="flex: 1; min-width: 200px;">
+                                    <label for="emp_tfn_exemption" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">TFN exemption</label>
+                                    <select id="emp_tfn_exemption" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; appearance: none; background: #fff url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7a8d\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E') no-repeat right 12px center; padding-right: 32px; box-sizing: border-box; width: 100%;">
+                                        <option value="">Select type</option>
+                                        <option value="Awaiting TFN">Awaiting TFN</option>
+                                        <option value="Pensioner / Senior">Pensioner / Senior</option>
+                                        <option value="Under 18">Under 18</option>
+                                    </select>
+                                </div>
+     
+                                <div class="field" style="flex: 1; min-width: 200px;">
+                                    <label for="emp_tax_scale_code" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">Tax Scale / Code</label>
+                                    <input type="text" id="emp_tax_scale_code" placeholder="e.g. Scale 2 (Tax-free threshold)" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box;">
+                                </div>
+                            </div>
+                            
+                            <!-- Residency Status Section -->
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding-bottom: 12px; border-bottom: 1px solid #dde3ed;">
+                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark);">Select residency status for tax purposes</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">
+                                    Your payee's residency status affects how they'll be taxed. 
+                                    <a href="https://www.ato.gov.au/Calculators-and-tools/Work-out-your-residency-status-for-tax-purposes/" target="_blank" style="color: #0078C1; text-decoration: underline; display: inline-flex; align-items: center; gap: 3px;">
+                                        Work out their residency status
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    </a>
+                                </div>
+                                
+                                <div style="border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #fff; max-width: 600px;">
+                                    <!-- Option 1: Australian resident -->
+                                    <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.15s;" id="label_residency_australian">
+                                        <input type="radio" name="residency_status" id="emp_residency_australian" value="Australian resident" style="width: 16px; height: 16px; accent-color: #0078C1; cursor: pointer;" checked>
+                                        <span style="font-size: 13px; font-weight: 500; color: var(--text-dark);">Australian resident</span>
+                                    </label>
+                                    <!-- Option 2: Foreign resident -->
+                                    <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 0; cursor: pointer; transition: background 0.15s;" id="label_residency_foreign">
+                                        <input type="radio" name="residency_status" id="emp_residency_foreign" value="Foreign resident" style="width: 16px; height: 16px; accent-color: #0078C1; cursor: pointer;">
+                                        <span style="font-size: 13px; font-weight: 500; color: var(--text-dark);">Foreign resident</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                        </div>
                         
+                        <!-- Australian Super Section inside the same wrapper -->
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 10px;">
+                            <div class="section-divider" style="grid-column: span 4;">Superannuation Details</div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Super Fund Name</label>
+                                <input type="text" id="emp_super_fund_name" placeholder="e.g. AustralianSuper" style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div class="field">
+                                <label>Super USI</label>
+                                <input type="text" id="emp_super_usi" placeholder="Unique USI" style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div class="field">
+                                <label>Super Member Number</label>
+                                <input type="text" id="emp_super_member_number" style="width:100%; box-sizing:border-box;">
+                            </div>
+                        </div>
+
+                        <!-- Australian Visa Section inside the same wrapper -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px;">
+                            <div class="section-divider" style="grid-column: span 2;">Visa Information</div>
+                            <div class="field">
+                                <label>Visa Type (optional)</label>
+                                <input type="text" id="emp_visa_type" placeholder="e.g. Student, Work Visa" style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div class="field">
+                                <label>Visa Expiry Date</label>
+                                <input type="text" id="emp_visa_expiry_date" placeholder="DD-MM-YYYY" maxlength="10" style="width:100%; box-sizing:border-box;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Indian Tax & EPF Fields -->
+                    <div id="ind-tax-fields" style="display: none; flex-direction: column; gap: 16px; grid-column: span 4; width:100%;">
                         <!-- Tax Details Header Row -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #dde3ed; padding-bottom: 8px; margin-bottom: 4px;">
-                            <span style="font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px;">Tax details</span>
+                            <span style="font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px;">Indian Tax & Compliance Details</span>
                             <span style="font-size: 11px; color: var(--text-muted);">
-                                Tax details are included when you file a pay run. 
-                                <a href="https://www.ato.gov.au/" target="_blank" style="color: #0078C1; text-decoration: underline; display: inline-flex; align-items: center; gap: 3px;">
+                                Tax details are required for Indian Income Tax & PF compliance. 
+                                <a href="https://www.incometax.gov.in/" target="_blank" style="color: #0078C1; text-decoration: underline; display: inline-flex; align-items: center; gap: 3px;">
                                     Learn more
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                 </a>
                             </span>
                         </div>
                         
-                        <!-- TFN / Exemption Horizontal Row -->
-                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                            <div class="field" style="flex: 1; min-width: 200px;">
-                                <label for="emp_tax_file_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">Tax File Number (TFN)</label>
-                                <input type="text" id="emp_tax_file_number" placeholder="XXX XXX XXX" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box;">
+                        <!-- Indian Tax Identifiers -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div class="field">
+                                <label for="emp_pan_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Permanent Account Number (PAN)</label>
+                                <input type="text" id="emp_pan_number" placeholder="ABCDE1234F" maxlength="10" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
                             </div>
-                            
-                            <div style="font-weight: 600; color: #64748b; font-size: 12px; margin-top: 14px;">OR</div>
-                            
-                            <div class="field" style="flex: 1; min-width: 200px;">
-                                <label for="emp_tfn_exemption" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">TFN exemption</label>
-                                <select id="emp_tfn_exemption" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; appearance: none; background: #fff url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7a8d\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E') no-repeat right 12px center; padding-right: 32px; box-sizing: border-box; width: 100%;">
-                                    <option value="">Select type</option>
-                                    <option value="Awaiting TFN">Awaiting TFN</option>
-                                    <option value="Pensioner / Senior">Pensioner / Senior</option>
-                                    <option value="Under 18">Under 18</option>
+                            <div class="field">
+                                <label for="emp_aadhaar_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Aadhaar Number</label>
+                                <input type="text" id="emp_aadhaar_number" placeholder="XXXX XXXX XXXX" maxlength="12" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                            </div>
+                            <div class="field">
+                                <label for="emp_tax_regime" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Tax Regime Choice</label>
+                                <select id="emp_tax_regime" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                                    <option value="New">New Tax Regime (Section 115BAC)</option>
+                                    <option value="Old">Old Tax Regime</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <div class="field" style="flex: 1; min-width: 200px;">
-                                <label for="emp_tax_scale_code" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">Tax Scale / Code</label>
-                                <input type="text" id="emp_tax_scale_code" placeholder="e.g. Scale 2 (Tax-free threshold)" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box;">
+                        <!-- PF & ESIC Compliance -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 10px;">
+                            <div class="section-divider" style="grid-column: span 3;">EPF & ESIC Compliance (India)</div>
+                            <div class="field">
+                                <label for="emp_uan_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Universal Account Number (UAN)</label>
+                                <input type="text" id="emp_uan_number" placeholder="12-digit UAN" maxlength="12" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                            </div>
+                            <div class="field">
+                                <label for="emp_esic_number" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">ESIC IP Number</label>
+                                <input type="text" id="emp_esic_number" placeholder="17-digit ESIC" maxlength="17" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                            </div>
+                            <div class="field">
+                                <label for="emp_pt_state" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Professional Tax State</label>
+                                <select id="emp_pt_state" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                                    <option value="Maharashtra">Maharashtra</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                    <option value="West Bengal">West Bengal</option>
+                                </select>
                             </div>
                         </div>
-                        
-                        <!-- Residency Status Section -->
-                        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding-bottom: 12px; border-bottom: 1px solid #dde3ed;">
-                            <div style="font-weight: 700; font-size: 12px; color: var(--text-dark);">Select residency status for tax purposes</div>
-                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">
-                                Your payee's residency status affects how they'll be taxed. 
-                                <a href="https://www.ato.gov.au/Calculators-and-tools/Work-out-your-residency-status-for-tax-purposes/" target="_blank" style="color: #0078C1; text-decoration: underline; display: inline-flex; align-items: center; gap: 3px;">
-                                    Work out their residency status
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                </a>
-                            </div>
-                            
-                            <div style="border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #fff; max-width: 600px;">
-                                <!-- Option 1: Australian resident -->
-                                <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.15s;" id="label_residency_australian">
-                                    <input type="radio" name="residency_status" id="emp_residency_australian" value="Australian resident" style="width: 16px; height: 16px; accent-color: #0078C1; cursor: pointer;" checked>
-                                    <span style="font-size: 13px; font-weight: 500; color: var(--text-dark);">Australian resident</span>
-                                </label>
-                                <!-- Option 2: Foreign resident -->
-                                <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 0; cursor: pointer; transition: background 0.15s;" id="label_residency_foreign">
-                                    <input type="radio" name="residency_status" id="emp_residency_foreign" value="Foreign resident" style="width: 16px; height: 16px; accent-color: #0078C1; cursor: pointer;">
-                                    <span style="font-size: 13px; font-weight: 500; color: var(--text-dark);">Foreign resident</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="section-divider">Superannuation Details</div>
-                    <div class="field" style="grid-column: span 2;">
-                        <label>Super Fund Name</label>
-                        <input type="text" id="emp_super_fund_name" placeholder="e.g. AustralianSuper">
-                    </div>
-                    <div class="field">
-                        <label>Super USI</label>
-                        <input type="text" id="emp_super_usi" placeholder="Unique USI">
-                    </div>
-                    <div class="field">
-                        <label>Super Member Number</label>
-                        <input type="text" id="emp_super_member_number">
-                    </div>
-                    
-                    <div class="section-divider" style="grid-column: span 4;">Visa Information</div>
-                    <div class="field">
-                        <label>Visa Type (optional)</label>
-                        <input type="text" id="emp_visa_type" placeholder="e.g. Student, Work Visa">
-                    </div>
-                    <div class="field">
-                        <label>Visa Expiry Date</label>
-                        <input type="text" id="emp_visa_expiry_date" placeholder="DD-MM-YYYY" maxlength="10">
-                    </div>
-                    
-                    <div class="field" style="grid-column: span 2;">
-                        <label>Visa/Tax Document (Max 5MB)</label>
-                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; height: 32px;">
-                            <!-- Hidden input to store document URL -->
-                            <input type="hidden" id="emp_visa_document_path" value="">
-                            
-                            <!-- Document file input -->
-                            <input type="file" id="emp_visa_document_file" style="display: none;" onchange="uploadWorkerDocument(this)" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
-                            
-                            <!-- Upload Trigger button -->
-                            <button type="button" onclick="document.getElementById('emp_visa_document_file').click()" class="btn-xero-secondary" style="height: 32px; padding: 0 12px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                Upload Document
-                            </button>
-                            
-                            <!-- Display upload status / link to view existing file -->
-                            <div id="worker_doc_status" style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">No file uploaded</div>
-                            
-                            <!-- Delete button (visible when file is uploaded) -->
-                            <button type="button" id="btn_delete_worker_doc" onclick="deleteUploadedWorkerDoc()" style="display: none; background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 4px;" title="Delete Document">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="section-divider" style="grid-column: span 4;">CRM & Ares Me Settings</div>
-                    <div class="field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; height: 100%; margin-top: auto; padding-top: 14px; grid-column: span 2;">
-                        <input type="checkbox" id="emp_invite_xero" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                        <label for="emp_invite_xero" style="margin: 0; cursor: pointer; text-transform: none; font-size: 11px; font-weight: 700; color: var(--text-dark);">Invite employee to Ares Me</label>
                     </div>
                 </div>
             </div>

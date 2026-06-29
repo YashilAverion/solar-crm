@@ -516,7 +516,8 @@ router.post('/workers', requireAuth, (req, res) => {
         is_contractor, income_type, start_date, award_classification,
         employee_group, holiday_group, include_holidays_in_payslips,
         ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
-        company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit
+        company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
+        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
     } = req.body;
     
     if (!first_name) {
@@ -534,8 +535,9 @@ router.post('/workers', requireAuth, (req, res) => {
             is_contractor, income_type, start_date, award_classification,
             employee_group, holiday_group, include_holidays_in_payslips,
             ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
-            company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit
-         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
+            pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
+         ) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             first_name.trim(), last_name ? last_name.trim() : '', email ? email.trim() : '', phone || '', role || 'Worker', pay_frequency || 'Fortnightly',
             title || '', middle_name || '', dob || '', job_title || '', gender || '', google_address || '',
@@ -550,7 +552,13 @@ router.post('/workers', requireAuth, (req, res) => {
             weekly_hours_limit !== undefined && weekly_hours_limit !== null && weekly_hours_limit !== '' ? parseFloat(weekly_hours_limit) : null,
             per_hour_wages_inc_tax !== undefined && per_hour_wages_inc_tax !== null && per_hour_wages_inc_tax !== '' ? parseFloat(per_hour_wages_inc_tax) : null,
             custom_holidays || '[]',
-            break_hours_limit || ''
+            break_hours_limit || '',
+            pan_number || '',
+            aadhaar_number || '',
+            tax_regime || 'New',
+            uan_number || '',
+            esic_number || '',
+            pt_state || 'Maharashtra'
         ],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
@@ -616,7 +624,8 @@ router.put('/workers/:id', requireAuth, (req, res) => {
         is_contractor, income_type, start_date, award_classification,
         employee_group, holiday_group, include_holidays_in_payslips,
         ordinary_earnings_rate, authorised_to_approve_leave, authorised_to_approve_timesheets,
-        company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit
+        company_name, tfn_exemption, residency_status, visa_document_path, weekly_hours_limit, per_hour_wages_inc_tax, custom_holidays, break_hours_limit,
+        pan_number, aadhaar_number, tax_regime, uan_number, esic_number, pt_state
     } = req.body;
     const workerId = req.params.id;
 
@@ -638,6 +647,7 @@ router.put('/workers/:id', requireAuth, (req, res) => {
                  ordinary_earnings_rate = ?, authorised_to_approve_leave = ?, authorised_to_approve_timesheets = ?,
                  company_name = ?, tfn_exemption = ?, residency_status = ?, visa_document_path = ?, weekly_hours_limit = ?, per_hour_wages_inc_tax = ?, custom_holidays = ?,
                  break_hours_limit = ?,
+                 pan_number = ?, aadhaar_number = ?, tax_regime = ?, uan_number = ?, esic_number = ?, pt_state = ?,
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
             [
@@ -655,6 +665,12 @@ router.put('/workers/:id', requireAuth, (req, res) => {
                 per_hour_wages_inc_tax !== undefined && per_hour_wages_inc_tax !== null && per_hour_wages_inc_tax !== '' ? parseFloat(per_hour_wages_inc_tax) : null,
                 custom_holidays || '[]',
                 break_hours_limit || '',
+                pan_number || '',
+                aadhaar_number || '',
+                tax_regime || 'New',
+                uan_number || '',
+                esic_number || '',
+                pt_state || 'Maharashtra',
                 workerId
             ],
             function(err) {
