@@ -361,7 +361,7 @@
         <div class="modal-title">Add New Company</div>
         <form id="companyForm" onsubmit="saveCompany(event)">
             <input type="hidden" id="edit_id" value="">
-            <div class="form-grid">
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
                 <div class="section-divider">Company Details</div>
                 <div class="field"><label>Type</label>
                     <select id="comp_type"><option>Commercial</option><option>Residential</option></select>
@@ -381,7 +381,7 @@
                 <div></div>
                 
                 <div class="section-divider">Billing Address</div>
-                <div class="field full-width"><label>Billing Address (Google Search)</label><input type="text" id="comp_google_address" placeholder="Type address to auto-fill..."></div>
+                <div class="field full-width" style="grid-column: span 4;"><label>Billing Address (Google Search)</label><input type="text" id="comp_google_address" placeholder="Type address to auto-fill..."></div>
                 <div class="field"><label>Unit Number</label><input type="text" id="comp_unit_number"></div>
                 <div class="field"><label>Lot Number</label><input type="text" id="comp_lot_number"></div>
                 <div class="field"><label>Street Type</label><input type="text" id="comp_street_type"></div>
@@ -389,6 +389,7 @@
                 <div class="field"><label>Suburb</label><input type="text" id="comp_suburb"></div>
                 <div class="field"><label>State</label><input type="text" id="comp_state"></div>
                 <div class="field"><label>Postcode</label><input type="text" id="comp_postcode"></div>
+                <div></div>
             </div>
             <div class="form-footer">
                 <button type="submit" class="btn-save" id="saveCompanyBtn">Save Company</button>

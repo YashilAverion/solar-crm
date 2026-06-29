@@ -602,6 +602,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="field"><label class="required">Last Name</label><input type="text" id="proj_last_name"></div>
                 <div class="field"><label class="required">Phone Number</label><div class="input-group"><span class="country-code">+61</span><input type="text" id="proj_phone" placeholder="4xx xxx xxx"></div></div>
                 <div class="field"><label>Email ID</label><input type="text" id="proj_email"></div>
+                <div></div>
+                <div class="field"><label>Project Number Reference</label><input type="text" id="proj_project_number" placeholder="Leave blank to auto-generate"></div>
                 
                 <div class="section-divider">Address Details</div>
                 <div class="field full-width"><label class="required">Google Search</label><input type="text" id="google_address" placeholder="Type address to auto-fill..."></div>
@@ -1053,6 +1055,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('proj_last_name').value = p.last_name || '';
         document.getElementById('proj_phone').value = p.phone || '';
         document.getElementById('proj_email').value = p.email || '';
+        document.getElementById('proj_project_number').value = p.project_number || '';
         document.getElementById('unit_number').value = p.unit_number || '';
         document.getElementById('lot_number').value = p.lot_number || '';
         document.getElementById('street_type').value = p.street_type || '';
@@ -1430,6 +1433,7 @@ document.addEventListener("DOMContentLoaded", function() {
             last_name: document.getElementById('proj_last_name').value,
             phone: document.getElementById('proj_phone').value,
             email: document.getElementById('proj_email').value,
+            project_number: document.getElementById('proj_project_number').value,
             google_address: document.getElementById('google_address').value,
             unit_number: document.getElementById('unit_number').value,
             lot_number: document.getElementById('lot_number').value,

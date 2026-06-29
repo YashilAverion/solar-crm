@@ -264,7 +264,7 @@ router.post('/', (req, res) => {
     const d = req.body;
     const currentUser = d.currentUser || 'System';
     
-    generateProjectNumber(d.type || 'Other', (newProjectNumber) => {
+    const saveWithProjectNumber = (projNum) => {
         const sql = `INSERT INTO installations (
             type, company, first_name, last_name, phone, email,
             google_address, unit_number, lot_number, street_type, address, suburb, state, postcode,
@@ -275,13 +275,21 @@ router.post('/', (req, res) => {
             d.phone || '', d.email || '', d.google_address || '',
             d.unit_number || '', d.lot_number || '', d.street_type || '',
             d.address || '', d.suburb || '', d.state || '', d.postcode || '',
-            getSydneyISO(), 'Pending', 'Pending', newProjectNumber
+            getSydneyISO(), 'Pending', 'Pending', projNum
         ], function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            addHistory(this.lastID, 'Created', `Installation added with Reference #${newProjectNumber} for ${d.first_name} ${d.last_name}.`, currentUser);
-            res.json({ id: this.lastID, project_number: newProjectNumber, success: true });
+            addHistory(this.lastID, 'Created', `Installation added with Reference #${projNum} for ${d.first_name} ${d.last_name}.`, currentUser);
+            res.json({ id: this.lastID, project_number: projNum, success: true });
         });
-    });
+    };
+
+    if (d.project_number && d.project_number.trim() !== '') {
+        saveWithProjectNumber(d.project_number.trim());
+    } else {
+        generateProjectNumber(d.type || 'Other', (newProjectNumber) => {
+            saveWithProjectNumber(newProjectNumber);
+        });
+    }
 });
 
 // ── EDIT INSTALLATION ─────────────────────────────────────
@@ -291,13 +299,14 @@ router.put('/:id', (req, res) => {
     const sql = `UPDATE installations SET
         type=?, company=?, first_name=?, last_name=?, phone=?, email=?,
         google_address=?, unit_number=?, lot_number=?, street_type=?,
-        address=?, suburb=?, state=?, postcode=?
+        address=?, suburb=?, state=?, postcode=?, project_number=?
         WHERE id=?`;
     db.run(sql, [
         d.type || '', d.company || '', d.first_name || '', d.last_name || '',
         d.phone || '', d.email || '', d.google_address || '',
         d.unit_number || '', d.lot_number || '', d.street_type || '',
         d.address || '', d.suburb || '', d.state || '', d.postcode || '',
+        d.project_number || '',
         req.params.id
     ], (err) => {
         if (err) return res.status(500).json({ error: err.message });
