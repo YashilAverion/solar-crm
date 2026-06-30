@@ -5867,7 +5867,12 @@ function previewComplianceDocText(docType) {
         if (doc) {
             const printWin = window.open('', '_blank');
             if (printWin) {
-                printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; padding: 40px; white-space: pre-wrap;">${doc.generated_blob_text}</pre>`);
+                const content = doc.generated_text_payload || doc.generated_blob_text || '';
+                if (content.trim().startsWith('<!DOCTYPE') || content.trim().startsWith('<html') || content.trim().startsWith('<div')) {
+                    printWin.document.write(content);
+                } else {
+                    printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; padding: 40px; white-space: pre-wrap;">${content}</pre>`);
+                }
                 printWin.document.close();
             } else {
                 Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site.', 'warning');
@@ -6061,6 +6066,162 @@ function closeComplianceDocsModal() {
     }
 }
 
+function wrapInHTMLFrame(contentHtml) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Averion Global LLP - Compliance Document Package</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    background-color: #f1f5f9;
+  }
+  .page {
+    background: #ffffff;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 50px 50px 40px 50px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  .letterhead-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #0078C1;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+  .logo-container img {
+    height: 70px;
+    width: auto;
+  }
+  .company-info {
+    text-align: right;
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.5;
+  }
+  .company-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0078C1;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .doc-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    margin: 25px 0 15px 0;
+    letter-spacing: 1px;
+  }
+  h3 {
+    color: #0078C1;
+    font-size: 13px;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  p, li {
+    font-size: 13px;
+    color: #334155;
+    margin-bottom: 10px;
+    text-align: justify;
+  }
+  ol, ul {
+    margin-top: 5px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  .sign-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px dashed #cbd5e1;
+  }
+  .sign-box {
+    width: 45%;
+    font-size: 12px;
+    color: #475569;
+  }
+  .sign-line {
+    border-bottom: 1px solid #94a3b8;
+    height: 50px;
+    margin-bottom: 8px;
+  }
+  .annexure-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    margin-bottom: 25px;
+    font-size: 12px;
+  }
+  .annexure-table th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+  }
+  .annexure-table td {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+  }
+  .annexure-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .doc-footer {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+    margin-top: 40px;
+    font-size: 10px;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+  }
+  @media print {
+    body {
+      background: none;
+    }
+    .page {
+      margin: 0;
+      padding: 20px 10px;
+      box-shadow: none;
+      border-radius: 0;
+      max-width: 100%;
+      page-break-after: always;
+    }
+    .page:last-child {
+      page-break-after: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+  ${contentHtml}
+</body>
+</html>`;
+}
+
 function actionComplianceDoc(docType, action) {
     const editId = document.getElementById('emp_edit_id').value;
     if (!editId) return;
@@ -6089,10 +6250,16 @@ function actionComplianceDoc(docType, action) {
             sortedDocs.forEach(type => {
                 const doc = (window.complianceDocsCache || []).find(d => d.document_type === type);
                 if (doc && (doc.generated_text_payload || doc.generated_blob_text)) {
-                    parts.push(doc.generated_text_payload || doc.generated_blob_text);
+                    const raw = doc.generated_text_payload || doc.generated_blob_text;
+                    const bodyMatch = raw.match(/<body>([^]*)<\/body>/i);
+                    if (bodyMatch) {
+                        parts.push(bodyMatch[1]);
+                    } else {
+                        parts.push(raw);
+                    }
                 }
             });
-            printContent = parts.join('\n\n\n\n\n\n\n\n\n\n');
+            printContent = wrapInHTMLFrame(parts.join('\n'));
         } else {
             const mappedType = docTypeMapping[docType];
             const doc = (window.complianceDocsCache || []).find(d => d.document_type === mappedType);
@@ -6108,7 +6275,7 @@ function actionComplianceDoc(docType, action) {
 
         const printWin = window.open('', '_blank');
         if (printWin) {
-            printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; padding: 40px; white-space: pre-wrap;">${printContent}</pre>`);
+            printWin.document.write(printContent);
             printWin.document.close();
         } else {
             Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site to preview agreements.', 'warning');
