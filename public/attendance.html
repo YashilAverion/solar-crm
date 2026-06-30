@@ -5470,6 +5470,62 @@ function initAutocomplete() {
     });
 }
 
+function enableManualAddressEntry() {
+    const input = document.getElementById('emp_google_address');
+    if (!input) return;
+
+    const val = input.value;
+
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.id = 'emp_google_address';
+    newInput.placeholder = 'Enter address manually';
+    newInput.value = val;
+    newInput.style.width = '100%';
+    newInput.setAttribute('autocomplete', 'off');
+    newInput.setAttribute('data-lpignore', 'true');
+    newInput.setAttribute('data-1pignore', 'true');
+
+    input.parentNode.replaceChild(newInput, input);
+    newInput.focus();
+
+    const link = document.getElementById('btn_enter_address_manually');
+    if (link) {
+        link.innerHTML = '✓ Manual entry enabled';
+        link.style.color = '#10b981';
+        link.style.pointerEvents = 'none';
+    }
+}
+
+function resetAddressField() {
+    let input = document.getElementById('emp_google_address');
+    if (!input) return;
+
+    empAutocomplete = null;
+
+    const parentNode = input.parentNode;
+    if (parentNode) {
+        const defaultInput = document.createElement('input');
+        defaultInput.type = 'text';
+        defaultInput.id = 'emp_google_address';
+        defaultInput.placeholder = 'Search for address';
+        defaultInput.setAttribute('onfocus', 'initAutocomplete()');
+        defaultInput.setAttribute('autocomplete', 'off');
+        defaultInput.setAttribute('data-lpignore', 'true');
+        defaultInput.setAttribute('data-1pignore', 'true');
+        defaultInput.style.width = '100%';
+        
+        parentNode.replaceChild(defaultInput, input);
+    }
+
+    const link = document.getElementById('btn_enter_address_manually');
+    if (link) {
+        link.innerHTML = 'Enter address manually';
+        link.style.color = '#0078C1';
+        link.style.pointerEvents = 'auto';
+    }
+}
+
 function selectEmploymentType(isContractor) {
     document.getElementById('emp_is_contractor').value = isContractor;
     
@@ -6717,6 +6773,7 @@ function openEmployeeModal(editId = null) {
     const deleteBtn = document.getElementById('emp_delete_btn');
     
     form.reset();
+    resetAddressField();
     document.getElementById('emp_edit_id').value = editId || '';
     
     // Switch to Details tab by default
@@ -7843,7 +7900,7 @@ function updateSelectedWeeksOrFortnights() {
                     <div class="field" style="grid-column: span 2;">
                         <label>Address search</label>
                         <input type="text" id="emp_google_address" placeholder="Search for address" onfocus="initAutocomplete()" autocomplete="off" data-lpignore="true" data-1pignore="true">
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('emp_google_address').focus();" style="color: #0078C1; text-decoration: none; font-size: 11px; font-weight: 600; margin-top: 4px; display: inline-block;">Enter address manually</a>
+                        <a href="#" id="btn_enter_address_manually" onclick="event.preventDefault(); enableManualAddressEntry();" style="color: #0078C1; text-decoration: none; font-size: 11px; font-weight: 600; margin-top: 4px; display: inline-block;">Enter address manually</a>
                     </div>
                     
                     <!-- Contact Information -->
