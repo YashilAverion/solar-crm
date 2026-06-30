@@ -1958,4 +1958,433 @@ router.post('/email-compliance-doc', requireAuth, (req, res) => {
     );
 });
 
+
+// ── COMPILE PHASE-WISE DOCUMENT TEMPLATE ─────────────────────────────────
+function compilePhaseDoc(category, emp, registry) {
+    const today = formatToDDMMYY(new Date());
+    const docDate = emp.onboarding_date ? formatToDDMMYY(emp.onboarding_date) : today;
+    const logoBase64 = getAverionLogoBase64();
+
+    const regName = registry ? registry.company_name : 'Averion Global LLP';
+    const regOffice = registry ? registry.registered_office : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
+    const regGstin = registry ? registry.gstin : '24ACMFA7488G1Z0';
+    const regPan = registry ? registry.pan_card : 'ACMFA7488G';
+
+    const gross = parseFloat(emp.base_salary || emp.base_salary_scale || 0);
+    const basic = gross * 0.50;
+    const hra = gross * 0.20;
+    const specialAllowance = gross * 0.30;
+
+    const formattedGross = gross.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedBasic = basic.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedHRA = hra.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedSpecial = specialAllowance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+
+    const probationMonths = emp.probation_months || emp.probation_period_months || 3;
+    const noticeDays = emp.notice_days || emp.notice_period_days || 45;
+    const shiftStart = emp.shift_schedule_string || emp.shift_start_time || '03:30 AM';
+    const leaveQuota = emp.allocated_leaves || emp.annual_leave_quota || 24;
+
+    const signHtml = `
+    <div class="sign-container">
+      <div class="sign-box">
+        For <strong>${regName}</strong>
+        <div class="sign-line"></div>
+        Authorized Signatory
+      </div>
+      <div class="sign-box">
+        Accepted by Employee/Intern
+        <div class="sign-line"></div>
+        <strong>${emp.full_name}</strong>
+      </div>
+    </div>
+    `;
+
+    let innerContent = '';
+
+    switch(category) {
+        case 'Category_B': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/EA/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Category B (Foundation)<br>
+                <strong>Execution Date:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Master Employment Agreement & Appointment Terms</div>
+            <p>This Master Employment Agreement (<strong>"Agreement"</strong>) is entered into at Ahmedabad, Gujarat, India, by and between <strong>${regName}</strong>, having its registered office at ${regOffice} (hereinafter referred to as the <strong>"Employer"</strong> or the <strong>"Company"</strong>) and Mr./Ms. <strong>${emp.full_name}</strong>, residing at ${emp.google_address || 'As per Company Records'} (hereinafter referred to as the <strong>"Employee"</strong>).</p>
+
+            <h3>1. Scope of Engagement & Internship Metrics</h3>
+            <ul>
+                <li>The Company hereby appoints the Employee as <strong>"${emp.designation || 'Associate'}"</strong> under the <strong>${emp.department || 'Operations'}</strong> Department.</li>
+                <li><strong>Internship Provision:</strong> In the event that the role is designated as an Internship, the engagement shall span a strict duration of six (6) months. During this internship period, the Employee shall be eligible for a fixed monthly stipend scaled between Rs 15,000 and Rs 25,000 based on performance benchmarks.</li>
+                <li><strong>Permanent Transition:</strong> Transition to permanent employment is subject to successful review at the end of the 6-month internship period, and is not automatic.</li>
+            </ul>
+
+            <h3>2. Probation & Confirmation</h3>
+            <ul>
+                <li>Upon onboarding (or transition to permanent role), the Employee shall undergo a probation period of strictly <strong>${probationMonths} Months</strong>.</li>
+                <li>During probation, either party may terminate employment with fifteen (15) days written notice. Post confirmation, the notice period is strictly set to <strong>${noticeDays} Days</strong>.</li>
+            </ul>
+
+            <h3>3. Work Shift Hours & Australian Time Zone Parameters</h3>
+            <ul>
+                <li>The Employee's standard daily working hours are nine (9) hours, including designated rest breaks.</li>
+                <li>Due to strict operational alignment with client schedules in the Australian Time Zone, the shift commences strictly at <strong>${shiftStart} IST</strong> daily.</li>
+                <li>Punctual shift commencement and alignment with Australian timezone requirements are absolute conditions of employment.</li>
+            </ul>
+
+            <h3>4. Remuneration & Compensation Structure</h3>
+            <ul>
+                <li>The Employee's monthly Gross salary (or stipend) is set to <strong>${formattedGross}</strong>, structured as detailed in Annexure A.</li>
+                <li>Gratuity benefits will be applicable only upon completing five (5) consecutive years of continuous active service under the Payment of Gratuity Act 1972.</li>
+            </ul>
+
+            <h3>5. Dispute Resolution, Governing Law & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>This Agreement is governed by the laws of India.</li>
+                <li>Any dispute arising from this contract shall be settled via binding arbitration in Ahmedabad, Gujarat, under the Arbitration and Conciliation Act 1996.</li>
+                <li>The competent courts of <strong>Ahmedabad, Gujarat</strong> shall have absolute and exclusive jurisdiction over all matters arising out of this employment relation.</li>
+            </ul>
+
+            ${signHtml}
+
+            <div style="page-break-before: always;"></div>
+            
+            <div class="doc-title" style="margin-top: 40px;">ANNEXURE A: COMPENSATION DETAILS</div>
+            <table class="annexure-table">
+              <thead>
+                <tr>
+                  <th>Salary Component</th>
+                  <th>Percentage</th>
+                  <th>Monthly Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Basic Salary</strong></td>
+                  <td>50%</td>
+                  <td>${formattedBasic}</td>
+                </tr>
+                <tr>
+                  <td><strong>House Rent Allowance (HRA)</strong></td>
+                  <td>20%</td>
+                  <td>${formattedHRA}</td>
+                </tr>
+                <tr>
+                  <td><strong>Special Allowance</strong></td>
+                  <td>30%</td>
+                  <td>${formattedSpecial}</td>
+                </tr>
+                <tr style="background-color: #e2e8f0; font-weight: 700;">
+                  <td>Gross Monthly CTC</td>
+                  <td>100%</td>
+                  <td>${formattedGross}</td>
+                </tr>
+              </tbody>
+            </table>
+            `;
+            break;
+        }
+
+        case 'Category_A': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/HRP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Category A (Foundation)<br>
+                <strong>Execution Date:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Master HR Policy Manual</div>
+            <p>This Master HR Policy Manual establishes the binding rules, regulations, and operational structures of <strong>${regName}</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Legal Foundation Rules</h3>
+            <ul>
+                <li>This manual constitutes a binding covenant between the Employee and ${regName}. Compliance with all policies detailed herein is mandatory.</li>
+                <li>The Company reserves the right to amend, update, or revise policies to align with statutory changes and operational requirements.</li>
+            </ul>
+
+            <h3>2. Leave Policy & Annual Quota Allotment</h3>
+            <ul>
+                <li>The Employee is entitled to an explicit annual leave quota of <strong>${leaveQuota} Days</strong>.</li>
+                <li>Leaves accrue monthly and must be applied for and approved in writing at least seven (7) days in advance, except in emergency cases.</li>
+                <li>Unapproved absences shall result in loss of pay and potential disciplinary actions.</li>
+            </ul>
+
+            <h3>3. Shift Patterns & Timings</h3>
+            <ul>
+                <li>All operations are structured around client timezones. The standard shift starts strictly at <strong>${shiftStart} IST</strong>.</li>
+                <li>The Employee must report, login, and be fully operational at their workstation by the commencement time of the shift.</li>
+            </ul>
+
+            <h3>4. Reporting Hierarchy & Communication Protocol</h3>
+            <ul>
+                <li>The Employee shall report directly to their designated Lead, Manager, or as directed by the Managing Partners.</li>
+                <li>Professional communication protocols must be followed at all times. All work-related communications must occur through official company channels (email, Slack, HRMS).</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Category_H': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/SIP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Category H (Incentive)<br>
+                <strong>Execution Date:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Target-Based Sales Incentive & Commission Policy</div>
+            <p>This policy outlines the sales incentive, targets, and commission structures established by <strong>${regName}</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Incentive Architecture & Milestones</h3>
+            <ul>
+                <li>The Employee is eligible for performance-based commissions upon meeting or exceeding set sales targets and milestones.</li>
+                <li>Milestones, commission rates, and payouts are evaluated monthly in accordance with the Sales Target Sheet.</li>
+            </ul>
+
+            <h3>2. Target-Driven Incentive Hold Policy</h3>
+            <ul>
+                <li><strong>Explicit Hold Provision:</strong> In the event of a failure to meet the minimum defined sales milestones, the Company shall put a hold on the target-driven sales incentive payout.</li>
+                <li><strong>Salary Protection Guarantee:</strong> The Company explicitly declares that under no circumstances shall there be any deduction from the Employee's baseline base salary for failing to meet sales targets. Base salary is legally protected.</li>
+            </ul>
+
+            <h3>3. Review and Discretionary adjustments</h3>
+            <ul>
+                <li>The Company reserves the right to modify commission matrices, baseline quotas, and campaign multipliers with prior written notice.</li>
+                <li>All incentive payouts are subject to client payment realization and audit.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Category_C': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/NDA/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Category C (NDA & IPR)<br>
+                <strong>Execution Date:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Comprehensive Non-Disclosure, IP Assignment & Anti-Moonlighting Covenant</div>
+            <p>This Agreement is entered into by and between <strong>${regName}</strong> and the Employee, Mr./Ms. <strong>${emp.full_name}</strong>, to protect proprietary assets and secrets.</p>
+
+            <h3>1. Protection of Corporate Secrets</h3>
+            <ul>
+                <li><strong>Confidential Information</strong> includes: Customer Database, Vendor Database, solar lead sheets, pricing lists, business proposals, financial reports, CRM records, and technical layout codes.</li>
+                <li>The Employee shall maintain strict confidentiality and is prohibited from exporting, screenshotting, or replicating files to personal storage devices.</li>
+            </ul>
+
+            <h3>2. Intellectual Property (IP) Assignment</h3>
+            <ul>
+                <li>All codes, algorithms, outreach spreadsheets, layout designs, and proposal calculators designed by the Employee during their service hours belong exclusively to the Company.</li>
+                <li>The Employee hereby assigns all global rights, titles, and interests in such IP to the Company.</li>
+            </ul>
+
+            <h3>3. Exclusivity & Anti-Moonlighting Restrictions</h3>
+            <ul>
+                <li>The Employee shall devote their whole time, attention, and capabilities exclusively to the Company.</li>
+                <li><strong>Dual Employment:</strong> The Employee is strictly prohibited from engaging in any duplicate employment, parallel freelancing, teaching, consulting, or starting a business, paid or unpaid, during the employment tenure.</li>
+                <li><strong>Client Poaching:</strong> The Employee shall not solicit, contact, or provide proposal designs to Company clients for personal gains or competitors.</li>
+            </ul>
+
+            <h3>4. Statutory Violations & Legal Reference</h3>
+            <ul>
+                <li>Any unauthorized extraction or leakage of company data constitutes a criminal offense under Section 43 & 66 of the Information Technology Act 2000.</li>
+                <li>Breach of trust, database theft, or corporate poaching shall result in immediate termination for cause and criminal prosecution under Section 408 of the Indian Penal Code (IPC).</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Category_F_L': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/ITP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Category F/L (Assets & Surveillance)<br>
+                <strong>Execution Date:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Workplace Surveillance, IT Assets, & Rest Breaks Policy</div>
+            <p>This policy details the surveillance consents, hardware management protocols, and shift break limits established by <strong>${regName}</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Shift Rest Break Limits</h3>
+            <ul>
+                <li>Under the 9-hour operational shift, the Employee is entitled to designated rest breaks not exceeding a cumulative total of one (1) hour.</li>
+                <li>All breaks must be logged in the timesheet system. Punctual return from rest breaks is mandatory.</li>
+            </ul>
+
+            <h3>2. Workplace Surveillance Consent</h3>
+            <ul>
+                <li>The Employee hereby provides absolute, irrevocable consent for operational monitoring including:
+                    <ul>
+                        <li>CCTV surveillance of physical premises and workspaces.</li>
+                        <li>Biometric punch-in/out logs for shift tracking.</li>
+                        <li>Remote system logging, corporate email tracking, and VoIP communication records on Company networks.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>3. IT Asset Management & Serial Trackers</h3>
+            <ul>
+                <li>The Employee acknowledges responsibility for securing and maintaining Company-issued hardware, including:
+                    <ul>
+                        <li>Laptop Serial: ${emp.assets_laptops || 'Not Issued'}</li>
+                        <li>Desktop Serial: ${emp.assets_desktops || 'Not Issued'}</li>
+                        <li>Mobile Serial: substituteMobiles</li>
+                        <li>SIM Card Identifier: ${emp.assets_sims || 'Not Issued'}</li>
+                        <li>ID Badge / Access Card: ${emp.assets_ids || emp.assets_access_cards || 'Not Issued'}</li>
+                    </ul>
+                </li>
+                <li>All software licenses and official email accounts are company assets and must be used solely for authorized business purposes.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        default:
+            innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
+            break;
+    }
+
+    return wrapInHTMLFrame(innerContent, category.substring(0, 5).toUpperCase(), emp, logoBase64);
+}
+
+// ── GENERATE PHASE-WISE HR DOCUMENTS (POST) ──────────────────────────────
+router.post('/generate-phase-docs', requireAuth, (req, res) => {
+    const { employee_id, document_type } = req.body;
+    if (!employee_id || !document_type) {
+        return res.status(400).json({ error: 'Missing employee_id or document_type' });
+    }
+
+    getFullEmployeeDetails(employee_id, (detailsErr, empDetails) => {
+        if (detailsErr) return res.status(500).json({ error: detailsErr.message });
+
+        db.get("SELECT * FROM averion_corporate_registry LIMIT 1", [], (regErr, registry) => {
+            if (regErr) return res.status(500).json({ error: regErr.message });
+
+            const compiledHtml = compilePhaseDoc(document_type, empDetails, registry);
+
+            db.get(
+                `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND (document_type = ? OR document_category_type = ?)`,
+                [employee_id.toString(), document_type, document_type],
+                (checkErr, docRow) => {
+                    if (checkErr) return res.status(500).json({ error: checkErr.message });
+
+                    if (!docRow) {
+                        db.run(
+                            `INSERT INTO legal_signed_documents 
+                             (employee_id, document_type, document_category_type, signed_status, generated_blob_text, generated_text_payload, compiled_html_payload, email_sent_status) 
+                             VALUES (?, ?, ?, 0, ?, ?, ?, 0)`,
+                            [employee_id.toString(), document_type, document_type, compiledHtml, compiledHtml, compiledHtml],
+                            function(insErr) {
+                                if (insErr) return res.status(500).json({ error: insErr.message });
+                                res.json({ success: true, document_type, generated_text_payload: compiledHtml });
+                            }
+                        );
+                    } else {
+                        db.run(
+                            `UPDATE legal_signed_documents 
+                             SET generated_blob_text = ?, generated_text_payload = ?, compiled_html_payload = ?, document_category_type = ?
+                             WHERE id = ?`,
+                            [compiledHtml, compiledHtml, compiledHtml, document_type, docRow.id],
+                            function(updErr) {
+                                if (updErr) return res.status(500).json({ error: updErr.message });
+                                res.json({ success: true, document_type, generated_text_payload: compiledHtml });
+                            }
+                        );
+                    }
+                }
+            );
+        });
+    });
+});
+
+// ── DISPATCH COMPLIANCE EMAIL (POST) ──────────────────────────────
+router.post('/dispatch-document-email', requireAuth, (req, res) => {
+    const { employee_id, document_type } = req.body;
+    if (!employee_id || !document_type) {
+        return res.status(400).json({ error: 'employee_id and document_type are required' });
+    }
+
+    db.get(
+        `SELECT * FROM legal_signed_documents WHERE employee_id = ? AND (document_type = ? OR document_category_type = ?)`,
+        [employee_id.toString(), document_type, document_type],
+        (err, doc) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!doc) return res.status(404).json({ error: 'Document not found. Please compile/generate documents first.' });
+
+            db.get(`SELECT email, first_name FROM attendance_workers WHERE id = ?`, [employee_id], (workerErr, worker) => {
+                if (workerErr) return res.status(500).json({ error: workerErr.message });
+                if (!worker || !worker.email) {
+                    return res.status(400).json({ error: 'Employee does not have a registered email address.' });
+                }
+
+                const isEmailConfigured = config.email && config.email.host && config.email.port && config.email.user && config.email.pass;
+                if (!isEmailConfigured) {
+                    return res.status(400).json({ error: 'SMTP email credentials are not configured in your .env file.' });
+                }
+
+                const transporter = nodemailer.createTransport({
+                    host: config.email.host,
+                    port: config.email.port,
+                    secure: config.email.secure,
+                    auth: {
+                        user: config.email.user,
+                        pass: config.email.pass
+                    }
+                });
+
+                let docTitle = document_type.replace(/_/g, ' ');
+                if (document_type === 'Category_B') docTitle = 'Employment Agreement / Appointment Letter';
+                else if (document_type === 'Category_A') docTitle = 'Master HR Policy Manual';
+                else if (document_type === 'Category_H') docTitle = 'Target-Based Sales Incentive Policy';
+                else if (document_type === 'Category_C') docTitle = 'Comprehensive NDA & Moonlighting Covenant';
+                else if (document_type === 'Category_F_L') docTitle = 'Workplace Surveillance & Assets Policy';
+
+                const mailOptions = {
+                    from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,
+                    to: worker.email,
+                    subject: `${docTitle} - Averion Compliance Management`,
+                    html: `
+                        <div style="font-family: sans-serif; max-width: 600px; color: #334155; line-height: 1.6; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <h2 style="color: #0078C1; margin-top: 0; border-bottom: 2px solid #0078C1; padding-bottom: 8px;">Averion Global LLP</h2>
+                            <p>Dear ${worker.first_name || 'Employee'},</p>
+                            <p>Please find attached your official Category Compliance Document: <strong>${docTitle}</strong>.</p>
+                            <p>You are required to review the attached policy and acknowledge it within your compliance dashboard.</p>
+                            <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;">
+                            <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">This is an automated operational notification from Averion HR. Please do not reply directly to this email.</p>
+                        </div>
+                    `,
+                    attachments: [{
+                        filename: `${document_type}_Compliance.html`,
+                        content: doc.compiled_html_payload || doc.generated_text_payload || doc.generated_blob_text
+                    }]
+                };
+
+                transporter.sendMail(mailOptions, (mailErr) => {
+                    if (mailErr) return res.status(500).json({ error: 'SMTP delivery failed: ' + mailErr.message });
+
+                    db.run(
+                        `UPDATE legal_signed_documents SET email_sent_status = 1 WHERE id = ?`,
+                        [doc.id],
+                        (updateErr) => {
+                            res.json({ success: true, message: `"${docTitle}" sent successfully.` });
+                        }
+                    );
+                });
+            });
+        }
+    );
+});
+
 module.exports = router;
+

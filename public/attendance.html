@@ -6391,6 +6391,93 @@ function wrapInHTMLFrame(contentHtml) {
 </html>`;
 }
 
+// ── PHASE 1: CATEGORY DOCUMENT GENERATION & EMAIL DISPATCH ─────────────────
+function actionPhaseDoc(category, action) {
+    const editId = document.getElementById('emp_edit_id').value;
+    if (!editId) return;
+    const emp = allXeroEmployees.find(u => u.id == editId);
+    if (!emp) return;
+
+    const categoryLabels = {
+        'Category_B': 'Employment Agreement / Appointment Letter',
+        'Category_A': 'Master HR Policy Manual',
+        'Category_H': 'Target-Based Sales Incentive & Commission Policy',
+        'Category_C': 'Comprehensive NDA, IP & Anti-Moonlighting Covenant',
+        'Category_F_L': 'Workplace Surveillance, IT Assets & Rest Breaks Policy'
+    };
+    const docLabel = categoryLabels[category] || category.replace(/_/g, ' ');
+
+    Swal.fire({
+        title: 'Compiling Document...',
+        text: `Generating ${docLabel}...`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch('/api/compliance/generate-phase-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: editId, document_type: category })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Failed to compile document.');
+
+        if (action === 'preview') {
+            Swal.close();
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                printWin.document.write(data.generated_text_payload || '');
+                printWin.document.close();
+            } else {
+                Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site to preview documents.', 'warning');
+            }
+        } else if (action === 'email') {
+            if (!emp.email) {
+                Swal.close();
+                Swal.fire('Email Missing', 'This employee profile does not have a registered email address.', 'warning');
+                return;
+            }
+            Swal.close();
+            Swal.fire({
+                title: 'Send Compliance Document?',
+                html: `Are you sure you want to email <strong>${docLabel}</strong><br>to <strong>${emp.first_name} ${emp.last_name || ''}</strong> at <em>${emp.email}</em>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Send ✉️',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#0078C1'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                Swal.fire({
+                    title: 'Dispatching Email...',
+                    text: 'Sending via SMTP...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                fetch('/api/compliance/dispatch-document-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ employee_id: editId, document_type: category })
+                })
+                .then(r => r.json())
+                .then(emailData => {
+                    if (emailData.success) {
+                        Swal.fire({ icon: 'success', title: 'Email Sent!', text: emailData.message || `"${docLabel}" dispatched successfully.`, confirmButtonColor: '#0078C1' });
+                    } else {
+                        Swal.fire('Dispatch Failed', emailData.error || 'SMTP error occurred.', 'error');
+                    }
+                })
+                .catch(err => Swal.fire('Network Error', err.message, 'error'));
+            });
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        Swal.fire('Compilation Error', err.message || 'Failed to generate document.', 'error');
+    });
+}
+
 function actionComplianceDoc(docType, action) {
     const editId = document.getElementById('emp_edit_id').value;
     if (!editId) return;
@@ -8842,112 +8929,96 @@ function updateSelectedWeeksOrFortnights() {
             <button type="button" onclick="closeComplianceDocsModal()" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;">✕</button>
         </div>
         
-        <!-- Modal Body (Grid of Cards) -->
-        <div style="padding: 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; overflow-y: auto; max-height: 480px; box-sizing: border-box; background: #f1f5f9;">
-            <!-- Card 0: Appointment Letter -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+        <!-- Modal Body (Phase 1: Foundation & Identity Kit) -->
+        <div style="padding: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; overflow-y: auto; max-height: 520px; box-sizing: border-box; background: #f1f5f9;">
+
+            <!-- Card: Category B — Employment Agreement / Appointment Letter -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #0078C1;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">✉️</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Appointment Letter</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Official corporate Appointment Letter detailing joining parameters, designation, shift timings, and monthly CTC bifurcation.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('appointment_letter', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('appointment_letter', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 1 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">📄</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Employment Agreement</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Official contract including designation, start date, probation, and monthly CTC bifurcation.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('offer_letter', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('offer_letter', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 2 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">📱</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Mobile & Phone Policy</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Office VoIP guidelines and personal device restrictions during shifts.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('phone_policy', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('phone_policy', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 3 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">☕</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Rest Breaks Policy</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Interval standards and timesheet punching rules under Shops & Establishment Act.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('break_policy', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('break_policy', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 4 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">🔒</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Data Protection Policy</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">NDA controls and severe legal consequences under IPC 408 and IT Act 66.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('data_theft', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('data_theft', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 5 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 20px;">📅</span>
-                        <strong style="font-size: 13px; color: #0f172a;">Employee Leave Guide</strong>
-                    </div>
-                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Regulations on PL/EL, CL, SL, and ML, including accruals and approvals.</p>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                    <button type="button" onclick="actionComplianceDoc('leave_policy', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
-                    <button type="button" onclick="actionComplianceDoc('leave_policy', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
-                </div>
-            </div>
-            
-            <!-- Card 6 -->
-            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; grid-column: span 2;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <span style="font-size: 20px;">📦</span>
-                            <strong style="font-size: 13px; color: #0f172a;">Combined Onboarding Package</strong>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 18px;">📋</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Employment Agreement</strong>
+                            <span style="font-size: 10px; color: #0078C1; font-weight: 700;">Category B — Foundation</span>
                         </div>
-                        <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.4;">Compiles all of the above policies and agreement into a single print-friendly PDF package.</p>
                     </div>
-                    <div style="display: flex; gap: 8px; width: 220px; flex-shrink: 0; margin-left: 16px;">
-                        <button type="button" onclick="actionComplianceDoc('package', 'preview')" style="flex: 1; height: 36px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview All</button>
-                        <button type="button" onclick="actionComplianceDoc('package', 'email')" style="flex: 1; height: 36px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email All</button>
+                    <p style="margin: 0 0 12px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Permanent employment parameters, 6-month internship scale (Rs 15,000–25,000), 3-month probation, 45-day notice, 03:30 AM IST shift, Gujarat jurisdiction & full CTC breakup.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Category_B', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Category_B', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Category A — Master HR Policy Manual -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #16a34a;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 18px;">📗</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Master HR Policy Manual</strong>
+                            <span style="font-size: 10px; color: #16a34a; font-weight: 700;">Category A — Foundation</span>
+                        </div>
                     </div>
+                    <p style="margin: 0 0 12px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Legal foundation rules binding employees to 24-day annual leave quota, shift patterns, reporting hierarchies, and workplace conduct obligations.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Category_A', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Category_A', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #16a34a; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Category H — Sales Incentive & Commission Policy -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #d97706;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 18px;">🎯</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Sales Incentive & Commission Policy</strong>
+                            <span style="font-size: 10px; color: #d97706; font-weight: 700;">Category H — Incentive</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 12px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Target-driven incentive hold architecture. Explicitly declares zero baseline salary deductions under any sales performance outcome.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Category_H', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Category_H', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Category C — NDA, IP & Anti-Moonlighting Covenant -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #7c3aed;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 18px;">🔏</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">NDA, IP & Anti-Moonlighting Covenant</strong>
+                            <span style="font-size: 10px; color: #7c3aed; font-weight: 700;">Category C — NDA & IPR</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 12px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Safeguards corporate secrets, blocks duplicate employment and client poaching. Cross-referenced under IPC 408 and IT Act Sections 43 & 66.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Category_C', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Category_C', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #7c3aed; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Category F/L — Surveillance, IT Assets & Rest Breaks (full-width) -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-left: 3px solid #0891b2; grid-column: span 2;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 18px;">🔎</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Workplace Surveillance, IT Assets & Rest Breaks Policy</strong>
+                            <span style="font-size: 10px; color: #0891b2; font-weight: 700;">Category F/L — Assets & Surveillance</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.4;">9-hour shift compliance (max 1-hour rest), CCTV & biometric consent, corporate email monitoring, hardware serial tracking (Laptops, Desktops, Mobiles, SIM cards, ID Badges).</p>
+                </div>
+                <div style="display: flex; gap: 6px; flex-shrink: 0; margin-left: 16px;">
+                    <button type="button" onclick="actionPhaseDoc('Category_F_L', 'preview')" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer; white-space: nowrap;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Category_F_L', 'email')" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 700; background: #0891b2; border: none; color: #fff; border-radius: 6px; cursor: pointer; white-space: nowrap;">✉️ Email</button>
                 </div>
             </div>
         </div>

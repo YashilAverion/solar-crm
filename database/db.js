@@ -1344,12 +1344,57 @@ db.serialize(() => {
         }
     });
 
+    // Initialize/seed averion_corporate_registry
+    db.run(`
+        CREATE TABLE IF NOT EXISTS averion_corporate_registry (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company_name TEXT NOT NULL,
+            registered_office TEXT NOT NULL,
+            gstin TEXT NOT NULL,
+            pan_card TEXT NOT NULL,
+            letterhead_logo TEXT
+        )
+    `, (err) => {
+        if (!err) {
+            db.get(`SELECT COUNT(*) as count FROM averion_corporate_registry`, [], (checkErr, row) => {
+                if (!checkErr && row && row.count === 0) {
+                    db.run(`
+                        INSERT INTO averion_corporate_registry (company_name, registered_office, gstin, pan_card, letterhead_logo)
+                        VALUES (?, ?, ?, ?, ?)
+                    `, [
+                        'Averion Global LLP',
+                        'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060',
+                        '24ACMFA7488G1Z0',
+                        'ACMFA7488G',
+                        'averion_logo.jpg'
+                    ]);
+                }
+            });
+        }
+    });
+
     const docAlterColumns = [
         "ALTER TABLE legal_signed_documents ADD COLUMN generated_text_payload TEXT",
-        "ALTER TABLE legal_signed_documents ADD COLUMN email_sent_status INTEGER DEFAULT 0"
+        "ALTER TABLE legal_signed_documents ADD COLUMN email_sent_status INTEGER DEFAULT 0",
+        "ALTER TABLE legal_signed_documents ADD COLUMN document_category_type TEXT",
+        "ALTER TABLE legal_signed_documents ADD COLUMN compiled_html_payload TEXT"
     ];
 
     docAlterColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors
+        });
+    });
+
+    const additionalProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN base_salary_scale REAL",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN allocated_leaves INTEGER",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN probation_months INTEGER",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN notice_days INTEGER",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN shift_schedule_string TEXT"
+    ];
+
+    additionalProfileColumns.forEach(sql => {
         db.run(sql, (err) => {
             // Ignore duplicate column errors
         });
