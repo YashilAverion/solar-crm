@@ -1104,87 +1104,113 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
     const bioConsent = biometric_consent ? 1 : 0;
     const hrConsent = hrms_consent ? 1 : 0;
 
-    db.serialize(() => {
-        db.run(
-            `INSERT INTO employee_compliance_profiles (
-                employee_id, full_name, department, designation, base_salary,
-                shift_start_time, probation_period_months, notice_period_days,
-                annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
-                assets_laptops, assets_desktops, assets_mobiles, assets_sims,
-                assets_ids, assets_access_cards, assets_licenses,
-                surveillance_consent, biometric_consent, hrms_consent
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(employee_id) DO UPDATE SET
-                full_name = excluded.full_name,
-                department = excluded.department,
-                designation = excluded.designation,
-                base_salary = excluded.base_salary,
-                shift_start_time = excluded.shift_start_time,
-                probation_period_months = excluded.probation_period_months,
-                notice_period_days = excluded.notice_period_days,
-                annual_leave_quota = excluded.annual_leave_quota,
-                gratuity_eligible = excluded.gratuity_eligible,
-                incentive_hold_flag = excluded.incentive_hold_flag,
-                onboarding_date = excluded.onboarding_date,
-                assets_laptops = excluded.assets_laptops,
-                assets_desktops = excluded.assets_desktops,
-                assets_mobiles = excluded.assets_mobiles,
-                assets_sims = excluded.assets_sims,
-                assets_ids = excluded.assets_ids,
-                assets_access_cards = excluded.assets_access_cards,
-                assets_licenses = excluded.assets_licenses,
-                surveillance_consent = excluded.surveillance_consent,
-                biometric_consent = excluded.biometric_consent,
-                hrms_consent = excluded.hrms_consent`,
-            [
-                employee_id, full_name, department, designation, salary,
-                shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
-                parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
-                assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
-                assets_ids || '', assets_access_cards || '', assets_licenses || '',
-                survConsent, bioConsent, hrConsent
-            ],
-            function(err) {
-                if (err) return res.status(500).json({ error: err.message });
+    db.get('SELECT id FROM employee_compliance_profiles WHERE employee_id = ?', [employee_id.toString()], (checkErr, row) => {
+        if (checkErr) return res.status(500).json({ error: checkErr.message });
 
-                const docTypes = [
-                    'Appointment_Letter', 'NDA_IP_Assignment', 'HR_Policy_Manual', 'Moonlighting_Covenant',
-                    'Gratuity_Reimbursement', 'Anti_Poaching_Agreement', 'IT_Asset_Surveillance', 'Shift_Safety_Declaration'
-                ];
+        const docTypes = [
+            'Appointment_Letter', 'NDA_IP_Assignment', 'HR_Policy_Manual', 'Moonlighting_Covenant',
+            'Gratuity_Reimbursement', 'Anti_Poaching_Agreement', 'IT_Asset_Surveillance', 'Shift_Safety_Declaration'
+        ];
 
-                getFullEmployeeDetails(employee_id, (detailsErr, empDetails) => {
-                    if (detailsErr) {
-                        console.error('Error generating document detail mappings:', detailsErr.message);
-                        return res.json({ success: true, message: 'Onboarding compliance profile saved, but failed to map document parameters.' });
-                    }
+        const handleSuccess = () => {
+            getFullEmployeeDetails(employee_id, (detailsErr, empDetails) => {
+                if (detailsErr) {
+                    console.error('Error generating document detail mappings:', detailsErr.message);
+                    return res.json({ success: true, message: 'Onboarding compliance profile saved, but failed to map document parameters.' });
+                }
 
-                    docTypes.forEach(docType => {
-                        const generatedText = generateDocumentText(docType, empDetails);
-                        
-                        db.get(
-                            `SELECT id, signed_status FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
-                            [employee_id.toString(), docType],
-                            (docErr, docRow) => {
-                                if (docErr) console.error('Error fetching document status:', docErr.message);
-                                else if (!docRow) {
-                                    db.run(
-                                        `INSERT INTO legal_signed_documents (employee_id, document_type, signed_status, generated_blob_text) VALUES (?, ?, 0, ?)`,
-                                        [employee_id.toString(), docType, generatedText]
-                                    );
-                                } else if (docRow.signed_status === 0) {
-                                    db.run(
-                                        `UPDATE legal_signed_documents SET generated_blob_text = ? WHERE id = ?`,
-                                        [generatedText, docRow.id]
-                                    );
-                                }
+                docTypes.forEach(docType => {
+                    const generatedText = generateDocumentText(docType, empDetails);
+                    
+                    db.get(
+                        `SELECT id, signed_status FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
+                        [employee_id.toString(), docType],
+                        (docErr, docRow) => {
+                            if (docErr) console.error('Error fetching document status:', docErr.message);
+                            else if (!docRow) {
+                                db.run(
+                                    `INSERT INTO legal_signed_documents (employee_id, document_type, signed_status, generated_blob_text) VALUES (?, ?, 0, ?)`,
+                                    [employee_id.toString(), docType, generatedText]
+                                );
+                            } else if (docRow.signed_status === 0) {
+                                db.run(
+                                    `UPDATE legal_signed_documents SET generated_blob_text = ? WHERE id = ?`,
+                                    [generatedText, docRow.id]
+                                );
                             }
-                        );
-                    });
-
-                    res.json({ success: true, message: 'Onboarding compliance profile saved and documents generated.' });
+                        }
+                    );
                 });
-            }
-        );
+
+                res.json({ success: true, message: 'Onboarding compliance profile saved and documents generated.' });
+            });
+        };
+
+        if (row) {
+            // Run UPDATE
+            db.run(
+                `UPDATE employee_compliance_profiles SET
+                    full_name = ?,
+                    department = ?,
+                    designation = ?,
+                    base_salary = ?,
+                    shift_start_time = ?,
+                    probation_period_months = ?,
+                    notice_period_days = ?,
+                    annual_leave_quota = ?,
+                    gratuity_eligible = ?,
+                    incentive_hold_flag = ?,
+                    onboarding_date = ?,
+                    assets_laptops = ?,
+                    assets_desktops = ?,
+                    assets_mobiles = ?,
+                    assets_sims = ?,
+                    assets_ids = ?,
+                    assets_access_cards = ?,
+                    assets_licenses = ?,
+                    surveillance_consent = ?,
+                    biometric_consent = ?,
+                    hrms_consent = ?
+                WHERE employee_id = ?`,
+                [
+                    full_name, department, designation, salary,
+                    shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
+                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
+                    assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
+                    assets_ids || '', assets_access_cards || '', assets_licenses || '',
+                    survConsent, bioConsent, hrConsent,
+                    employee_id.toString()
+                ],
+                function(updateErr) {
+                    if (updateErr) return res.status(500).json({ error: updateErr.message });
+                    handleSuccess();
+                }
+            );
+        } else {
+            // Run INSERT
+            db.run(
+                `INSERT INTO employee_compliance_profiles (
+                    employee_id, full_name, department, designation, base_salary,
+                    shift_start_time, probation_period_months, notice_period_days,
+                    annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
+                    assets_laptops, assets_desktops, assets_mobiles, assets_sims,
+                    assets_ids, assets_access_cards, assets_licenses,
+                    surveillance_consent, biometric_consent, hrms_consent
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    employee_id.toString(), full_name, department, designation, salary,
+                    shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
+                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
+                    assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
+                    assets_ids || '', assets_access_cards || '', assets_licenses || '',
+                    survConsent, bioConsent, hrConsent
+                ],
+                function(insertErr) {
+                    if (insertErr) return res.status(500).json({ error: insertErr.message });
+                    handleSuccess();
+                }
+            );
+        }
     });
 });
 
