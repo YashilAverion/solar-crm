@@ -316,8 +316,11 @@ function wrapInDocumentBoilerplate(docTitle, contentHTML, emp) {
                     font-weight: 600;
                 }
                 @media print {
+                    @page {
+                        margin: 0;
+                    }
                     body {
-                        padding: 20px;
+                        padding: 1.6cm;
                     }
                     .no-print {
                         display: none;
@@ -469,8 +472,11 @@ function getCombinedPackageHTML(emp) {
                     font-weight: 600;
                 }
                 @media print {
+                    @page {
+                        margin: 0;
+                    }
                     body {
-                        padding: 15px;
+                        padding: 1.6cm;
                     }
                     .no-print {
                         display: none;

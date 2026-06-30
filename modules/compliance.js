@@ -262,12 +262,16 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     justify-content: space-between;
   }
   @media print {
+    @page {
+      margin: 0;
+    }
     body {
       background: none;
+      padding: 1.6cm;
     }
     .page {
       margin: 0;
-      padding: 20px 10px;
+      padding: 0;
       box-shadow: none;
       border-radius: 0;
       max-width: 100%;
