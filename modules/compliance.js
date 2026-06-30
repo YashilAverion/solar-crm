@@ -42,7 +42,7 @@ function getFullEmployeeDetails(employeeId, callback) {
         if (workerErr || !worker) {
             return callback(workerErr || new Error('Worker not found'));
         }
-        db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [employeeId.toString()], (profileErr, profile) => {
+        db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ? OR user_id = ?', [employeeId.toString(), parseInt(employeeId, 10)], (profileErr, profile) => {
             if (profileErr) return callback(profileErr);
 
             const empDetails = {
@@ -1104,7 +1104,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
     const bioConsent = biometric_consent ? 1 : 0;
     const hrConsent = hrms_consent ? 1 : 0;
 
-    db.get('SELECT id FROM employee_compliance_profiles WHERE employee_id = ?', [employee_id.toString()], (checkErr, row) => {
+    db.get('SELECT id FROM employee_compliance_profiles WHERE employee_id = ? OR user_id = ?', [employee_id.toString(), parseInt(employee_id, 10)], (checkErr, row) => {
         if (checkErr) return res.status(500).json({ error: checkErr.message });
 
         const docTypes = [
@@ -1150,6 +1150,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
             // Run UPDATE
             db.run(
                 `UPDATE employee_compliance_profiles SET
+                    employee_id = ?,
                     full_name = ?,
                     department = ?,
                     designation = ?,
@@ -1171,15 +1172,16 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     surveillance_consent = ?,
                     biometric_consent = ?,
                     hrms_consent = ?
-                WHERE employee_id = ?`,
+                WHERE employee_id = ? OR user_id = ?`,
                 [
+                    employee_id.toString(),
                     full_name, department, designation, salary,
                     shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
                     parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
                     assets_ids || '', assets_access_cards || '', assets_licenses || '',
                     survConsent, bioConsent, hrConsent,
-                    employee_id.toString()
+                    employee_id.toString(), parseInt(employee_id, 10)
                 ],
                 function(updateErr) {
                     if (updateErr) return res.status(500).json({ error: updateErr.message });
@@ -1190,15 +1192,19 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
             // Run INSERT
             db.run(
                 `INSERT INTO employee_compliance_profiles (
-                    employee_id, full_name, department, designation, base_salary,
+                    employee_id, user_id, employment_type, modern_award_name, base_hourly_rate, casual_loading_active,
+                    tax_file_number, tax_scale_code, super_fund_name, super_usi, super_member_number,
+                    visa_type, visa_expiry_date, full_name, department, designation, base_salary,
                     shift_start_time, probation_period_months, notice_period_days,
                     annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
                     assets_laptops, assets_desktops, assets_mobiles, assets_sims,
                     assets_ids, assets_access_cards, assets_licenses,
                     surveillance_consent, biometric_consent, hrms_consent
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    employee_id.toString(), full_name, department, designation, salary,
+                    employee_id.toString(), parseInt(employee_id, 10), 'Full-Time', '', 25.00, 1,
+                    '', '', '', '', '',
+                    '', '', full_name, department, designation, salary,
                     shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
                     parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
@@ -1218,7 +1224,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
 router.get('/employee/:id', requireAuth, (req, res) => {
     const empId = req.params.id;
     
-    db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [empId], (err, profile) => {
+    db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ? OR user_id = ?', [empId, parseInt(empId, 10)], (err, profile) => {
         if (err) return res.status(500).json({ error: err.message });
         
         db.all('SELECT id, document_type, signed_status, generated_blob_text, generated_text_payload, email_sent_status, timestamp FROM legal_signed_documents WHERE employee_id = ?', [empId], (docErr, documents) => {
