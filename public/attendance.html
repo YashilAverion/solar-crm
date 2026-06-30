@@ -5448,7 +5448,7 @@ function initAutocomplete() {
     const countryLimit = company === 'Averion Global LLP' ? 'in' : 'au';
     
     if (empAutocomplete) {
-        empAutocomplete.setComponentRestrictions({ country: countryLimit });
+        empAutocomplete.setComponentRestrictions({ country: ['IN', 'AU'] });
         return;
     }
     
@@ -5458,7 +5458,7 @@ function initAutocomplete() {
     
     empAutocomplete = new google.maps.places.Autocomplete(input, {
         types: ['address'],
-        componentRestrictions: { country: countryLimit }
+        componentRestrictions: { country: ['IN', 'AU'] }
     });
 
     empAutocomplete.addListener('place_changed', function() {
@@ -5763,7 +5763,15 @@ function syncIndianCtcSummary(updateTotalInput = false) {
 
 function showComplianceDocGenerator() {
     const editId = document.getElementById('emp_edit_id').value;
-    if (!editId) return;
+    if (!editId) {
+        Swal.fire({
+            title: 'Save Details First',
+            text: 'Please save this employee\'s details first before generating compliance documents.',
+            icon: 'info',
+            confirmButtonColor: '#0078C1'
+        });
+        return;
+    }
     const emp = allXeroEmployees.find(u => u.id == editId);
     if (!emp) return;
     
@@ -6011,10 +6019,9 @@ function syncTaxFieldsByCompany() {
     // Dynamically update Google Address search country restriction
     initAutocomplete();
     
-    const editId = document.getElementById('emp_edit_id').value;
     const genBtn = document.getElementById('emp_generate_docs_btn');
     if (genBtn) {
-        if (company === 'Averion Global LLP' && editId) {
+        if (company === 'Averion Global LLP') {
             genBtn.style.display = 'block';
         } else {
             genBtn.style.display = 'none';
@@ -6296,7 +6303,13 @@ function openEmployeeModal(editId = null) {
         titleEl.textContent = 'Add New Employee/Worker';
         deleteBtn.style.display = 'none';
         const genBtn = document.getElementById('emp_generate_docs_btn');
-        if (genBtn) genBtn.style.display = 'none';
+        if (genBtn) {
+            if (activeCompanyFilter === 'Averion Global LLP') {
+                genBtn.style.display = 'block';
+            } else {
+                genBtn.style.display = 'none';
+            }
+        }
         
         // Set new entry defaults
         document.getElementById('emp_role').value = 'Worker';
