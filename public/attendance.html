@@ -1817,6 +1817,10 @@
                                     <span>Overtime Hours:</span>
                                     <strong id="payrollOtHours">0.00 hrs</strong>
                                 </div>
+                                <div class="payslip-item">
+                                    <span>Remaining Hours:</span>
+                                    <strong id="payrollRemainingHours">0.00 hrs</strong>
+                                </div>
                             </div>
                             <div class="payslip-col">
                                 <div class="payslip-item">
@@ -1853,6 +1857,7 @@
                                     <th>Actual Hours</th>
                                     <th>Ordinary Hours</th>
                                     <th>Overtime Hours</th>
+                                    <th>Remaining Hours</th>
                                     <th>Gross Pay</th>
                                     <th>Tax Withheld</th>
                                     <th>Super (12%)</th>
@@ -1863,7 +1868,7 @@
                             </thead>
                             <tbody id="payrollHistoryBody">
                                 <tr>
-                                    <td colspan="10" class="no-data">Select an employee to view processed payroll history ledger.</td>
+                                    <td colspan="11" class="no-data">Select an employee to view processed payroll history ledger.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3272,7 +3277,7 @@ function switchPayrollCompany(companyName) {
     
     const historyBody = document.getElementById('payrollHistoryBody');
     if (historyBody) {
-        historyBody.innerHTML = '<tr><td colspan="10" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
+        historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
     }
     const summaryBox = document.getElementById('payrollSummaryBox');
     if (summaryBox) {
@@ -4974,6 +4979,7 @@ function calculatePayroll() {
         document.getElementById('payrollActualHours').textContent = `${(data.actual_hours || 0).toFixed(2)} hrs`;
         document.getElementById('payrollOrdHours').textContent = `${data.ordinary_hours.toFixed(2)} hrs`;
         document.getElementById('payrollOtHours').textContent = `${data.overtime_hours.toFixed(2)} hrs`;
+        document.getElementById('payrollRemainingHours').textContent = `${(data.remaining_hours || 0).toFixed(2)} hrs`;
         
         const ordEarnings = data.ordinary_hours * data.base_rate;
         const otEarnings = data.gross_pay - ordEarnings;
@@ -7798,7 +7804,7 @@ function loadPayrollModuleData() {
     const targetUserId = employeeId || (currentUser ? currentUser.id : null);
     if (!targetUserId) return;
     
-    historyBody.innerHTML = '<tr><td colspan="10" class="no-data">Loading processed payslips ledger...</td></tr>';
+    historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Loading processed payslips ledger...</td></tr>';
     
     // Fetch employee processed payslips
     fetch(`/api/payroll/history/${targetUserId}`)
@@ -7806,7 +7812,7 @@ function loadPayrollModuleData() {
         .then(rows => {
             historyBody.innerHTML = '';
             if (rows.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="10" class="no-data">No payroll records logged for this employee.</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="11" class="no-data">No payroll records logged for this employee.</td></tr>';
                 return;
             }
             
@@ -7817,6 +7823,7 @@ function loadPayrollModuleData() {
                     <td>${(r.actual_hours || 0).toFixed(2)} hrs</td>
                     <td>${r.ordinary_hours.toFixed(2)} hrs</td>
                     <td>${r.overtime_hours.toFixed(2)} hrs</td>
+                    <td>${(r.remaining_hours || 0).toFixed(2)} hrs</td>
                     <td style="font-weight: 600; position: relative;" class="gross-pay-cell" onmouseenter="showGrossPayTooltip(event, this)" onmouseleave="hideGrossPayTooltip()" data-calc="${encodeURIComponent(JSON.stringify(r))}">
                         $${r.gross_pay.toFixed(2)}
                     </td>
@@ -8038,6 +8045,10 @@ function editPayrollRecord(id, record) {
                     <input id="edit_ord_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.ordinary_hours}">
                 </div>
                 <div style="display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Remaining Hours</label>
+                    <input id="edit_remaining_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.remaining_hours || 0}">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
                     <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Overtime Hours</label>
                     <input id="edit_ot_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.overtime_hours}">
                 </div>
@@ -8065,6 +8076,8 @@ function editPayrollRecord(id, record) {
             return {
                 actual_hours: parseFloat(document.getElementById('edit_actual_hours').value) || 0,
                 ordinary_hours: parseFloat(document.getElementById('edit_ord_hours').value) || 0,
+                overtime_hours: parseFloat(document.getElementById('edit_ot_hours').value) || 0,
+                remaining_hours: parseFloat(document.getElementById('edit_remaining_hours').value) || 0,
                 overtime_hours: parseFloat(document.getElementById('edit_ot_hours').value) || 0,
                 gross_pay: parseFloat(document.getElementById('edit_gross_pay').value) || 0,
                 tax_withheld: parseFloat(document.getElementById('edit_tax_withheld').value) || 0,

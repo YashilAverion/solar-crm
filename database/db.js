@@ -481,7 +481,8 @@ db.serialize(() => {
         "ALTER TABLE products ADD COLUMN created_at TEXT",
         "ALTER TABLE payroll_historical_records ADD COLUMN generated_by TEXT",
         "ALTER TABLE payroll_historical_records ADD COLUMN calculation_metadata TEXT",
-        "ALTER TABLE payroll_historical_records ADD COLUMN actual_hours REAL DEFAULT 0"
+        "ALTER TABLE payroll_historical_records ADD COLUMN actual_hours REAL DEFAULT 0",
+        "ALTER TABLE payroll_historical_records ADD COLUMN remaining_hours REAL DEFAULT 0"
     ];
     
     alterStatements.push("ALTER TABLE leads ADD COLUMN property_type TEXT DEFAULT 'Residential'", "ALTER TABLE leads ADD COLUMN abn_number TEXT DEFAULT ''", "ALTER TABLE leads ADD COLUMN sales_input_notes TEXT DEFAULT ''", "ALTER TABLE leads ADD COLUMN system_size REAL DEFAULT 0", "ALTER TABLE leads ADD COLUMN stc_rebate REAL DEFAULT 0", "ALTER TABLE leads ADD COLUMN annual_savings REAL DEFAULT 0", "ALTER TABLE leads ADD COLUMN payback_period REAL DEFAULT 0", "ALTER TABLE leads ADD COLUMN co2_reduction REAL DEFAULT 0");
@@ -816,6 +817,7 @@ db.serialize(() => {
             actual_hours REAL DEFAULT 0,
             ordinary_hours REAL DEFAULT 0,
             overtime_hours REAL DEFAULT 0,
+            remaining_hours REAL DEFAULT 0,
             gross_pay REAL DEFAULT 0,
             tax_withheld REAL DEFAULT 0,
             super_contribution REAL DEFAULT 0,

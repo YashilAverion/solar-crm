@@ -212,6 +212,8 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     const roundedActualHours = parseFloat(totalActualHours.toFixed(3));
                     const roundedOrdinaryHours = parseFloat(totalOrdinaryHours.toFixed(3));
                     const roundedOvertimeHours = parseFloat(totalOvertimeHours.toFixed(3));
+                    const remainingHours = Math.max(0, totalActualHours - totalOrdinaryHours - totalOvertimeHours);
+                    const roundedRemainingHours = parseFloat(remainingHours.toFixed(3));
                     const roundedGrossPay = parseFloat(grossPay.toFixed(2));
                     const roundedTaxWithheld = parseFloat(taxWithheld.toFixed(2));
                     const roundedSuperContribution = parseFloat(superContribution.toFixed(2));
@@ -244,13 +246,13 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     db.run(
                         `INSERT INTO payroll_historical_records (
                             user_id, pay_period_start, pay_period_end, 
-                            actual_hours, ordinary_hours, overtime_hours, gross_pay, 
+                            actual_hours, ordinary_hours, overtime_hours, remaining_hours, gross_pay, 
                             tax_withheld, super_contribution, net_pay, created_at,
                             generated_by, calculation_metadata
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [
                             user_id, pay_period_start, pay_period_end, 
-                            roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedGrossPay, 
+                            roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedRemainingHours, roundedGrossPay, 
                             roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
                             generatedBy, JSON.stringify(calculationMetadata)
                         ],
@@ -269,6 +271,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                                 actual_hours: roundedActualHours,
                                 ordinary_hours: roundedOrdinaryHours,
                                 overtime_hours: roundedOvertimeHours,
+                                remaining_hours: roundedRemainingHours,
                                 base_rate: baseRate,
                                 gross_pay: roundedGrossPay,
                                 tax_withheld: roundedTaxWithheld,
@@ -305,19 +308,20 @@ router.get('/history/:user_id', requireAuth, (req, res) => {
 // PUT /history/:id (Update employee payslip history)
 router.put('/history/:id', requireAuth, (req, res) => {
     const { id } = req.params;
-    const { actual_hours, ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay } = req.body;
+    const { actual_hours, ordinary_hours, overtime_hours, remaining_hours, gross_pay, tax_withheld, super_contribution, net_pay } = req.body;
     
     db.run(
         `UPDATE payroll_historical_records SET 
             actual_hours = ?,
             ordinary_hours = ?, 
             overtime_hours = ?, 
+            remaining_hours = ?,
             gross_pay = ?, 
             tax_withheld = ?, 
             super_contribution = ?, 
             net_pay = ?
          WHERE id = ?`,
-        [actual_hours, ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay, id],
+        [actual_hours, ordinary_hours, overtime_hours, remaining_hours, gross_pay, tax_withheld, super_contribution, net_pay, id],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
