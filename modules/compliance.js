@@ -284,8 +284,6 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     ${contentHtml}
 
     <div class="doc-footer">
-      <div>Document ID: ${docId} | Confidentiality: Strict Confidential | Owner: HR Compliance</div>
-      <div>Version Number: VER-2026-V1.0 | Page 1 of 1</div>
     </div>
   </div>
 </body>
@@ -2269,17 +2267,12 @@ function compilePhaseDoc(category, emp, registry) {
             })();
 
             innerContent = `
-            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/OL/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 2 — Offer Letter<br>
-                <strong>Offer Date:</strong> ${offerDate}<br>
-                <strong>Offer Valid Until:</strong> ${offerDeadline}
-            </div>
+            <div style="height: 10px;"></div>
 
             <div class="doc-title">Conditional Offer of Employment</div>
 
             <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
-            <p>On behalf of <strong>Averion Global LLP</strong>, it is with great pleasure that we extend this Conditional Offer of Employment to you for the position of <strong>${emp.designation || 'Associate'}</strong> within the <strong>${emp.department || 'Operations'}</strong> Department. This offer is contingent upon the satisfactory completion of all pre-employment verifications, document submissions, and onboarding formalities as stipulated herein.</p>
+            <p>On behalf of Averion Global LLP, it is with great pleasure that we extend this Conditional Offer of Employment to you for the position of ${emp.designation || 'Associate'} within the ${emp.department || 'Operations'} Department. This offer is contingent upon the satisfactory completion of all pre-employment verifications, document submissions, and onboarding formalities as stipulated herein.</p>
 
             <h3>1. Position & Reporting</h3>
             <ul>
@@ -2304,28 +2297,28 @@ function compilePhaseDoc(category, emp, registry) {
                 </tbody>
             </table>
             <ul>
-                <li>Salary is disbursed on the last working day of each calendar month via bank transfer.</li>
-                <li>Statutory deductions (PF, PT, TDS) will apply as per applicable Indian laws.</li>
+                <li>Salary is disbursed between the 10th and 15th date of each calendar month via bank transfer.</li>
+                <li>Statutory deductions (PT, TDS) will apply as per applicable Indian laws.</li>
             </ul>
 
             <h3>3. Probation Period</h3>
             <ul>
-                <li>You will be on probation for a period of <strong>${probationMonths} (three) months</strong> from the date of joining.</li>
+                <li>You will be on probation for a period of ${probationMonths} (three) months from the date of joining.</li>
                 <li>Upon successful completion of probation and a satisfactory performance review, your employment will be confirmed in writing.</li>
                 <li>During probation, either party may terminate employment with fifteen (15) calendar days written notice.</li>
             </ul>
 
             <h3>4. Shift & Working Hours</h3>
             <ul>
-                <li>Standard daily shift duration: <strong>9 (nine) hours</strong>, commencing at <strong>${shiftStart} IST</strong> in alignment with Australian client timezone parameters.</li>
-                <li>Weekly off: <strong>Sunday</strong>. Occasional weekend shifts may be required subject to operational needs.</li>
+                <li>Standard daily shift duration: 9 (nine) hours, commencing at ${shiftStart} IST in alignment with Australian client timezone parameters.</li>
+                <li>Weekly off: Sunday. Occasional weekend shifts may be required subject to operational needs.</li>
             </ul>
 
             <h3>5. Acceptance & Deadline</h3>
             <ul>
-                <li>This offer shall remain valid until <strong>${offerDeadline}</strong>. Non-response by this date shall render this offer null and void.</li>
+                <li>This offer shall remain valid for 7 days from the date of issue. Non-response within this period shall render this offer null and void.</li>
                 <li>To formally accept, please sign and return this letter along with the required onboarding documents.</li>
-                <li>If you have any queries, contact HR at <strong>hr@averionglobal.com</strong>.</li>
+                <li>If you have any queries, contact HR at hr@averionglobal.co.in.</li>
             </ul>
 
             ${signHtml}
