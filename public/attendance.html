@@ -6399,13 +6399,15 @@ function switchCompliancePhase(phaseNum) {
     const p4Panel = document.getElementById('compliancePhase4Panel');
     const p5Panel = document.getElementById('compliancePhase5Panel');
     const p6Panel = document.getElementById('compliancePhase6Panel');
+    const p7Panel = document.getElementById('compliancePhase7Panel');
     const tab1    = document.getElementById('compPhaseTab1');
     const tab2    = document.getElementById('compPhaseTab2');
     const tab3    = document.getElementById('compPhaseTab3');
     const tab4    = document.getElementById('compPhaseTab4');
     const tab5    = document.getElementById('compPhaseTab5');
     const tab6    = document.getElementById('compPhaseTab6');
-    if (!p1Panel || !p2Panel || !p3Panel || !p4Panel || !p5Panel || !p6Panel) return;
+    const tab7    = document.getElementById('compPhaseTab7');
+    if (!p1Panel || !p2Panel || !p3Panel || !p4Panel || !p5Panel || !p6Panel || !p7Panel) return;
 
     if (phaseNum === 1) {
         p1Panel.style.display = 'grid';
@@ -6414,6 +6416,7 @@ function switchCompliancePhase(phaseNum) {
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
         p6Panel.style.display = 'none';
+        p7Panel.style.display = 'none';
         tab1.style.borderBottomColor = '#0078C1';
         tab1.style.color = '#0078C1';
         tab2.style.borderBottomColor = 'transparent';
@@ -6426,6 +6429,8 @@ function switchCompliancePhase(phaseNum) {
         tab5.style.color = '#64748b';
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
     } else if (phaseNum === 2) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'grid';
@@ -6433,6 +6438,7 @@ function switchCompliancePhase(phaseNum) {
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
         p6Panel.style.display = 'none';
+        p7Panel.style.display = 'none';
         tab2.style.borderBottomColor = '#0078C1';
         tab2.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6445,6 +6451,8 @@ function switchCompliancePhase(phaseNum) {
         tab5.style.color = '#64748b';
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
     } else if (phaseNum === 3) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
@@ -6452,6 +6460,7 @@ function switchCompliancePhase(phaseNum) {
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
         p6Panel.style.display = 'none';
+        p7Panel.style.display = 'none';
         tab3.style.borderBottomColor = '#0078C1';
         tab3.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6464,6 +6473,8 @@ function switchCompliancePhase(phaseNum) {
         tab5.style.color = '#64748b';
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
     } else if (phaseNum === 4) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
@@ -6471,6 +6482,7 @@ function switchCompliancePhase(phaseNum) {
         p4Panel.style.display = 'grid';
         p5Panel.style.display = 'none';
         p6Panel.style.display = 'none';
+        p7Panel.style.display = 'none';
         tab4.style.borderBottomColor = '#0078C1';
         tab4.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6483,6 +6495,8 @@ function switchCompliancePhase(phaseNum) {
         tab5.style.color = '#64748b';
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
     } else if (phaseNum === 5) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
@@ -6490,6 +6504,7 @@ function switchCompliancePhase(phaseNum) {
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'grid';
         p6Panel.style.display = 'none';
+        p7Panel.style.display = 'none';
         tab5.style.borderBottomColor = '#0078C1';
         tab5.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6502,13 +6517,16 @@ function switchCompliancePhase(phaseNum) {
         tab4.style.color = '#64748b';
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
-    } else {
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
+    } else if (phaseNum === 6) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
         p3Panel.style.display = 'none';
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
         p6Panel.style.display = 'grid';
+        p7Panel.style.display = 'none';
         tab6.style.borderBottomColor = '#0078C1';
         tab6.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6521,6 +6539,30 @@ function switchCompliancePhase(phaseNum) {
         tab4.style.color = '#64748b';
         tab5.style.borderBottomColor = 'transparent';
         tab5.style.color = '#64748b';
+        tab7.style.borderBottomColor = 'transparent';
+        tab7.style.color = '#64748b';
+    } else {
+        p1Panel.style.display = 'none';
+        p2Panel.style.display = 'none';
+        p3Panel.style.display = 'none';
+        p4Panel.style.display = 'none';
+        p5Panel.style.display = 'none';
+        p6Panel.style.display = 'none';
+        p7Panel.style.display = 'grid';
+        tab7.style.borderBottomColor = '#0078C1';
+        tab7.style.color = '#0078C1';
+        tab1.style.borderBottomColor = 'transparent';
+        tab1.style.color = '#64748b';
+        tab2.style.borderBottomColor = 'transparent';
+        tab2.style.color = '#64748b';
+        tab3.style.borderBottomColor = 'transparent';
+        tab3.style.color = '#64748b';
+        tab4.style.borderBottomColor = 'transparent';
+        tab4.style.color = '#64748b';
+        tab5.style.borderBottomColor = 'transparent';
+        tab5.style.color = '#64748b';
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
     }
 }
 }
@@ -6569,7 +6611,15 @@ function actionPhaseDoc(category, action) {
         'Counseling_Letter': 'Counseling Letter',
         'Warning_Letter': 'Formal Warning Letter',
         'Show_Cause_Notice': 'Show Cause Notice',
-        'Suspension_Letter': 'Suspension Letter'
+        'Suspension_Letter': 'Suspension Letter',
+        'Phase7_Statutory_Declaration': 'Statutory Declaration',
+        'Phase7_Attendance_Leave_Register': 'Attendance & Leave Register',
+        'Phase7_POSH_Complaint_Form': 'POSH Complaint Form',
+        'Phase7_Final_Dismissal_Order': 'Final Dismissal Order',
+        'Statutory_Declaration': 'Statutory Declaration',
+        'Attendance_Leave_Register': 'Attendance & Leave Register',
+        'POSH_Complaint_Form': 'POSH Complaint Form',
+        'Final_Dismissal_Order': 'Final Dismissal Order'
     };
     const docLabel = categoryLabels[category] || category.replace(/_/g, ' ');
 
@@ -9103,6 +9153,7 @@ function updateSelectedWeeksOrFortnights() {
             <button id="compPhaseTab4" type="button" onclick="switchCompliancePhase(4)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">📅 Phase 4 — Leave &amp; Exit</button>
             <button id="compPhaseTab5" type="button" onclick="switchCompliancePhase(5)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">📈 Phase 5 — Sales &amp; KRA</button>
             <button id="compPhaseTab6" type="button" onclick="switchCompliancePhase(6)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">⚖️ Phase 6 — Disciplinary &amp; Disputes</button>
+            <button id="compPhaseTab7" type="button" onclick="switchCompliancePhase(7)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">⚖️ Phase 7 — Statutory &amp; Dismissal</button>
         </div>
         
         <!-- Modal Body (Phase 1: Foundation & Identity Kit) -->
@@ -9543,6 +9594,82 @@ function updateSelectedWeeksOrFortnights() {
                 <div style="display: flex; gap: 6px; margin-top: auto;">
                     <button type="button" onclick="actionPhaseDoc('Phase6_Suspension_Letter', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
                     <button type="button" onclick="actionPhaseDoc('Phase6_Suspension_Letter', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Body (Phase 7: Compliance Logs, Registers & Final Termination Kit) -->
+        <div id="compliancePhase7Panel" style="padding: 16px; display: none; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; max-height: 500px; box-sizing: border-box; background: #f1f5f9;">
+
+            <!-- Card: Phase7 — Statutory Declaration -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #0078C1;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">📋</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Statutory Declaration</strong>
+                            <span style="font-size: 10px; color: #0078C1; font-weight: 700;">Phase 7 — Statutory Compliance</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Solomon declaration form logging employee compliance, leave limits, and timezone start alignments.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Statutory_Declaration', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Statutory_Declaration', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase7 — Attendance & Leave Register -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #059669;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">📅</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Attendance &amp; Leave Register</strong>
+                            <span style="font-size: 10px; color: #059669; font-weight: 700;">Phase 7 — Statutory Compliance</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Form-G ready attendance/leave registry database layout mapping the shift and weekly off patterns.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Attendance_Leave_Register', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Attendance_Leave_Register', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #059669; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase7 — POSH Complaint Form -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #7c3aed;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">🔒</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">POSH Complaint Form</strong>
+                            <span style="font-size: 10px; color: #7c3aed; font-weight: 700;">Phase 7 — Statutory Compliance</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Statutory complaint filing and Internal Committee (IC) hearing timeline guidelines under POSH 2013.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase7_POSH_Complaint_Form', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase7_POSH_Complaint_Form', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #7c3aed; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase7 — Final Dismissal Order -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #d97706;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">🛑</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Final Dismissal Order</strong>
+                            <span style="font-size: 10px; color: #d97706; font-weight: 700;">Phase 7 — Final Termination</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Statutory dismissal order citing IPC 408 / IT Act 66 breaches, eliminating notice payouts with base salary protection.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Final_Dismissal_Order', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase7_Final_Dismissal_Order', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
                 </div>
             </div>
         </div>

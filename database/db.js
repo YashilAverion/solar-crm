@@ -1468,6 +1468,20 @@ db.serialize(() => {
         });
     });
 
+    // Phase 7: Compliance Logs, Registers & Final Termination Kit
+    const phase7ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN posh_training_status INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN statutory_declaration_signed INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN final_dismissal_timestamp TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN compliance_audit_log_id TEXT"
+    ];
+
+    phase7ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;

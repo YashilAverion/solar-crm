@@ -3162,8 +3162,153 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+        // ── PHASE 7: COMPLIANCE LOGS, REGISTERS & FINAL TERMINATION KIT ────────────────────
+        case 'Phase7_Statutory_Declaration':
+        case 'Statutory_Declaration': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/STAT/DEC/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
+                <strong>Date of Declaration:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Statutory Declaration Form</div>
+            <p>I, <strong>${emp.full_name}</strong>, holding the position of <strong>${emp.designation || 'Employee'}</strong> at <strong>Averion Global LLP</strong>, do hereby solemnly declare and affirm that:</p>
+
+            <h3>1. Shift and Timezone Alignment</h3>
+            <ul>
+                <li>I coordinate and execute my operational duties within the non-standard early morning operational shift commencing strictly at <strong>substituteShiftStart IST</strong> to align with the Australian client timezone.</li>
+                <li>I confirm that I log my working hours daily in the Solar CRM database system.</li>
+            </ul>
+
+            <h3>2. Leave and Holiday Adherence</h3>
+            <ul>
+                <li>I acknowledge that my annual leave quota is fixed at twenty-four (24) days, accrued monthly, in accordance with the provisions of the Gujarat Shops and Establishments Act.</li>
+                <li>I confirm that all leave requests must traverse the standard approval hierarchy (Manager -> HR Node -> Director Sign-off).</li>
+            </ul>
+
+            <h3>3. Compliance & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>This declaration is made to satisfy statutory audits under the Gujarat Shops and Establishments Act. I lock all dispute resolution paths arising from my statutory declaration exclusively to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase7_Attendance_Leave_Register':
+        case 'Attendance_Leave_Register': {
+            const leavesBalance = emp.accrued_leaves_balance || 0;
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/STAT/REG/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
+                <strong>Audit Timestamp:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Attendance & Leave Register Template (Form-G Audit Ready)</div>
+            <p>This statutory template outlines the active audit logs and compliance parameters maintained for <strong>${emp.full_name}</strong> under Section 22 of the Gujarat Shops and Establishments Act.</p>
+
+            <h3>1. Shift Scheduling & Working Hours</h3>
+            <ul>
+                <li><strong>Shift Commencement:</strong> 03:30 AM IST (Australian Client Timezone alignment).</li>
+                <li><strong>Daily Working Hours:</strong> 9 Hours daily (including rest break intervals).</li>
+                <li><strong>Weekly Off:</strong> Sunday.</li>
+            </ul>
+
+            <h3>2. Leave Balance Summary</h3>
+            <ul>
+                <li><strong>Total Annual Accrual:</strong> 24 Annual Leaves (2 days per calendar month).</li>
+                <li><strong>Accrued Leave Balance registered:</strong> ${leavesBalance} days.</li>
+                <li><strong>Approval Node Routing:</strong> HR Compliance Node & Director Sign-off required.</li>
+            </ul>
+
+            <h3>3. Audit Validation & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>This register is maintained exclusively for statutory labor inspections in Gujarat. Any disputes regarding attendance records or leave balances shall be subject to the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase7_POSH_Complaint_Form':
+        case 'POSH_Complaint_Form': {
+            const trainingStatus = emp.posh_training_status ? 'COMPLETED' : 'PENDING';
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/STAT/POSH/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
+                <strong>Training Status:</strong> ${trainingStatus}
+            </div>
+
+            <div class="doc-title">POSH Complaint Form & Investigation Framework</div>
+            <p><strong>Averion Global LLP</strong> maintains a strict zero-tolerance policy against any form of sexual harassment. This document outlines the formal complaint submission mechanism under the POSH Act, 2013.</p>
+
+            <h3>1. Training and Awareness Verification</h3>
+            <ul>
+                <li>The Employee's POSH training status is registered as: <strong>${trainingStatus}</strong>.</li>
+                <li>All employees must undergo the annual POSH compliance workshop conducted by the Internal Committee (IC).</li>
+            </ul>
+
+            <h3>2. IC Complaint & Hearing Investigation Timeline</h3>
+            <ul>
+                <li><strong>Confidentiality:</strong> The identity of the complainant, respondent, and witnesses shall be kept strictly confidential under Section 16 of the POSH Act.</li>
+                <li><strong>Timeline:</strong> The Internal Committee (IC) shall initiate an inquiry within seven (7) days of receiving a written complaint and complete the investigation within ninety (90) days.</li>
+                <li><strong>Immediate Protection:</strong> Complainants may request temporary transfer or leaves during the pendency of the inquiry.</li>
+            </ul>
+
+            <h3>3. Governing Law & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>The Internal Committee operates in Ahmedabad. All mediation, inquiry findings, and appeals are subject strictly to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase7_Final_Dismissal_Order':
+        case 'Final_Dismissal_Order': {
+            const dismissalTime = emp.final_dismissal_timestamp || docDate;
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/STAT/FDO/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 7 — Final Statutory Termination<br>
+                <strong>Dismissal Date:</strong> ${dismissalTime}
+            </div>
+
+            <div class="doc-title">Final Dismissal Order & Termination for Cause</div>
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>This constitutes the official Dismissal Order and Termination of your employment at <strong>Averion Global LLP</strong> for cause, effective on <strong>substituteDismissalTime</strong>.</p>
+
+            <h3>1. Dismissal for Cause & Statutory Breaches</h3>
+            <ul>
+                <li>Your employment is terminated immediately due to serious code of conduct breaches, non-performance, or unauthorized data leakage violating corporate safety policies.</li>
+                <li><strong>IPC & IT Act References:</strong> Specifically, actions constitute a breach under <strong>IPC Section 408 (Criminal Breach of Trust by Clerk or Servant)</strong> and <strong>IT Act Section 66 (Computer-related offences)</strong>.</li>
+                <li>Accordingly, the Company is released from any obligations regarding notice payouts or severance packages.</li>
+            </ul>
+
+            <h3>2. Baseline Salary Protection</h3>
+            <ul>
+                <li>Your baseline salary (Rs 15,000 to Rs 60,000 scale) is fully protected and calculated up to your final active working day: <strong>substituteDismissalTime</strong>.</li>
+                <li>No arbitrary deductions will be made on your earned base salary scale. Final Full and Final (F&F) settlement will be processed in accordance with active working logs.</li>
+            </ul>
+
+            <h3>3. Dispute Resolution & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Any dispute arising from this dismissal order, F&F calculations, or labor disputes shall be subject exclusively to the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
-            innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>substituteSignHtml`;
+            innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
             break;
     }
 
@@ -3205,7 +3350,9 @@ router.post('/generate-phase-docs', requireAuth, (req, res) => {
                                 'Phase5_Sales_Incentive_Policy', 'Phase5_Sales_Commission_Policy', 'Phase5_KRA_Document', 'Phase5_Sales_Target_Letter',
                                 'Sales_Incentive_Policy', 'Sales_Commission_Policy', 'KRA_Document', 'Sales_Target_Letter',
                                 'Phase6_Counseling_Letter', 'Phase6_Warning_Letter', 'Phase6_Show_Cause_Notice', 'Phase6_Suspension_Letter',
-                                'Counseling_Letter', 'Warning_Letter', 'Show_Cause_Notice', 'Suspension_Letter'
+                                'Counseling_Letter', 'Warning_Letter', 'Show_Cause_Notice', 'Suspension_Letter',
+                                'Phase7_Statutory_Declaration', 'Phase7_Attendance_Leave_Register', 'Phase7_POSH_Complaint_Form', 'Phase7_Final_Dismissal_Order',
+                                'Statutory_Declaration', 'Attendance_Leave_Register', 'POSH_Complaint_Form', 'Final_Dismissal_Order'
                             ];
                             docs.sort((a, b) => {
                                 return logicalOrder.indexOf(a.document_type) - logicalOrder.indexOf(b.document_type);
@@ -3327,6 +3474,10 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
                 else if (document_type === 'Phase6_Warning_Letter' || document_type === 'Warning_Letter') docTitle = 'Formal Warning Letter';
                 else if (document_type === 'Phase6_Show_Cause_Notice' || document_type === 'Show_Cause_Notice') docTitle = 'Show Cause Notice';
                 else if (document_type === 'Phase6_Suspension_Letter' || document_type === 'Suspension_Letter') docTitle = 'Suspension Letter';
+                else if (document_type === 'Phase7_Statutory_Declaration' || document_type === 'Statutory_Declaration') docTitle = 'Statutory Declaration';
+                else if (document_type === 'Phase7_Attendance_Leave_Register' || document_type === 'Attendance_Leave_Register') docTitle = 'Attendance & Leave Register';
+                else if (document_type === 'Phase7_POSH_Complaint_Form' || document_type === 'POSH_Complaint_Form') docTitle = 'POSH Complaint Form';
+                else if (document_type === 'Phase7_Final_Dismissal_Order' || document_type === 'Final_Dismissal_Order') docTitle = 'Final Dismissal Order';
 
                 const mailOptions = {
                     from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,
