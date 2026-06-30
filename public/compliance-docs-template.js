@@ -325,6 +325,14 @@ function wrapInDocumentBoilerplate(docTitle, contentHTML, emp) {
                     .no-print {
                         display: none;
                     }
+                    h1, h2, h3, h4, h5, h6 {
+                        page-break-after: avoid;
+                        break-after: avoid;
+                    }
+                    tr, li, .sign-container, .sign-box, .sign-block {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
                 }
             </style>
         </head>
@@ -480,6 +488,14 @@ function getCombinedPackageHTML(emp) {
                     }
                     .no-print {
                         display: none;
+                    }
+                    h1, h2, h3, h4, h5, h6 {
+                        page-break-after: avoid;
+                        break-after: avoid;
+                    }
+                    tr, li, .sign-container, .sign-box, .sign-block {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
                     }
                 }
             </style>

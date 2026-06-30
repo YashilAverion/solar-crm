@@ -271,6 +271,18 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
       max-width: 100%;
       page-break-after: always;
     }
+    h1, h2, h3, h4, h5, h6 {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    tr, li, .sign-container, .sign-box {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .annexure-table {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
     .page:last-child {
       page-break-after: avoid;
     }
