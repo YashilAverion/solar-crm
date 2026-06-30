@@ -8,6 +8,21 @@ const fs = require('fs');
 const path = require('path');
 
 // Helper to convert the Averion logo to base64
+
+function formatToDDMMYY(dateStringOrObj) {
+    if (!dateStringOrObj || dateStringOrObj === 'As per Company Records') {
+        return 'As per Company Records';
+    }
+    const d = new Date(dateStringOrObj);
+    if (isNaN(d.getTime())) {
+        return dateStringOrObj;
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = String(d.getFullYear()).slice(-2);
+    return `${day}-${month}-${year}`;
+}
+
 function getAverionLogoBase64() {
     try {
         const logoPath = path.join(__dirname, '../public/averion_logo.jpg');
@@ -62,8 +77,9 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     margin-bottom: 30px;
   }
   .logo-container img {
-    height: 70px;
+    height: 120px;
     width: auto;
+    margin: -20px 0;
   }
   .company-info {
     text-align: right;
@@ -205,7 +221,7 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 
 // Helper to generate legal text templates (Original)
 function generateDocumentText(docType, emp) {
-    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const today = formatToDDMMYY(new Date());
     const formattedSalary = parseFloat(emp.base_salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
     
     const corporateHeader = `
@@ -239,7 +255,7 @@ SUBJECT: LETTER OF APPOINTMENT
 
 Dear ${emp.full_name},
 
-We are pleased to appoint you in our organization as "${emp.designation}" in the ${emp.department} Department. Your employment commences on ${emp.onboarding_date || today} subject to the following terms:
+We are pleased to appoint you in our organization as "${emp.designation}" in the ${emp.department} Department. Your employment commences on ${emp.formatToDDMMYY(emp.onboarding_date) || today} subject to the following terms:
 
 1. WORK HOURS & SHIFT METRICS:
 Due to our business alignment with Australian Time Zone clients, your operational shift will commence strictly at 03:30 AM IST daily. Shift adherence is mandatory.
@@ -474,7 +490,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             
             <h3>1. Definitions and Interpretation</h3>
             <ul>
-              <li><strong>"Effective Date"</strong> shall mean the onboarding date of ${emp.onboarding_date || today}.</li>
+              <li><strong>"Effective Date"</strong> shall mean the onboarding date of ${formatToDDMMYY(emp.onboarding_date) || today}.</li>
               <li><strong>"Employment Type"</strong> shall mean ${isIntern ? 'Internship' : 'Permanent Employment'}.</li>
               <li><strong>"Designation"</strong> shall mean "${emp.designation || 'Associate'}" under the ${emp.department || 'Sales'} Department.</li>
             </ul>
