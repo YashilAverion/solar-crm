@@ -3015,8 +3015,155 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+        // ── PHASE 6: DISCIPLINARY ACTIONS, SHOW CAUSE, & WORKPLACE DISPUTES KIT ────────────────────
+        case 'Phase6_Counseling_Letter':
+        case 'Counseling_Letter': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/DISC/CL/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
+                <strong>Date of Counseling:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Workplace Performance & Conduct Counseling Letter</div>
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>This counseling letter serves to record the formal counseling session conducted on <strong>substituteDocDate</strong> regarding performance and shift timing deviations.</p>
+
+            <h3>1. Performance and Conduct Review</h3>
+            <ul>
+                <li>The Company's operational shift commences strictly at <strong>${shiftStart} IST</strong> to coordinate with Australian timezone client schedules.</li>
+                <li>During recent reviews, deviations in your start times and overall shift adherence were noted. This is a non-punitive, supportive session meant to outline recovery plans and ensure alignment.</li>
+            </ul>
+
+            <h3>2. Natural Justice & Improvement Support</h3>
+            <ul>
+                <li>In accordance with the principles of natural justice and the Gujarat Shops and Establishments Act, you are hereby given a supportive window of fourteen (14) days to improve timing compliance.</li>
+                <li>Your baseline salary scale remains fully protected during this improvement window.</li>
+            </ul>
+
+            <h3>3. Internal Mediation & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Any internal disputes or grievances must be submitted to the HR Grievance Node. All legal actions shall be resolved exclusively within the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase6_Warning_Letter':
+        case 'Warning_Letter': {
+            const warningsCount = (parseInt(emp.disciplinary_warnings_count, 10) || 0) + 1;
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/DISC/WL/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
+                <strong>Date of Issue:</strong> substituteDocDate<br>
+                <strong>Warning Count:</strong> Warning #${warningsCount} (First & Final Notice)
+            </div>
+
+            <div class="doc-title">Formal Written Warning Letter (First & Final Notice)</div>
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>This letter constitutes a formal written warning regarding persistent performance deficits and attendance non-compliance.</p>
+
+            <h3>1. Progressive Escalation & Conduct Deficits</h3>
+            <ul>
+                <li>You have received previous informal counseling sessions. This formal warning is registered as Warning #${warningsCount} on your compliance record.</li>
+                <li><strong>Timing Violations:</strong> Continued failures to log in for the early morning shift commencing at <strong>${shiftStart} IST</strong> constitute a serious breach of your employment contract. Punctuality is critical for Australian timezone client operations.</li>
+            </ul>
+
+            <h3>2. Dispute Isolation & Whistleblower Procedures</h3>
+            <ul>
+                <li><strong>Dispute Isolation Covenant:</strong> The Employee explicitly agrees that all corrective actions are internal and confidential. The Employee covenants that they must submit any grievances or disputes through the Company's internal Grievance and Whistleblower review systems before pursuing external claims.</li>
+                <li>Failure to utilize internal grievance paths before filing external claims constitutes a breach of the confidentiality terms of employment.</li>
+            </ul>
+
+            <h3>3. Legal Consequences & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Further non-compliance will lead to immediate suspension and termination for cause under the provisions of the Gujarat Shops and Establishments Act.</li>
+                <li>Any dispute arising out of this warning or subsequent disciplinary actions shall be subject exclusively to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase6_Show_Cause_Notice':
+        case 'Show_Cause_Notice': {
+            const showCauseStatus = emp.show_cause_status || 'PENDING_EXPLANATION';
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/DISC/SCN/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
+                <strong>Date of Issue:</strong> substituteDocDate<br>
+                <strong>Notice Status:</strong> ${showCauseStatus}
+            </div>
+
+            <div class="doc-title">Formal Show Cause Notice</div>
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>You are hereby directed to show cause in writing within forty-eight (48) hours of receipt of this notice as to why disciplinary action should not be initiated against you.</p>
+
+            <h3>1. Specific Allegations of Non-Compliance</h3>
+            <ul>
+                <li><strong>Absence during Critical Shift Hours:</strong> You were registered as absent or severely late during the early morning operational shift commencing at <strong>${shiftStart} IST</strong> on multiple occasions.</li>
+                <li><strong>Negligence of Duty:</strong> Deficits in client communication tracking and solar database CRM entries have been reported.</li>
+            </ul>
+
+            <h3>2. Principles of Natural Justice</h3>
+            <ul>
+                <li>To satisfy natural justice parameters under the Gujarat Shops and Establishments Act, you are given a full opportunity to submit your written explanation.</li>
+                <li>Failure to respond within 48 hours will result in the Company proceeding with unilateral disciplinary actions, including immediate suspension.</li>
+            </ul>
+
+            <h3>3. Arbitration & Jurisdiction</h3>
+            <ul>
+                <li>All disputes relating to this notice shall be governed strictly by the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase6_Suspension_Letter':
+        case 'Suspension_Letter': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/DISC/SL/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
+                <strong>Date of Suspension:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Letter of Suspension Pending Disciplinary Inquiry</div>
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>This is to inform you that you are suspended from your duties at <strong>Averion Global LLP</strong> with immediate effect, pending a formal domestic inquiry into allegations of gross misconduct.</p>
+
+            <h3>1. Terms of Suspension</h3>
+            <ul>
+                <li><strong>Effective Date:</strong> substituteDocDate</li>
+                <li><strong>Operational Restrictions:</strong> During the suspension period, you are barred from entering the office premises and accessing the Solar CRM network, client databases, or official email communication tools.</li>
+                <li><strong>Subsistence Allowance:</strong> You shall be entitled to a subsistence allowance in accordance with the provisions of applicable Indian labor laws and the Gujarat Shops and Establishments Act.</li>
+            </ul>
+
+            <h3>2. Grievance Review & Whistleblower Covenants</h3>
+            <ul>
+                <li><strong>Dispute Isolation Covenant:</strong> The Employee covenants that all disciplinary matters and suspension terms must undergo the internal grievance review framework prior to any external legal recourse.</li>
+                <li>The domestic inquiry will be conducted in strict compliance with the principles of natural justice.</li>
+            </ul>
+
+            <h3>3. Arbitration & Competent Jurisdiction</h3>
+            <ul>
+                <li>Any arbitration or mediation setup arising out of this suspension shall be held at Ahmedabad. The competent courts of <strong>Ahmedabad, Gujarat</strong> shall have exclusive jurisdiction.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
-            innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
+            innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>substituteSignHtml`;
             break;
     }
 
@@ -3056,7 +3203,9 @@ router.post('/generate-phase-docs', requireAuth, (req, res) => {
                                 'Phase3_Mobile_Phone_Policy', 'Phase3_Rest_Breaks_Policy', 'Phase3_Data_Protection_Policy',
                                 'Phase4_Employee_Leave_Guide', 'Phase4_Exit_Interview_Form',
                                 'Phase5_Sales_Incentive_Policy', 'Phase5_Sales_Commission_Policy', 'Phase5_KRA_Document', 'Phase5_Sales_Target_Letter',
-                                'Sales_Incentive_Policy', 'Sales_Commission_Policy', 'KRA_Document', 'Sales_Target_Letter'
+                                'Sales_Incentive_Policy', 'Sales_Commission_Policy', 'KRA_Document', 'Sales_Target_Letter',
+                                'Phase6_Counseling_Letter', 'Phase6_Warning_Letter', 'Phase6_Show_Cause_Notice', 'Phase6_Suspension_Letter',
+                                'Counseling_Letter', 'Warning_Letter', 'Show_Cause_Notice', 'Suspension_Letter'
                             ];
                             docs.sort((a, b) => {
                                 return logicalOrder.indexOf(a.document_type) - logicalOrder.indexOf(b.document_type);
@@ -3174,6 +3323,10 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
                 else if (document_type === 'Phase5_Sales_Commission_Policy' || document_type === 'Sales_Commission_Policy') docTitle = 'Sales Commission Policy';
                 else if (document_type === 'Phase5_KRA_Document' || document_type === 'KRA_Document') docTitle = 'KRA Document';
                 else if (document_type === 'Phase5_Sales_Target_Letter' || document_type === 'Sales_Target_Letter') docTitle = 'Sales Target Letter';
+                else if (document_type === 'Phase6_Counseling_Letter' || document_type === 'Counseling_Letter') docTitle = 'Counseling Letter';
+                else if (document_type === 'Phase6_Warning_Letter' || document_type === 'Warning_Letter') docTitle = 'Formal Warning Letter';
+                else if (document_type === 'Phase6_Show_Cause_Notice' || document_type === 'Show_Cause_Notice') docTitle = 'Show Cause Notice';
+                else if (document_type === 'Phase6_Suspension_Letter' || document_type === 'Suspension_Letter') docTitle = 'Suspension Letter';
 
                 const mailOptions = {
                     from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,

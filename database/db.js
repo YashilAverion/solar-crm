@@ -1454,6 +1454,20 @@ db.serialize(() => {
         });
     });
 
+    // Phase 6: Disciplinary Actions, Show Cause, & Workplace Disputes Kit
+    const phase6ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN disciplinary_warnings_count INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN show_cause_status TEXT DEFAULT 'NONE'",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN active_suspension_flag INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN dispute_filing_timestamp TEXT"
+    ];
+
+    phase6ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;

@@ -6398,12 +6398,14 @@ function switchCompliancePhase(phaseNum) {
     const p3Panel = document.getElementById('compliancePhase3Panel');
     const p4Panel = document.getElementById('compliancePhase4Panel');
     const p5Panel = document.getElementById('compliancePhase5Panel');
+    const p6Panel = document.getElementById('compliancePhase6Panel');
     const tab1    = document.getElementById('compPhaseTab1');
     const tab2    = document.getElementById('compPhaseTab2');
     const tab3    = document.getElementById('compPhaseTab3');
     const tab4    = document.getElementById('compPhaseTab4');
     const tab5    = document.getElementById('compPhaseTab5');
-    if (!p1Panel || !p2Panel || !p3Panel || !p4Panel || !p5Panel) return;
+    const tab6    = document.getElementById('compPhaseTab6');
+    if (!p1Panel || !p2Panel || !p3Panel || !p4Panel || !p5Panel || !p6Panel) return;
 
     if (phaseNum === 1) {
         p1Panel.style.display = 'grid';
@@ -6411,6 +6413,7 @@ function switchCompliancePhase(phaseNum) {
         p3Panel.style.display = 'none';
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
+        p6Panel.style.display = 'none';
         tab1.style.borderBottomColor = '#0078C1';
         tab1.style.color = '#0078C1';
         tab2.style.borderBottomColor = 'transparent';
@@ -6421,12 +6424,15 @@ function switchCompliancePhase(phaseNum) {
         tab4.style.color = '#64748b';
         tab5.style.borderBottomColor = 'transparent';
         tab5.style.color = '#64748b';
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
     } else if (phaseNum === 2) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'grid';
         p3Panel.style.display = 'none';
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
+        p6Panel.style.display = 'none';
         tab2.style.borderBottomColor = '#0078C1';
         tab2.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6437,12 +6443,15 @@ function switchCompliancePhase(phaseNum) {
         tab4.style.color = '#64748b';
         tab5.style.borderBottomColor = 'transparent';
         tab5.style.color = '#64748b';
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
     } else if (phaseNum === 3) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
         p3Panel.style.display = 'grid';
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'none';
+        p6Panel.style.display = 'none';
         tab3.style.borderBottomColor = '#0078C1';
         tab3.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6453,12 +6462,15 @@ function switchCompliancePhase(phaseNum) {
         tab4.style.color = '#64748b';
         tab5.style.borderBottomColor = 'transparent';
         tab5.style.color = '#64748b';
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
     } else if (phaseNum === 4) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
         p3Panel.style.display = 'none';
         p4Panel.style.display = 'grid';
         p5Panel.style.display = 'none';
+        p6Panel.style.display = 'none';
         tab4.style.borderBottomColor = '#0078C1';
         tab4.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6469,12 +6481,15 @@ function switchCompliancePhase(phaseNum) {
         tab3.style.color = '#64748b';
         tab5.style.borderBottomColor = 'transparent';
         tab5.style.color = '#64748b';
-    } else {
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
+    } else if (phaseNum === 5) {
         p1Panel.style.display = 'none';
         p2Panel.style.display = 'none';
         p3Panel.style.display = 'none';
         p4Panel.style.display = 'none';
         p5Panel.style.display = 'grid';
+        p6Panel.style.display = 'none';
         tab5.style.borderBottomColor = '#0078C1';
         tab5.style.color = '#0078C1';
         tab1.style.borderBottomColor = 'transparent';
@@ -6485,6 +6500,27 @@ function switchCompliancePhase(phaseNum) {
         tab3.style.color = '#64748b';
         tab4.style.borderBottomColor = 'transparent';
         tab4.style.color = '#64748b';
+        tab6.style.borderBottomColor = 'transparent';
+        tab6.style.color = '#64748b';
+    } else {
+        p1Panel.style.display = 'none';
+        p2Panel.style.display = 'none';
+        p3Panel.style.display = 'none';
+        p4Panel.style.display = 'none';
+        p5Panel.style.display = 'none';
+        p6Panel.style.display = 'grid';
+        tab6.style.borderBottomColor = '#0078C1';
+        tab6.style.color = '#0078C1';
+        tab1.style.borderBottomColor = 'transparent';
+        tab1.style.color = '#64748b';
+        tab2.style.borderBottomColor = 'transparent';
+        tab2.style.color = '#64748b';
+        tab3.style.borderBottomColor = 'transparent';
+        tab3.style.color = '#64748b';
+        tab4.style.borderBottomColor = 'transparent';
+        tab4.style.color = '#64748b';
+        tab5.style.borderBottomColor = 'transparent';
+        tab5.style.color = '#64748b';
     }
 }
 }
@@ -6525,7 +6561,15 @@ function actionPhaseDoc(category, action) {
         'Sales_Incentive_Policy': 'Sales Incentive Policy',
         'Sales_Commission_Policy': 'Sales Commission Policy',
         'KRA_Document': 'KRA Document',
-        'Sales_Target_Letter': 'Sales Target Letter'
+        'Sales_Target_Letter': 'Sales Target Letter',
+        'Phase6_Counseling_Letter': 'Counseling Letter',
+        'Phase6_Warning_Letter': 'Formal Warning Letter',
+        'Phase6_Show_Cause_Notice': 'Show Cause Notice',
+        'Phase6_Suspension_Letter': 'Suspension Letter',
+        'Counseling_Letter': 'Counseling Letter',
+        'Warning_Letter': 'Formal Warning Letter',
+        'Show_Cause_Notice': 'Show Cause Notice',
+        'Suspension_Letter': 'Suspension Letter'
     };
     const docLabel = categoryLabels[category] || category.replace(/_/g, ' ');
 
@@ -9058,6 +9102,7 @@ function updateSelectedWeeksOrFortnights() {
             <button id="compPhaseTab3" type="button" onclick="switchCompliancePhase(3)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">🔒 Phase 3 — Safety &amp; Security</button>
             <button id="compPhaseTab4" type="button" onclick="switchCompliancePhase(4)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">📅 Phase 4 — Leave &amp; Exit</button>
             <button id="compPhaseTab5" type="button" onclick="switchCompliancePhase(5)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">📈 Phase 5 — Sales &amp; KRA</button>
+            <button id="compPhaseTab6" type="button" onclick="switchCompliancePhase(6)" style="height: 38px; padding: 0 12px; border: none; border-bottom: 3px solid transparent; background: transparent; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; margin-bottom: -2px; transition: all 0.2s;">⚖️ Phase 6 — Disciplinary &amp; Disputes</button>
         </div>
         
         <!-- Modal Body (Phase 1: Foundation & Identity Kit) -->
@@ -9422,6 +9467,82 @@ function updateSelectedWeeksOrFortnights() {
                 <div style="display: flex; gap: 6px; margin-top: auto;">
                     <button type="button" onclick="actionPhaseDoc('Phase5_Sales_Target_Letter', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
                     <button type="button" onclick="actionPhaseDoc('Phase5_Sales_Target_Letter', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Body (Phase 6: Disciplinary Actions, Show Cause, & Workplace Disputes Kit) -->
+        <div id="compliancePhase6Panel" style="padding: 16px; display: none; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; max-height: 500px; box-sizing: border-box; background: #f1f5f9;">
+
+            <!-- Card: Phase6 — Counseling Letter -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #0078C1;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">💬</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Counseling Letter</strong>
+                            <span style="font-size: 10px; color: #0078C1; font-weight: 700;">Phase 6 — Disciplinary &amp; Disputes</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Non-punitive conduct/performance counseling with support parameters and timing warning details.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Counseling_Letter', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Counseling_Letter', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase6 — Written Warning Letter -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #059669;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">⚠️</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Formal Warning Letter</strong>
+                            <span style="font-size: 10px; color: #059669; font-weight: 700;">Phase 6 — Disciplinary &amp; Disputes</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Formal written warning (First &amp; Final Notice) outlining progressive warnings and dispute isolation covenants.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Warning_Letter', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Warning_Letter', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #059669; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase6 — Show Cause Notice -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #7c3aed;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">❓</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Show Cause Notice</strong>
+                            <span style="font-size: 10px; color: #7c3aed; font-weight: 700;">Phase 6 — Disciplinary &amp; Disputes</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Demanding written explanation for operational negligence or shift start delays (03:30 AM startup) within 48 hours.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Show_Cause_Notice', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Show_Cause_Notice', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #7c3aed; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase6 — Suspension Letter -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid #d97706;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">🛑</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Suspension Letter</strong>
+                            <span style="font-size: 10px; color: #d97706; font-weight: 700;">Phase 6 — Disciplinary &amp; Disputes</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Formal suspension pending inquiry, detailing CRM access revocation and internal grievance review parameters.</p>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto;">
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Suspension_Letter', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase6_Suspension_Letter', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
                 </div>
             </div>
         </div>
