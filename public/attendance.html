@@ -5000,7 +5000,7 @@ function calculatePayroll() {
         // Populate payslip layout
         document.getElementById('payrollDateRangeLabel').textContent = `${start} to ${end}`;
         const isTemplate = data.calculation_metadata && data.calculation_metadata.has_template_rate;
-        document.getElementById('payrollBaseRate').textContent = `${currencySym}${data.base_rate.toFixed(2)} / hr${isTemplate ? ' (Template Rate)' : ''}`;
+        document.getElementById('payrollBaseRate').textContent = `${currencySym}${data.base_rate.toFixed(2)}${activePayrollCompanyFilter === 'Averion Global LLP' ? ' / month' : ' / hr'}${isTemplate ? ' (Template Rate)' : ''}`;
         document.getElementById('payrollActualHours').textContent = `${(data.actual_hours || 0).toFixed(2)} hrs`;
         document.getElementById('payrollOrdHours').textContent = `${data.ordinary_hours.toFixed(2)} hrs`;
         document.getElementById('payrollOtHours').textContent = `${data.overtime_hours.toFixed(2)} hrs`;
@@ -7864,9 +7864,9 @@ function loadPayrollModuleData() {
                     <td style="font-weight: 600; position: relative;" class="gross-pay-cell" onmouseenter="showGrossPayTooltip(event, this)" onmouseleave="hideGrossPayTooltip()" data-calc="${encodeURIComponent(JSON.stringify(r))}">
                         ${currencySym}${r.gross_pay.toFixed(2)}
                     </td>
-                    <td style="color:var(--danger)">substituteTaxSign${currencySym}substituteTaxWithheld
-                    <td style="color:var(--primary)">substituteCurrencySymsubstituteSuper
-                    <td style="font-weight: 700; color:var(--success)">substituteCurrencySymsubstituteNetPay
+                    <td style="color:var(--danger)">${taxSign}${currencySym}${r.tax_withheld.toFixed(2)}</td></td>
+                    <td style="color:var(--primary)">${currencySym}${r.super_contribution.toFixed(2)}</td></td>
+                    <td style="font-weight: 700; color:var(--success)">${currencySym}${r.net_pay.toFixed(2)}</td>
                     <td style="font-size:10px; color:var(--text-muted);">${formatGeneratedOn(r.created_at, r.generated_by)}</td>
                     <td>
                         <button class="btn-table-action-icon" onclick="printSalarySlip(${r.id}, ${JSON.stringify(r).replace(/"/g, '&quot;')})" style="margin-right:6px;" title="Print/View Salary Slip">

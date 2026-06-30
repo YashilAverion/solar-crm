@@ -13,7 +13,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
 
     // 1. Fetch the user's compliance profile & worker template settings
     db.get(
-        `SELECT p.*, w.weekly_hours_limit, w.per_hour_wages_inc_tax, w.role as worker_role, w.first_name, w.last_name
+        `SELECT p.*, w.weekly_hours_limit, w.per_hour_wages_inc_tax, w.role as worker_role, w.first_name, w.last_name, w.company_name
          FROM employee_compliance_profiles p
          JOIN attendance_workers w ON p.user_id = w.id
          WHERE p.user_id = ?`,
@@ -44,8 +44,11 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     }
 
                     // 3. Calculation loop
+                    const isAverion = (profile.company_name === 'Averion Global LLP');
                     const hasTemplateRate = (profile.per_hour_wages_inc_tax && profile.per_hour_wages_inc_tax > 0);
-                    const baseRate = hasTemplateRate ? profile.per_hour_wages_inc_tax : (profile.base_hourly_rate * (profile.employment_type === 'Casual' ? 1.25 : 1));
+                    
+                    // Base rate references the template rate or normal hourly/monthly scale
+                    const baseRate = isAverion ? (profile.base_salary || 25000) : (hasTemplateRate ? profile.per_hour_wages_inc_tax : (profile.base_hourly_rate * (profile.employment_type === 'Casual' ? 1.25 : 1)));
 
                     let totalActualHours = 0;
                     timesheets.forEach(sheet => {
@@ -56,157 +59,144 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     let totalOvertimeHours = 0;
                     let ordinaryEarnings = 0;
                     let overtimeEarnings = 0;
-
-                    // Group timesheets by week relative to pay_period_start
                     const startMs = new Date(pay_period_start + 'T00:00:00').getTime();
-                    const weekHours = {}; // week number (1, 2, 3...) -> { ordHours, otHours, ordEarnings, otEarnings }
+                    const weekHours = {};
 
-                    if (hasTemplateRate) {
-                        const limit = (profile.weekly_hours_limit && profile.weekly_hours_limit > 0) ? profile.weekly_hours_limit : Infinity;
+                    // Common timesheet hours accumulation
+                    timesheets.forEach(sheet => {
+                        const hours = sheet.total_hours_worked || 0;
+                        const sheetDateMs = new Date(sheet.work_date + 'T00:00:00').getTime();
+                        const diffDays = Math.round((sheetDateMs - startMs) / (24 * 60 * 60 * 1000));
+                        const weekNum = Math.floor(diffDays / 7) + 1;
                         
-                        // Group timesheets by week number
-                        const weekTimesheets = {};
-                        timesheets.forEach(sheet => {
-                            const hours = sheet.total_hours_worked || 0;
-                            const sheetDateMs = new Date(sheet.work_date + 'T00:00:00').getTime();
-                            const diffDays = Math.round((sheetDateMs - startMs) / (24 * 60 * 60 * 1000));
-                            const weekNum = Math.floor(diffDays / 7) + 1;
-                            
-                            if (!weekTimesheets[weekNum]) {
-                                weekTimesheets[weekNum] = [];
-                            }
-                            weekTimesheets[weekNum].push(sheet);
-                        });
+                        if (!weekHours[weekNum]) {
+                            weekHours[weekNum] = { ordHours: 0, otHours: 0, ordEarnings: 0, otEarnings: 0 };
+                        }
+                        
+                        let ord = 0;
+                        let ot = 0;
+                        if (hours <= 8) {
+                            ord = hours;
+                        } else {
+                            ord = 8;
+                            ot = hours - 8;
+                        }
+                        
+                        weekHours[weekNum].ordHours += ord;
+                        weekHours[weekNum].otHours += ot;
+                        totalOrdinaryHours += ord;
+                        totalOvertimeHours += ot;
+                    });
 
-                        Object.keys(weekTimesheets).forEach(weekNum => {
-                            const sheets = weekTimesheets[weekNum];
-                            let rawHoursSum = 0;
-                            sheets.forEach(s => {
-                                rawHoursSum += s.total_hours_worked || 0;
-                            });
+                    let grossPay = 0;
+                    let taxWithheld = 0;
+                    let superContribution = 0;
+                    let netPay = 0;
+                    let multiplier = 1;
+                    let weeklyGross = 0;
+                    let a = 0, b = 0;
 
-                            const ord = Math.min(rawHoursSum, limit);
-                            const ordEarn = ord * baseRate;
-
-                            weekHours[weekNum] = {
-                                ordHours: ord,
-                                otHours: 0,
-                                ordEarnings: ordEarn,
-                                otEarnings: 0,
-                                rawHours: rawHoursSum,
-                                limitApplied: limit !== Infinity ? limit : null
-                            };
-
-                            totalOrdinaryHours += ord;
-                            ordinaryEarnings += ordEarn;
-                        });
-                    } else {
-                        timesheets.forEach(sheet => {
-                            const hours = sheet.total_hours_worked || 0;
-                            const sheetDateMs = new Date(sheet.work_date + 'T00:00:00').getTime();
-                            const diffDays = Math.round((sheetDateMs - startMs) / (24 * 60 * 60 * 1000));
-                            const weekNum = Math.floor(diffDays / 7) + 1;
-                            
-                            if (!weekHours[weekNum]) {
-                                weekHours[weekNum] = { ordHours: 0, otHours: 0, ordEarnings: 0, otEarnings: 0 };
-                            }
-                            
-                            let ord = 0;
-                            let ot = 0;
-                            let ordEarn = 0;
-                            let otEarn = 0;
-                            
-                            if (hours <= 8) {
-                                ord = hours;
-                                ordEarn = hours * baseRate;
-                            } else if (hours <= 10) {
-                                ord = 8;
-                                ordEarn = 8 * baseRate;
-                                ot = hours - 8;
-                                otEarn = ot * baseRate * 1.5;
-                            } else {
-                                ord = 8;
-                                ordEarn = 8 * baseRate;
-                                ot = hours - 8;
-                                otEarn = 2 * baseRate * 1.5 + (hours - 10) * baseRate * 2.0;
-                            }
-                            
-                            weekHours[weekNum].ordHours += ord;
-                            weekHours[weekNum].otHours += ot;
-                            weekHours[weekNum].ordEarnings += ordEarn;
-                            weekHours[weekNum].otEarnings += otEarn;
-                            
-                            totalOrdinaryHours += ord;
-                            totalOvertimeHours += ot;
-                            ordinaryEarnings += ordEarn;
-                            overtimeEarnings += otEarn;
-                        });
-                    }
-
-                    // Superannuation Guarantee (SG) Rule: 12% on Gross Ordinary Earnings
-                    const superContribution = ordinaryEarnings * 0.12;
-
-                    // Gross Pay
-                    const grossPay = ordinaryEarnings + overtimeEarnings;
-
-                    // Calculate the pay period duration in days to get the weekly equivalent
                     const startDt = new Date(pay_period_start + 'T00:00:00');
                     const endDt = new Date(pay_period_end + 'T00:00:00');
                     const diffDays = Math.round((endDt - startDt) / (24 * 60 * 60 * 1000)) + 1;
+                    const daysInMonth = new Date(startDt.getFullYear(), startDt.getMonth() + 1, 0).getDate();
 
-                    let multiplier = 1;
-                    if (diffDays >= 10 && diffDays <= 18) {
-                        multiplier = 2; // Fortnightly
-                    } else if (diffDays >= 25 && diffDays <= 35) {
-                        multiplier = 52 / 12; // Monthly
-                    } else if (diffDays >= 5 && diffDays <= 9) {
-                        multiplier = 1; // Weekly
+                    if (isAverion) {
+                        // Indian monthly pro-rata salary calculation
+                        const monthlyGross = profile.base_salary || 25000;
+                        const workedDays = totalOrdinaryHours / 8.0;
+                        
+                        // Count Sundays in the pay period
+                        let sundays = 0;
+                        let curr = new Date(startDt);
+                        while (curr <= endDt) {
+                            if (curr.getDay() === 0) sundays++;
+                            curr.setDate(curr.getDate() + 1);
+                        }
+                        
+                        const pd = Math.min(diffDays, workedDays + sundays);
+                        const proRataBase = monthlyGross * (pd / daysInMonth);
+                        overtimeEarnings = totalOvertimeHours * (monthlyGross / 160.0);
+                        grossPay = proRataBase + overtimeEarnings;
+                        
+                        // PT Slab: Rs. 200/month for monthly gross salary >= 12,000
+                        const monthlyPT = monthlyGross >= 12000 ? 200 : 0;
+                        taxWithheld = monthlyPT * (diffDays / daysInMonth);
+                        superContribution = 0; // No PF deduction as per requirements
+                        netPay = grossPay - taxWithheld;
+                        
+                        // Populate weekHours earnings for rendering UI compatibility
+                        Object.keys(weekHours).forEach(weekNum => {
+                            const ordHr = weekHours[weekNum].ordHours;
+                            const otHr = weekHours[weekNum].otHours;
+                            weekHours[weekNum].ordEarnings = (monthlyGross / 160.0) * ordHr;
+                            weekHours[weekNum].otEarnings = (monthlyGross / 160.0) * otHr;
+                        });
                     } else {
-                        multiplier = diffDays / 7;
+                        // Australian Fair Work / ATO scale calculation
+                        if (hasTemplateRate) {
+                            const limit = (profile.weekly_hours_limit && profile.weekly_hours_limit > 0) ? profile.weekly_hours_limit : Infinity;
+                            Object.keys(weekHours).forEach(weekNum => {
+                                const rawHoursSum = weekHours[weekNum].ordHours + weekHours[weekNum].otHours;
+                                const ord = Math.min(rawHoursSum, limit);
+                                const ordEarn = ord * baseRate;
+                                weekHours[weekNum].ordHours = ord;
+                                weekHours[weekNum].otHours = 0;
+                                weekHours[weekNum].ordEarnings = ordEarn;
+                                weekHours[weekNum].otEarnings = 0;
+                                ordinaryEarnings += ordEarn;
+                            });
+                        } else {
+                            Object.keys(weekHours).forEach(weekNum => {
+                                const ordHr = weekHours[weekNum].ordHours;
+                                const otHr = weekHours[weekNum].otHours;
+                                const hours = ordHr + otHr;
+                                let ord = 0; let ot = 0; let ordEarn = 0; let otEarn = 0;
+                                if (hours <= 8) {
+                                    ord = hours; ordEarn = hours * baseRate;
+                                } else if (hours <= 10) {
+                                    ord = 8; ordEarn = 8 * baseRate; ot = hours - 8; otEarn = ot * baseRate * 1.5;
+                                } else {
+                                    ord = 8; ordEarn = 8 * baseRate; ot = hours - 8; otEarn = 2 * baseRate * 1.5 + (hours - 10) * baseRate * 2.0;
+                                }
+                                weekHours[weekNum].ordHours = ord;
+                                weekHours[weekNum].otHours = ot;
+                                weekHours[weekNum].ordEarnings = ordEarn;
+                                weekHours[weekNum].otEarnings = otEarn;
+                                ordinaryEarnings += ordEarn;
+                                overtimeEarnings += otEarn;
+                            });
+                        }
+                        
+                        superContribution = ordinaryEarnings * 0.12;
+                        grossPay = ordinaryEarnings + overtimeEarnings;
+                        
+                        if (diffDays >= 10 && diffDays <= 18) {
+                            multiplier = 2;
+                        } else if (diffDays >= 25 && diffDays <= 35) {
+                            multiplier = 52 / 12;
+                        } else if (diffDays >= 5 && diffDays <= 9) {
+                            multiplier = 1;
+                        } else {
+                            multiplier = diffDays / 7;
+                        }
+                        
+                        weeklyGross = grossPay / multiplier;
+                        if (weeklyGross < 350) { a = 0.0000; b = 0; }
+                        else if (weeklyGross < 500) { a = 0.1600; b = 57.8462; }
+                        else if (weeklyGross < 625) { a = 0.2600; b = 107.8462; }
+                        else if (weeklyGross < 721) { a = 0.1800; b = 57.8462; }
+                        else if (weeklyGross < 865) { a = 0.1800; b = 57.1462; }
+                        else if (weeklyGross < 1282) { a = 0.3227; b = 180.0385; }
+                        else if (weeklyGross < 2596) { a = 0.3200; b = 176.5769; }
+                        else if (weeklyGross < 3653) { a = 0.3900; b = 358.3077; }
+                        else { a = 0.4700; b = 650.6154; }
+                        
+                        const x = Math.floor(weeklyGross) + 0.99;
+                        const weeklyTaxWithheld = Math.max(0, Math.round(a * x - b));
+                        taxWithheld = weeklyTaxWithheld * multiplier;
+                        netPay = grossPay - taxWithheld;
                     }
-
-                    const weeklyGross = grossPay / multiplier;
-
-                    // 1. Weekly Tax (Scale 2 - Tax-free threshold claimed, Stage 3 Tax Cuts, 2024-25 and 2025-26 rules incorporating Medicare Levy)
-                    let a = 0;
-                    let b = 0;
-                    if (weeklyGross < 350) {
-                        a = 0.0000;
-                        b = 0;
-                    } else if (weeklyGross < 500) {
-                        a = 0.1600;
-                        b = 57.8462;
-                    } else if (weeklyGross < 625) {
-                        a = 0.2600;
-                        b = 107.8462; // Medicare shade-in
-                    } else if (weeklyGross < 721) {
-                        a = 0.1800;
-                        b = 57.8462;
-                    } else if (weeklyGross < 865) {
-                        a = 0.1800;
-                        b = 57.1462;
-                    } else if (weeklyGross < 1282) {
-                        a = 0.3227;
-                        b = 180.0385; // LITO phase-out
-                    } else if (weeklyGross < 2596) {
-                        a = 0.3200;
-                        b = 176.5769;
-                    } else if (weeklyGross < 3653) {
-                        a = 0.3900;
-                        b = 358.3077;
-                    } else {
-                        a = 0.4700;
-                        b = 650.6154;
-                    }
-
-                    const x = Math.floor(weeklyGross) + 0.99;
-                    const weeklyTaxWithheld = Math.max(0, Math.round(a * x - b));
-
-                    // Convert back to period tax
-                    const taxWithheld = weeklyTaxWithheld * multiplier;
-
-                    // Net Pay
-                    const netPay = grossPay - taxWithheld;
 
                     // Round financial totals to 2 decimal places for database storage
                     const roundedActualHours = parseFloat(totalActualHours.toFixed(3));
