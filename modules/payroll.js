@@ -47,6 +47,11 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     const hasTemplateRate = (profile.per_hour_wages_inc_tax && profile.per_hour_wages_inc_tax > 0);
                     const baseRate = hasTemplateRate ? profile.per_hour_wages_inc_tax : (profile.base_hourly_rate * (profile.employment_type === 'Casual' ? 1.25 : 1));
 
+                    let totalActualHours = 0;
+                    timesheets.forEach(sheet => {
+                        totalActualHours += sheet.total_hours_worked || 0;
+                    });
+
                     let totalOrdinaryHours = 0;
                     let totalOvertimeHours = 0;
                     let ordinaryEarnings = 0;
@@ -204,6 +209,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     const netPay = grossPay - taxWithheld;
 
                     // Round financial totals to 2 decimal places for database storage
+                    const roundedActualHours = parseFloat(totalActualHours.toFixed(3));
                     const roundedOrdinaryHours = parseFloat(totalOrdinaryHours.toFixed(3));
                     const roundedOvertimeHours = parseFloat(totalOvertimeHours.toFixed(3));
                     const roundedGrossPay = parseFloat(grossPay.toFixed(2));
@@ -238,13 +244,13 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     db.run(
                         `INSERT INTO payroll_historical_records (
                             user_id, pay_period_start, pay_period_end, 
-                            ordinary_hours, overtime_hours, gross_pay, 
+                            actual_hours, ordinary_hours, overtime_hours, gross_pay, 
                             tax_withheld, super_contribution, net_pay, created_at,
                             generated_by, calculation_metadata
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [
                             user_id, pay_period_start, pay_period_end, 
-                            roundedOrdinaryHours, roundedOvertimeHours, roundedGrossPay, 
+                            roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedGrossPay, 
                             roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
                             generatedBy, JSON.stringify(calculationMetadata)
                         ],
@@ -260,6 +266,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                                 user_id,
                                 pay_period_start,
                                 pay_period_end,
+                                actual_hours: roundedActualHours,
                                 ordinary_hours: roundedOrdinaryHours,
                                 overtime_hours: roundedOvertimeHours,
                                 base_rate: baseRate,
@@ -298,10 +305,11 @@ router.get('/history/:user_id', requireAuth, (req, res) => {
 // PUT /history/:id (Update employee payslip history)
 router.put('/history/:id', requireAuth, (req, res) => {
     const { id } = req.params;
-    const { ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay } = req.body;
+    const { actual_hours, ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay } = req.body;
     
     db.run(
         `UPDATE payroll_historical_records SET 
+            actual_hours = ?,
             ordinary_hours = ?, 
             overtime_hours = ?, 
             gross_pay = ?, 
@@ -309,7 +317,7 @@ router.put('/history/:id', requireAuth, (req, res) => {
             super_contribution = ?, 
             net_pay = ?
          WHERE id = ?`,
-        [ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay, id],
+        [actual_hours, ordinary_hours, overtime_hours, gross_pay, tax_withheld, super_contribution, net_pay, id],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
