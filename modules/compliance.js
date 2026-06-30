@@ -306,6 +306,7 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 // Helper to generate legal text templates (Original)
 function generateDocumentText(docType, emp) {
     const today = formatToDDMMYY(new Date());
+    const docDate = emp.onboarding_date ? formatToDDMMYY(emp.onboarding_date) : today;
     const logoBase64 = getAverionLogoBase64();
     const sigBase64 = getAverionSignatureBase64();
     
@@ -594,9 +595,7 @@ function generateDocumentText(docType, emp) {
 
             const agreementContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/EA/${emp.employee_id || 'TEMP'}<br>
-                <strong>Version:</strong> 2.4.0 (IT Services)<br>
-                <strong>Effective Date:</strong> ${formatToDDMMYY(emp.onboarding_date) || today}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Master Employment Agreement</div>
@@ -722,9 +721,7 @@ function generateDocumentText(docType, emp) {
         case 'NDA': {
             const ndaContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/NDA/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.2.0<br>
-                <strong>Effective Date:</strong> ${formatToDDMMYY(emp.onboarding_date) || today}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Mutual Non-Disclosure Agreement</div>
@@ -763,9 +760,7 @@ function generateDocumentText(docType, emp) {
         case 'Warning_Letter': {
             const warningContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/WL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> ${today}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Warning / Disciplinary Caution</div>
@@ -810,9 +805,7 @@ function generateDocumentText(docType, emp) {
         case 'Termination_Letter': {
             const terminationContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/TL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> ${today}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Termination / Separation Notice</div>
@@ -851,9 +844,7 @@ function generateDocumentText(docType, emp) {
         case 'Experience_Letter': {
             const experienceContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/EL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> ${today}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title" style="margin-top: 40px; font-size: 22px; text-transform: uppercase;">To Whomsoever It May Concern</div>
@@ -876,9 +867,7 @@ function generateDocumentText(docType, emp) {
         case 'Relieving_Letter': {
             const relievingContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/RL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> substituteToday
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Relieving</div>
@@ -911,9 +900,7 @@ function generateDocumentText(docType, emp) {
         case 'Salary_Revision_Letter': {
             const revisionContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/SRL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> substituteToday
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Salary Increment & Revision Notice</div>
@@ -977,9 +964,7 @@ function generateDocumentText(docType, emp) {
         case 'Promotion_Letter': {
             const promotionContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/PL/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> substituteToday
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Promotion & Career Advancement</div>
@@ -1044,9 +1029,7 @@ function generateDocumentText(docType, emp) {
         case 'Asset_Handover': {
             const handoverContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc No:</strong> AVG/HR/AH/substituteEmployeeId<br>
-                <strong>Version:</strong> 1.0.0<br>
-                <strong>Effective Date:</strong> substituteToday
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Corporate Asset Handover & Acknowledgement</div>
@@ -2023,9 +2006,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Category_B': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/EA/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Category B (Foundation)<br>
-                <strong>Execution Date:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Master Employment Agreement & Appointment Terms</div>
@@ -2107,9 +2088,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Category_A': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/HRP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Category A (Foundation)<br>
-                <strong>Execution Date:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Master HR Policy Manual</div>
@@ -2148,9 +2127,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Category_H': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/SIP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Category H (Incentive)<br>
-                <strong>Execution Date:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Target-Based Sales Incentive & Commission Policy</div>
@@ -2182,9 +2159,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Category_C': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/NDA/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Category C (NDA & IPR)<br>
-                <strong>Execution Date:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Comprehensive Non-Disclosure, IP Assignment & Anti-Moonlighting Covenant</div>
@@ -2223,9 +2198,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Category_F_L': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/ITP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Category F/L (Assets & Surveillance)<br>
-                <strong>Execution Date:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Workplace Surveillance, IT Assets, & Rest Breaks Policy</div>
@@ -2361,9 +2334,7 @@ function compilePhaseDoc(category, emp, registry) {
 
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/AL/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 2 — Appointment Letter<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Appointment</div>
@@ -2438,9 +2409,7 @@ function compilePhaseDoc(category, emp, registry) {
 
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/CEA/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 2 — Comprehensive Employment Agreement<br>
-                <strong>Execution Date:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Comprehensive Employment Agreement</div>
@@ -2533,10 +2502,7 @@ function compilePhaseDoc(category, emp, registry) {
 
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/IC/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 2 — 6-Month Internship / Apprenticeship Contract<br>
-                <strong>Commencement Date:</strong> ${docDate}<br>
-                <strong>Internship End Date:</strong> ${internEndDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">6-Month Internship / Apprenticeship Contract</div>
@@ -2612,9 +2578,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Mobile_Phone_Policy': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/MPP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Mobile Phone & VoIP Communications Policy</div>
@@ -2659,9 +2623,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Rest_Breaks_Policy': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/RBP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Rest Breaks & Shift Interval Policy</div>
@@ -2701,9 +2663,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Data_Protection_Policy': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/DPP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Data Protection, Confidentiality & Anti-Moonlighting Covenant</div>
@@ -2746,9 +2706,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Employee_Leave_Guide': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/ELG/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 4 — Leave & Transition Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Employee Leave Guide & Allotment Policy</div>
@@ -2797,9 +2755,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Exit_Interview_Form': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/EIF/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 4 — Leave & Transition Kit<br>
-                <strong>Date of Clearance:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Exit Clearance & Interview Statement Form</div>
@@ -2870,9 +2826,7 @@ function compilePhaseDoc(category, emp, registry) {
             const incentiveHoldCount = emp.incentive_hold_count || 0;
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/SIP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Target-Based Sales Incentive Policy</div>
@@ -2907,9 +2861,7 @@ function compilePhaseDoc(category, emp, registry) {
             const commSlab = parseFloat(emp.commission_slab_percentage || 0.0);
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/SCP/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
-                <strong>Date of Issue:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Sales Commission Slab Policy</div>
@@ -2961,9 +2913,7 @@ function compilePhaseDoc(category, emp, registry) {
 
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/KRA/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
-                <strong>Date of Issue:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Key Result Areas (KRA) Document</div>
@@ -2998,9 +2948,7 @@ function compilePhaseDoc(category, emp, registry) {
                 : 'As per Company Sales Matrix';
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/STL/substituteEmployeeId<br>
-                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
-                <strong>Date of Issue:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Official Sales Target Letter</div>
@@ -3034,9 +2982,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Counseling_Letter': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/DISC/CL/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
-                <strong>Date of Counseling:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Workplace Performance & Conduct Counseling Letter</div>
@@ -3070,10 +3016,7 @@ function compilePhaseDoc(category, emp, registry) {
             const warningsCount = (parseInt(emp.disciplinary_warnings_count, 10) || 0) + 1;
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/DISC/WL/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
-                <strong>Date of Issue:</strong> substituteDocDate<br>
-                <strong>Warning Count:</strong> Warning #${warningsCount} (First & Final Notice)
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Formal Written Warning Letter (First & Final Notice)</div>
@@ -3108,10 +3051,7 @@ function compilePhaseDoc(category, emp, registry) {
             const showCauseStatus = emp.show_cause_status || 'PENDING_EXPLANATION';
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/DISC/SCN/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
-                <strong>Date of Issue:</strong> substituteDocDate<br>
-                <strong>Notice Status:</strong> ${showCauseStatus}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Formal Show Cause Notice</div>
@@ -3144,9 +3084,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Suspension_Letter': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/DISC/SL/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 6 — Disciplinary & Disputes Kit<br>
-                <strong>Date of Suspension:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Letter of Suspension Pending Disciplinary Inquiry</div>
@@ -3181,9 +3119,7 @@ function compilePhaseDoc(category, emp, registry) {
         case 'Statutory_Declaration': {
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/STAT/DEC/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
-                <strong>Date of Declaration:</strong> ${docDate}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Statutory Declaration Form</div>
@@ -3216,9 +3152,7 @@ function compilePhaseDoc(category, emp, registry) {
             const leavesBalance = emp.accrued_leaves_balance || 0;
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/STAT/REG/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
-                <strong>Audit Timestamp:</strong> substituteDocDate
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Attendance & Leave Register Template (Form-G Audit Ready)</div>
@@ -3253,9 +3187,7 @@ function compilePhaseDoc(category, emp, registry) {
             const trainingStatus = emp.posh_training_status ? 'COMPLETED' : 'PENDING';
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/STAT/POSH/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 7 — Compliance Logs & Registers<br>
-                <strong>Training Status:</strong> ${trainingStatus}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">POSH Complaint Form & Investigation Framework</div>
@@ -3289,9 +3221,7 @@ function compilePhaseDoc(category, emp, registry) {
             const dismissalTime = emp.final_dismissal_timestamp || docDate;
             innerContent = `
             <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
-                <strong>Doc ID:</strong> AVG/HR/STAT/FDO/${emp.employee_id || '999'}<br>
-                <strong>Category:</strong> Phase 7 — Final Statutory Termination<br>
-                <strong>Dismissal Date:</strong> ${dismissalTime}
+                <strong>Date:</strong> ${docDate}
             </div>
 
             <div class="doc-title">Final Dismissal Order & Termination for Cause</div>
