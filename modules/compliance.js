@@ -8,7 +8,20 @@ const fs = require('fs');
 const path = require('path');
 
 // Helper to convert the Averion logo to base64
+function getAverionLogoBase64() {
+    try {
+        const logoPath = path.join(__dirname, '../public/averion_logo.jpg');
+        if (fs.existsSync(logoPath)) {
+            const fileBuffer = fs.readFileSync(logoPath);
+            return `data:image/jpeg;base64,${fileBuffer.toString('base64')}`;
+        }
+    } catch (e) {
+        console.error('Error reading averion_logo.jpg:', e.message);
+    }
+    return '';
+}
 
+// Helper to format dates to DD-MM-YY
 function formatToDDMMYY(dateStringOrObj) {
     if (!dateStringOrObj || dateStringOrObj === 'As per Company Records') {
         return 'As per Company Records';
@@ -23,17 +36,70 @@ function formatToDDMMYY(dateStringOrObj) {
     return `${day}-${month}-${year}`;
 }
 
-function getAverionLogoBase64() {
-    try {
-        const logoPath = path.join(__dirname, '../public/averion_logo.jpg');
-        if (fs.existsSync(logoPath)) {
-            const fileBuffer = fs.readFileSync(logoPath);
-            return `data:image/jpeg;base64,${fileBuffer.toString('base64')}`;
+// Fetch all combined details for a worker
+function getFullEmployeeDetails(employeeId, callback) {
+    db.get('SELECT * FROM attendance_workers WHERE id = ?', [employeeId], (workerErr, worker) => {
+        if (workerErr || !worker) {
+            return callback(workerErr || new Error('Worker not found'));
         }
-    } catch (e) {
-        console.error('Error reading averion_logo.jpg:', e.message);
-    }
-    return '';
+        db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [employeeId.toString()], (profileErr, profile) => {
+            if (profileErr) return callback(profileErr);
+
+            const empDetails = {
+                employee_id: employeeId.toString(),
+                first_name: worker.first_name || 'As per Company Records',
+                last_name: worker.last_name || '',
+                full_name: `${worker.first_name || ''} ${worker.last_name || ''}`.trim() || 'As per Company Records',
+                email: worker.email || 'As per Company Records',
+                phone: worker.phone || worker.phone_number || worker.mobile_number || 'As per Company Records',
+                google_address: worker.google_address || 'As per Company Records',
+                company_name: worker.company_name || 'Averion Global LLP',
+                job_title: worker.job_title || 'As per Company Records',
+                pan_number: worker.pan_number || 'As per Company Records',
+                aadhaar_number: worker.aadhaar_number || 'As per Company Records',
+                uan_number: worker.uan_number || 'As per Company Records',
+                esic_number: worker.esic_number || 'As per Company Records',
+                bank_account_name: worker.bank_account_name || 'As per Company Records',
+                bank_bsb: worker.bank_bsb || 'As per Company Records',
+                bank_account_number: worker.bank_account_number || 'As per Company Records',
+                bank_account_type: worker.bank_account_type || 'Savings',
+                
+                cl_balance: worker.cl_balance !== undefined && worker.cl_balance !== null ? worker.cl_balance : 'As per Company Records',
+                sl_balance: worker.sl_balance !== undefined && worker.sl_balance !== null ? worker.sl_balance : 'As per Company Records',
+                ml_balance: worker.ml_balance !== undefined && worker.ml_balance !== null ? worker.ml_balance : 'As per Company Records',
+                annual_leave_balance: worker.annual_leave_balance !== undefined && worker.annual_leave_balance !== null ? worker.annual_leave_balance : 'As per Company Records',
+                
+                emergency_name: worker.emergency_name || 'As per Company Records',
+                emergency_phone: worker.emergency_phone || 'As per Company Records',
+                emergency_relationship: worker.emergency_relationship || 'As per Company Records',
+
+                // Profile parameters
+                department: profile ? profile.department : 'Sales',
+                designation: profile ? profile.designation : (worker.job_title || 'Associate'),
+                base_salary: profile ? profile.base_salary : 25000,
+                shift_start_time: profile ? profile.shift_start_time : '03:30 AM',
+                probation_period_months: profile ? profile.probation_period_months : 3,
+                notice_period_days: profile ? profile.notice_period_days : 45,
+                annual_leave_quota: profile ? profile.annual_leave_quota : 24,
+                gratuity_eligible: profile ? profile.gratuity_eligible : 0,
+                incentive_hold_flag: profile ? profile.incentive_hold_flag : 0,
+                onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
+                
+                assets_laptops: profile ? profile.assets_laptops : '',
+                assets_desktops: profile ? profile.assets_desktops : '',
+                assets_mobiles: profile ? profile.assets_mobiles : '',
+                assets_sims: profile ? profile.assets_sims : '',
+                assets_ids: profile ? profile.assets_ids : '',
+                assets_access_cards: profile ? profile.assets_access_cards : '',
+                assets_licenses: profile ? profile.assets_licenses : '',
+                
+                surveillance_consent: profile ? profile.surveillance_consent : 0,
+                biometric_consent: profile ? profile.biometric_consent : 0,
+                hrms_consent: profile ? profile.hrms_consent : 0
+            };
+            callback(null, empDetails);
+        });
+    });
 }
 
 // Wrap inner HTML content in a professional letterhead frame
@@ -229,218 +295,211 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 // Helper to generate legal text templates (Original)
 function generateDocumentText(docType, emp) {
     const today = formatToDDMMYY(new Date());
-    const formattedSalary = parseFloat(emp.base_salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const logoBase64 = getAverionLogoBase64();
     
-    const corporateHeader = `
-========================================================================
-                      AVERION GLOBAL LLP
-  Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road,
-             Ognaj, Ahmedabad, Gujarat - 380060, India
-         GST: 24ACMFA7488G1Z0 | PAN: ACMFA7488G | HR Department
-========================================================================
-    `;
+    const gross = parseFloat(emp.base_salary || 0);
+    const basic = gross * 0.50;
+    const hra = gross * 0.20;
+    const specialAllowance = gross * 0.30;
 
-    const signBlocks = `
-------------------------------------------------------------------------
-For Averion Global LLP                       Accepted by Employee
-(Authorized Signatory)                       (${emp.full_name})
-------------------------------------------------------------------------
+    const formattedGross = gross.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedBasic = basic.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedHRA = hra.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedSpecial = specialAllowance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+
+    const signHtml = `
+    <div class="sign-container">
+      <div class="sign-box">
+        For <strong>Averion Global LLP</strong>
+        <div class="sign-line"></div>
+        Authorized Signatory
+      </div>
+      <div class="sign-box">
+        Accepted by Employee/Intern
+        <div class="sign-line"></div>
+        <strong>${emp.full_name}</strong>
+      </div>
+    </div>
     `;
 
     switch(docType) {
         case 'Appointment_Letter':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
+            const isIntern = (emp.designation || '').toLowerCase().includes('intern');
+            const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
+            const noticeDays = emp.notice_period_days || 45;
 
-To,
-${emp.full_name}
-Ahmedabad, Gujarat
+            const appointmentContent = `
+            <div class="doc-title">Letter of Appointment</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Code:</strong> ${emp.employee_id}</p>
+            
+            <p>To,<br>
+            <strong>Mr./Ms. ${emp.full_name}</strong><br>
+            ${emp.google_address || 'As per Company Records'}</p>
+            
+            <p>Dear <strong>${emp.full_name}</strong>,</p>
+            
+            <p>We are pleased to offer you an appointment in our organization as <strong>"${emp.designation || 'Associate'}"</strong> in the <strong>${emp.department || 'Sales'}</strong> Department. Your appointment commences on <strong>${formatToDDMMYY(emp.onboarding_date) || today}</strong> (the "Effective Date") subject to the following terms and conditions:</p>
+            
+            <h3>1. Appointment & Probation Period</h3>
+            <p>You shall be on probation for a period of <strong>${probationMonths} months</strong> from the Effective Date. Your performance will be reviewed periodically, and the Company reserves the right to extend the probation period if deemed necessary. During the probation period, either party may terminate this relationship by giving fifteen (15) days written notice. Upon successful completion of probation, your confirmation will be communicated to you in writing.</p>
+            
+            <h3>2. Work Shift Timings & Adherence</h3>
+            <p>Due to the nature of our business and operational alignment with clients in the Australian Time Zone, your regular daily shift starts strictly at <strong>03:30 AM IST</strong>. The standard daily working hours are nine (9) hours, including designated rest breaks. Punctual attendance and readiness at your workstation by 03:30 AM IST is a fundamental requirement of your employment.</p>
+            
+            <h3>3. Remuneration & Benefits</h3>
+            <p>Your Monthly Gross Compensation is set to <strong>${formattedGross}</strong>, structured as detailed in Annexure A. Gratuity benefits will be applicable upon completing five (5) consecutive years of continuous active service under the Payment of Gratuity Act 1972. Salary is subject to statutory deductions such as Income Tax, Professional Tax, and other applicable withholdings as per government regulations.</p>
+            
+            <h3>4. Exclusivity & Moonlighting Restriction</h3>
+            <p>You are required to devote your whole time, attention, and ability to the business and affairs of Averion Global LLP. You shall not, during the tenure of your employment, engage directly or indirectly in any other business, dual employment, freelance assignments, consulting work, or advisory services, whether paid or unpaid, without the prior written consent of the Company.</p>
+            
+            <h3>5. Confidentiality & Non-Disclosure</h3>
+            <p>You shall maintain strict confidentiality regarding all proprietary information, client leads, solar design specifications, project files, pricing lists, and computer systems belonging to the Company. You are prohibited from copy, screenshot, or export of CRM database records to personal storages or devices.</p>
+            
+            <h3>6. Intellectual Property Rights</h3>
+            <p>All software codes, outreach spreadsheets, calculators, databases, and solar proposal layouts designed or generated by you during your service hours belong exclusively to the Company. You hereby assign all rights and titles globally in such IP to Averion Global LLP.</p>
+            
+            <h3>7. Separation & Notice Period</h3>
+            <p>Post confirmation, either party may terminate this employment agreement by giving a written notice of <strong>${noticeDays} days</strong> or by paying salary in lieu thereof, at the sole discretion of the Company. The Company reserves the right to terminate your services immediately for cause (such as data leakage, theft, breach of policy, or code of conduct violations) without notice or compensation.</p>
+            
+            <h3>8. POSH & Workplace Safety</h3>
+            <p>The Company maintains a strictly zero-tolerance policy against sexual harassment. You shall abide by the Prevention of Sexual Harassment (POSH) Act 2013 and cooperate with the Internal Complaints Committee (ICC) if required.</p>
+            
+            <h3>9. Arbitration & Jurisdiction</h3>
+            <p>This Appointment Letter is subject to the laws of India. Any and all disputes arising from your employment shall be settled via binding arbitration in Ahmedabad, Gujarat, under the Arbitration and Conciliation Act 1996. The competent courts of Ahmedabad, Gujarat shall have exclusive jurisdiction.</p>
+            
+            ${signHtml}
+            
+            <div style="page-break-before: always;"></div>
+            
+            <div class="doc-title" style="margin-top: 40px;">ANNEXURE A: COMPENSATION DETAILS</div>
+            <table class="annexure-table">
+              <thead>
+                <tr>
+                  <th>Salary Component</th>
+                  <th>Percentage</th>
+                  <th>Monthly Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Basic Salary</strong></td>
+                  <td>50%</td>
+                  <td>${formattedBasic}</td>
+                </tr>
+                <tr>
+                  <td><strong>House Rent Allowance (HRA)</strong></td>
+                  <td>20%</td>
+                  <td>${formattedHRA}</td>
+                </tr>
+                <tr>
+                  <td><strong>Special Allowance</strong></td>
+                  <td>30%</td>
+                  <td>${formattedSpecial}</td>
+                </tr>
+                <tr style="background-color: #e2e8f0; font-weight: 700;">
+                  <td>Gross Monthly CTC</td>
+                  <td>100%</td>
+                  <td>${formattedGross}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <table class="annexure-table">
+              <thead>
+                <tr>
+                  <th>Bank Account Details</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Bank Name / Holder</td>
+                  <td>${emp.bank_account_name || 'As per Company Records'}</td>
+                </tr>
+                <tr>
+                  <td>Account Type</td>
+                  <td>${emp.bank_account_type || 'Savings'}</td>
+                </tr>
+                <tr>
+                  <td>IFSC Code / BSB</td>
+                  <td>${emp.bank_bsb || 'As per Company Records'}</td>
+                </tr>
+                <tr>
+                  <td>Account Number</td>
+                  <td>${emp.bank_account_number || 'As per Company Records'}</td>
+                </tr>
+                <tr>
+                  <td>Permanent Account Number (PAN)</td>
+                  <td>${emp.pan_number || 'As per Company Records'}</td>
+                </tr>
+                <tr>
+                  <td>Aadhaar Card Number</td>
+                  <td>${emp.aadhaar_number || 'As per Company Records'}</td>
+                </tr>
+              </tbody>
+            </table>
 
-SUBJECT: LETTER OF APPOINTMENT
-
-Dear ${emp.full_name},
-
-We are pleased to appoint you in our organization as "${emp.designation}" in the ${emp.department} Department. Your employment commences on ${emp.formatToDDMMYY(emp.onboarding_date) || today} subject to the following terms:
-
-1. WORK HOURS & SHIFT METRICS:
-Due to our business alignment with Australian Time Zone clients, your operational shift will commence strictly at 03:30 AM IST daily. Shift adherence is mandatory.
-
-2. COMPENSATIVE PACKAGE (CTC):
-Your Monthly Base Salary will be ${formattedSalary} (Rupees equivalent). 
-
-3. PROBATION & NOTICE PERIOD:
-You will be placed on a probationary period of ${emp.probation_period_months} months. Your services can be terminated during probation by giving 15 days notice. Upon confirmation, the notice period shall strictly be ${emp.notice_period_days} days.
-
-4. LEAVE ENTITLEMENT:
-You will be entitled to an annual leave quota of ${emp.annual_leave_quota} days per calendar year.
-
-5. LEGAL JURISDICTION:
-This agreement is governed by the laws of India. Any dispute arising out of this appointment shall be subject exclusively to the competent courts of Ahmedabad, Gujarat.
-
-${signBlocks}
-            `.trim();
-
-        case 'NDA_IP_Assignment':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-PROPRIETARY INFORMATION AND INTELLECTUAL PROPERTY ASSIGNMENT COVENANT
-
-This Non-Disclosure and IP Assignment Agreement is entered into by ${emp.full_name} ("Employee") in favor of Averion Global LLP ("Company").
-
-1. INTELLECTUAL PROPERTY OWNERSHIP:
-All solar layout designs, technical drawings, pricing calculators, CRM software codes, databases, and operational spreadsheets designed, written, or conceptualized by the Employee during their hours of service belong exclusively to Averion Global LLP. The Employee hereby assigns all right, title, and interest in such IP to the Company globally.
-
-2. CONFIDENTIALITY CONSTRAINTS:
-The Employee shall not disclose, photocopy, screenshot, or poach any leads, client contact sheets, or pricing matrices stored inside the Solar CRM to any third party.
-
-3. GOVERNING LAW & COURT JURISDICTION:
-This Covenant is subject strictly to the jurisdiction of the competent courts of Ahmedabad, Gujarat.
-
-${signBlocks}
-            `.trim();
-
-        case 'HR_Policy_Manual':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-HR POLICY & SYSTEM PROCEDURES MANUAL DECLARATION
-
-I, ${emp.full_name}, hereby acknowledge receipt and agree to comply with the Averion Global LLP Employee Guidelines:
-
-1. SHIFT SCHEDULE ADHERENCE:
-Standard morning operational shifts run on the Australian Time Zone, starting strictly at 03:30 AM IST. Punctuality is mandatory.
-
-2. SECURITY & CRITICAL ASSETS:
-The use of personal recording devices, screenshot tools, or exporting leads from the Solar CRM portal is strictly prohibited. All computer systems, network connections, and cloud portals are monitored.
-
-3. DISCIPLINARY POLICY:
-Any breach of operational security or data leakage will result in immediate dismissal, forfeiture of outstanding allowances, and legal action.
-
-${signBlocks}
-            `.trim();
-
-        case 'Moonlighting_Covenant':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-EXCLUSIVITY OF SERVICE & ANTI-MOONLIGHTING COVENANT
-
-This Covenant is entered into by ${emp.full_name} ("Employee") in favor of Averion Global LLP ("Company").
-
-1. ABSOLUTE BAN ON DUAL EMPLOYMENT:
-The Employee shall devote their entire working time and attention exclusively to the business of the Company. The Employee is strictly prohibited from engaging in any other business, dual employment, freelancing, tutoring, consulting, or providing services to any external firm (directly or indirectly, paid or unpaid) during the tenure of their employment.
-
-2. ZERO CLIENT POACHING:
-The Employee shall not solicit, divert, or design solar proposals for any clients of the Company for personal profit or for any competitor.
-
-3. PENAL CONSEQUENCES:
-Any violation of this Covenant will result in immediate termination for cause and a liability suit filed in the competent courts of Ahmedabad, Gujarat.
-
-${signBlocks}
-            `.trim();
-
-        case 'Gratuity_Reimbursement':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-GRATUITY & STATUTORY DISBURSEMENTS AGREEMENT
-
-1. STATUTORY ELIGIBILITY:
-In accordance with the Payment of Gratuity Act 1972, gratuity is payable only upon successful completion of five (5) consecutive years of active service with Averion Global LLP.
-
-2. REIMBURSEMENT PROVISIONS:
-Should the Employee leave the Company before completing the statutory timeline, no pro-rated gratuity is payable. Any voluntary gratuity buffers advance-reimbursed by the Company shall be subject to recoupment or deduction from the final settlement.
-
-3. ELIGIBILITY CONFIRMATION:
-Employee's Gratuity Eligibility Status: ${emp.gratuity_eligible ? 'ELIGIBLE' : 'NOT ELIGIBLE (Pending 5 years service)'}.
-
-${signBlocks}
-            `.trim();
-
-        case 'Anti_Poaching_Agreement':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-NON-SOLICITATION & ANTI-POACHING COVENANT
-
-1. RESTRICTION OF POACHING:
-The Employee covenants that for a period of twenty-four (24) months post-separation from Averion Global LLP, they will not directly or indirectly recruit, induce, or poach any employee, vendor, or developer away from the Company.
-
-2. CUSTOMER PROTECTION:
-The Employee shall not approach or solicit any clients of Averion Global LLP to divert solar design, sales leads, or installation business.
-
-3. GEOGRAPHIC & LEGAL BOUNDARY:
-This agreement is governed by the laws of India and subject exclusively to the courts of Ahmedabad, Gujarat.
-
-${signBlocks}
-            `.trim();
-
-        case 'IT_Asset_Surveillance':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-IT ASSETS & NETWORK SURVEILLANCE CONSENT
-
-1. MONITORING CONSENT:
-The Employee consents to active network surveillance, keystroke logging, screen captures, and remote access tracking on all Company-provided systems (Laptops, Desktops, VOIP communication systems, and Solar CRM logs).
-
-2. BIOMETRIC & HRMS REGISTRATION:
-The Employee consents to logging daily punches via Biometric systems, CCTV camera capture on the bay, and processing personal records within the HRMS dashboard.
-
-3. CONFIDENTIAL ASSETS RECOVERY:
-Upon separation, the Employee must immediately surrender all assigned assets including Laptop, SIM card, ID card, Access Badge, and software licenses.
-
-4. SHIFT SECURITY OVERVIEW:
-Since operations run early morning shifts starting strictly at 03:30 AM IST (aligned to Australian Client Time Zones), biometric and CRM activity checks are monitored continuously.
-
-${signBlocks}
-            `.trim();
-
-        case 'Shift_Safety_Declaration':
-            return `
-${corporateHeader}
-Date: ${today}
-Employee ID: ${emp.employee_id}
-
-EARLY MORNING SHIFT WORKPLACE SAFETY DECLARATION
-
-Since my shift commences at 03:30 AM IST (aligned to Australian Client Time Zones), I hereby declare and agree to the following workplace safety protocols:
-
-1. COMMUTE PROTOCOL:
-I shall ensure safe travel arrangements during early morning hours and will report any travel deviations or safety incidents directly to the HR Support Bay.
-
-2. WORKPLACE BEHAVIOR:
-I shall comply with all office security, emergency fire escape routes, and surveillance standards enforced in the office bays of Averion Global LLP.
-
-3. EMERGENCIES:
-I confirm that my emergency contact details are fully updated, and I am aware of the fire safety systems installed at Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad.
-
-${signBlocks}
-            `.trim();
+            <div class="doc-title" style="margin-top: 40px;">ANNEXURE B: ASSIGNED CORPORATE ASSET TRACKERS</div>
+            <table class="annexure-table">
+              <thead>
+                <tr>
+                  <th>Asset Category</th>
+                  <th>Asset Tag / Serial Number</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Laptop Asset Tag</td>
+                  <td>${emp.assets_laptops || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>Desktop Asset Tag</td>
+                  <td>${emp.assets_desktops || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>Mobile Device Asset Tag</td>
+                  <td>${emp.assets_mobiles || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>SIM Card Identifier</td>
+                  <td>${emp.assets_sims || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>ID Card / Badge Code</td>
+                  <td>${emp.assets_ids || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>Building Access Card Tag</td>
+                  <td>${emp.assets_access_cards || 'Not Assigned'}</td>
+                </tr>
+                <tr>
+                  <td>Software Licenses Assigned</td>
+                  <td>${emp.assets_licenses || 'Not Assigned'}</td>
+                </tr>
+              </tbody>
+            </table>
+            `;
+            return wrapInHTMLFrame(appointmentContent, 'APT', emp, logoBase64);
 
         default:
-            return "Standard Compliance Agreement";
+            // Fallback for other documents, wrap in HTML frame for consistent styling
+            const title = docType.replace(/_/g, ' ');
+            const dummyContent = `
+            <div class="doc-title">${title}</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            <p>This document details the compliance agreement covenants corresponding to the ${title} policy established by Averion Global LLP.</p>
+            <p>Please review and sign this document to acknowledge compliance.</p>
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(dummyContent, docType.substring(0, 3).toUpperCase(), emp, logoBase64);
     }
 }
 
 // Helper to generate the 5 compliance policy cards (New HTML Template System)
 function compileHRComplianceDoc(docType, emp, policyMeta) {
-    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const today = formatToDDMMYY(new Date());
     
     // Parse salary values
     const gross = parseFloat(emp.base_salary || 0);
@@ -921,38 +980,37 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     'Gratuity_Reimbursement', 'Anti_Poaching_Agreement', 'IT_Asset_Surveillance', 'Shift_Safety_Declaration'
                 ];
 
-                const emp = {
-                    employee_id, full_name, department, designation, base_salary: salary,
-                    probation_period_months: parseInt(probation_period_months, 10) || 3,
-                    notice_period_days: parseInt(notice_period_days, 10) || 45,
-                    annual_leave_quota: parseInt(annual_leave_quota, 10) || 24,
-                    gratuity_eligible: gratEligible, onboarding_date
-                };
+                getFullEmployeeDetails(employee_id, (detailsErr, empDetails) => {
+                    if (detailsErr) {
+                        console.error('Error generating document detail mappings:', detailsErr.message);
+                        return res.json({ success: true, message: 'Onboarding compliance profile saved, but failed to map document parameters.' });
+                    }
 
-                docTypes.forEach(docType => {
-                    const generatedText = generateDocumentText(docType, emp);
-                    
-                    db.get(
-                        `SELECT id, signed_status FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
-                        [employee_id, docType],
-                        (docErr, docRow) => {
-                            if (docErr) console.error('Error fetching document status:', docErr.message);
-                            else if (!docRow) {
-                                db.run(
-                                    `INSERT INTO legal_signed_documents (employee_id, document_type, signed_status, generated_blob_text) VALUES (?, ?, 0, ?)`,
-                                    [employee_id, docType, generatedText]
-                                );
-                            } else if (docRow.signed_status === 0) {
-                                db.run(
-                                    `UPDATE legal_signed_documents SET generated_blob_text = ? WHERE id = ?`,
-                                    [generatedText, docRow.id]
-                                );
+                    docTypes.forEach(docType => {
+                        const generatedText = generateDocumentText(docType, empDetails);
+                        
+                        db.get(
+                            `SELECT id, signed_status FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
+                            [employee_id.toString(), docType],
+                            (docErr, docRow) => {
+                                if (docErr) console.error('Error fetching document status:', docErr.message);
+                                else if (!docRow) {
+                                    db.run(
+                                        `INSERT INTO legal_signed_documents (employee_id, document_type, signed_status, generated_blob_text) VALUES (?, ?, 0, ?)`,
+                                        [employee_id.toString(), docType, generatedText]
+                                    );
+                                } else if (docRow.signed_status === 0) {
+                                    db.run(
+                                        `UPDATE legal_signed_documents SET generated_blob_text = ? WHERE id = ?`,
+                                        [generatedText, docRow.id]
+                                    );
+                                }
                             }
-                        }
-                    );
-                });
+                        );
+                    });
 
-                res.json({ success: true, message: 'Onboarding compliance profile saved and documents generated.' });
+                    res.json({ success: true, message: 'Onboarding compliance profile saved and documents generated.' });
+                });
             }
         );
     });
@@ -1039,7 +1097,7 @@ router.post('/employee/:id/email', requireAuth, (req, res) => {
                     </div>
                 `,
                 attachments: [{
-                    filename: `${document_type}_Agreement.txt`,
+                    filename: `${document_type}_Agreement.html`,
                     content: doc.generated_blob_text || doc.generated_text_payload
                 }]
             };
@@ -1059,122 +1117,65 @@ router.post('/generate-compliance-docs', requireAuth, (req, res) => {
         return res.status(400).json({ error: 'employee_id is required' });
     }
 
-    db.get('SELECT * FROM attendance_workers WHERE id = ?', [employee_id], (workerErr, worker) => {
-        if (workerErr) return res.status(500).json({ error: workerErr.message });
-        if (!worker) return res.status(404).json({ error: 'Worker profile not found.' });
+    getFullEmployeeDetails(employee_id, (detailsErr, empDetails) => {
+        if (detailsErr) return res.status(500).json({ error: detailsErr.message });
 
-        db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [employee_id.toString()], (profileErr, profile) => {
-            if (profileErr) return res.status(500).json({ error: profileErr.message });
+        db.get("SELECT * FROM averion_hr_policies WHERE company_name = 'Averion Global LLP' LIMIT 1", [], (policyErr, policyMeta) => {
+            const docTypes = [
+                'Employment_Agreement',
+                'Mobile_Phone_Policy',
+                'Rest_Breaks_Policy',
+                'Data_Protection_Policy',
+                'Employee_Leave_Guide'
+            ];
 
-            const empDetails = {
-                employee_id: employee_id.toString(),
-                first_name: worker.first_name || 'As per Company Records',
-                last_name: worker.last_name || '',
-                full_name: `${worker.first_name || ''} ${worker.last_name || ''}`.trim() || 'As per Company Records',
-                email: worker.email || 'As per Company Records',
-                phone: worker.phone || worker.phone_number || worker.mobile_number || 'As per Company Records',
-                company_name: worker.company_name || 'Averion Global LLP',
-                job_title: worker.job_title || 'As per Company Records',
-                pan_number: worker.pan_number || 'As per Company Records',
-                aadhaar_number: worker.aadhaar_number || 'As per Company Records',
-                uan_number: worker.uan_number || 'As per Company Records',
-                esic_number: worker.esic_number || 'As per Company Records',
-                bank_account_name: worker.bank_account_name || 'As per Company Records',
-                bank_bsb: worker.bank_bsb || 'As per Company Records',
-                bank_account_number: worker.bank_account_number || 'As per Company Records',
-                bank_account_type: worker.bank_account_type || 'Savings',
+            const documents = [];
+            let completed = 0;
+
+            docTypes.forEach(docType => {
+                const textPayload = compileHRComplianceDoc(docType, empDetails, policyMeta);
                 
-                cl_balance: worker.cl_balance !== undefined && worker.cl_balance !== null ? worker.cl_balance : 'As per Company Records',
-                sl_balance: worker.sl_balance !== undefined && worker.sl_balance !== null ? worker.sl_balance : 'As per Company Records',
-                ml_balance: worker.ml_balance !== undefined && worker.ml_balance !== null ? worker.ml_balance : 'As per Company Records',
-                annual_leave_balance: worker.annual_leave_balance !== undefined && worker.annual_leave_balance !== null ? worker.annual_leave_balance : 'As per Company Records',
-                
-                emergency_name: worker.emergency_name || 'As per Company Records',
-                emergency_phone: worker.emergency_phone || 'As per Company Records',
-                emergency_relationship: worker.emergency_relationship || 'As per Company Records',
-
-                // Profile parameters
-                department: profile ? profile.department : 'Sales',
-                designation: profile ? profile.designation : (worker.job_title || 'Associate'),
-                base_salary: profile ? profile.base_salary : 25000,
-                shift_start_time: profile ? profile.shift_start_time : '03:30 AM',
-                probation_period_months: profile ? profile.probation_period_months : 3,
-                notice_period_days: profile ? profile.notice_period_days : 45,
-                annual_leave_quota: profile ? profile.annual_leave_quota : 24,
-                gratuity_eligible: profile ? profile.gratuity_eligible : 0,
-                incentive_hold_flag: profile ? profile.incentive_hold_flag : 0,
-                onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
-                
-                assets_laptops: profile ? profile.assets_laptops : '',
-                assets_desktops: profile ? profile.assets_desktops : '',
-                assets_mobiles: profile ? profile.assets_mobiles : '',
-                assets_sims: profile ? profile.assets_sims : '',
-                assets_ids: profile ? profile.assets_ids : '',
-                assets_access_cards: profile ? profile.assets_access_cards : '',
-                assets_licenses: profile ? profile.assets_licenses : '',
-                
-                surveillance_consent: profile ? profile.surveillance_consent : 0,
-                biometric_consent: profile ? profile.biometric_consent : 0,
-                hrms_consent: profile ? profile.hrms_consent : 0
-            };
-
-            db.get("SELECT * FROM averion_hr_policies WHERE company_name = 'Averion Global LLP' LIMIT 1", [], (policyErr, policyMeta) => {
-                const docTypes = [
-                    'Employment_Agreement',
-                    'Mobile_Phone_Policy',
-                    'Rest_Breaks_Policy',
-                    'Data_Protection_Policy',
-                    'Employee_Leave_Guide'
-                ];
-
-                const documents = [];
-                let completed = 0;
-
-                docTypes.forEach(docType => {
-                    const textPayload = compileHRComplianceDoc(docType, empDetails, policyMeta);
-                    
-                    db.get(
-                        `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
-                        [employee_id.toString(), docType],
-                        (checkErr, existingDoc) => {
-                            if (!checkErr && existingDoc) {
-                                db.run(
-                                    `UPDATE legal_signed_documents 
-                                     SET generated_text_payload = ?, generated_blob_text = ? 
-                                     WHERE id = ?`,
-                                    [textPayload, textPayload, existingDoc.id],
-                                    (updateErr) => {
-                                        documents.push({
-                                            document_type: docType,
-                                            generated_text_payload: textPayload
-                                        });
-                                        completed++;
-                                        if (completed === docTypes.length) {
-                                            res.json({ success: true, documents });
-                                        }
+                db.get(
+                    `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
+                    [employee_id.toString(), docType],
+                    (checkErr, existingDoc) => {
+                        if (!checkErr && existingDoc) {
+                            db.run(
+                                `UPDATE legal_signed_documents 
+                                 SET generated_text_payload = ?, generated_blob_text = ? 
+                                 WHERE id = ?`,
+                                [textPayload, textPayload, existingDoc.id],
+                                (updateErr) => {
+                                    documents.push({
+                                        document_type: docType,
+                                        generated_text_payload: textPayload
+                                    });
+                                    completed++;
+                                    if (completed === docTypes.length) {
+                                        res.json({ success: true, documents });
                                     }
-                                );
-                            } else {
-                                db.run(
-                                    `INSERT INTO legal_signed_documents 
-                                     (employee_id, document_type, signed_status, generated_text_payload, generated_blob_text) 
-                                     VALUES (?, ?, 0, ?, ?)`,
-                                    [employee_id.toString(), docType, textPayload, textPayload],
-                                    (insertErr) => {
-                                        documents.push({
-                                            document_type: docType,
-                                            generated_text_payload: textPayload
-                                        });
-                                        completed++;
-                                        if (completed === docTypes.length) {
-                                            res.json({ success: true, documents });
-                                        }
+                                }
+                            );
+                        } else {
+                            db.run(
+                                `INSERT INTO legal_signed_documents 
+                                 (employee_id, document_type, signed_status, generated_text_payload, generated_blob_text) 
+                                 VALUES (?, ?, 0, ?, ?)`,
+                                 [employee_id.toString(), docType, textPayload, textPayload],
+                                (insertErr) => {
+                                    documents.push({
+                                        document_type: docType,
+                                        generated_text_payload: textPayload
+                                    });
+                                    completed++;
+                                    if (completed === docTypes.length) {
+                                        res.json({ success: true, documents });
                                     }
-                                );
-                            }
+                                }
+                            );
                         }
-                    );
-                });
+                    }
+                );
             });
         });
     });
