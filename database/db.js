@@ -666,12 +666,76 @@ db.serialize(() => {
         });
     });
 
+    // Run check constraint migration for employee_compliance_profiles
+    db.get("SELECT sql FROM sqlite_master WHERE type='table' AND name='employee_compliance_profiles'", (err, row) => {
+        if (row && row.sql && !row.sql.includes('Permanent')) {
+            console.log('[DB Migration] Migrating employee_compliance_profiles schema to support Indian compliance types...');
+            db.serialize(() => {
+                db.run('PRAGMA foreign_keys = OFF;');
+                db.run('ALTER TABLE employee_compliance_profiles RENAME TO temp_employee_compliance_profiles;', (renameErr) => {
+                    if (renameErr) {
+                        console.error('Error renaming employee_compliance_profiles:', renameErr.message);
+                        db.run('PRAGMA foreign_keys = ON;');
+                        return;
+                    }
+                    db.run(`
+                        CREATE TABLE employee_compliance_profiles (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER UNIQUE,
+                            employment_type TEXT NOT NULL CHECK(employment_type IN ('Full-Time', 'Part-Time', 'Casual', 'Permanent', 'Contractual', 'Probationer', 'Trainee')),
+                            modern_award_name TEXT,
+                            base_hourly_rate REAL NOT NULL,
+                            casual_loading_active INTEGER DEFAULT 0 CHECK(casual_loading_active IN (0, 1)),
+                            tax_file_number TEXT,
+                            tax_scale_code TEXT,
+                            super_fund_name TEXT,
+                            super_usi TEXT,
+                            super_member_number TEXT,
+                            visa_type TEXT,
+                            visa_expiry_date TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY(user_id) REFERENCES attendance_workers(id) ON DELETE CASCADE
+                        )
+                    `, (createErr) => {
+                        if (createErr) {
+                            console.error('Error recreating table employee_compliance_profiles:', createErr.message);
+                            db.run('ALTER TABLE temp_employee_compliance_profiles RENAME TO employee_compliance_profiles;');
+                            db.run('PRAGMA foreign_keys = ON;');
+                            return;
+                        }
+                        
+                        db.run(`
+                            INSERT INTO employee_compliance_profiles (
+                                id, user_id, employment_type, modern_award_name, base_hourly_rate,
+                                casual_loading_active, tax_file_number, tax_scale_code, super_fund_name,
+                                super_usi, super_member_number, visa_type, visa_expiry_date, created_at, updated_at
+                            ) SELECT 
+                                id, user_id, employment_type, modern_award_name, base_hourly_rate,
+                                casual_loading_active, tax_file_number, tax_scale_code, super_fund_name,
+                                super_usi, super_member_number, visa_type, visa_expiry_date, created_at, updated_at
+                            FROM temp_employee_compliance_profiles
+                        `, (insertErr) => {
+                            if (insertErr) {
+                                console.error('Error copying data to employee_compliance_profiles:', insertErr.message);
+                            } else {
+                                console.log('[DB Migration] Data successfully copied to new employee_compliance_profiles table.');
+                                db.run('DROP TABLE temp_employee_compliance_profiles;');
+                            }
+                            db.run('PRAGMA foreign_keys = ON;');
+                        });
+                    });
+                });
+            });
+        }
+    });
+
     // Migrate/Create dependent tables referencing attendance_workers(id) instead of users(id)
     migrateTableToWorkers('employee_compliance_profiles', `
         CREATE TABLE IF NOT EXISTS employee_compliance_profiles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER UNIQUE,
-            employment_type TEXT NOT NULL CHECK(employment_type IN ('Full-Time', 'Part-Time', 'Casual')),
+            employment_type TEXT NOT NULL CHECK(employment_type IN ('Full-Time', 'Part-Time', 'Casual', 'Permanent', 'Contractual', 'Probationer', 'Trainee')),
             modern_award_name TEXT,
             base_hourly_rate REAL NOT NULL,
             casual_loading_active INTEGER DEFAULT 0 CHECK(casual_loading_active IN (0, 1)),
