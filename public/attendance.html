@@ -6227,7 +6227,7 @@ function runComplianceAuditSummary() {
         .then(data => {
             if (data.success) {
                 document.getElementById('auditTotalWorkers').innerHTML = `Active Workers: <strong>${data.total_active_workers}</strong>`;
-                document.getElementById('auditPendingSignatures').innerHTML = `Pending Signatures: <strong>substitutePendingSignatures</strong>`;
+                document.getElementById('auditPendingSignatures').innerHTML = `Pending Signatures: <strong>${data.pending_signatures_count}</strong>`;
             }
         })
         .catch(err => {
@@ -6603,7 +6603,6 @@ function switchCompliancePhase(phaseNum) {
         tab6.style.borderBottomColor = 'transparent';
         tab6.style.color = '#64748b';
     }
-}
 }
 
 // ── PHASE 1: CATEGORY DOCUMENT GENERATION & EMAIL DISPATCH ─────────────────
