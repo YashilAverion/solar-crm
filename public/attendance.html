@@ -5431,7 +5431,6 @@ async function handleBulkExport() {
 
 let empAutocomplete = null;
 function initAutocomplete() {
-    if (empAutocomplete) return;
     const input = document.getElementById('emp_google_address');
     if (!input) return;
 
@@ -5444,13 +5443,22 @@ function initAutocomplete() {
     
     if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
     
+    const companySelect = document.getElementById('emp_company_name');
+    const company = companySelect ? companySelect.value : '';
+    const countryLimit = company === 'Averion Global LLP' ? 'in' : 'au';
+    
+    if (empAutocomplete) {
+        empAutocomplete.setComponentRestrictions({ country: countryLimit });
+        return;
+    }
+    
     input.addEventListener('keydown', function(e) { 
         if (e.key === 'Enter') e.preventDefault(); 
     });
     
     empAutocomplete = new google.maps.places.Autocomplete(input, {
         types: ['address'],
-        componentRestrictions: { country: 'au' }
+        componentRestrictions: { country: countryLimit }
     });
 
     empAutocomplete.addListener('place_changed', function() {
@@ -5753,6 +5761,54 @@ function syncIndianCtcSummary(updateTotalInput = false) {
     }
 }
 
+function showComplianceDocGenerator() {
+    const editId = document.getElementById('emp_edit_id').value;
+    if (!editId) return;
+    const emp = allXeroEmployees.find(u => u.id == editId);
+    if (!emp) return;
+    
+    Swal.fire({
+        title: 'Indian Compliance HR Documents',
+        text: 'Select a document to generate and print / save as PDF for ' + emp.first_name + ' ' + emp.last_name + ':',
+        input: 'select',
+        inputOptions: {
+            'offer_letter': 'Employment Agreement (Offer Letter & Salary CTC)',
+            'phone_policy': 'Mobile Device & Office Phone Use Policy',
+            'break_policy': 'Rest Breaks & Work Scheduling Policy',
+            'data_theft': 'Data Protection & Confidentiality Policy (Strict Penalties)',
+            'leave_policy': 'Employee Leave Entitlement & Rules Guide',
+            'package': 'Combined Full Compliance Onboarding Package (All-in-one)'
+        },
+        inputPlaceholder: 'Select document template...',
+        showCancelButton: true,
+        confirmButtonText: 'Generate 📄',
+        confirmButtonColor: '#0078C1',
+        cancelButtonText: 'Close',
+        inputValidator: (value) => {
+            return new Promise((resolve) => {
+                if (value) {
+                    resolve();
+                } else {
+                    resolve('You need to select a document template!');
+                }
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const docType = result.value;
+            const htmlContent = getComplianceDocHTML(docType, emp);
+            
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                printWin.document.write(htmlContent);
+                printWin.document.close();
+            } else {
+                Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site to generate documents.', 'warning');
+            }
+        }
+    });
+}
+
 const HOLIDAY_DEFAULTS = {
     'Gujarat Public Holidays': [
         { date: '14-01-2026', name: "Uttarayan (Makar Sankranti)" },
@@ -5952,6 +6008,19 @@ function syncTaxFieldsByCompany() {
     if (!compSelect) return;
     const company = compSelect.value;
     
+    // Dynamically update Google Address search country restriction
+    initAutocomplete();
+    
+    const editId = document.getElementById('emp_edit_id').value;
+    const genBtn = document.getElementById('emp_generate_docs_btn');
+    if (genBtn) {
+        if (company === 'Averion Global LLP' && editId) {
+            genBtn.style.display = 'block';
+        } else {
+            genBtn.style.display = 'none';
+        }
+    }
+    
     const ausTax = document.getElementById('aus-tax-fields');
     const indTax = document.getElementById('ind-tax-fields');
     
@@ -6088,7 +6157,13 @@ function openEmployeeModal(editId = null) {
         titleEl.textContent = 'Edit Employee Details';
         deleteBtn.style.display = 'block';
         
+        const genBtn = document.getElementById('emp_generate_docs_btn');
+        if (genBtn) genBtn.style.display = 'none'; // Will be set to block below if Averion
+        
         const u = allXeroEmployees.find(emp => emp.id == editId);
+        if (u && genBtn && u.company_name === 'Averion Global LLP') {
+            genBtn.style.display = 'block';
+        }
         if (u) {
             document.getElementById('emp_title').value = u.title || '';
             document.getElementById('emp_first_name').value = u.first_name || '';
@@ -6220,6 +6295,8 @@ function openEmployeeModal(editId = null) {
     } else {
         titleEl.textContent = 'Add New Employee/Worker';
         deleteBtn.style.display = 'none';
+        const genBtn = document.getElementById('emp_generate_docs_btn');
+        if (genBtn) genBtn.style.display = 'none';
         
         // Set new entry defaults
         document.getElementById('emp_role').value = 'Worker';
@@ -7774,6 +7851,7 @@ function updateSelectedWeeksOrFortnights() {
             
             <div class="bottom-actions">
                 <button type="button" id="emp_delete_btn" onclick="deleteEmployeeFromModal()" style="display: none; height: 34px; padding: 0 16px; background: #ef4444; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; transition: all 0.2s; margin-right: auto;">Delete Worker</button>
+                <button type="button" id="emp_generate_docs_btn" onclick="showComplianceDocGenerator()" style="display: none; height: 34px; padding: 0 16px; background: #0078C1; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; transition: all 0.2s; margin-right: 12px;">📄 Generate Documents</button>
                 <button type="button" class="btn-reset" onclick="closeEmployeeModal()">Cancel</button>
                 <button type="submit" class="btn-save">Save</button>
             </div>
@@ -7815,6 +7893,7 @@ function updateSelectedWeeksOrFortnights() {
     </div>
 </div>
 
+    <script src="/compliance-docs-template.js"></script>
     <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>
     <script src="/responsive.js"></script>
