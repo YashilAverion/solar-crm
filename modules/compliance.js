@@ -2848,6 +2848,173 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+        // ── PHASE 5: SALES PERFORMANCE & OPERATIONS KIT ────────────────────
+        case 'Phase5_Sales_Incentive_Policy':
+        case 'Sales_Incentive_Policy': {
+            const minSalary = 15000;
+            const maxSalary = 60000;
+            const incentiveHoldCount = emp.incentive_hold_count || 0;
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/SIP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Target-Based Sales Incentive Policy</div>
+            <p>This Policy establishes the performance-based variable incentive structure and compensation compliance rules at <strong>Averion Global LLP</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Target Achievement & Variable Incentive Hold</h3>
+            <ul>
+                <li>The Employee's performance is measured against monthly sales targets and key milestones.</li>
+                <li><strong>Incentive Validation Hold:</strong> In the event that the Employee fails to achieve the designated sales milestones or target slabs for any given appraisal cycle, the Company reserves the absolute right to trigger a strict validation hold on all variable incentives.</li>
+                <li>Incentives held under validation may be released or forfeited based on subsequent performance or management discretion. Current incentive hold counts registered: <strong>${incentiveHoldCount}</strong>.</li>
+            </ul>
+
+            <h3>2. Baseline Salary Protection</h3>
+            <ul>
+                <li>The Company explicitly reinforces that the Employee's baseline salary remains completely untouched and protected under all circumstances.</li>
+                <li><strong>Salary Range:</strong> The baseline salary for this performance category is established within the <strong>Rs 15,000 to Rs 60,000</strong> range, depending on role and designation. The Employee's current base salary scale is <strong>Rs {(parseFloat(emp.base_salary) || 25000).toLocaleString('en-IN')}</strong>.</li>
+                <li>No performance target deficit, milestone failure, or operational hold shall result in any deduction or penalty applied to the Employee's baseline salary scale.</li>
+            </ul>
+
+            <h3>3. Dispute Resolution & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Any dispute arising from the calculation of sales targets, incentive payouts, or performance hold counts shall be resolved exclusively within the jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase5_Sales_Commission_Policy':
+        case 'Sales_Commission_Policy': {
+            const commSlab = parseFloat(emp.commission_slab_percentage || 0.0);
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/SCP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Sales Commission Slab Policy</div>
+            <p>This Policy details the sales commission percentages, disbursement schedules, and audit requirements at <strong>Averion Global LLP</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Commission Slab & Percentages</h3>
+            <ul>
+                <li><strong>Commission Percentage:</strong> The Employee's assigned sales commission slab has been fixed at <strong>${commSlab}%</strong> of the net realization value per completed sale.</li>
+                <li>Commission slabs are subject to regular performance audits and may be adjusted based on quarterly achievement quotas.</li>
+            </ul>
+
+            <h3>2. Payout Realization & Timelines</h3>
+            <ul>
+                <li>Commissions are calculated only upon complete realization of client payments (i.e. funds received by the Company) and successful project sign-off.</li>
+                <li>Realized commissions are processed and disbursed on the 10th of the subsequent calendar month following the realization cycle.</li>
+            </ul>
+
+            <h3>3. Governing Law & Jurisdiction</h3>
+            <ul>
+                <li>This policy is governed by the laws of India. All disputes regarding commission calculations and payouts shall be subject strictly to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase5_KRA_Document':
+        case 'KRA_Document': {
+            const role = emp.designation || 'Sales Executive';
+            let kraItems = '';
+            
+            if (role.toLowerCase().includes('manager')) {
+                kraItems = `
+                <li><strong>Team Performance (40%):</strong> Manage, train, and guide the sales team to meet or exceed monthly sales goals.</li>
+                <li><strong>Operational Governance (30%):</strong> Supervise timezone adherence and VoIP call quality checks for the early morning shift beginning at <strong>${shiftStart} IST</strong>.</li>
+                <li><strong>Lead Conversion & Strategy (30%):</strong> Optimize lead lists and lead-to-client conversion ratios.</li>`;
+            } else if (role.toLowerCase().includes('executive')) {
+                kraItems = `
+                <li><strong>Sales & Leads (50%):</strong> Outreach to prospective clients and convert leads into solar customers.</li>
+                <li><strong>Timezone Adherence (30%):</strong> Log in punctually for the early morning shift starting at <strong>${shiftStart} IST</strong> to align with Australian timezone client schedules.</li>
+                <li><strong>CRM Hygiene (20%):</strong> Maintain clean, detailed notes and status tracking inside the CRM.</li>`;
+            } else {
+                kraItems = `
+                <li><strong>Operations Support (40%):</strong> Assist team operations, CRM maintenance, and coordination of solar lead sheets.</li>
+                <li><strong>Timezone & Punctuality (40%):</strong> Strict compliance with early morning shift timings starting at <strong>${shiftStart} IST</strong>.</li>
+                <li><strong>Compliance Adherence (20%):</strong> Adhere to data safety, mobile phone policy, and rest break logs.</li>`;
+            }
+
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/KRA/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
+                <strong>Date of Issue:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Key Result Areas (KRA) Document</div>
+            <p>This Key Result Areas (KRA) Document establishes the specific operational benchmarks and performance parameters at <strong>Averion Global LLP</strong> for <strong>substituteFullName</strong> in the capacity of <strong>${role}</strong>.</p>
+
+            <h3>1. Specific Operational Benchmarks</h3>
+            <ul>
+                ${kraItems}
+            </ul>
+
+            <h3>2. Early Morning Shift Adherence</h3>
+            <ul>
+                <li>The Employee's role requires strict coordination with Australian client timezone parameters.</li>
+                <li>The operational shift commences early morning at <strong>${shiftStart} IST</strong>. Punctual shift login is a critical performance indicator. Cumulative delays in login will result in KRA rating deductions and validation holds on performance incentives.</li>
+            </ul>
+
+            <h3>3. Dispute Resolution & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Any dispute arising from performance evaluations, KRA audits, or rating appeals shall be resolved exclusively within the jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase5_Sales_Target_Letter':
+        case 'Sales_Target_Letter': {
+            const targetAmount = parseFloat(emp.sales_target_amount || 0.0);
+            const fmtTarget = targetAmount > 0 
+                ? targetAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
+                : 'As per Company Sales Matrix';
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/STL/substituteEmployeeId<br>
+                <strong>Category:</strong> Phase 5 — Sales Performance & Operations Kit<br>
+                <strong>Date of Issue:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Official Sales Target Letter</div>
+            <p>Dear Mr./Ms. <strong>substituteFullName</strong>,</p>
+            <p>This letter formally assigns your sales targets and performance quotas at <strong>Averion Global LLP</strong> for the current appraisal cycle.</p>
+
+            <h3>1. Target Allocation</h3>
+            <ul>
+                <li>Your sales target amount for the cycle has been fixed at <strong>${fmtTarget}</strong> of net realized value.</li>
+                <li>Targets must be achieved within the standard operational guidelines and are evaluated monthly.</li>
+            </ul>
+
+            <h3>2. Timezone & Early Morning Shift Adherence</h3>
+            <ul>
+                <li>To effectively outreach leads and service Australian client timezone parameters, your shift starts early morning at <strong>${shiftStart} IST</strong>.</li>
+                <li>Consistent shift attendance and timing adherence are essential for achieving these targets.</li>
+            </ul>
+
+            <h3>3. Governing Law & Jurisdiction</h3>
+            <ul>
+                <li>All targets, performance holds, and incentives are subject to company policies. Any legal disputes shall be subject strictly to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
             innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
             break;
@@ -2887,7 +3054,9 @@ router.post('/generate-phase-docs', requireAuth, (req, res) => {
                                 'Category_B', 'Category_A', 'Category_H', 'Category_C', 'Category_F_L',
                                 'Phase2_Offer_Letter', 'Phase2_Appointment_Letter', 'Phase2_Employment_Agreement', 'Phase2_Internship_Contract',
                                 'Phase3_Mobile_Phone_Policy', 'Phase3_Rest_Breaks_Policy', 'Phase3_Data_Protection_Policy',
-                                'Phase4_Employee_Leave_Guide', 'Phase4_Exit_Interview_Form'
+                                'Phase4_Employee_Leave_Guide', 'Phase4_Exit_Interview_Form',
+                                'Phase5_Sales_Incentive_Policy', 'Phase5_Sales_Commission_Policy', 'Phase5_KRA_Document', 'Phase5_Sales_Target_Letter',
+                                'Sales_Incentive_Policy', 'Sales_Commission_Policy', 'KRA_Document', 'Sales_Target_Letter'
                             ];
                             docs.sort((a, b) => {
                                 return logicalOrder.indexOf(a.document_type) - logicalOrder.indexOf(b.document_type);
@@ -3001,6 +3170,10 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
                 else if (document_type === 'Phase4_Employee_Leave_Guide' || document_type === 'Employee_Leave_Guide') docTitle = 'Employee Leave Guide';
                 else if (document_type === 'Phase4_Exit_Interview_Form' || document_type === 'Exit_Interview_Form') docTitle = 'Exit Interview Form';
                 else if (document_type === 'Phase4_Combined_Onboarding_Package' || document_type === 'Combined_Onboarding_Package') docTitle = 'Combined Onboarding Package';
+                else if (document_type === 'Phase5_Sales_Incentive_Policy' || document_type === 'Sales_Incentive_Policy') docTitle = 'Sales Incentive Policy';
+                else if (document_type === 'Phase5_Sales_Commission_Policy' || document_type === 'Sales_Commission_Policy') docTitle = 'Sales Commission Policy';
+                else if (document_type === 'Phase5_KRA_Document' || document_type === 'KRA_Document') docTitle = 'KRA Document';
+                else if (document_type === 'Phase5_Sales_Target_Letter' || document_type === 'Sales_Target_Letter') docTitle = 'Sales Target Letter';
 
                 const mailOptions = {
                     from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,

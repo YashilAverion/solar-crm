@@ -1440,6 +1440,20 @@ db.serialize(() => {
         });
     });
 
+    // Phase 5: Sales Performance & Operations Kit
+    const phase5ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN sales_target_amount REAL DEFAULT 0.0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN commission_slab_percentage REAL DEFAULT 0.0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN kra_signoff_status INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN incentive_hold_count INTEGER DEFAULT 0"
+    ];
+
+    phase5ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;
