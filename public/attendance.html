@@ -4187,8 +4187,20 @@ function switchTsSheetCompany(companyName) {
 
 function updateTsSheetCompanyTabs(userId) {
     const user = (window.allWorkers || []).find(u => u.id == userId);
-    const company = user ? (user.company_name || 'Ares Energy') : 'Ares Energy';
+    let company = user ? (user.company_name || 'Ares Energy') : 'Ares Energy';
+    if (activeTsCompanyFilter === 'Averion Global LLP') {
+        company = 'Averion Global LLP';
+    }
     activeTsSheetCompanyFilter = company;
+    
+    const tsSheetTabs = document.getElementById('tsSheetCompanyTabs');
+    if (tsSheetTabs) {
+        if (activeTsCompanyFilter === 'Averion Global LLP') {
+            tsSheetTabs.style.display = 'none';
+        } else {
+            tsSheetTabs.style.display = 'flex';
+        }
+    }
     
     document.querySelectorAll('#tsSheetCompanyTabs .company-tab-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -4196,7 +4208,7 @@ function updateTsSheetCompanyTabs(userId) {
     if (company === 'Ares Energy') {
         const tab = document.getElementById('tsSheetCompanyTabAres');
         if (tab) tab.classList.add('active');
-    } else {
+    } else if (company === "Gill's Electrical") {
         const tab = document.getElementById('tsSheetCompanyTabGills');
         if (tab) tab.classList.add('active');
     }
@@ -4242,6 +4254,18 @@ function openAddTimesheetModal() {
     syncMonthYearFromDateFilters();
 
     activeTsSheetCompanyFilter = activeTsCompanyFilter;
+    if (activeTsCompanyFilter !== 'Averion Global LLP' && activeTsSheetCompanyFilter !== 'Ares Energy' && activeTsSheetCompanyFilter !== "Gill's Electrical") {
+        activeTsSheetCompanyFilter = 'Ares Energy';
+    }
+    
+    const tsSheetTabs = document.getElementById('tsSheetCompanyTabs');
+    if (tsSheetTabs) {
+        if (activeTsCompanyFilter === 'Averion Global LLP') {
+            tsSheetTabs.style.display = 'none';
+        } else {
+            tsSheetTabs.style.display = 'flex';
+        }
+    }
     
     document.querySelectorAll('#tsSheetCompanyTabs .company-tab-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -4249,7 +4273,7 @@ function openAddTimesheetModal() {
     if (activeTsSheetCompanyFilter === 'Ares Energy') {
         const tab = document.getElementById('tsSheetCompanyTabAres');
         if (tab) tab.classList.add('active');
-    } else {
+    } else if (activeTsSheetCompanyFilter === "Gill's Electrical") {
         const tab = document.getElementById('tsSheetCompanyTabGills');
         if (tab) tab.classList.add('active');
     }
