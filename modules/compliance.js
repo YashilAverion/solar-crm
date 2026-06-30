@@ -1294,6 +1294,7 @@ router.post('/generate-compliance-docs', requireAuth, (req, res) => {
 
         db.get("SELECT * FROM averion_hr_policies WHERE company_name = 'Averion Global LLP' LIMIT 1", [], (policyErr, policyMeta) => {
             const docTypes = [
+                'Appointment_Letter',
                 'Employment_Agreement',
                 'Mobile_Phone_Policy',
                 'Rest_Breaks_Policy',

@@ -5797,6 +5797,12 @@ function autoBifurcateIndianSalary(val) {
     document.getElementById('emp_hra').value = hra;
     document.getElementById('emp_special_allowance').value = special;
     
+    const compBase = document.getElementById('emp_compliance_base_salary');
+    if (compBase) {
+        compBase.value = val;
+        if (typeof validateComplianceStipend === 'function') validateComplianceStipend();
+    }
+    
     syncIndianCtcSummary(false);
 }
 
@@ -5814,6 +5820,11 @@ function syncIndianCtcSummary(updateTotalInput = false) {
         if (totalInput) {
             totalInput.value = total > 0 ? total : '';
         }
+    }
+    const compBase = document.getElementById('emp_compliance_base_salary');
+    if (compBase) {
+        compBase.value = total > 0 ? total : '';
+        if (typeof validateComplianceStipend === 'function') validateComplianceStipend();
     }
 }
 
@@ -6002,6 +6013,21 @@ function validateComplianceStipend() {
     const salaryVal = parseFloat(document.getElementById('emp_compliance_base_salary').value) || 0;
     const isIntern = designation.includes('intern');
     
+    const totalInput = document.getElementById('emp_total_salary_input');
+    if (totalInput && parseFloat(totalInput.value) !== salaryVal) {
+        totalInput.value = salaryVal > 0 ? salaryVal : '';
+        const basic = Math.round(salaryVal * 0.5);
+        const hra = Math.round(salaryVal * 0.2);
+        const special = salaryVal - (basic + hra);
+        document.getElementById('emp_basic_salary').value = salaryVal > 0 ? basic : '0';
+        document.getElementById('emp_hra').value = salaryVal > 0 ? hra : '0';
+        document.getElementById('emp_special_allowance').value = salaryVal > 0 ? special : '0';
+        const summaryVal = document.getElementById('indian_ctc_summary_val');
+        if (summaryVal) {
+            summaryVal.textContent = '₹' + salaryVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+        }
+    }
+    
     if (isIntern) {
         document.getElementById('emp_compliance_probation').value = 6;
         if (salaryVal < 15000 || salaryVal > 25000) {
@@ -6080,17 +6106,53 @@ function showComplianceDocGenerator() {
 
     Swal.fire({
         title: 'Compiling Compliance Docs...',
-        text: 'Generating statutory agreements from database policy guidelines...',
+        text: 'Saving compliance profile and generating documents...',
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
         }
     });
 
-    fetch('/api/hr/generate-compliance-docs', {
+    const payload = {
+        employee_id: editId.toString(),
+        full_name: document.getElementById('emp_first_name').value.trim() + ' ' + document.getElementById('emp_last_name').value.trim(),
+        department: document.getElementById('emp_compliance_department').value,
+        designation: document.getElementById('emp_compliance_designation').value.trim() || 'Associate',
+        base_salary: parseFloat(document.getElementById('emp_compliance_base_salary').value) || 0,
+        shift_start_time: document.getElementById('emp_compliance_shift_start').value,
+        probation_period_months: parseInt(document.getElementById('emp_compliance_probation').value, 10) || 3,
+        notice_period_days: parseInt(document.getElementById('emp_compliance_notice').value, 10) || 45,
+        annual_leave_quota: parseInt(document.getElementById('emp_compliance_leaves').value, 10) || 24,
+        gratuity_eligible: document.getElementById('emp_compliance_gratuity').checked ? 1 : 0,
+        incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
+        onboarding_date: document.getElementById('emp_compliance_onboarding_date').value,
+        assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
+        assets_desktops: document.getElementById('emp_compliance_asset_desktop').value.trim(),
+        assets_mobiles: document.getElementById('emp_compliance_asset_mobile').value.trim(),
+        assets_sims: document.getElementById('emp_compliance_asset_sim').value.trim(),
+        assets_ids: document.getElementById('emp_compliance_asset_id').value.trim(),
+        assets_access_cards: document.getElementById('emp_compliance_asset_access').value.trim(),
+        assets_licenses: document.getElementById('emp_compliance_asset_licenses').value.trim(),
+        surveillance_consent: document.getElementById('emp_compliance_consent_surv').checked ? 1 : 0,
+        biometric_consent: document.getElementById('emp_compliance_consent_bio').checked ? 1 : 0,
+        hrms_consent: document.getElementById('emp_compliance_consent_hrms').checked ? 1 : 0
+    };
+
+    fetch('/api/compliance/onboard-employee', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employee_id: editId })
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(saveData => {
+        if (saveData.error) {
+            throw new Error(saveData.error);
+        }
+        return fetch('/api/hr/generate-compliance-docs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ employee_id: editId })
+        });
     })
     .then(res => res.json())
     .then(data => {
@@ -6293,6 +6355,7 @@ function actionComplianceDoc(docType, action) {
     if (!emp) return;
 
     const docTypeMapping = {
+        'appointment_letter': 'Appointment_Letter',
         'offer_letter': 'Employment_Agreement',
         'phone_policy': 'Mobile_Phone_Policy',
         'break_policy': 'Rest_Breaks_Policy',
@@ -6304,6 +6367,7 @@ function actionComplianceDoc(docType, action) {
         let printContent = '';
         if (docType === 'package') {
             const sortedDocs = [
+                'Appointment_Letter',
                 'Employment_Agreement',
                 'Mobile_Phone_Policy',
                 'Rest_Breaks_Policy',
@@ -8699,6 +8763,21 @@ function updateSelectedWeeksOrFortnights() {
         
         <!-- Modal Body (Grid of Cards) -->
         <div style="padding: 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; overflow-y: auto; max-height: 480px; box-sizing: border-box; background: #f1f5f9;">
+            <!-- Card 0: Appointment Letter -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span style="font-size: 20px;">✉️</span>
+                        <strong style="font-size: 13px; color: #0f172a;">Appointment Letter</strong>
+                    </div>
+                    <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748b; line-height: 1.4;">Official corporate Appointment Letter detailing joining parameters, designation, shift timings, and monthly CTC bifurcation.</p>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto;">
+                    <button type="button" onclick="actionComplianceDoc('appointment_letter', 'preview')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
+                    <button type="button" onclick="actionComplianceDoc('appointment_letter', 'email')" style="flex: 1; height: 32px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+            
             <!-- Card 1 -->
             <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
