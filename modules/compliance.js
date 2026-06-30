@@ -323,7 +323,7 @@ function generateDocumentText(docType, emp) {
     `;
 
     switch(docType) {
-        case 'Appointment_Letter':
+        case 'Appointment_Letter': {
             const isIntern = (emp.designation || '').toLowerCase().includes('intern');
             const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
             const noticeDays = emp.notice_period_days || 45;
@@ -481,9 +481,176 @@ function generateDocumentText(docType, emp) {
             </table>
             `;
             return wrapInHTMLFrame(appointmentContent, 'APT', emp, logoBase64);
+        }
+
+        case 'NDA_IP_Assignment': {
+            const ndaContent = `
+            <div class="doc-title">Non-Disclosure and Intellectual Property Assignment Agreement</div>
+            <p><strong>Date of Execution:</strong> ${today}</p>
+            <p><strong>Between:</strong> Averion Global LLP ("Company") and Mr./Ms. <strong>${emp.full_name}</strong> ("Employee").</p>
+            
+            <h3>1. Purpose & Scope</h3>
+            <p>The Company engages the Employee in a highly confidential capacity. In the course of duties, the Employee will have access to corporate databases, solar client leads, CRM records, proprietary proposal templates, and layout optimization algorithms.</p>
+            
+            <h3>2. Definitions of Proprietary Information</h3>
+            <p>Proprietary Information includes all client identifiers, solar yield models, marketing pitches, lead sheets, pricing frameworks, and digital credentials. It also covers codes and design structures generated during employment.</p>
+            
+            <h3>3. Strict Non-Disclosure & Security Obligations</h3>
+            <p>The Employee shall maintain absolute confidentiality and protect all corporate assets. The Employee is strictly prohibited from exporting, screenshotting, transferring, or duplicating database files. Any breach constitutes a material violation under Section 43 of the Information Technology Act 2000.</p>
+            
+            <h3>4. Intellectual Property Assignment</h3>
+            <p>The Employee hereby assigns and transfers exclusively to the Company all rights, titles, and global interests (including copyright, trademark, and patent rights) in all software tools, scripts, layout proposal templates, and marketing processes created during work shifts.</p>
+            
+            <h3>5. Term & Survival</h3>
+            <p>The obligations of confidentiality, non-disclosure, and intellectual property assignment shall survive indefinitely post separation of employment.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(ndaContent, 'NDA', emp, logoBase64);
+        }
+
+        case 'HR_Policy_Manual': {
+            const hrManualContent = `
+            <div class="doc-title">HR Policy Manual & Conduct Regulations</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Professional Code of Conduct</h3>
+            <p>All employees of Averion Global LLP must operate with the highest standards of integrity, respect, and professionalism. Communication with clients and team members must remain respectful at all times.</p>
+            
+            <h3>2. Timings & Shift Attendance</h3>
+            <p>Standard operations commence strictly at 03:30 AM IST. Nine (9) hours constitute a daily shift. Mandatory biometric punch tracking is integrated. Repeated tardiness will lead to warning logs and disciplinary review.</p>
+            
+            <h3>3. Anti-Harassment & POSH Compliance</h3>
+            <p>The Company maintains a strictly zero-tolerance policy against sexual harassment. The Internal Complaints Committee (ICC) is fully functional under the POSH Act 2013 to address and resolve any complaints securely.</p>
+            
+            <h3>4. Leaves and Public Holidays</h3>
+            <p>Entitled to a basic quota of 24 days annual leaves. Holiday scheduling follows the Australian Time Zone operational groups. Leave approvals require a minimum of 7 days prior notification.</p>
+            
+            <h3>5. Disciplinary Process & Separation</h3>
+            <p>Standard procedures involve a verbal warning, written warning, suspension, and termination. The Company reserves the right to execute immediate termination for cause (such as data theft, dual employment, or breach of confidentiality).</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(hrManualContent, 'HRM', emp, logoBase64);
+        }
+
+        case 'Moonlighting_Covenant': {
+            const moonlightingContent = `
+            <div class="doc-title">Exclusivity and Non-Moonlighting Covenant</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Covenant of Exclusivity</h3>
+            <p>The Employee shall devote their whole time, attention, and professional capabilities exclusively to the business and operations of Averion Global LLP during their employment contract.</p>
+            
+            <h3>2. Comprehensive Moonlighting Restriction</h3>
+            <p>The Employee is strictly prohibited from engaging directly or indirectly in any dual employment, freelance tasks, external advisory services, contracting work, or independent business ventures (paid or unpaid) without the explicit, written approval of the Company's Board.</p>
+            
+            <h3>3. Non-Conflict of Interest</h3>
+            <p>The Employee shall not engage in any activity that conflicts with the interests of the Company, including private solar proposal layout designing, sales lead brokering, or competitor consulting.</p>
+            
+            <h3>4. Penal Actions & Remedies</h3>
+            <p>Violation of the exclusivity covenant will result in immediate termination for cause, forfeiture of pending bonuses/stipends, and civil recovery of double the gross compensation paid during the period of violation.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(moonlightingContent, 'EXC', emp, logoBase64);
+        }
+
+        case 'Gratuity_Reimbursement': {
+            const gratuityContent = `
+            <div class="doc-title">Gratuity and Statutory Reimbursements Declaration</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Gratuity Entitlement Covenants</h3>
+            <p>Statutory gratuity benefits are administered in strict accordance with the Payment of Gratuity Act 1972. Eligibility for gratuity payments requires completion of a minimum of five (5) consecutive years of continuous active service with the Company.</p>
+            
+            <h3>2. Remuneration Deductions</h3>
+            <p>The gross salary is subject to statutory withholdings including Professional Tax, Provident Fund (PF) contribution, and Employee State Insurance (ESIC) where applicable under Indian labor codes.</p>
+            
+            <h3>3. Expense Reimbursement Rules</h3>
+            <p>All business-related expenses (including approved client communication costs, travel, and mobile internet allowances) are reimbursable only upon submission of valid tax invoices and approval within 30 days of expense occurrence.</p>
+            
+            <h3>4. Final Settlements</h3>
+            <p>Final settlement payouts, statutory bonus distributions, and leave encashment calculations will be completed within 30 days of the Employee completing the exit clearance procedure.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(gratuityContent, 'GRT', emp, logoBase64);
+        }
+
+        case 'Anti_Poaching_Agreement': {
+            const antiPoachingContent = `
+            <div class="doc-title">Non-Solicitation and Anti-Poaching Agreement</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Non-Solicitation of Clients</h3>
+            <p>The Employee covenants that during employment and for a period of twenty-four (24) months post separation, they shall not solicit, contact, or service any client or lead of Averion Global LLP for personal profit or on behalf of any other entity.</p>
+            
+            <h3>2. Non-Solicitation of Employees & Contractors</h3>
+            <p>The Employee agrees not to solicit, induce, recruit, or attempt to hire any employee, developer, or contractor of Averion Global LLP to join any competitor, freelance network, or partner business.</p>
+            
+            <h3>3. Protection of Business Goodwill</h3>
+            <p>The restrictions are agreed to be reasonable and necessary to protect the Company's proprietary market leads, solar proposal layouts, and business goodwill.</p>
+            
+            <h3>4. Injunctive Relief and Damages</h3>
+            <p>Any breach of these covenants will cause irreparable harm, entitling the Company to seek immediate injunctive relief and liquidated damages from competent courts in Ahmedabad.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(antiPoachingContent, 'ANS', emp, logoBase64);
+        }
+
+        case 'IT_Asset_Surveillance': {
+            const surveillanceContent = `
+            <div class="doc-title">IT Asset Security and Workstation Surveillance Policy</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Ownership of Assets</h3>
+            <p>All hardware systems (laptops, desktops, monitors, SIM cards, building access cards) assigned to the Employee remain the sole property of Averion Global LLP. Detailed asset tags are listed in Annexure B of the appointment contract.</p>
+            
+            <h3>2. Remote Monitoring Consent</h3>
+            <p>The Employee consents to active remote monitoring of the assigned workstation. This includes keystroke tracking, periodic screenshots, active VPN logging, browser history tracking, and remote desktop access reviews.</p>
+            
+            <h3>3. Data Export Prohibitions</h3>
+            <p>No corporate data, customer details, lead lists, or software tools may be copied or transferred. Screen sharing via unapproved software (e.g. AnyDesk, TeamViewer) is strictly prohibited.</p>
+            
+            <h3>4. Penal Obligations</h3>
+            <p>Asset damage or data theft will result in recovery of financial damages, immediate suspension, and legal prosecution under the Information Technology Act 2000.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(surveillanceContent, 'ITS', emp, logoBase64);
+        }
+
+        case 'Shift_Safety_Declaration': {
+            const shiftSafetyContent = `
+            <div class="doc-title">Early Morning Shift Operations & Safety Declaration</div>
+            <p><strong>Date:</strong> ${today}</p>
+            <p><strong>Employee Name:</strong> ${emp.full_name}</p>
+            
+            <h3>1. Shift Schedule & Timezone Alignment</h3>
+            <p>Operations are aligned to the Australian Time Zone, requiring a startup strictly at 03:30 AM IST. Total shift duration is nine (9) hours. Attendance and system readiness by 03:30 AM IST is mandatory.</p>
+            
+            <h3>2. Early Morning Safety Protocols</h3>
+            <p>The Company operates active secure physical entry. Employees traveling during early morning hours must prioritize safe travel paths, share live location tracking with family/supervisors, and follow corporate safety directives.</p>
+            
+            <h3>3. Absences & Call-Out Routine</h3>
+            <p>If an employee cannot report for the shift due to an emergency, they must notify the operations manager/HR via SMS or dashboard call-out before 03:00 AM IST.</p>
+            
+            <h3>4. Verification of Covenants</h3>
+            <p>The Employee declares they have verified their commuting paths and confirm they are fully capable of reporting for duty at 03:30 AM IST daily without exceptions.</p>
+            
+            ${signHtml}
+            `;
+            return wrapInHTMLFrame(shiftSafetyContent, 'SFT', emp, logoBase64);
+        }
 
         default:
-            // Fallback for other documents, wrap in HTML frame for consistent styling
             const title = docType.replace(/_/g, ' ');
             const dummyContent = `
             <div class="doc-title">${title}</div>
@@ -540,7 +707,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
     let innerContent = '';
 
     switch(docType) {
-        case 'Employment_Agreement':
+        case 'Employment_Agreement': {
             const isIntern = (emp.designation || '').toLowerCase().includes('intern');
             const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
             const noticeDays = emp.notice_period_days || 45;
@@ -725,8 +892,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             </table>
             `;
             break;
+        }
 
-        case 'Mobile_Phone_Policy':
+        case 'Mobile_Phone_Policy': {
             innerContent = `
             <div class="doc-title">Mobile Device & Workstation Surveillance Policy</div>
             <p><strong>Date:</strong> ${today}</p>
@@ -758,8 +926,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             ${signHtml}
             `;
             break;
+        }
 
-        case 'Rest_Breaks_Policy':
+        case 'Rest_Breaks_Policy': {
             innerContent = `
             <div class="doc-title">Rest Breaks & Timesheet Punching Compliance</div>
             <p><strong>Date:</strong> ${today}</p>
@@ -811,8 +980,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             ${signHtml}
             `;
             break;
+        }
 
-        case 'Data_Protection_Policy':
+        case 'Data_Protection_Policy': {
             innerContent = `
             <div class="doc-title">Data Protection & NDA Policy</div>
             <p><strong>Date:</strong> ${today}</p>
@@ -837,8 +1007,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             ${signHtml}
             `;
             break;
+        }
 
-        case 'Employee_Leave_Guide':
+        case 'Employee_Leave_Guide': {
             innerContent = `
             <div class="doc-title">Employee Leave Entitlements Guide & Compliance</div>
             <p><strong>Date:</strong> ${today}</p>
@@ -886,6 +1057,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             ${signHtml}
             `;
             break;
+        }
 
         default:
             innerContent = `<div class="doc-title">Compliance Document</div><p>Standard compliance guidelines.</p>${signHtml}`;
