@@ -5923,6 +5923,49 @@ function loadEmployeeCompliance(employeeId) {
     });
 }
 
+function draftComplianceDocument() {
+    const editId = document.getElementById('emp_edit_id').value;
+    if (!editId) {
+        Swal.fire({
+            title: 'Save Details First',
+            text: 'Please save this employee\'s details first before drafting custom compliance documents.',
+            icon: 'info',
+            confirmButtonColor: '#0078C1'
+        });
+        return;
+    }
+    const docType = document.getElementById('emp_compliance_draft_type').value;
+
+    Swal.fire({
+        title: 'Drafting Document...',
+        text: 'Compiling legal parameters and saving document...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/api/compliance/draft-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: editId, document_type: docType })
+    })
+    .then(res => res.json())
+    .then(data => {
+        Swal.close();
+        if (data.success) {
+            showXeroToast('Document drafted successfully.', 'success');
+            loadEmployeeCompliance(editId);
+        } else {
+            Swal.fire('Drafting Error', data.error || 'Failed to draft compliance document.', 'error');
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        Swal.fire('Network Error', err.message || 'Failed to connect to compile engine.', 'error');
+    });
+}
+
 function previewComplianceDocText(docType) {
     const editId = document.getElementById('emp_edit_id').value;
     if (!editId) return;
@@ -8687,7 +8730,24 @@ function updateSelectedWeeksOrFortnights() {
                     </div>
 
                     <!-- Signed documents list -->
-                    <div class="section-divider" style="grid-column: span 4; margin-top: 10px;">Legal Signatures Compliance Tracking</div>
+                    <div class="section-divider" style="grid-column: span 4; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; padding-right: 8px;">
+                        <span>Legal Signatures Compliance Tracking</span>
+                        <div style="display: flex; gap: 8px; align-items: center; font-weight: normal; text-transform: none;">
+                            <select id="emp_compliance_draft_type" style="height: 26px; padding: 0 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; color: #334155; outline: none; background: #fff; line-height: 1;">
+                                <option value="Appointment_Letter">Appointment Letter</option>
+                                <option value="Employment_Agreement">Employment Agreement</option>
+                                <option value="NDA">Non-Disclosure Agreement (NDA)</option>
+                                <option value="Warning_Letter">Warning Letter</option>
+                                <option value="Termination_Letter">Termination Letter</option>
+                                <option value="Experience_Letter">Experience Letter</option>
+                                <option value="Relieving_Letter">Relieving Letter</option>
+                                <option value="Salary_Revision_Letter">Salary Revision Letter</option>
+                                <option value="Promotion_Letter">Promotion Letter</option>
+                                <option value="Asset_Handover">Asset Handover</option>
+                            </select>
+                            <button type="button" onclick="draftComplianceDocument()" style="height: 26px; padding: 0 10px; background: #0078C1; color: #fff; border: none; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s;">⚡ Draft</button>
+                        </div>
+                    </div>
                     <div style="grid-column: span 4; background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-sizing: border-box; width: 100%;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                             <thead>
