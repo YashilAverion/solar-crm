@@ -2593,6 +2593,140 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+        // ── PHASE 3: WORKSPACE SAFETY, CONFIDENTIALITY & SECURITY KIT ────────────────────
+        case 'Phase3_Mobile_Phone_Policy':
+        case 'Mobile_Phone_Policy': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/MPP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Mobile Phone & VoIP Communications Policy</div>
+            <p>This Policy outlines the regulations regarding the use of personal mobile devices, official SIM cards, and VoIP telephony systems at <strong>Averion Global LLP</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Personal Device Restrictions & Early Shift Startup</h3>
+            <ul>
+                <li>The Company's operational shift commences strictly at <strong>${shiftStart} IST</strong> in alignment with Australian timezone client parameters. Personal smartphones and communication devices are strictly restricted during active work hours.</li>
+                <li>Employees are required to store personal mobile phones in designated lockers or silent mode in bags upon shift commencement. Accessing personal mobile devices during operational hours without prior supervisor approval is prohibited.</li>
+            </ul>
+
+            <h3>2. Official VoIP Systems & Telephony Logs</h3>
+            <ul>
+                <li>All business communications, client outreach, and vendor negotiations must be conducted strictly through the Company's authorized VoIP telephony networks.</li>
+                <li>All calls, chats, and interactions on Company VoIP software are programmatically tracked, recorded, and audited for quality assurance and security compliance.</li>
+                <li>Any misuse of VoIP accounts, unauthorized long-distance personal calls, or deletion of communication logs constitutes a major security violation.</li>
+            </ul>
+
+            <h3>3. Mobile Assets & SIM Card Responsibility</h3>
+            <ul>
+                <li>In the event that the Company allocates a corporate mobile device or SIM card to the Employee:
+                    <ul>
+                        <li><strong>Assigned Mobile Serial:</strong> ${emp.assets_mobiles || 'Not Issued'}</li>
+                        <li><strong>Assigned SIM Identifier:</strong> ${emp.assets_sims || 'Not Issued'}</li>
+                    </ul>
+                </li>
+                <li>The corporate device and SIM must be utilized exclusively for Company business. De-routing or removing the MDM (Mobile Device Management) security locks is strictly prohibited.</li>
+            </ul>
+
+            <h3>4. Enforcement & Ahmedabad Jurisdiction</h3>
+            <ul>
+                <li>Violations of this policy will attract immediate disciplinary action, including suspension and termination for cause.</li>
+                <li>This policy is governed by the laws of India, and all dispute resolution and legal paths shall be locked exclusively to the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase3_Rest_Breaks_Policy':
+        case 'Rest_Breaks_Policy': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/RBP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Rest Breaks & Shift Interval Policy</div>
+            <p>This policy details the operational shift schedules, rest intervals, and timesheet logging guidelines at <strong>Averion Global LLP</strong>, structured in compliance with the Gujarat Shops and Establishments (Regulation of Employment and Conditions of Service) Act.</p>
+
+            <h3>1. Shift Structure & Break Allotment</h3>
+            <ul>
+                <li>The standard daily shift length for all full-time employees and interns is <strong>9 (nine) hours</strong>, commencing at <strong>${shiftStart} IST</strong>.</li>
+                <li>Within this 9-hour operational period, Employees are entitled to a cumulative rest interval limit of <strong>1 (one) hour</strong>, comprising one lunch break (40 minutes) and tea/refreshment breaks (20 minutes total).</li>
+            </ul>
+
+            <h3>2. Automated Timesheet Punching & Clock Controls</h3>
+            <ul>
+                <li><strong>Log-in & Log-out:</strong> Employees must punch in their arrival and departure through the HRMS platform and biometric scanner. All rest breaks must be actively logged via the "Break-In" and "Break-Out" controls on the system.</li>
+                <li>Failure to punch break intervals or exceeding the cumulative 1-hour break limit will trigger automated timesheet flags, leading to payroll reconciliation or leave deductions.</li>
+                <li>Punctual return from rest breaks is mandatory. Unauthorized extension of breaks will be treated as non-compliance and absence from duty.</li>
+            </ul>
+
+            <h3>3. Statutory Compliance</h3>
+            <ul>
+                <li>This break policy is designed in strict compliance with Section 13 of the Gujarat Shops and Establishments Act, ensuring no continuous work period exceeds five (5) hours without an interval of at least thirty (30) minutes.</li>
+                <li>For interns, the same shift breaks and compliance structures apply.</li>
+            </ul>
+
+            <h3>4. Disciplinary Jurisdiction</h3>
+            <ul>
+                <li>Continuous non-compliance with break schedules will result in formal warning letters and forfeiture of attendance incentives.</li>
+                <li>Any dispute arising out of timesheet calculations, break deductions, or compliance metrics shall be subject strictly to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase3_Data_Protection_Policy':
+        case 'Data_Protection_Policy': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/DPP/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 3 — Workspace Safety & Security Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Data Protection, Confidentiality & Anti-Moonlighting Covenant</div>
+            <p>This Covenant establishes the binding terms governing data security, intellectual property, confidentiality, and anti-moonlighting restrictions at <strong>Averion Global LLP</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Airtight Non-Disclosure Controls</h3>
+            <ul>
+                <li><strong>Confidential Information</strong> includes, but is not limited to, client solar lead databases, customer lists, pricing tables, CRM records, proprietary proposal calculators, sales scripts, internal reports, and company strategies.</li>
+                <li>The Employee is strictly prohibited from exporting, downloading, copying, screenshotting, or sharing any confidential information to personal email accounts, storage devices, or cloud platforms.</li>
+                <li>All customer database assets and vendor communications remain the exclusive property of the Company.</li>
+            </ul>
+
+            <h3>2. Intellectual Property (IP) & Non-Solicitation</h3>
+            <ul>
+                <li>Any deliverables, proposal templates, solar layout designs, outreach campaigns, or software code designed by the Employee during active hours belong solely to the Company.</li>
+                <li>The Employee covenants that they shall not solicit, poach, contact, or service any client, customer, or lead of the Company for personal gains or on behalf of any third-party competitor.</li>
+            </ul>
+
+            <h3>3. Airtight Anti-Moonlighting Covenant</h3>
+            <ul>
+                <li>The Employee shall devote their entire professional capacity exclusively to the business of the Company.</li>
+                <li><strong>Dual Employment Prohibited:</strong> The Employee is strictly barred from engaging in any secondary employment, parallel freelancing, consulting, teaching, or starting an independent business (whether paid, unpaid, direct, or indirect) during the tenure of their contract.</li>
+            </ul>
+
+            <h3>4. Statutory Violations & Severe Legal Penalties</h3>
+            <ul>
+                <li>Any database theft, customer data leakage, or extraction of CRM records constitutes a criminal breach of trust and theft.</li>
+                <li>The Company shall initiate immediate termination for cause and criminal prosecution under <strong>Section 408 of the Indian Penal Code (IPC)</strong> for breach of trust by an employee.</li>
+                <li>Furthermore, unauthorized access, copying, or damage to computer networks and lead databases will be prosecuted under <strong>Section 43 & Section 66 of the Information Technology Act, 2000</strong>.</li>
+                <li>All legal recourses, damage claims, and injunctive actions shall be resolved exclusively within the jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
             innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
             break;
@@ -2692,6 +2826,9 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
                 else if (document_type === 'Category_H') docTitle = 'Target-Based Sales Incentive Policy';
                 else if (document_type === 'Category_C') docTitle = 'Comprehensive NDA & Moonlighting Covenant';
                 else if (document_type === 'Category_F_L') docTitle = 'Workplace Surveillance & Assets Policy';
+                else if (document_type === 'Phase3_Mobile_Phone_Policy' || document_type === 'Mobile_Phone_Policy') docTitle = 'Mobile & Phone Policy';
+                else if (document_type === 'Phase3_Rest_Breaks_Policy' || document_type === 'Rest_Breaks_Policy') docTitle = 'Rest Breaks Policy';
+                else if (document_type === 'Phase3_Data_Protection_Policy' || document_type === 'Data_Protection_Policy') docTitle = 'Data Protection Policy';
 
                 const mailOptions = {
                     from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,

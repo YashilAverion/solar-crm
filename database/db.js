@@ -1414,6 +1414,19 @@ db.serialize(() => {
         });
     });
 
+    // Phase 3: Workspace Safety, Confidentiality & Security Kit
+    const phase3ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN device_surveillance_consent INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN nda_version_signed INTEGER DEFAULT 1",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN security_clearance_timestamp TEXT"
+    ];
+
+    phase3ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;
