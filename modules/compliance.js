@@ -211,7 +211,7 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
         <div>Shop 2, Sthapatya Residency, Near Nayara Petrol Pump,</div>
         <div>SP Ring Road, Ognaj, Ahmedabad – 380060, Gujarat, India</div>
         <div>GST: ${emp.gst || '24ACMFA7488G1Z0'} | PAN: ${emp.pan || 'ACMFA7488G'}</div>
-        <div>Email: hr@averionglobal.com | Web: www.averionglobal.com</div>
+        <div>Email: hr@averionglobal.co.in | Web: www.averionglobal.co.in</div>
       </div>
     </div>
     
@@ -543,7 +543,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             <h3>8. POSH & Whistleblower Standards</h3>
             <ul>
               <li>The Company strictly enforces a zero-tolerance policy towards sexual harassment in accordance with the POSH Act 2013.</li>
-              <li><strong>Whistleblower Policy:</strong> Complaints regarding compliance breaches, data theft, or ethical violations can be submitted anonymously to compliance@averionglobal.com.</li>
+              <li><strong>Whistleblower Policy:</strong> Complaints regarding compliance breaches, data theft, or ethical violations can be submitted anonymously to compliance@averionglobal.co.in.</li>
             </ul>
             
             <h3>9. Jurisdiction & Arbitration</h3>
@@ -747,7 +747,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
             <p>Due to the early morning nature of the shift (03:30 AM startup), employees are prohibited from leaving the office premises during shift hours without written permission from their reporting supervisor.</p>
             
             <h3>6. Escalation & Grievances</h3>
-            <p>Grievances regarding break scheduling or timekeeping discrepancies must be logged directly inside the CRM HRMS dashboard or emailed to hr@averionglobal.com.</p>
+            <p>Grievances regarding break scheduling or timekeeping discrepancies must be logged directly inside the CRM HRMS dashboard or emailed to hr@averionglobal.co.in.</p>
             
             ${signHtml}
             `;

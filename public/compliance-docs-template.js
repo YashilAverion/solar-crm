@@ -23,7 +23,7 @@ function getComplianceDocHTML(docType, emp) {
             contentHTML = `
                 <div class="letterhead">
                     <h2>AVERION GLOBAL LLP</h2>
-                    <p>Regd. Office: Gujarat, India | Email: hr@averionglobal.com</p>
+                    <p>Regd. Office: Gujarat, India | Email: hr@averionglobal.co.in</p>
                     <hr/>
                 </div>
                 <div class="doc-meta">
@@ -487,7 +487,7 @@ function getCombinedPackageHTML(emp) {
             <div class="page">
                 <div class="letterhead">
                     <h2>AVERION GLOBAL LLP</h2>
-                    <p>Regd. Office: Gujarat, India | Email: hr@averionglobal.com</p>
+                    <p>Regd. Office: Gujarat, India | Email: hr@averionglobal.co.in</p>
                     <hr/>
                 </div>
                 <div class="doc-meta">
