@@ -5761,6 +5761,248 @@ function syncIndianCtcSummary(updateTotalInput = false) {
     }
 }
 
+function loadEmployeeCompliance(employeeId) {
+    const tbody = document.getElementById('compliance_docs_signatures_tbody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="3" style="padding: 16px; text-align: center; color: var(--text-muted);">Loading compliance records...</td></tr>`;
+
+    // Clear all fields first in case it's a new worker
+    document.getElementById('emp_compliance_department').value = 'Sales';
+    document.getElementById('emp_compliance_designation').value = '';
+    document.getElementById('emp_compliance_base_salary').value = '';
+    document.getElementById('emp_compliance_onboarding_date').value = '';
+    document.getElementById('emp_compliance_onboarding_date_text').value = '';
+    document.getElementById('emp_compliance_shift_start').value = '03:30 AM';
+    document.getElementById('emp_compliance_probation').value = '3';
+    document.getElementById('emp_compliance_notice').value = '45';
+    document.getElementById('emp_compliance_leaves').value = '24';
+    document.getElementById('emp_compliance_gratuity').checked = false;
+    document.getElementById('emp_compliance_incentive_hold').checked = false;
+    
+    document.getElementById('emp_compliance_asset_laptop').value = '';
+    document.getElementById('emp_compliance_asset_desktop').value = '';
+    document.getElementById('emp_compliance_asset_mobile').value = '';
+    document.getElementById('emp_compliance_asset_sim').value = '';
+    document.getElementById('emp_compliance_asset_id').value = '';
+    document.getElementById('emp_compliance_asset_access').value = '';
+    document.getElementById('emp_compliance_asset_licenses').value = '';
+    
+    document.getElementById('emp_compliance_consent_surv').checked = false;
+    document.getElementById('emp_compliance_consent_bio').checked = false;
+    document.getElementById('emp_compliance_consent_hrms').checked = false;
+
+    if (!employeeId) {
+        tbody.innerHTML = `<tr><td colspan="3" style="padding: 16px; text-align: center; color: var(--text-muted);">Please save employee details first to generate legal agreements.</td></tr>`;
+        return;
+    }
+
+    fetch(`/api/compliance/employee/${employeeId}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.profile) {
+            const p = data.profile;
+            document.getElementById('emp_compliance_department').value = p.department || 'Sales';
+            document.getElementById('emp_compliance_designation').value = p.designation || '';
+            document.getElementById('emp_compliance_base_salary').value = p.base_salary || '';
+            document.getElementById('emp_compliance_onboarding_date').value = p.onboarding_date || '';
+            document.getElementById('emp_compliance_onboarding_date_text').value = p.onboarding_date ? formatDateToDisplay(p.onboarding_date) : '';
+            document.getElementById('emp_compliance_shift_start').value = p.shift_start_time || '03:30 AM';
+            document.getElementById('emp_compliance_probation').value = p.probation_period_months || 3;
+            document.getElementById('emp_compliance_notice').value = p.notice_period_days || 45;
+            document.getElementById('emp_compliance_leaves').value = p.annual_leave_quota || 24;
+            document.getElementById('emp_compliance_gratuity').checked = p.gratuity_eligible === 1;
+            document.getElementById('emp_compliance_incentive_hold').checked = p.incentive_hold_flag === 1;
+            
+            document.getElementById('emp_compliance_asset_laptop').value = p.assets_laptops || '';
+            document.getElementById('emp_compliance_asset_desktop').value = p.assets_desktops || '';
+            document.getElementById('emp_compliance_asset_mobile').value = p.assets_mobiles || '';
+            document.getElementById('emp_compliance_asset_sim').value = p.assets_sims || '';
+            document.getElementById('emp_compliance_asset_id').value = p.assets_ids || '';
+            document.getElementById('emp_compliance_asset_access').value = p.assets_access_cards || '';
+            document.getElementById('emp_compliance_asset_licenses').value = p.assets_licenses || '';
+            
+            document.getElementById('emp_compliance_consent_surv').checked = p.surveillance_consent === 1;
+            document.getElementById('emp_compliance_consent_bio').checked = p.biometric_consent === 1;
+            document.getElementById('emp_compliance_consent_hrms').checked = p.hrms_consent === 1;
+        }
+
+        tbody.innerHTML = '';
+        if (data.documents && data.documents.length > 0) {
+            data.documents.forEach(doc => {
+                const docTitle = doc.document_type.replace(/_/g, ' ');
+                const statusHTML = doc.signed_status === 1 
+                    ? `<span style="color: #16a34a; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">🟢 Signed</span>` 
+                    : `<span style="color: #dc2626; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">🔴 Pending</span>`;
+                
+                const signBtnHTML = doc.signed_status === 0
+                    ? `<button type="button" class="btn-table-action" onclick="signComplianceDoc('${employeeId}', '${doc.document_type}')" style="height: 22px; padding: 0 8px; font-size: 11px; font-weight: 700; background: #16a34a; border: none; color: #fff; border-radius: 4px; cursor: pointer; transition: all 0.2s; margin-left: 6px;">✍️ Sign</button>`
+                    : ``;
+                
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 8px 12px; font-weight: 600; color: #0f172a;">${docTitle}</td>
+                        <td style="padding: 8px 12px;">${statusHTML}</td>
+                        <td style="padding: 8px 12px; text-align: right; box-sizing: border-box;">
+                            <button type="button" class="btn-table-action" onclick="previewComplianceDocText('${doc.document_type}')" style="height: 22px; padding: 0 8px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 4px; cursor: pointer; transition: all 0.2s;">👁️ View</button>
+                            <button type="button" class="btn-table-action" onclick="emailComplianceDocText('${employeeId}', '${doc.document_type}')" style="height: 22px; padding: 0 8px; font-size: 11px; font-weight: 700; background: #0078C1; border: none; color: #fff; border-radius: 4px; cursor: pointer; transition: all 0.2s; margin-left: 6px;">✉️ Email</button>
+                            ${signBtnHTML}
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="3" style="padding: 16px; text-align: center; color: var(--text-muted);">Please save onboarding details above to generate legal documents.</td></tr>`;
+        }
+    });
+}
+
+function previewComplianceDocText(docType) {
+    const editId = document.getElementById('emp_edit_id').value;
+    if (!editId) return;
+    
+    fetch(`/api/compliance/employee/${editId}`)
+    .then(res => res.json())
+    .then(data => {
+        const doc = data.documents.find(d => d.document_type === docType);
+        if (doc) {
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; padding: 40px; white-space: pre-wrap;">${doc.generated_blob_text}</pre>`);
+                printWin.document.close();
+            } else {
+                Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site.', 'warning');
+            }
+        }
+    });
+}
+
+function emailComplianceDocText(employeeId, docType) {
+    const empMail = document.getElementById('emp_email').value.trim();
+    if (!empMail) {
+        Swal.fire('Email Missing', 'This employee profile does not have an email address.', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Email Document?',
+        text: `Do you want to send this agreement to ${empMail}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Send ✉️',
+        confirmButtonColor: '#0078C1'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.showLoading();
+            fetch(`/api/compliance/employee/${employeeId}/email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ document_type: docType, email: empMail })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Sent!', 'Document agreement has been successfully emailed.', 'success');
+                } else {
+                    Swal.fire('SMTP Error', data.error || 'Failed to send.', 'error');
+                }
+            });
+        }
+    });
+}
+
+function signComplianceDoc(employeeId, docType) {
+    Swal.fire({
+        title: 'Sign Agreement?',
+        text: 'Are you sure you want to mark this document as signed by the employee?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Mark Signed ✍️',
+        confirmButtonColor: '#16a34a'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/compliance/employee/${employeeId}/sign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ document_type: docType })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Signed!', 'Signature logged successfully.', 'success');
+                    loadEmployeeCompliance(employeeId);
+                }
+            });
+        }
+    });
+}
+
+function validateComplianceStipend() {
+    const designation = document.getElementById('emp_compliance_designation').value.toLowerCase();
+    const salaryVal = parseFloat(document.getElementById('emp_compliance_base_salary').value) || 0;
+    const isIntern = designation.includes('intern');
+    
+    if (isIntern) {
+        document.getElementById('emp_compliance_probation').value = 6;
+        if (salaryVal < 15000 || salaryVal > 25000) {
+            document.getElementById('emp_compliance_base_salary').style.borderColor = '#dc2626';
+        } else {
+            document.getElementById('emp_compliance_base_salary').style.borderColor = '';
+        }
+    } else {
+        if (salaryVal < 15000 || salaryVal > 60000) {
+            document.getElementById('emp_compliance_base_salary').style.borderColor = '#dc2626';
+        } else {
+            document.getElementById('emp_compliance_base_salary').style.borderColor = '';
+        }
+    }
+}
+
+function saveOnboardingCompliance(workerId) {
+    const payload = {
+        employee_id: workerId.toString(),
+        full_name: document.getElementById('emp_first_name').value.trim() + ' ' + document.getElementById('emp_last_name').value.trim(),
+        department: document.getElementById('emp_compliance_department').value,
+        designation: document.getElementById('emp_compliance_designation').value.trim() || 'Associate',
+        base_salary: parseFloat(document.getElementById('emp_compliance_base_salary').value) || 0,
+        shift_start_time: document.getElementById('emp_compliance_shift_start').value,
+        probation_period_months: parseInt(document.getElementById('emp_compliance_probation').value, 10) || 3,
+        notice_period_days: parseInt(document.getElementById('emp_compliance_notice').value, 10) || 45,
+        annual_leave_quota: parseInt(document.getElementById('emp_compliance_leaves').value, 10) || 24,
+        gratuity_eligible: document.getElementById('emp_compliance_gratuity').checked ? 1 : 0,
+        incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
+        onboarding_date: document.getElementById('emp_compliance_onboarding_date').value || new Date().toISOString().split('T')[0],
+        
+        assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
+        assets_desktops: document.getElementById('emp_compliance_asset_desktop').value.trim(),
+        assets_mobiles: document.getElementById('emp_compliance_asset_mobile').value.trim(),
+        assets_sims: document.getElementById('emp_compliance_asset_sim').value.trim(),
+        assets_ids: document.getElementById('emp_compliance_asset_id').value.trim(),
+        assets_access_cards: document.getElementById('emp_compliance_asset_access').value.trim(),
+        assets_licenses: document.getElementById('emp_compliance_asset_licenses').value.trim(),
+        
+        surveillance_consent: document.getElementById('emp_compliance_consent_surv').checked ? 1 : 0,
+        biometric_consent: document.getElementById('emp_compliance_consent_bio').checked ? 1 : 0,
+        hrms_consent: document.getElementById('emp_compliance_consent_hrms').checked ? 1 : 0
+    };
+
+    fetch('/api/compliance/onboard-employee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Error saving compliance onboarding:', data.error);
+        } else {
+            console.log('Compliance onboarding details saved successfully.');
+        }
+    })
+    .catch(err => {
+        console.error('Failed to save compliance onboarding:', err.message);
+    });
+}
+
 function showComplianceDocGenerator() {
     const editId = document.getElementById('emp_edit_id').value;
     if (!editId) {
@@ -6084,6 +6326,19 @@ function syncTaxFieldsByCompany() {
         }
     }
     
+    const complianceTabBtn = document.getElementById('emp_compliance_tab_btn');
+    if (complianceTabBtn) {
+        if (company === 'Averion Global LLP') {
+            complianceTabBtn.style.display = 'inline-flex';
+        } else {
+            complianceTabBtn.style.display = 'none';
+            const activeBtn = document.querySelector('.modal-tab-btn.active');
+            if (activeBtn && activeBtn.id === 'emp_compliance_tab_btn') {
+                switchModalTab('details');
+            }
+        }
+    }
+    
     const ausTax = document.getElementById('aus-tax-fields');
     const indTax = document.getElementById('ind-tax-fields');
     
@@ -6227,6 +6482,7 @@ function openEmployeeModal(editId = null) {
         if (u && genBtn && u.company_name === 'Averion Global LLP') {
             genBtn.style.display = 'block';
         }
+        loadEmployeeCompliance(editId);
         if (u) {
             document.getElementById('emp_title').value = u.title || '';
             document.getElementById('emp_first_name').value = u.first_name || '';
@@ -6366,6 +6622,7 @@ function openEmployeeModal(editId = null) {
                 genBtn.style.display = 'none';
             }
         }
+        loadEmployeeCompliance('');
         
         // Set new entry defaults
         document.getElementById('emp_role').value = 'Worker';
@@ -6686,6 +6943,13 @@ function saveEmployeeForm(event) {
         if (data.error) {
             showXeroToast(data.error, 'error');
         } else {
+            const compSelect = document.getElementById('emp_company_name');
+            if (compSelect && compSelect.value === 'Averion Global LLP') {
+                const targetWorkerId = editId || data.id;
+                if (targetWorkerId) {
+                    saveOnboardingCompliance(targetWorkerId);
+                }
+            }
             showXeroToast(editId ? 'Worker details updated successfully.' : 'Worker added successfully.', 'success');
             closeEmployeeModal();
             loadAdminEmployeesList();
@@ -7261,6 +7525,10 @@ function updateSelectedWeeksOrFortnights() {
             <button type="button" class="modal-tab-btn" onclick="switchModalTab('holidays')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 Holidays Group
+            </button>
+            <button type="button" class="modal-tab-btn" onclick="switchModalTab('compliance')" id="emp_compliance_tab_btn" style="display: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Onboarding & Compliance
             </button>
         </div>
 
@@ -7871,7 +8139,7 @@ function updateSelectedWeeksOrFortnights() {
                 </div>
             </div>
             
-            <!-- Holidays Group Tab -->
+<!-- Holidays Group Tab -->
             <div id="modal-tab-pane-holidays" class="modal-tab-pane">
                 <div class="form-grid">
                     <div class="section-divider" style="grid-column: span 4;">Holidays Group Settings</div>
@@ -7914,6 +8182,153 @@ function updateSelectedWeeksOrFortnights() {
                         <div id="holidays_list_container" style="border: 1px solid var(--border); border-radius: 8px; max-height: 240px; overflow-y: auto; background: #f8fafc; padding: 8px; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; height: 100%; min-height: 180px;">
                             <!-- Dynamic holidays list items go here -->
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onboarding & Compliance Tab -->
+            <div id="modal-tab-pane-compliance" class="modal-tab-pane">
+                <div class="form-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                    <div class="section-divider" style="grid-column: span 4; margin-top: 0;">Corporate Onboarding & Compliance Control Panel</div>
+                    
+                    <!-- Basic Parameters -->
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_department">Department</label>
+                        <select id="emp_compliance_department" style="height: 36px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; width: 100%;">
+                            <option value="Sales">Sales</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Installation">Installation</option>
+                            <option value="Service">Service</option>
+                            <option value="HR">HR</option>
+                        </select>
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_designation">Designation</label>
+                        <input type="text" id="emp_compliance_designation" placeholder="e.g. Sales Executive">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_base_salary">Base Salary (INR Monthly)</label>
+                        <input type="number" id="emp_compliance_base_salary" placeholder="Range 15,000 - 60,000" min="15000" max="60000" oninput="validateComplianceStipend()">
+                    </div>
+
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_onboarding_date">Onboarding Date</label>
+                        <div style="display: flex; align-items: center; position: relative; width: 100%;">
+                            <input type="text" id="emp_compliance_onboarding_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box;" oninput="formatAndSyncDateText('emp_compliance_onboarding_date')" onblur="formatAndSyncDateText('emp_compliance_onboarding_date', true)">
+                            <button type="button" onclick="document.getElementById('emp_compliance_onboarding_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                            <input type="date" id="emp_compliance_onboarding_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="syncDateToText('emp_compliance_onboarding_date')">
+                        </div>
+                    </div>
+
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_shift_start">Shift Start Time</label>
+                        <input type="text" id="emp_compliance_shift_start" value="03:30 AM" placeholder="e.g. 03:30 AM">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_probation">Probation (Months)</label>
+                        <input type="number" id="emp_compliance_probation" value="3" placeholder="Default 3">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_notice">Notice Period (Days)</label>
+                        <input type="number" id="emp_compliance_notice" value="45" placeholder="Default 45">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_leaves">Annual Leave Quota (Days)</label>
+                        <input type="number" id="emp_compliance_leaves" value="24" placeholder="Default 24">
+                    </div>
+
+                    <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        <input type="checkbox" id="emp_compliance_gratuity" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                        <label for="emp_compliance_gratuity" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Gratuity Eligible (5+ years service)</label>
+                    </div>
+
+                    <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        <input type="checkbox" id="emp_compliance_incentive_hold" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                        <label for="emp_compliance_incentive_hold" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Target-Based Incentive Hold Active</label>
+                    </div>
+
+                    <!-- Asset Trackers -->
+                    <div class="section-divider" style="grid-column: span 4; margin-top: 10px;">Assigned Corporate Asset Trackers</div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_laptop">Laptop Asset Tag</label>
+                        <input type="text" id="emp_compliance_asset_laptop" placeholder="e.g. LPT-9821">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_desktop">Desktop Asset Tag</label>
+                        <input type="text" id="emp_compliance_asset_desktop" placeholder="e.g. DSK-4481">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_mobile">Mobile Asset Tag</label>
+                        <input type="text" id="emp_compliance_asset_mobile" placeholder="e.g. MOB-1102">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_sim">SIM Card Asset Tag</label>
+                        <input type="text" id="emp_compliance_asset_sim" placeholder="e.g. SIM-Airtel-4G">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_id">Company ID Card Badge</label>
+                        <input type="text" id="emp_compliance_asset_id" placeholder="e.g. CRD-0042">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_asset_access">Building Access Card</label>
+                        <input type="text" id="emp_compliance_asset_access" placeholder="e.g. ACC-2219">
+                    </div>
+                    
+                    <div class="field" style="grid-column: span 2;">
+                        <label for="emp_compliance_asset_licenses">Software Licenses Assigned</label>
+                        <input type="text" id="emp_compliance_asset_licenses" placeholder="e.g. Zoom, SolarDesign, Salesforce">
+                    </div>
+
+                    <!-- Consents & Surveillance -->
+                    <div class="section-divider" style="grid-column: span 4; margin-top: 10px;">Surveillance & System Logging Consents</div>
+                    
+                    <div class="field" style="grid-column: span 4; display: flex; gap: 24px; background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; margin: 0;">
+                            <input type="checkbox" id="emp_compliance_consent_surv" style="width: 15px; height: 15px; margin: 0;">
+                            <span>CCTV Surveillance Consent</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; margin: 0;">
+                            <input type="checkbox" id="emp_compliance_consent_bio" style="width: 15px; height: 15px; margin: 0;">
+                            <span>Biometric Login Consent</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; margin: 0;">
+                            <input type="checkbox" id="emp_compliance_consent_hrms" style="width: 15px; height: 15px; margin: 0;">
+                            <span>HRMS Data Logging Consent</span>
+                        </label>
+                    </div>
+
+                    <!-- Whistleblower mechanism -->
+                    <div style="grid-column: span 4; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 10px; font-size: 11px; color: #92400e; display: flex; align-items: center; gap: 8px;">
+                        <span>📢</span>
+                        <span><strong>Anonymous Whistleblower Mechanism:</strong> Complaints can be submitted anonymously to compliance@averionglobal.com in accordance with Section 177(9) of the Indian Companies Act 2013.</span>
+                    </div>
+
+                    <!-- Signed documents list -->
+                    <div class="section-divider" style="grid-column: span 4; margin-top: 10px;">Legal Signatures Compliance Tracking</div>
+                    <div style="grid-column: span 4; background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-sizing: border-box; width: 100%;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+                                    <th style="padding: 10px 12px; font-weight: 700; color: var(--text-muted);">Legal Document Type</th>
+                                    <th style="padding: 10px 12px; font-weight: 700; color: var(--text-muted);">Signature Status</th>
+                                    <th style="padding: 10px 12px; font-weight: 700; color: var(--text-muted); text-align: right;">Actions Available</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compliance_docs_signatures_tbody">
+                                <!-- Dynamic rows go here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

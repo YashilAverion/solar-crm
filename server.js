@@ -1323,6 +1323,7 @@ const marginMasterRoutes = require('./modules/margin_master');
 const invoiceRoutes = require('./modules/invoice');
 const comboRoutes = require('./modules/combos');
 const attendanceRouter = require('./modules/attendance');
+const complianceRouter = require('./modules/compliance');
 const payrollRoutes = require('./modules/payroll');
 const quotationRoutes = require('./modules/quotations');
 
@@ -1997,6 +1998,7 @@ app.use('/margin-master', marginMasterRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/combos', comboRoutes);
 app.use('/api/attendance', attendanceRouter);
+app.use('/api/compliance', complianceRouter);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/quotations', quotationRoutes);
 

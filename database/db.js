@@ -1225,6 +1225,87 @@ db.serialize(() => {
         }
     }
 
+    // ── EMPLOYEE COMPLIANCE & LEGAL DOCUMENTS TABLES ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS employee_compliance_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id TEXT UNIQUE NOT NULL,
+            full_name TEXT NOT NULL,
+            department TEXT NOT NULL,
+            designation TEXT NOT NULL,
+            base_salary REAL NOT NULL,
+            shift_start_time TEXT DEFAULT '03:30 AM',
+            probation_period_months INTEGER DEFAULT 3,
+            notice_period_days INTEGER DEFAULT 45,
+            annual_leave_quota INTEGER DEFAULT 24,
+            gratuity_eligible INTEGER DEFAULT 0,
+            incentive_hold_flag INTEGER DEFAULT 0,
+            onboarding_date TEXT NOT NULL,
+            assets_laptops TEXT DEFAULT '',
+            assets_desktops TEXT DEFAULT '',
+            assets_mobiles TEXT DEFAULT '',
+            assets_sims TEXT DEFAULT '',
+            assets_ids TEXT DEFAULT '',
+            assets_access_cards TEXT DEFAULT '',
+            assets_licenses TEXT DEFAULT '',
+            surveillance_consent INTEGER DEFAULT 0,
+            biometric_consent INTEGER DEFAULT 0,
+            hrms_consent INTEGER DEFAULT 0
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating employee_compliance_profiles table:', err.message);
+        else console.log('[DB] employee_compliance_profiles table ready.');
+    });
+
+    const complianceAlterColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_laptops TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_desktops TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_mobiles TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_sims TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_ids TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_access_cards TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN assets_licenses TEXT DEFAULT ''",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN surveillance_consent INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN biometric_consent INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN hrms_consent INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN employee_id TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN full_name TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN department TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN designation TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN base_salary REAL",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN shift_start_time TEXT DEFAULT '03:30 AM'",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN probation_period_months INTEGER DEFAULT 3",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN notice_period_days INTEGER DEFAULT 45",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN annual_leave_quota INTEGER DEFAULT 24",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN gratuity_eligible INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN incentive_hold_flag INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN onboarding_date TEXT"
+    ];
+
+    complianceAlterColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            if (err && !err.message.includes('duplicate column name')) {
+                // Ignore duplicate column errors
+            }
+        });
+    });
+
+    db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_compliance_employee_id ON employee_compliance_profiles (employee_id) WHERE employee_id IS NOT NULL", () => {});
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS legal_signed_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id TEXT NOT NULL,
+            document_type TEXT NOT NULL,
+            signed_status INTEGER DEFAULT 0,
+            generated_blob_text TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating legal_signed_documents table:', err.message);
+        else console.log('[DB] legal_signed_documents table ready.');
+    });
+
 });
 
 module.exports = db;
