@@ -21,6 +21,19 @@ function getAverionLogoBase64() {
     return '';
 }
 
+function getAverionSignatureBase64() {
+    try {
+        const sigPath = path.join(__dirname, '../public/averion_signature.png');
+        if (fs.existsSync(sigPath)) {
+            const fileBuffer = fs.readFileSync(sigPath);
+            return `data:image/png;base64,${fileBuffer.toString('base64')}`;
+        }
+    } catch (e) {
+        console.error('Error reading averion_signature.png:', e.message);
+    }
+    return '';
+}
+
 // Helper to format dates to DD-MM-YY
 function formatToDDMMYY(dateStringOrObj) {
     if (!dateStringOrObj || dateStringOrObj === 'As per Company Records') {
@@ -294,6 +307,7 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 function generateDocumentText(docType, emp) {
     const today = formatToDDMMYY(new Date());
     const logoBase64 = getAverionLogoBase64();
+    const sigBase64 = getAverionSignatureBase64();
     
     const gross = parseFloat(emp.base_salary || 0);
     const basic = gross * 0.50;
@@ -307,8 +321,9 @@ function generateDocumentText(docType, emp) {
 
     const signHtml = `
     <div class="sign-container">
-      <div class="sign-box">
+      <div class="sign-box" style="position: relative;">
         For <strong>Averion Global LLP</strong>
+        ${sigBase64 ? `<div style="position: absolute; bottom: 15px; left: 10px; z-index: 10;"><img src="${sigBase64}" alt="Signature" style="height: 60px; max-width: 180px; background: transparent; mix-blend-mode: multiply;"></div>` : ''}
         <div class="sign-line"></div>
         Authorized Signatory
       </div>
@@ -1127,6 +1142,7 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
     const formattedSpecial = specialAllowance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
     
     const companyName = policyMeta ? policyMeta.company_name : 'Averion Global LLP';
+    const sigBase64 = getAverionSignatureBase64();
     const address = policyMeta ? policyMeta.registered_address : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
     const gst = policyMeta ? policyMeta.gst_number : '24ACMFA7488G1Z0';
     const pan = policyMeta ? policyMeta.pan_number : 'ACMFA7488G';
@@ -1138,8 +1154,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
 
     const signHtml = `
     <div class="sign-container">
-      <div class="sign-box">
+      <div class="sign-box" style="position: relative;">
         For <strong>${companyName}</strong>
+        ${sigBase64 ? `<div style="position: absolute; bottom: 15px; left: 10px; z-index: 10;"><img src="${sigBase64}" alt="Signature" style="height: 60px; max-width: 180px; background: transparent; mix-blend-mode: multiply;"></div>` : ''}
         <div class="sign-line"></div>
         Authorized Signatory
       </div>
@@ -1962,6 +1979,7 @@ function compilePhaseDoc(category, emp, registry) {
     const today = formatToDDMMYY(new Date());
     const docDate = emp.onboarding_date ? formatToDDMMYY(emp.onboarding_date) : today;
     const logoBase64 = getAverionLogoBase64();
+    const sigBase64 = getAverionSignatureBase64();
 
     const regName = registry ? registry.company_name : 'Averion Global LLP';
     const regOffice = registry ? registry.registered_office : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
@@ -1985,8 +2003,9 @@ function compilePhaseDoc(category, emp, registry) {
 
     const signHtml = `
     <div class="sign-container">
-      <div class="sign-box">
+      <div class="sign-box" style="position: relative;">
         For <strong>${regName}</strong>
+        ${sigBase64 ? `<div style="position: absolute; bottom: 15px; left: 10px; z-index: 10;"><img src="${sigBase64}" alt="Signature" style="height: 60px; max-width: 180px; background: transparent; mix-blend-mode: multiply;"></div>` : ''}
         <div class="sign-line"></div>
         Authorized Signatory
       </div>
@@ -2267,7 +2286,9 @@ function compilePhaseDoc(category, emp, registry) {
             })();
 
             innerContent = `
-            <div style="height: 10px;"></div>
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Date:</strong> ${docDate}
+            </div>
 
             <div class="doc-title">Conditional Offer of Employment</div>
 
@@ -2297,7 +2318,7 @@ function compilePhaseDoc(category, emp, registry) {
                 </tbody>
             </table>
             <ul>
-                <li>Salary is disbursed between the 10th and 15th date of each calendar month via bank transfer.</li>
+                <li>Salary is disbursed between 10th to 15th Date of each calendar month via bank transfer.</li>
                 <li>Statutory deductions (PT, TDS) will apply as per applicable Indian laws.</li>
             </ul>
 
