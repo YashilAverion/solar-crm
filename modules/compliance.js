@@ -51,18 +51,18 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   body {
-    font-family: 'Inter', sans-serif;
-    color: #1e293b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
     margin: 0;
     padding: 0;
-    line-height: 1.6;
+    line-height: 1.8;
     background-color: #f1f5f9;
   }
   .page {
     background: #ffffff;
     max-width: 800px;
     margin: 40px auto;
-    padding: 50px 50px 40px 50px;
+    padding: 60px 60px 50px 60px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     box-sizing: border-box;
@@ -73,13 +73,20 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     justify-content: space-between;
     align-items: center;
     border-bottom: 3px solid #0078C1;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    padding-bottom: 15px;
+    margin-bottom: 35px;
+  }
+  .logo-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
   .logo-container img {
-    height: 120px;
+    height: 180px;
     width: auto;
-    margin: -20px 0;
+    margin-top: -45px;
+    margin-bottom: -45px;
+    margin-left: -20px;
   }
   .company-info {
     text-align: right;
