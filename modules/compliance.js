@@ -1232,6 +1232,9 @@ function compileHRComplianceDoc(docType, emp, policyMeta) {
     let innerContent = '';
 
     switch(docType) {
+        case 'Appointment_Letter':
+            return generateDocumentText(docType, emp);
+
         case 'Employment_Agreement': {
             const isIntern = (emp.designation || '').toLowerCase().includes('intern');
             const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
