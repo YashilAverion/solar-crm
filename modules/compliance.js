@@ -327,15 +327,14 @@ function generateDocumentText(docType, emp) {
             const isIntern = (emp.designation || '').toLowerCase().includes('intern');
             const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
             const noticeDays = emp.notice_period_days || 45;
+            const docDate = emp.onboarding_date ? formatToDDMMYY(emp.onboarding_date) : today;
 
             const appointmentContent = `
             <div class="doc-title">Letter of Appointment</div>
-            <p><strong>Date:</strong> ${today}</p>
-            <p><strong>Employee Code:</strong> ${emp.employee_id}</p>
+            <p><strong>Date:</strong> ${docDate}</p>
             
             <p>To,<br>
-            <strong>Mr./Ms. ${emp.full_name}</strong><br>
-            ${emp.google_address || 'As per Company Records'}</p>
+            <strong>Mr./Ms. ${emp.full_name}</strong>${(emp.google_address && emp.google_address !== 'As per Company Records') ? `<br>${emp.google_address}` : ''}</p>
             
             <p>Dear <strong>${emp.full_name}</strong>,</p>
             
@@ -401,81 +400,6 @@ function generateDocumentText(docType, emp) {
                   <td>Gross Monthly CTC</td>
                   <td>100%</td>
                   <td>${formattedGross}</td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <table class="annexure-table">
-              <thead>
-                <tr>
-                  <th>Bank Account Details</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Bank Name / Holder</td>
-                  <td>${emp.bank_account_name || 'As per Company Records'}</td>
-                </tr>
-                <tr>
-                  <td>Account Type</td>
-                  <td>${emp.bank_account_type || 'Savings'}</td>
-                </tr>
-                <tr>
-                  <td>IFSC Code / BSB</td>
-                  <td>${emp.bank_bsb || 'As per Company Records'}</td>
-                </tr>
-                <tr>
-                  <td>Account Number</td>
-                  <td>${emp.bank_account_number || 'As per Company Records'}</td>
-                </tr>
-                <tr>
-                  <td>Permanent Account Number (PAN)</td>
-                  <td>${emp.pan_number || 'As per Company Records'}</td>
-                </tr>
-                <tr>
-                  <td>Aadhaar Card Number</td>
-                  <td>${emp.aadhaar_number || 'As per Company Records'}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="doc-title" style="margin-top: 40px;">ANNEXURE B: ASSIGNED CORPORATE ASSET TRACKERS</div>
-            <table class="annexure-table">
-              <thead>
-                <tr>
-                  <th>Asset Category</th>
-                  <th>Asset Tag / Serial Number</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Laptop Asset Tag</td>
-                  <td>${emp.assets_laptops || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>Desktop Asset Tag</td>
-                  <td>${emp.assets_desktops || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>Mobile Device Asset Tag</td>
-                  <td>${emp.assets_mobiles || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>SIM Card Identifier</td>
-                  <td>${emp.assets_sims || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>ID Card / Badge Code</td>
-                  <td>${emp.assets_ids || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>Building Access Card Tag</td>
-                  <td>${emp.assets_access_cards || 'Not Assigned'}</td>
-                </tr>
-                <tr>
-                  <td>Software Licenses Assigned</td>
-                  <td>${emp.assets_licenses || 'Not Assigned'}</td>
                 </tr>
               </tbody>
             </table>
