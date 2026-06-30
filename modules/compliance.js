@@ -220,27 +220,45 @@ ${signBlocks}
 // Helper to generate the 5 compliance policy cards (New Template System)
 function compileHRComplianceDoc(docType, emp, policyMeta) {
     const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
-    const formattedSalary = parseFloat(emp.base_salary || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    
+    // Parse salary values
+    const gross = parseFloat(emp.base_salary || 0);
+    const basic = gross * 0.50;
+    const hra = gross * 0.20;
+    const specialAllowance = gross * 0.30;
+
+    const formattedGross = gross.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedBasic = basic.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedHRA = hra.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const formattedSpecial = specialAllowance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
     
     const companyName = policyMeta ? policyMeta.company_name : 'Averion Global LLP';
     const address = policyMeta ? policyMeta.registered_address : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
     const gst = policyMeta ? policyMeta.gst_number : '24ACMFA7488G1Z0';
     const pan = policyMeta ? policyMeta.pan_number : 'ACMFA7488G';
     
-    const border = "========================================================================";
+    const border = "=================================================================================";
     const header = `
 ${border}
-                      ${companyName.toUpperCase()}
-  Registered Office: ${address}
-  GST: ${gst} | PAN: ${pan}
+                             AVERION GLOBAL LLP
+             Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, 
+             SP Ring Road, Ognaj, Ahmedabad, Gujarat - 380060
+                  GST: ${gst} | PAN: ${pan} | LLP
 ${border}
     `;
 
     const signBlock = `
-------------------------------------------------------------------------
-For ${companyName}                       Accepted by Employee
-(Authorized Signatory)                       (${emp.full_name})
-------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+For ${companyName}                            Accepted by Employee/Intern
+(Authorized Signatory)                            (${emp.full_name})
+---------------------------------------------------------------------------------
+    `;
+
+    const footer = `
+---------------------------------------------------------------------------------
+Document ID: AVG-${docType}-2026-${emp.employee_id || '999'} | Confidentiality: Strict Confidential | Owner: HR Compliance
+Version Number: VER-2026-V1.0 | Page 1 of 1
+---------------------------------------------------------------------------------
     `;
 
     switch(docType) {
@@ -248,130 +266,191 @@ For ${companyName}                       Accepted by Employee
             const isIntern = (emp.designation || '').toLowerCase().includes('intern');
             const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
             const noticeDays = emp.notice_period_days || 45;
-            const salaryText = isIntern 
-                ? `Stipend: ${formattedSalary} (strictly between Rs 15,000 and Rs 25,000 per month)`
-                : `Base Salary: ${formattedSalary} per month (Salary range: Rs 15,000 to Rs 60,000)`;
             
             return `
 ${header}
-OFFICIAL CONTRACT OF EMPLOYMENT
+                              EMPLOYMENT AGREEMENT
 
-Date: ${today}
-Employee/Intern:  ${emp.full_name}
-Designation: ${emp.designation || 'Associate'}
-Department: ${emp.department || 'Sales'}
-Onboarding Date:  ${emp.onboarding_date || today}
+This Employment Agreement ("Agreement") is executed on this ${today} at Ahmedabad, Gujarat, India.
 
-We are pleased to onboard you at ${companyName} under the following legally binding terms:
+BY AND BETWEEN:
 
-1. POSITION AND ROLE:
-You are appointed as "${emp.designation || 'Associate'}" in our ${emp.department || 'Sales'} Department.
+AVERION GLOBAL LLP, a Limited Liability Partnership incorporated under the laws of India, having its registered office at ${address} (hereinafter referred to as the "Employer" or the "Company", which expression shall unless repugnant to the context include its successors and permitted assigns);
 
-2. COMPENSATION AND REMUNERATION:
-- ${salaryText}
-- In compliance with corporate sales policy, a Target-Based Incentive Hold is applicable. Failure to meet designated sales quotas leads strictly to an incentive hold, with absolutely zero base salary deduction.
+AND:
 
-3. WORK TIMINGS:
-Due to our business alignment with Australian client time zones, you will work early morning shifts starting strictly at 03:30 AM IST. Daily shift length is 9 hours.
+Mr./Ms. ${emp.full_name}, residing at ${emp.google_address || 'As per Company Records'} (hereinafter referred to as the "Employee", which expression shall unless repugnant to the context include their legal heirs and administrators).
 
-4. PROBATION AND NOTICE PERIOD:
-- You will undergo a probation period of ${probationMonths} months.
-- Post confirmation, the notice period required for separation is strictly ${noticeDays} days.
+1. DEFINITIONS AND INTERPRETATION
+- "Effective Date" shall mean the onboarding date of ${emp.onboarding_date || today}.
+- "Employment Type" shall mean ${isIntern ? 'Internship' : 'Permanent Employment'}.
+- "Designation" shall mean "${emp.designation || 'Associate'}" under the ${emp.department || 'Sales'} Department.
 
-5. LEGAL JURISDICTION:
-This agreement is governed by the laws of India. Any and all disputes arising from this contract shall be locked exclusively to the competent courts of Ahmedabad, Gujarat, India.
+2. APPOINTMENT AND PROBATION
+- The Company hereby appoints the Employee to perform services aligned with the designated role starting from the Effective Date.
+- The Employee shall undergo a probation period of ${probationMonths} months. Either party may terminate employment during probation with fifteen (15) days written notice. Upon confirmation, notice period is strictly set to ${noticeDays} days.
+
+3. COMPENSATION AND PAY STRUCTURE
+- The Monthly Gross Compensation is set to ${formattedGross}. The pay structure is bifurcated under Annexure A.
+- Target-Based Incentive Hold Policy: A Target-Based Incentive Hold is applicable in accordance with sales quotas. Failure to meet performance targets leads strictly to an incentive hold, with absolutely zero base salary deduction.
+- Gratuity eligibility: ${emp.gratuity_eligible === 1 ? 'Eligible under the Payment of Gratuity Act 1972' : 'Not Eligible (Pending 5 years continuous service)'}.
+
+4. WORKING HOURS AND SHIFT TIMINGS
+- The Employee shall work a daily shift of 9 hours.
+- Early Morning Shift: Operations start strictly at 03:30 AM IST daily to align with Australian Client Time Zones.
+- Weekly Off: Sunday.
+
+5. EXCLUSIVITY & ANTI-MOONLIGHTING
+- The Employee shall devote their entire working time and attention exclusively to the business of the Company. 
+- Dual Employment: The Employee is strictly prohibited from engaging in any other business, dual employment, freelancing, tutoring, consulting, or providing services to any external firm (directly or indirectly, paid or unpaid) during the tenure of their employment.
+- Customer Protection: The Employee shall not solicit, divert, or design solar proposals for any clients of the Company for personal profit or for any competitor.
+
+6. DATA PROTECTION & DIGITAL SECURITY
+- The Employee agrees to comply with the Digital Personal Data Protection (DPDP) Act 2023 and the Information Technology (IT) Act 2000.
+- All CRM databases, customer leads, pricing matrices, and layout algorithms are proprietary assets of the Company. The Employee is strictly prohibited from exporting, screenshotting, or communicating client lists.
+
+7. INTELLECTUAL PROPERTY RIGHTS
+- All solar layouts, outreach calculators, and CRM software designs generated by the Employee during service belong exclusively to the Employer. The Employee hereby assigns all global rights, titles, and interests in such IP to the Company.
+
+8. POSH & WHISTLEBLOWER STANDARDS
+- The Company strictly enforces a zero-tolerance policy towards sexual harassment in accordance with the POSH Act 2013.
+- Whistleblower Policy: Complaints regarding compliance breaches, data theft, or ethical violations can be submitted anonymously to compliance@averionglobal.com.
+
+9. JURISDICTION & ARBITRATION
+- This Agreement is governed by the laws of India.
+- Dispute Resolution: Any dispute arising out of this contract shall be settled via binding arbitration in Ahmedabad, Gujarat, under the Arbitration and Conciliation Act 1996.
+- Jurisdiction: The competent courts of Ahmedabad, Gujarat shall have exclusive jurisdiction.
 
 ${signBlock}
+
+ANNEXURE A: PAY STRUCTURE BREAKDOWN
+- Monthly Gross CTC: ${formattedGross}
+- Basic Salary (50%): ${formattedBasic}
+- House Rent Allowance (HRA) (20%): ${formattedHRA}
+- Special Allowance (30%): ${formattedSpecial}
+- Bank Name: As per Company Records | Account Type: ${emp.bank_account_type}
+- IFSC Code / BSB: ${emp.bank_bsb} | Account Number: ${emp.bank_account_number}
+- Permanent Account Number (PAN): ${emp.pan_number} | Aadhaar: ${emp.aadhaar_number}
+
+ANNEXURE B: ASSIGNED CORPORATE ASSET TRACKERS
+- Laptop Tag: ${emp.assets_laptops || 'Not Assigned'}
+- Desktop Tag: ${emp.assets_desktops || 'Not Assigned'}
+- Mobile Tag: ${emp.assets_mobiles || 'Not Assigned'}
+- SIM Card Tag: ${emp.assets_sims || 'Not Assigned'}
+- ID Card Badge: ${emp.assets_ids || 'Not Assigned'}
+- Access Card: ${emp.assets_access_cards || 'Not Assigned'}
+- Software Licenses: ${emp.assets_licenses || 'Not Assigned'}
+
+${footer}
             `.trim();
 
         case 'Mobile_Phone_Policy':
             return `
 ${header}
-MOBILE DEVICE AND WORKSTATION SURVEILLANCE POLICY
+                        MOBILE DEVICE & WORKSTATION SURVEILLANCE POLICY
 
-Date:  ${today}
-Employee:  ${emp.full_name}
+1. PURPOSE & SCOPE
+This policy regulates workstation monitoring, communication rules, and the use of personal mobile devices during early morning operations at ${companyName}.
 
-1. EARLY MORNING SHIFT ADHERENCE:
-Since our operations run on the Australian Time Zone starting at 03:30 AM IST daily, communication channel readiness is paramount.
+2. SHIFT TIMING & ADHERENCE
+Due to active operations running on the Australian Time Zone, shifts start strictly at 03:30 AM IST. Total daily shift length is 9 hours. Communication channels must remain active and uninterrupted.
 
-2. VoIP COMMUNICATION RULES:
-All official calls, outreach campaigns, and customer updates must be routed exclusively through our corporate VoIP channels. Use of personal lines for company business is strictly forbidden.
+3. VoIP COMMUNICATION STANDARDS
+All outreach campaigns, customer calls, and support communications must be routed strictly through the Company's corporate VoIP channels. Use of personal lines or personal call accounts for business outreach is strictly prohibited.
 
-3. PERSONAL SMARTPHONE RESTRICTION:
-The use of personal mobile phones on the active production floor/bay is strictly restricted during shift hours. Any remote data tracking or monitoring of workstations is done to prevent leakage.
+4. PERSONAL MOBILE PHONES RESTRICTION
+The use of personal smartphones, mobile devices, and personal recording equipment is strictly restricted on the active production floor/bay area during shift hours. All personal devices must be stored or silenced.
 
-4. PENALTIES:
-Unapproved phone usage on the bay will result in immediate confiscation and disciplinary warning logs on your HRMS profile.
+5. REMOTE WORKSTATION SURVEILLANCE & CONSENTS
+- The Employee hereby consents to remote monitoring on all corporate-provided systems. This includes keystroke logging, VPN connectivity tracking, active screen captures, and remote access tracking.
+- CCTV Surveillance: Active CCTV surveillance is operational inside the office bays.
+- Biometric Punching: Mandatory biometric login registration is required to track shift start and end times.
+- Consent Status: CCTV Consent: ${emp.surveillance_consent === 1 ? 'GRANTED' : 'DENIED'}, Biometric Consent: ${emp.biometric_consent === 1 ? 'GRANTED' : 'DENIED'}, HRMS Data Logging: ${emp.hrms_consent === 1 ? 'GRANTED' : 'DENIED'}.
+
+6. DISCIPLINARY PENAL CONSTRAINTS
+Violations of the smartphone policy or unapproved exports of CRM data will result in immediate warning logs on your HRMS profile, and termination for cause under the Industrial Relations Code.
 
 ${signBlock}
+
+${footer}
             `.trim();
 
         case 'Rest_Breaks_Policy':
             return `
 ${header}
-REST BREAKS & TIMESHEET PUNCHING COMPLIANCE POLICY
+                        REST BREAKS & TIMESHEET PUNCHING COMPLIANCE
 
-Date:  ${today}
-Employee:  ${emp.full_name}
+1. REGULATORY COMPLIANCE
+This policy sets forth rigid interval standards in strict compliance with the Gujarat Shops and Establishments (Regulation of Employment and Conditions of Service) Act 2019.
 
-This policy sets forth rigid interval standards in strict compliance with the Gujarat Shops & Establishments Act for office environments:
-
-1. WORK SHIFT LIMIT:
+2. WORK SHIFT LIMITS
 Your daily shift is set to 9 hours (including rest intervals). Work hours cannot exceed statutory limits under the Shops Act.
 
-2. REST INTERVAL SCHEDULE:
+3. REST INTERVAL SCHEDULE
 - Morning Tea Break: 15 minutes (scheduled at 06:00 AM IST).
 - Lunch/Rest Break: 30 minutes (scheduled at 09:30 AM IST).
 - Afternoon Tea Break: 15 minutes (scheduled at 11:45 AM IST).
 
-3. MANDATORY PUNCHING:
+4. MANDATORY PUNCHING
 Employees must punch out on the Biometric/HRMS system before commencing any break, and punch in immediately upon returning. Failure to punch breaks is a direct violation of labor reporting compliance.
 
+5. OFFICE PREMISES PROTOCOLS
+Due to the early morning nature of the shift (03:30 AM startup), employees are prohibited from leaving the office premises during shift hours without written permission from their reporting supervisor.
+
+6. ESCALATION & GRIEVANCES
+Grievances regarding break scheduling or timekeeping discrepancies must be logged directly inside the CRM HRMS dashboard or emailed to hr@averionglobal.com.
+
 ${signBlock}
+
+${footer}
             `.trim();
 
         case 'Data_Protection_Policy':
             return `
 ${header}
-DATA PROTECTION, STRICT NDA, & INTELLECTUAL PROPERTY COVENANT
+                           DATA PROTECTION & NDA POLICY
 
-Date:  ${today}
-Employee:  ${emp.full_name}
+1. DATA CONFIDENTIALITY OBLIGATIONS
+The Employee agrees to comply with the Digital Personal Data Protection (DPDP) Act 2023 and the Information Technology (IT) Act 2000. All databases, client leads, solar design specifications, and calculator spreadsheets are highly confidential.
 
-1. PROTECTION OF SOLAR CRM ASSETS:
-The customer leads database, product pricing rules, utility assumptions, and solar layout templates are the sole proprietary assets of ${companyName}.
+2. PROHIBITION OF EXPORTS
+The Employee is strictly prohibited from copying, emailing, screenshotting, exporting, or transmitting CRM database records, Solar calculator parameters, or client lists to personal devices or external channels.
 
-2. STRICT DATA LEAK BAN:
-The Employee is prohibited from copying, emailing, screenshotting, or exporting any databases, leads files, or client profiles to external personal storage or devices.
+3. CONTEXT & SURVEILLANCE
+Workstations are monitored via remote key-logging, screenshot capturing, and active VPN tracking. Surveillance Consent: ${emp.surveillance_consent === 1 ? 'Active' : 'Inactive'}.
 
-3. INDIAN PENAL & CYBER LAW CONSEQUENCES:
+4. INDIAN PENAL & CYBER LAW CONSEQUENCES
 Any unauthorized export or leakage of database files will result in immediate termination for cause and criminal prosecution under:
 - Section 43 & 66 of the Information Technology Act, 2000 (up to 3 years imprisonment or fine up to Rs 5 Lakhs).
 - Section 408 of the Indian Penal Code (Criminal breach of trust by clerk or servant; up to 7 years imprisonment and fine).
 
 ${signBlock}
+
+${footer}
             `.trim();
 
         case 'Employee_Leave_Guide':
             return `
 ${header}
-EMPLOYEE LEAVE ENTITLEMENTS GUIDE & COMPLIANCE
+                       EMPLOYEE LEAVE ENTITLEMENTS GUIDE & COMPLIANCE
 
-Date:  ${today}
-Employee:  ${emp.full_name}
+1. LEAVE ALLOTMENT
+- Annual Leave Quota: The Employee is entitled to a mandatory annual leave quota of 24 days per calendar year.
+- Balances: Casual Leave (CL): ${emp.cl_balance} Days | Sick Leave (SL): ${emp.sl_balance} Days | Maternity Leave (ML): ${emp.ml_balance} Days | Privilege Leave: ${emp.annual_leave_balance} Days.
 
-1. LEAVE ALLOTMENT:
-Employees are entitled to a mandatory annual leave quota of 24 days per calendar year.
-
-2. SUBMISSION AND APPROVAL PATH:
+2. SUBMISSION AND APPROVAL PATH
 - All leave requests must be submitted through the Solar CRM HRMS portal at least 7 business days in advance.
 - Approval requires authorization from the department manager. Unapproved absences will be marked as Loss of Pay (LOP).
 
-3. SICK AND CASUAL LEAVES:
+3. EARLY SHIFT CALL-OUT ROUTINE
 Emergency sick leaves must be reported to the HR coordinator before 03:00 AM IST on the day of absence.
 
+4. MATERNITY BENEFIT
+Maternity benefits are administered in strict compliance with the Maternity Benefit Act 1961 (26 weeks paid leave).
+
 ${signBlock}
+
+${footer}
             `.trim();
 
         default:
@@ -612,17 +691,54 @@ router.post('/generate-compliance-docs', requireAuth, (req, res) => {
 
             const empDetails = {
                 employee_id: employee_id.toString(),
-                full_name: `${worker.first_name || ''} ${worker.last_name || ''}`.trim(),
+                first_name: worker.first_name || 'As per Company Records',
+                last_name: worker.last_name || '',
+                full_name: `${worker.first_name || ''} ${worker.last_name || ''}`.trim() || 'As per Company Records',
+                email: worker.email || 'As per Company Records',
+                phone: worker.phone || worker.phone_number || worker.mobile_number || 'As per Company Records',
+                company_name: worker.company_name || 'Averion Global LLP',
+                job_title: worker.job_title || 'As per Company Records',
+                pan_number: worker.pan_number || 'As per Company Records',
+                aadhaar_number: worker.aadhaar_number || 'As per Company Records',
+                uan_number: worker.uan_number || 'As per Company Records',
+                esic_number: worker.esic_number || 'As per Company Records',
+                bank_account_name: worker.bank_account_name || 'As per Company Records',
+                bank_bsb: worker.bank_bsb || 'As per Company Records',
+                bank_account_number: worker.bank_account_number || 'As per Company Records',
+                bank_account_type: worker.bank_account_type || 'Savings',
+                
+                cl_balance: worker.cl_balance !== undefined && worker.cl_balance !== null ? worker.cl_balance : 'As per Company Records',
+                sl_balance: worker.sl_balance !== undefined && worker.sl_balance !== null ? worker.sl_balance : 'As per Company Records',
+                ml_balance: worker.ml_balance !== undefined && worker.ml_balance !== null ? worker.ml_balance : 'As per Company Records',
+                annual_leave_balance: worker.annual_leave_balance !== undefined && worker.annual_leave_balance !== null ? worker.annual_leave_balance : 'As per Company Records',
+                
+                emergency_name: worker.emergency_name || 'As per Company Records',
+                emergency_phone: worker.emergency_phone || 'As per Company Records',
+                emergency_relationship: worker.emergency_relationship || 'As per Company Records',
+
+                // Profile parameters
                 department: profile ? profile.department : 'Sales',
                 designation: profile ? profile.designation : (worker.job_title || 'Associate'),
-                base_salary: profile ? profile.base_salary : (worker.per_hour_wages_inc_tax ? worker.per_hour_wages_inc_tax * 160 : 25000),
+                base_salary: profile ? profile.base_salary : 25000,
+                shift_start_time: profile ? profile.shift_start_time : '03:30 AM',
                 probation_period_months: profile ? profile.probation_period_months : 3,
                 notice_period_days: profile ? profile.notice_period_days : 45,
                 annual_leave_quota: profile ? profile.annual_leave_quota : 24,
-                onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
                 gratuity_eligible: profile ? profile.gratuity_eligible : 0,
                 incentive_hold_flag: profile ? profile.incentive_hold_flag : 0,
-                shift_start_time: profile ? profile.shift_start_time : '03:30 AM'
+                onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
+                
+                assets_laptops: profile ? profile.assets_laptops : '',
+                assets_desktops: profile ? profile.assets_desktops : '',
+                assets_mobiles: profile ? profile.assets_mobiles : '',
+                assets_sims: profile ? profile.assets_sims : '',
+                assets_ids: profile ? profile.assets_ids : '',
+                assets_access_cards: profile ? profile.assets_access_cards : '',
+                assets_licenses: profile ? profile.assets_licenses : '',
+                
+                surveillance_consent: profile ? profile.surveillance_consent : 0,
+                biometric_consent: profile ? profile.biometric_consent : 0,
+                hrms_consent: profile ? profile.hrms_consent : 0
             };
 
             db.get("SELECT * FROM averion_hr_policies WHERE company_name = 'Averion Global LLP' LIMIT 1", [], (policyErr, policyMeta) => {
