@@ -5715,7 +5715,28 @@ function addComplianceDocRow(type = 'Aadhaar Card', path = '') {
     renderComplianceDocs();
 }
 
-function syncIndianCtcSummary() {
+function autoBifurcateIndianSalary(val) {
+    const total = parseFloat(val) || 0;
+    if (total <= 0) {
+        document.getElementById('emp_basic_salary').value = '0';
+        document.getElementById('emp_hra').value = '0';
+        document.getElementById('emp_special_allowance').value = '0';
+        syncIndianCtcSummary(false);
+        return;
+    }
+    
+    const basic = Math.round(total * 0.5);
+    const hra = Math.round(total * 0.2);
+    const special = total - (basic + hra);
+    
+    document.getElementById('emp_basic_salary').value = basic;
+    document.getElementById('emp_hra').value = hra;
+    document.getElementById('emp_special_allowance').value = special;
+    
+    syncIndianCtcSummary(false);
+}
+
+function syncIndianCtcSummary(updateTotalInput = false) {
     const basic = parseFloat(document.getElementById('emp_basic_salary').value) || 0;
     const hra = parseFloat(document.getElementById('emp_hra').value) || 0;
     const sa = parseFloat(document.getElementById('emp_special_allowance').value) || 0;
@@ -5723,6 +5744,12 @@ function syncIndianCtcSummary() {
     const summaryVal = document.getElementById('indian_ctc_summary_val');
     if (summaryVal) {
         summaryVal.textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+    if (updateTotalInput) {
+        const totalInput = document.getElementById('emp_total_salary_input');
+        if (totalInput) {
+            totalInput.value = total > 0 ? total : '';
+        }
     }
 }
 
@@ -6159,6 +6186,9 @@ function openEmployeeModal(editId = null) {
             document.getElementById('emp_epf_opt_in').checked = u.epf_opt_in !== 0;
             document.getElementById('emp_esic_opt_in').checked = u.esic_opt_in !== 0;
             document.getElementById('emp_pt_opt_in').checked = u.pt_opt_in !== 0;
+            
+            const totalSal = (parseFloat(u.basic_salary) || 0) + (parseFloat(u.hra) || 0) + (parseFloat(u.special_allowance) || 0);
+            document.getElementById('emp_total_salary_input').value = totalSal > 0 ? totalSal : '';
             syncIndianCtcSummary();
             
             try {
@@ -6236,6 +6266,7 @@ function openEmployeeModal(editId = null) {
         
         document.getElementById('emp_bank_account_type').value = 'Savings';
         
+        document.getElementById('emp_total_salary_input').value = '';
         document.getElementById('emp_basic_salary').value = '0';
         document.getElementById('emp_hra').value = '0';
         document.getElementById('emp_special_allowance').value = '0';
@@ -7637,17 +7668,23 @@ function updateSelectedWeeksOrFortnights() {
                     <div id="ind-pay-template-fields" style="display: none; grid-template-columns: repeat(3, 1fr); gap: 16px; grid-column: span 4; width: 100%;">
                         <div class="section-divider" style="grid-column: span 3; margin-top: 0;">Monthly Salary Breakdown & CTC (India)</div>
                         
+                        <!-- Auto-Bifurcation input spanning 3 columns -->
+                        <div class="field" style="grid-column: span 3;">
+                            <label for="emp_total_salary_input" style="font-size: 11px; font-weight: 700; color: #0078C1; text-transform: uppercase; letter-spacing: 0.4px;">Enter Total Monthly Gross Salary (INR) - Auto-bifurcates below</label>
+                            <input type="number" id="emp_total_salary_input" placeholder="e.g. 50000" style="width:100%; box-sizing: border-box; height: 36px; border: 1px solid #0078C1; border-radius: 6px; padding: 0 10px; font-size: 13px;" oninput="autoBifurcateIndianSalary(this.value)">
+                        </div>
+                        
                         <div class="field">
-                            <label for="emp_basic_salary" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Basic Salary (INR)</label>
-                            <input type="number" id="emp_basic_salary" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                            <label for="emp_basic_salary" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Basic Salary (INR) (50%)</label>
+                            <input type="number" id="emp_basic_salary" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary(true)">
                         </div>
                         <div class="field">
-                            <label for="emp_hra" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly HRA (INR)</label>
-                            <input type="number" id="emp_hra" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                            <label for="emp_hra" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly HRA (INR) (20%)</label>
+                            <input type="number" id="emp_hra" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary(true)">
                         </div>
                         <div class="field">
-                            <label for="emp_special_allowance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Special Allowance (INR)</label>
-                            <input type="number" id="emp_special_allowance" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary()">
+                            <label for="emp_special_allowance" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Monthly Special Allowance (INR) (30%)</label>
+                            <input type="number" id="emp_special_allowance" step="1" value="0" style="width:100%; box-sizing: border-box; height: 36px;" oninput="syncIndianCtcSummary(true)">
                         </div>
 
                         <!-- Statutory Contribution Checkboxes -->
