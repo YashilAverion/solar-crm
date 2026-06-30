@@ -1427,6 +1427,19 @@ db.serialize(() => {
         });
     });
 
+    // Phase 4: Leave, Transition & Combined Onboarding Package Kit
+    const phase4ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN accrued_leaves_balance INTEGER DEFAULT 24",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN director_approval_status INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN exit_interview_status TEXT"
+    ];
+
+    phase4ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;

@@ -2727,6 +2727,127 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+        // ── PHASE 4: LEAVE, TRANSITION & COMBINED ONBOARDING PACKAGE KIT ────────────────────
+        case 'Phase4_Employee_Leave_Guide':
+        case 'Employee_Leave_Guide': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/ELG/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 4 — Leave & Transition Kit<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Employee Leave Guide & Allotment Policy</div>
+            <p>This Guide outlines the official leave regulations, accrual systems, and mandatory approval hierarchies at <strong>Averion Global LLP</strong>, applicable to the Employee Mr./Ms. <strong>${emp.full_name}</strong>.</p>
+
+            <h3>1. Annual Leave Allotment & Accrual Matrix</h3>
+            <ul>
+                <li><strong>Allotment:</strong> The Employee is entitled to a mandatory annual leave quota of <strong>${leaveQuota} (twenty-four) days</strong>.</li>
+                <li><strong>Accrual:</strong> Leaves accrue monthly at a rate of 2 (two) days for every completed month of active service. Leaves cannot be claimed in advance during the first three (3) months of employment/probation except in extraordinary circumstances.</li>
+                <li><strong>Unused Leaves:</strong> Up to ten (10) unused accrued leaves can be carried forward to the next calendar year. Any additional unused leaves beyond ten (10) will automatically lapse at the end of the year. No cash encashment is permitted except upon resignation or termination.</li>
+            </ul>
+
+            <h3>2. Categories of Leave</h3>
+            <ul>
+                <li><strong>Casual Leave (CL):</strong> 8 days per year. Intended for short personal matters. Cannot be combined with Sick Leave.</li>
+                <li><strong>Sick Leave (SL):</strong> 8 days per year. Intended for medical recovery. Medical certificate from a registered practitioner is mandatory for sick leaves exceeding two (2) consecutive days.</li>
+                <li><strong>Earned Leave (EL):</strong> 8 days per year. Intended for planned vacations. Earned leaves must be applied for at least fifteen (15) days in advance.</li>
+            </ul>
+
+            <h3>3. Advance Approval & Director Escalation Hierarchy</h3>
+            <ul>
+                <li>All leave applications must be submitted digitally via the HRMS portal.</li>
+                <li><strong>Approval Chain:</strong> The leave application undergoes a strict routing hierarchy:
+                    <ol>
+                        <li>Submitted by Employee.</li>
+                        <li>Reviewed and recommended/rejected by the immediate **Reporting Manager**.</li>
+                        <li>Verified for balance and compliance by the **HR Operations Node**.</li>
+                        <li>Final approval/sign-off escalated to and approved by the **Managing Director** (or Authorized Director).</li>
+                    </ol>
+                </li>
+                <li>Leaves are NOT considered authorized until the Director node registers digital approval status as Approved.</li>
+                <li><strong>Unauthorized Absences:</strong> Absence from duty without prior approved leave through the routing hierarchy constitutes abandonment of duties. It will result in immediate loss of pay (LWP), suspension of incentives, and formal warning letters. Continuous unauthorized absence for five (5) consecutive days will lead to automatic termination for cause.</li>
+            </ul>
+
+            <h3>4. Jurisdiction</h3>
+            <ul>
+                <li>This policy is governed by the Gujarat Shops and Establishments Act, and all disputes arising here-from shall be subject to the courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase4_Exit_Interview_Form':
+        case 'Exit_Interview_Form': {
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/EIF/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 4 — Leave & Transition Kit<br>
+                <strong>Date of Clearance:</strong> substituteDocDate
+            </div>
+
+            <div class="doc-title">Exit Clearance & Interview Statement Form</div>
+            <p>This Exit Clearance Form and Final Statement records the completion of exit formalities, asset handovers, and full-and-final settlement declarations at <strong>Averion Global LLP</strong> for the separating Employee/Intern Mr./Ms. <strong>substituteFullName</strong>.</p>
+
+            <h3>1. Operational Exit Clearance Checklist</h3>
+            <p>The Employee/Intern must obtain sign-off and clearance verifying the handover of all Company properties:</p>
+            <table class="annexure-table">
+                <thead>
+                    <tr>
+                        <th>Department / Asset Category</th>
+                        <th>Cleared Item Details</th>
+                        <th>Clearance Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>IT & Infrastructure</strong></td>
+                        <td>Laptop (${emp.assets_laptops || 'N/A'}) / Desktop (${emp.assets_desktops || 'N/A'}) returned in good working condition. Official emails and software credentials revoked.</td>
+                        <td>[ Cleared / Pending ]</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Telephony & SIM</strong></td>
+                        <td>Mobile Handset (${emp.assets_mobiles || 'N/A'}) and SIM Card (${emp.assets_sims || 'N/A'}) handed over. VoIP access disabled.</td>
+                        <td>[ Cleared / Pending ]</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin & Facilities</strong></td>
+                        <td>ID Badge / Access Card (${emp.assets_ids || 'N/A'}) returned. All physical files, keys, and lockers cleared.</td>
+                        <td>[ Cleared / Pending ]</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HR Operations</strong></td>
+                        <td>Exit interview statement recorded, clearance checklist verified.</td>
+                        <td>[ Cleared / Pending ]</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2. Final Exit Statements & Handover</h3>
+            <ul>
+                <li>The separating Employee/Intern certifies that they have completely transitioned and handed over all active client solar designs, outreach sheets, lead contacts, and ongoing proposals to their designated successor or manager.</li>
+                <li>The separating individual covenants that they have deleted all local cache files, solar proposal layouts, client files, and confidential information from their personal laptops, devices, or private email accounts.</li>
+            </ul>
+
+            <h3>3. Statutory Full & Final Settlement Declaration</h3>
+            <ul>
+                <li>Upon verification of all clearances and asset returns, the Finance Node shall release the Full and Final (F&F) salary/stipend settlement within thirty (30) days from the last active working day.</li>
+                <li><strong>Release Declaration:</strong> By signing this form, the Employee/Intern acknowledges that upon receipt of the F&F payment, they will have no further claims, dues, or actions pending against the Company regarding salary, stipend, incentives, leaves, or statutory gratuity.</li>
+            </ul>
+
+            <h3>4. Post-Employment Confidentiality & Jurisdiction</h3>
+            <ul>
+                <li>The separating individual is reminded that all NDA and confidentiality obligations remain binding in perpetuity. Any solicitation of Company clients or leakage of corporate databases post-exit will attract severe prosecution under IPC Section 408 and IT Act Section 66.</li>
+                <li>Any dispute arising from the exit clearances or settlement calculations shall be resolved exclusively within the jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
             innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
             break;
@@ -2748,39 +2869,87 @@ router.post('/generate-phase-docs', requireAuth, (req, res) => {
         db.get("SELECT * FROM averion_corporate_registry LIMIT 1", [], (regErr, registry) => {
             if (regErr) return res.status(500).json({ error: regErr.message });
 
-            const compiledHtml = compilePhaseDoc(document_type, empDetails, registry);
+            if (document_type === 'Phase4_Combined_Onboarding_Package' || document_type === 'Combined_Onboarding_Package') {
+                db.all(
+                    `SELECT document_type, generated_text_payload, compiled_html_payload 
+                     FROM legal_signed_documents 
+                     WHERE employee_id = ? AND document_type NOT IN ('Phase4_Combined_Onboarding_Package', 'Combined_Onboarding_Package')`,
+                    [employee_id.toString()],
+                    (docErr, docs) => {
+                        if (docErr) return res.status(500).json({ error: docErr.message });
 
-            db.get(
-                `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND (document_type = ? OR document_category_type = ?)`,
-                [employee_id.toString(), document_type, document_type],
-                (checkErr, docRow) => {
-                    if (checkErr) return res.status(500).json({ error: checkErr.message });
+                        let combinedContent = '';
+                        if (!docs || docs.length === 0) {
+                            combinedContent = `<div class="doc-title">Combined Onboarding Package</div>
+                                               <p>No compliance policy documents have been compiled/generated yet. Please generate individual documents in Phase 1, Phase 2, and Phase 3 first.</p>`;
+                        } else {
+                            const logicalOrder = [
+                                'Category_B', 'Category_A', 'Category_H', 'Category_C', 'Category_F_L',
+                                'Phase2_Offer_Letter', 'Phase2_Appointment_Letter', 'Phase2_Employment_Agreement', 'Phase2_Internship_Contract',
+                                'Phase3_Mobile_Phone_Policy', 'Phase3_Rest_Breaks_Policy', 'Phase3_Data_Protection_Policy',
+                                'Phase4_Employee_Leave_Guide', 'Phase4_Exit_Interview_Form'
+                            ];
+                            docs.sort((a, b) => {
+                                return logicalOrder.indexOf(a.document_type) - logicalOrder.indexOf(b.document_type);
+                            });
 
-                    if (!docRow) {
-                        db.run(
-                            `INSERT INTO legal_signed_documents 
-                             (employee_id, document_type, document_category_type, signed_status, generated_blob_text, generated_text_payload, compiled_html_payload, email_sent_status) 
-                             VALUES (?, ?, ?, 0, ?, ?, ?, 0)`,
-                            [employee_id.toString(), document_type, document_type, compiledHtml, compiledHtml, compiledHtml],
-                            function(insErr) {
-                                if (insErr) return res.status(500).json({ error: insErr.message });
-                                res.json({ success: true, document_type, generated_text_payload: compiledHtml });
-                            }
-                        );
-                    } else {
-                        db.run(
-                            `UPDATE legal_signed_documents 
-                             SET generated_blob_text = ?, generated_text_payload = ?, compiled_html_payload = ?, document_category_type = ?
-                             WHERE id = ?`,
-                            [compiledHtml, compiledHtml, compiledHtml, document_type, docRow.id],
-                            function(updErr) {
-                                if (updErr) return res.status(500).json({ error: updErr.message });
-                                res.json({ success: true, document_type, generated_text_payload: compiledHtml });
-                            }
-                        );
+                            const parts = [];
+                            docs.forEach((d, idx) => {
+                                const raw = d.compiled_html_payload || d.generated_text_payload;
+                                if (raw) {
+                                    const bodyMatch = raw.match(/<body>([^]*)<\/body>/i);
+                                    let inner = bodyMatch ? bodyMatch[1] : raw;
+                                    parts.push(`<div class="combined-doc-section" style="${idx > 0 ? 'page-break-before: always; margin-top: 40px;' : ''}">
+                                        ${inner}
+                                    </div>`);
+                                }
+                            });
+                            combinedContent = parts.join('\n');
+                        }
+
+                        const logoBase64 = getAverionLogoBase64();
+                        const compiledHtml = wrapInHTMLFrame(combinedContent, 'COP', empDetails, logoBase64);
+                        saveDocToDB(compiledHtml);
                     }
-                }
-            );
+                );
+            } else {
+                const compiledHtml = compilePhaseDoc(document_type, empDetails, registry);
+                saveDocToDB(compiledHtml);
+            }
+
+            function saveDocToDB(compiledHtml) {
+                db.get(
+                    `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND (document_type = ? OR document_category_type = ?)`,
+                    [employee_id.toString(), document_type, document_type],
+                    (checkErr, docRow) => {
+                        if (checkErr) return res.status(500).json({ error: checkErr.message });
+
+                        if (!docRow) {
+                            db.run(
+                                `INSERT INTO legal_signed_documents 
+                                 (employee_id, document_type, document_category_type, signed_status, generated_blob_text, generated_text_payload, compiled_html_payload, email_sent_status) 
+                                 VALUES (?, ?, ?, 0, ?, ?, ?, 0)`,
+                                [employee_id.toString(), document_type, document_type, compiledHtml, compiledHtml, compiledHtml],
+                                function(insErr) {
+                                    if (insErr) return res.status(500).json({ error: insErr.message });
+                                    res.json({ success: true, document_type, generated_text_payload: compiledHtml });
+                                }
+                            );
+                        } else {
+                            db.run(
+                                `UPDATE legal_signed_documents 
+                                 SET generated_blob_text = ?, generated_text_payload = ?, compiled_html_payload = ?, document_category_type = ?
+                                 WHERE id = ?`,
+                                [compiledHtml, compiledHtml, compiledHtml, document_type, docRow.id],
+                                function(updErr) {
+                                    if (updErr) return res.status(500).json({ error: updErr.message });
+                                    res.json({ success: true, document_type, generated_text_payload: compiledHtml });
+                                }
+                            );
+                        }
+                    }
+                );
+            }
         });
     });
 });
@@ -2829,6 +2998,9 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
                 else if (document_type === 'Phase3_Mobile_Phone_Policy' || document_type === 'Mobile_Phone_Policy') docTitle = 'Mobile & Phone Policy';
                 else if (document_type === 'Phase3_Rest_Breaks_Policy' || document_type === 'Rest_Breaks_Policy') docTitle = 'Rest Breaks Policy';
                 else if (document_type === 'Phase3_Data_Protection_Policy' || document_type === 'Data_Protection_Policy') docTitle = 'Data Protection Policy';
+                else if (document_type === 'Phase4_Employee_Leave_Guide' || document_type === 'Employee_Leave_Guide') docTitle = 'Employee Leave Guide';
+                else if (document_type === 'Phase4_Exit_Interview_Form' || document_type === 'Exit_Interview_Form') docTitle = 'Exit Interview Form';
+                else if (document_type === 'Phase4_Combined_Onboarding_Package' || document_type === 'Combined_Onboarding_Package') docTitle = 'Combined Onboarding Package';
 
                 const mailOptions = {
                     from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,
