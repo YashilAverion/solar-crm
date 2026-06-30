@@ -3515,5 +3515,103 @@ router.post('/dispatch-document-email', requireAuth, (req, res) => {
     );
 });
 
+// ── GET STATUTORY COMPLIANCE AUDIT SUMMARY ────────────────────────────────
+router.get('/audit-summary', requireAuth, (req, res) => {
+    db.all(`
+        SELECT p.employee_id, COUNT(d.id) as total_docs, SUM(CASE WHEN d.signed_status = 1 THEN 1 ELSE 0 END) as signed_docs
+        FROM employee_compliance_profiles p
+        LEFT JOIN legal_signed_documents d ON p.employee_id = d.employee_id
+        GROUP BY p.employee_id
+    `, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        let totalWorkers = rows.length;
+        let pendingSignatures = 0;
+        let flaggedProfiles = [];
+        
+        rows.forEach(r => {
+            const missing = r.total_docs - r.signed_docs;
+            if (missing > 0) {
+                pendingSignatures += missing;
+                flaggedProfiles.push({
+                    employee_id: r.employee_id,
+                    missing_signatures: missing
+                });
+            }
+        });
+        
+        db.run(`
+            INSERT INTO averion_compliance_audits (audit_timestamp, total_active_workers, pending_signatures_count, archived_logs_summary)
+            VALUES (CURRENT_TIMESTAMP, ?, ?, ?)
+        `, [totalWorkers, pendingSignatures, JSON.stringify(flaggedProfiles)], (insertErr) => {
+            res.json({
+                success: true,
+                total_active_workers: totalWorkers,
+                pending_signatures_count: pendingSignatures,
+                flagged_profiles: flaggedProfiles
+            });
+        });
+    });
+});
+
+// ── POST ARCHIVE INACTIVE COMPLIANCE RECORDS ──────────────────────────────
+router.post('/archive-inactive-records', requireAuth, (req, res) => {
+    db.all(`
+        SELECT employee_id FROM employee_compliance_profiles
+        WHERE (final_dismissal_timestamp IS NOT NULL AND final_dismissal_timestamp != '')
+           OR exit_interview_status = 'COMPLETED'
+    `, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows || rows.length === 0) {
+            return res.json({ success: true, message: 'No inactive/terminated records found for archiving.' });
+        }
+        
+        const inactiveIds = rows.map(r => r.employee_id.toString());
+        const placeholders = inactiveIds.map(() => '?').join(',');
+        
+        db.all(`
+            SELECT id, compiled_html_payload, generated_text_payload
+            FROM legal_signed_documents
+            WHERE employee_id IN (${placeholders})
+              AND (compiled_html_payload LIKE '<%' OR length(compiled_html_payload) > 1000)
+        `, inactiveIds, (selectErr, docs) => {
+            if (selectErr) return res.status(500).json({ error: selectErr.message });
+            if (!docs || docs.length === 0) {
+                return res.json({ success: true, message: 'No heavy payloads to archive for inactive employees.' });
+            }
+            
+            let archivedCount = 0;
+            let bytesSaved = 0;
+            let completed = 0;
+            
+            docs.forEach(doc => {
+                const originalLength = (doc.compiled_html_payload || '').length + (doc.generated_text_payload || '').length;
+                const stub = `[ARCHIVED COMPLIANCE DOCUMENT - Original Payload Size: ${originalLength} bytes]`;
+                
+                db.run(`
+                    UPDATE legal_signed_documents
+                    SET compiled_html_payload = ?, generated_text_payload = ?
+                    WHERE id = ?
+                `, [stub, stub, doc.id], (updateErr) => {
+                    completed++;
+                    if (!updateErr) {
+                        archivedCount++;
+                        bytesSaved += originalLength - stub.length * 2;
+                    }
+                    
+                    if (completed === docs.length) {
+                        res.json({
+                            success: true,
+                            archived_documents_count: archivedCount,
+                            bytes_saved: bytesSaved,
+                            message: `Successfully archived ${archivedCount} documents, freeing approximately substituteMb Saved.`
+                        });
+                    }
+                });
+            });
+        });
+    });
+});
+
 module.exports = router;
 

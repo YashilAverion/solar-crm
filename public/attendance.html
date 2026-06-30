@@ -6209,6 +6209,7 @@ function showComplianceDocGenerator() {
             const modal = document.getElementById('complianceDocsModal');
             if (modal) {
                 modal.style.display = 'flex';
+                runComplianceAuditSummary();
             }
         } else {
             Swal.fire('Compilation Error', data.error || 'Failed to generate compliance documents.', 'error');
@@ -6218,6 +6219,44 @@ function showComplianceDocGenerator() {
         Swal.close();
         Swal.fire('Network Error', err.message || 'Failed to connect to backend compile engine.', 'error');
     });
+}
+
+function runComplianceAuditSummary() {
+    fetch('/api/compliance/audit-summary')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('auditTotalWorkers').innerHTML = `Active Workers: <strong>${data.total_active_workers}</strong>`;
+                document.getElementById('auditPendingSignatures').innerHTML = `Pending Signatures: <strong>substitutePendingSignatures</strong>`;
+            }
+        })
+        .catch(err => {
+            console.error('Failed to load compliance audit summary:', err.message);
+        });
+}
+
+function triggerComplianceArchiving() {
+    Swal.fire({
+        title: 'Archiving Inactive Records...',
+        text: 'Compressing payloads for terminated employees...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+    fetch('/api/compliance/archive-inactive-records', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            Swal.close();
+            if (data.success) {
+                Swal.fire('Archiving Success', data.message || 'Archived successfully.', 'success');
+                runComplianceAuditSummary();
+            } else {
+                Swal.fire('Archiving Error', data.error || 'Failed to archive.', 'error');
+            }
+        })
+        .catch(err => {
+            Swal.close();
+            Swal.fire('Network Error', err.message || 'Failed to archive.', 'error');
+        });
 }
 
 function closeComplianceDocsModal() {
@@ -9143,6 +9182,21 @@ function updateSelectedWeeksOrFortnights() {
                 <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;" id="complianceDocsModalSubtitle">Select action for Employee</p>
             </div>
             <button type="button" onclick="closeComplianceDocsModal()" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <!-- Statutory Compliance Audit Summary Banner -->
+        <div style="background: #eff6ff; border-bottom: 1px solid #dbeafe; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 13px;">⚖️</span>
+                <span style="font-size: 11px; font-weight: 700; color: #1e40af;">Statutory Compliance Audit Summary</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; color: #1e40af; flex-wrap: wrap;">
+                <span id="auditTotalWorkers">Active Workers: --</span>
+                <span style="color: #bfdbfe;">|</span>
+                <span id="auditPendingSignatures" style="color: #b91c1c;">Pending Signatures: --</span>
+                <button type="button" onclick="runComplianceAuditSummary()" style="background: #1d4ed8; color: #fff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 9px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 3px; outline: none;">🔄 Audit Now</button>
+                <button type="button" onclick="triggerComplianceArchiving()" style="background: #475569; color: #fff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 9px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 3px; outline: none;">📦 Archive Inactive</button>
+            </div>
         </div>
 
         <!-- Phase Tab Switcher -->

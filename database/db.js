@@ -1482,6 +1482,22 @@ db.serialize(() => {
         });
     });
 
+    // Phase 8: Post-Deployment Maintenance & Compliance Audit Kit
+    db.run(`
+        CREATE TABLE IF NOT EXISTS averion_compliance_audits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audit_timestamp TEXT,
+            total_active_workers INTEGER,
+            pending_signatures_count INTEGER,
+            archived_logs_summary TEXT
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating averion_compliance_audits table:', err.message);
+    });
+
+    db.run("CREATE INDEX IF NOT EXISTS idx_signed_docs_employee_id ON legal_signed_documents (employee_id)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_signed_docs_document_type ON legal_signed_documents (document_type)", () => {});
+
 });
 
 module.exports = db;
