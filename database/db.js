@@ -1306,6 +1306,55 @@ db.serialize(() => {
         else console.log('[DB] legal_signed_documents table ready.');
     });
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS averion_hr_policies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company_name TEXT DEFAULT 'Averion Global LLP',
+            registered_address TEXT DEFAULT 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060',
+            gst_number TEXT DEFAULT '24ACMFA7488G1Z0',
+            pan_number TEXT DEFAULT 'ACMFA7488G',
+            policy_employment_agreement TEXT,
+            policy_mobile_phone TEXT,
+            policy_rest_breaks TEXT,
+            policy_data_protection TEXT,
+            policy_employee_leave TEXT
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating averion_hr_policies:', err.message);
+        else {
+            console.log('[DB] Table averion_hr_policies ready.');
+            db.get(`SELECT COUNT(*) as count FROM averion_hr_policies`, [], (seedErr, row) => {
+                if (!seedErr && row && row.count === 0) {
+                    db.run(`INSERT INTO averion_hr_policies (
+                        company_name, registered_address, gst_number, pan_number,
+                        policy_employment_agreement, policy_mobile_phone, policy_rest_breaks, policy_data_protection, policy_employee_leave
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+                        'Averion Global LLP',
+                        'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060',
+                        '24ACMFA7488G1Z0',
+                        'ACMFA7488G',
+                        'Employment Agreement Policy text template content goes here.',
+                        'Mobile & Phone Policy text template content goes here.',
+                        'Rest Breaks Policy text template content goes here.',
+                        'Data Protection Policy text template content goes here.',
+                        'Employee Leave Policy text template content goes here.'
+                    ]);
+                }
+            });
+        }
+    });
+
+    const docAlterColumns = [
+        "ALTER TABLE legal_signed_documents ADD COLUMN generated_text_payload TEXT",
+        "ALTER TABLE legal_signed_documents ADD COLUMN email_sent_status INTEGER DEFAULT 0"
+    ];
+
+    docAlterColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors
+        });
+    });
+
 });
 
 module.exports = db;

@@ -6016,16 +6016,42 @@ function showComplianceDocGenerator() {
     }
     const emp = allXeroEmployees.find(u => u.id == editId);
     if (!emp) return;
-    
-    const subtitle = document.getElementById('complianceDocsModalSubtitle');
-    if (subtitle) {
-        subtitle.innerHTML = `Generate, preview, or email official compliance documents for <strong>${emp.first_name} ${emp.last_name}</strong>`;
-    }
-    
-    const modal = document.getElementById('complianceDocsModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+
+    Swal.fire({
+        title: 'Compiling Compliance Docs...',
+        text: 'Generating statutory agreements from database policy guidelines...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/api/hr/generate-compliance-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: editId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        Swal.close();
+        if (data.success) {
+            window.complianceDocsCache = data.documents;
+            const subtitle = document.getElementById('complianceDocsModalSubtitle');
+            if (subtitle) {
+                subtitle.innerHTML = `Generate, preview, or email official compliance documents for <strong>${emp.first_name} ${emp.last_name}</strong>`;
+            }
+            const modal = document.getElementById('complianceDocsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        } else {
+            Swal.fire('Compilation Error', data.error || 'Failed to generate compliance documents.', 'error');
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        Swal.fire('Network Error', err.message || 'Failed to connect to backend compile engine.', 'error');
+    });
 }
 
 function closeComplianceDocsModal() {
@@ -6040,76 +6066,126 @@ function actionComplianceDoc(docType, action) {
     if (!editId) return;
     const emp = allXeroEmployees.find(u => u.id == editId);
     if (!emp) return;
-    
-    const htmlContent = getComplianceDocHTML(docType, emp);
-    
+
+    const docTypeMapping = {
+        'offer_letter': 'Employment_Agreement',
+        'phone_policy': 'Mobile_Phone_Policy',
+        'break_policy': 'Rest_Breaks_Policy',
+        'data_theft': 'Data_Protection_Policy',
+        'leave_policy': 'Employee_Leave_Guide'
+    };
+
     if (action === 'preview') {
+        let printContent = '';
+        if (docType === 'package') {
+            const sortedDocs = [
+                'Employment_Agreement',
+                'Mobile_Phone_Policy',
+                'Rest_Breaks_Policy',
+                'Data_Protection_Policy',
+                'Employee_Leave_Guide'
+            ];
+            const parts = [];
+            sortedDocs.forEach(type => {
+                const doc = (window.complianceDocsCache || []).find(d => d.document_type === type);
+                if (doc && (doc.generated_text_payload || doc.generated_blob_text)) {
+                    parts.push(doc.generated_text_payload || doc.generated_blob_text);
+                }
+            });
+            printContent = parts.join('\n\n\n\n\n\n\n\n\n\n');
+        } else {
+            const mappedType = docTypeMapping[docType];
+            const doc = (window.complianceDocsCache || []).find(d => d.document_type === mappedType);
+            if (doc) {
+                printContent = doc.generated_text_payload || doc.generated_blob_text;
+            }
+        }
+
+        if (!printContent) {
+            Swal.fire('Document Error', 'Compliance text payload is empty or not generated yet.', 'warning');
+            return;
+        }
+
         const printWin = window.open('', '_blank');
         if (printWin) {
-            printWin.document.write(htmlContent);
+            printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; padding: 40px; white-space: pre-wrap;">${printContent}</pre>`);
             printWin.document.close();
         } else {
-            Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site to generate documents.', 'warning');
+            Swal.fire('Pop-up Blocked', 'Please allow pop-ups for this site to preview agreements.', 'warning');
         }
     } else if (action === 'email') {
         if (!emp.email) {
             Swal.fire('Email Missing', 'This employee profile does not have an email address configured.', 'warning');
             return;
         }
-        
+
+        const sendMailPromise = (type) => {
+            return fetch('/api/hr/email-compliance-doc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ employee_id: editId, document_type: type })
+            }).then(res => res.json());
+        };
+
         let docTitle = 'Compliance Document';
-        if (docType === 'offer_letter') docTitle = 'Employment Agreement & Offer Letter';
+        if (docType === 'offer_letter') docTitle = 'Employment Agreement';
         else if (docType === 'phone_policy') docTitle = 'Mobile Device Use Policy';
-        else if (docType === 'break_policy') docTitle = 'Rest Breaks & Scheduling Policy';
-        else if (docType === 'data_theft') docTitle = 'Data Protection & Confidentiality Policy';
-        else if (docType === 'leave_policy') docTitle = 'Leave Entitlements & Rules Guide';
-        else if (docType === 'package') docTitle = 'HR Onboarding Compliance Package';
-        
+        else if (docType === 'break_policy') docTitle = 'Rest Breaks Policy';
+        else if (docType === 'data_theft') docTitle = 'Data Protection Policy';
+        else if (docType === 'leave_policy') docTitle = 'Employee Leave Guide';
+        else if (docType === 'package') docTitle = 'Combined Onboarding Package';
+
         Swal.fire({
-            title: 'Send Document via Email?',
-            text: `Are you sure you want to send the "${docTitle}" as an HTML attachment to ${emp.first_name} at ${emp.email}?`,
+            title: 'Send Compliance Agreement?',
+            text: `Are you sure you want to send the "${docTitle}" to ${emp.first_name} at ${emp.email}?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, Send ✉️',
-            confirmButtonColor: '#0078C1',
-            cancelButtonText: 'Cancel'
+            confirmButtonColor: '#0078C1'
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
                     title: 'Sending Email...',
-                    text: 'Please wait while we establish a secure SMTP delivery tunnel...',
+                    text: 'Please wait while we establish secure SMTP delivery tunnel...',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
                     }
                 });
-                
-                fetch(`/api/attendance/workers/${emp.id}/email-document`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        docType: docType,
-                        htmlContent: htmlContent
+
+                if (docType === 'package') {
+                    const sortedDocs = [
+                        'Employment_Agreement',
+                        'Mobile_Phone_Policy',
+                        'Rest_Breaks_Policy',
+                        'Data_Protection_Policy',
+                        'Employee_Leave_Guide'
+                    ];
+                    
+                    let chain = Promise.resolve();
+                    sortedDocs.forEach(type => {
+                        chain = chain.then(() => sendMailPromise(type));
+                    });
+
+                    chain.then(() => {
+                        Swal.fire('Onboarding Package Sent!', `All compliance policies have been emailed to ${emp.email}.`, 'success');
+                    }).catch(err => {
+                        Swal.fire('Delivery Error', err.message || 'Failed to dispatch combined package.', 'error');
+                    });
+                } else {
+                    const mappedType = docTypeMapping[docType];
+                    sendMailPromise(mappedType)
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Email Sent!', `Document has been successfully delivered to ${emp.email}.`, 'success');
+                        } else {
+                            Swal.fire('Delivery Failed', data.error || 'Failed to dispatch email.', 'error');
+                        }
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'Email Sent!',
-                            text: `"${docTitle}" has been successfully delivered to ${emp.email}.`,
-                            icon: 'success',
-                            confirmButtonColor: '#0078C1'
-                        });
-                    } else {
-                        Swal.fire('Delivery Failed', data.error || 'Failed to dispatch email over SMTP.', 'error');
-                    }
-                })
-                .catch(err => {
-                    Swal.fire('Delivery Error', err.message || 'SMTP network connection timed out.', 'error');
-                });
+                    .catch(err => {
+                        Swal.fire('Delivery Error', err.message || 'SMTP network connection error.', 'error');
+                    });
+                }
             }
         });
     }

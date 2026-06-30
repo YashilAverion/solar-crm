@@ -5,7 +5,7 @@ const { requireAuth } = require('../helpers');
 const nodemailer = require('nodemailer');
 const config = require('../config');
 
-// Helper to generate legal text templates
+// Helper to generate legal text templates (Original)
 function generateDocumentText(docType, emp) {
     const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
     const formattedSalary = parseFloat(emp.base_salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
@@ -184,6 +184,9 @@ The Employee consents to logging daily punches via Biometric systems, CCTV camer
 3. CONFIDENTIAL ASSETS RECOVERY:
 Upon separation, the Employee must immediately surrender all assigned assets including Laptop, SIM card, ID card, Access Badge, and software licenses.
 
+4. SHIFT SECURITY OVERVIEW:
+Since operations run early morning shifts starting strictly at 03:30 AM IST (aligned to Australian Client Time Zones), biometric and CRM activity checks are monitored continuously.
+
 ${signBlocks}
             `.trim();
 
@@ -214,6 +217,168 @@ ${signBlocks}
     }
 }
 
+// Helper to generate the 5 compliance policy cards (New Template System)
+function compileHRComplianceDoc(docType, emp, policyMeta) {
+    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const formattedSalary = parseFloat(emp.base_salary || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    
+    const companyName = policyMeta ? policyMeta.company_name : 'Averion Global LLP';
+    const address = policyMeta ? policyMeta.registered_address : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
+    const gst = policyMeta ? policyMeta.gst_number : '24ACMFA7488G1Z0';
+    const pan = policyMeta ? policyMeta.pan_number : 'ACMFA7488G';
+    
+    const border = "========================================================================";
+    const header = `
+${border}
+                      ${companyName.toUpperCase()}
+  Registered Office: ${address}
+  GST: ${gst} | PAN: ${pan}
+${border}
+    `;
+
+    const signBlock = `
+------------------------------------------------------------------------
+For ${companyName}                       Accepted by Employee
+(Authorized Signatory)                       (${emp.full_name})
+------------------------------------------------------------------------
+    `;
+
+    switch(docType) {
+        case 'Employment_Agreement':
+            const isIntern = (emp.designation || '').toLowerCase().includes('intern');
+            const probationMonths = isIntern ? 6 : (emp.probation_period_months || 3);
+            const noticeDays = emp.notice_period_days || 45;
+            const salaryText = isIntern 
+                ? `Stipend: ${formattedSalary} (strictly between Rs 15,000 and Rs 25,000 per month)`
+                : `Base Salary: ${formattedSalary} per month (Salary range: Rs 15,000 to Rs 60,000)`;
+            
+            return `
+${header}
+OFFICIAL CONTRACT OF EMPLOYMENT
+
+Date: ${today}
+Employee/Intern:  ${emp.full_name}
+Designation: ${emp.designation || 'Associate'}
+Department: ${emp.department || 'Sales'}
+Onboarding Date:  ${emp.onboarding_date || today}
+
+We are pleased to onboard you at ${companyName} under the following legally binding terms:
+
+1. POSITION AND ROLE:
+You are appointed as "${emp.designation || 'Associate'}" in our ${emp.department || 'Sales'} Department.
+
+2. COMPENSATION AND REMUNERATION:
+- ${salaryText}
+- In compliance with corporate sales policy, a Target-Based Incentive Hold is applicable. Failure to meet designated sales quotas leads strictly to an incentive hold, with absolutely zero base salary deduction.
+
+3. WORK TIMINGS:
+Due to our business alignment with Australian client time zones, you will work early morning shifts starting strictly at 03:30 AM IST. Daily shift length is 9 hours.
+
+4. PROBATION AND NOTICE PERIOD:
+- You will undergo a probation period of ${probationMonths} months.
+- Post confirmation, the notice period required for separation is strictly ${noticeDays} days.
+
+5. LEGAL JURISDICTION:
+This agreement is governed by the laws of India. Any and all disputes arising from this contract shall be locked exclusively to the competent courts of Ahmedabad, Gujarat, India.
+
+${signBlock}
+            `.trim();
+
+        case 'Mobile_Phone_Policy':
+            return `
+${header}
+MOBILE DEVICE AND WORKSTATION SURVEILLANCE POLICY
+
+Date:  ${today}
+Employee:  ${emp.full_name}
+
+1. EARLY MORNING SHIFT ADHERENCE:
+Since our operations run on the Australian Time Zone starting at 03:30 AM IST daily, communication channel readiness is paramount.
+
+2. VoIP COMMUNICATION RULES:
+All official calls, outreach campaigns, and customer updates must be routed exclusively through our corporate VoIP channels. Use of personal lines for company business is strictly forbidden.
+
+3. PERSONAL SMARTPHONE RESTRICTION:
+The use of personal mobile phones on the active production floor/bay is strictly restricted during shift hours. Any remote data tracking or monitoring of workstations is done to prevent leakage.
+
+4. PENALTIES:
+Unapproved phone usage on the bay will result in immediate confiscation and disciplinary warning logs on your HRMS profile.
+
+${signBlock}
+            `.trim();
+
+        case 'Rest_Breaks_Policy':
+            return `
+${header}
+REST BREAKS & TIMESHEET PUNCHING COMPLIANCE POLICY
+
+Date:  ${today}
+Employee:  ${emp.full_name}
+
+This policy sets forth rigid interval standards in strict compliance with the Gujarat Shops & Establishments Act for office environments:
+
+1. WORK SHIFT LIMIT:
+Your daily shift is set to 9 hours (including rest intervals). Work hours cannot exceed statutory limits under the Shops Act.
+
+2. REST INTERVAL SCHEDULE:
+- Morning Tea Break: 15 minutes (scheduled at 06:00 AM IST).
+- Lunch/Rest Break: 30 minutes (scheduled at 09:30 AM IST).
+- Afternoon Tea Break: 15 minutes (scheduled at 11:45 AM IST).
+
+3. MANDATORY PUNCHING:
+Employees must punch out on the Biometric/HRMS system before commencing any break, and punch in immediately upon returning. Failure to punch breaks is a direct violation of labor reporting compliance.
+
+${signBlock}
+            `.trim();
+
+        case 'Data_Protection_Policy':
+            return `
+${header}
+DATA PROTECTION, STRICT NDA, & INTELLECTUAL PROPERTY COVENANT
+
+Date:  ${today}
+Employee:  ${emp.full_name}
+
+1. PROTECTION OF SOLAR CRM ASSETS:
+The customer leads database, product pricing rules, utility assumptions, and solar layout templates are the sole proprietary assets of ${companyName}.
+
+2. STRICT DATA LEAK BAN:
+The Employee is prohibited from copying, emailing, screenshotting, or exporting any databases, leads files, or client profiles to external personal storage or devices.
+
+3. INDIAN PENAL & CYBER LAW CONSEQUENCES:
+Any unauthorized export or leakage of database files will result in immediate termination for cause and criminal prosecution under:
+- Section 43 & 66 of the Information Technology Act, 2000 (up to 3 years imprisonment or fine up to Rs 5 Lakhs).
+- Section 408 of the Indian Penal Code (Criminal breach of trust by clerk or servant; up to 7 years imprisonment and fine).
+
+${signBlock}
+            `.trim();
+
+        case 'Employee_Leave_Guide':
+            return `
+${header}
+EMPLOYEE LEAVE ENTITLEMENTS GUIDE & COMPLIANCE
+
+Date:  ${today}
+Employee:  ${emp.full_name}
+
+1. LEAVE ALLOTMENT:
+Employees are entitled to a mandatory annual leave quota of 24 days per calendar year.
+
+2. SUBMISSION AND APPROVAL PATH:
+- All leave requests must be submitted through the Solar CRM HRMS portal at least 7 business days in advance.
+- Approval requires authorization from the department manager. Unapproved absences will be marked as Loss of Pay (LOP).
+
+3. SICK AND CASUAL LEAVES:
+Emergency sick leaves must be reported to the HR coordinator before 03:00 AM IST on the day of absence.
+
+${signBlock}
+            `.trim();
+
+        default:
+            return "Standard Corporate Compliance Document";
+    }
+}
+
 // ── ONBOARD NEW EMPLOYEE (POST) ──────────────────────────────────────
 router.post('/onboard-employee', requireAuth, (req, res) => {
     const {
@@ -234,16 +399,13 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
     // Enforce Corporate Internship Rules
     const isIntern = designation.toLowerCase().includes('intern');
     if (isIntern) {
-        // Probation strictly capped to 6 months
         if (parseInt(probation_period_months, 10) !== 6) {
             return res.status(400).json({ error: 'Internships must strictly have a 6-month probation period.' });
         }
-        // Salary strictly between 15000 and 25000 Rs
         if (salary < 15000 || salary > 25000) {
             return res.status(400).json({ error: 'Intern stipend must be strictly between 15,000 and 25,000 Rs.' });
         }
     } else {
-        // Base salary between 15000 and 60000 Rs for regular hires
         if (salary < 15000 || salary > 60000) {
             return res.status(400).json({ error: 'Employee base salary must be strictly between 15,000 and 60,000 Rs.' });
         }
@@ -298,7 +460,6 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
             function(err) {
                 if (err) return res.status(500).json({ error: err.message });
 
-                // Generate the 8 compliance documents dynamically
                 const docTypes = [
                     'Appointment_Letter', 'NDA_IP_Assignment', 'HR_Policy_Manual', 'Moonlighting_Covenant',
                     'Gratuity_Reimbursement', 'Anti_Poaching_Agreement', 'IT_Asset_Surveillance', 'Shift_Safety_Declaration'
@@ -315,20 +476,17 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                 docTypes.forEach(docType => {
                     const generatedText = generateDocumentText(docType, emp);
                     
-                    // Check if already exists in database
                     db.get(
                         `SELECT id, signed_status FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
                         [employee_id, docType],
                         (docErr, docRow) => {
                             if (docErr) console.error('Error fetching document status:', docErr.message);
                             else if (!docRow) {
-                                // Insert fresh document
                                 db.run(
                                     `INSERT INTO legal_signed_documents (employee_id, document_type, signed_status, generated_blob_text) VALUES (?, ?, 0, ?)`,
                                     [employee_id, docType, generatedText]
                                 );
                             } else if (docRow.signed_status === 0) {
-                                // Regenerate if still unsigned to catch any updated variables
                                 db.run(
                                     `UPDATE legal_signed_documents SET generated_blob_text = ? WHERE id = ?`,
                                     [generatedText, docRow.id]
@@ -351,8 +509,7 @@ router.get('/employee/:id', requireAuth, (req, res) => {
     db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [empId], (err, profile) => {
         if (err) return res.status(500).json({ error: err.message });
         
-        // Always fetch the associated documents checklist
-        db.all('SELECT id, document_type, signed_status, generated_blob_text, timestamp FROM legal_signed_documents WHERE employee_id = ?', [empId], (docErr, documents) => {
+        db.all('SELECT id, document_type, signed_status, generated_blob_text, generated_text_payload, email_sent_status, timestamp FROM legal_signed_documents WHERE employee_id = ?', [empId], (docErr, documents) => {
             if (docErr) return res.status(500).json({ error: docErr.message });
             
             res.json({
@@ -427,13 +584,177 @@ router.post('/employee/:id/email', requireAuth, (req, res) => {
                 `,
                 attachments: [{
                     filename: `${document_type}_Agreement.txt`,
-                    content: doc.generated_blob_text
+                    content: doc.generated_blob_text || doc.generated_text_payload
                 }]
             };
 
             transporter.sendMail(mailOptions, (mailErr) => {
                 if (mailErr) return res.status(500).json({ error: 'SMTP delivery failed: ' + mailErr.message });
                 res.json({ success: true, message: 'Document sent to employee.' });
+            });
+        }
+    );
+});
+
+// ── NEW COMPLIANCE DOCS GENERATOR PORTAL (POST /api/hr/generate-compliance-docs) ───────────────────
+router.post('/generate-compliance-docs', requireAuth, (req, res) => {
+    const { employee_id } = req.body;
+    if (!employee_id) {
+        return res.status(400).json({ error: 'employee_id is required' });
+    }
+
+    db.get('SELECT * FROM attendance_workers WHERE id = ?', [employee_id], (workerErr, worker) => {
+        if (workerErr) return res.status(500).json({ error: workerErr.message });
+        if (!worker) return res.status(404).json({ error: 'Worker profile not found.' });
+
+        db.get('SELECT * FROM employee_compliance_profiles WHERE employee_id = ?', [employee_id.toString()], (profileErr, profile) => {
+            if (profileErr) return res.status(500).json({ error: profileErr.message });
+
+            const empDetails = {
+                employee_id: employee_id.toString(),
+                full_name: `${worker.first_name || ''} ${worker.last_name || ''}`.trim(),
+                department: profile ? profile.department : 'Sales',
+                designation: profile ? profile.designation : (worker.job_title || 'Associate'),
+                base_salary: profile ? profile.base_salary : (worker.per_hour_wages_inc_tax ? worker.per_hour_wages_inc_tax * 160 : 25000),
+                probation_period_months: profile ? profile.probation_period_months : 3,
+                notice_period_days: profile ? profile.notice_period_days : 45,
+                annual_leave_quota: profile ? profile.annual_leave_quota : 24,
+                onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
+                gratuity_eligible: profile ? profile.gratuity_eligible : 0,
+                incentive_hold_flag: profile ? profile.incentive_hold_flag : 0,
+                shift_start_time: profile ? profile.shift_start_time : '03:30 AM'
+            };
+
+            db.get("SELECT * FROM averion_hr_policies WHERE company_name = 'Averion Global LLP' LIMIT 1", [], (policyErr, policyMeta) => {
+                const docTypes = [
+                    'Employment_Agreement',
+                    'Mobile_Phone_Policy',
+                    'Rest_Breaks_Policy',
+                    'Data_Protection_Policy',
+                    'Employee_Leave_Guide'
+                ];
+
+                const documents = [];
+                let completed = 0;
+
+                docTypes.forEach(docType => {
+                    const textPayload = compileHRComplianceDoc(docType, empDetails, policyMeta);
+                    
+                    db.get(
+                        `SELECT id FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
+                        [employee_id.toString(), docType],
+                        (checkErr, existingDoc) => {
+                            if (!checkErr && existingDoc) {
+                                db.run(
+                                    `UPDATE legal_signed_documents 
+                                     SET generated_text_payload = ?, generated_blob_text = ? 
+                                     WHERE id = ?`,
+                                    [textPayload, textPayload, existingDoc.id],
+                                    (updateErr) => {
+                                        documents.push({
+                                            document_type: docType,
+                                            generated_text_payload: textPayload
+                                        });
+                                        completed++;
+                                        if (completed === docTypes.length) {
+                                            res.json({ success: true, documents });
+                                        }
+                                    }
+                                );
+                            } else {
+                                db.run(
+                                    `INSERT INTO legal_signed_documents 
+                                     (employee_id, document_type, signed_status, generated_text_payload, generated_blob_text) 
+                                     VALUES (?, ?, 0, ?, ?)`,
+                                    [employee_id.toString(), docType, textPayload, textPayload],
+                                    (insertErr) => {
+                                        documents.push({
+                                            document_type: docType,
+                                            generated_text_payload: textPayload
+                                        });
+                                        completed++;
+                                        if (completed === docTypes.length) {
+                                            res.json({ success: true, documents });
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    );
+                });
+            });
+        });
+    });
+});
+
+// ── NEW COMPLIANCE EMAIL DISPATCH PORTAL (POST /api/hr/email-compliance-doc) ─────────────────────
+router.post('/email-compliance-doc', requireAuth, (req, res) => {
+    const { employee_id, document_type } = req.body;
+    if (!employee_id || !document_type) {
+        return res.status(400).json({ error: 'employee_id and document_type are required' });
+    }
+
+    db.get(
+        `SELECT * FROM legal_signed_documents WHERE employee_id = ? AND document_type = ?`,
+        [employee_id.toString(), document_type],
+        (err, doc) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!doc) return res.status(404).json({ error: 'Document template not found. Please compile/generate documents first.' });
+
+            db.get(`SELECT email, first_name FROM attendance_workers WHERE id = ?`, [employee_id], (workerErr, worker) => {
+                if (workerErr) return res.status(500).json({ error: workerErr.message });
+                if (!worker || !worker.email) {
+                    return res.status(400).json({ error: 'Employee does not have a registered email address.' });
+                }
+
+                const isEmailConfigured = config.email && config.email.host && config.email.port && config.email.user && config.email.pass;
+                if (!isEmailConfigured) {
+                    return res.status(400).json({ error: 'SMTP email credentials are not configured in your .env file.' });
+                }
+
+                const transporter = nodemailer.createTransport({
+                    host: config.email.host,
+                    port: config.email.port,
+                    secure: config.email.secure,
+                    auth: {
+                        user: config.email.user,
+                        pass: config.email.pass
+                    }
+                });
+
+                const docTitle = document_type.replace(/_/g, ' ');
+
+                const mailOptions = {
+                    from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,
+                    to: worker.email,
+                    subject: `${docTitle} - Averion Compliance Management`,
+                    html: `
+                        <div style="font-family: sans-serif; max-width: 600px; color: #334155; line-height: 1.6; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <h2 style="color: #0f172a; margin-top: 0; border-bottom: 2px solid #0078C1; padding-bottom: 8px;">Averion Global LLP</h2>
+                            <p>Dear ${worker.first_name || 'Employee'},</p>
+                            <p>Please find attached the official compliance policy document: <strong>${docTitle}</strong>.</p>
+                            <p>You are required to review the attached policy and acknowledge it within your HRMS compliance dashboard.</p>
+                            <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;">
+                            <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">This is an automated operational notification from Averion HR. Please do not reply directly to this email.</p>
+                        </div>
+                    `,
+                    attachments: [{
+                        filename: `${document_type}_Compliance.txt`,
+                        content: doc.generated_text_payload || doc.generated_blob_text
+                    }]
+                };
+
+                transporter.sendMail(mailOptions, (mailErr) => {
+                    if (mailErr) return res.status(500).json({ error: 'SMTP delivery failed: ' + mailErr.message });
+
+                    db.run(
+                        `UPDATE legal_signed_documents SET email_sent_status = 1 WHERE id = ?`,
+                        [doc.id],
+                        (updateErr) => {
+                            res.json({ success: true, message: `"${docTitle}" sent successfully.` });
+                        }
+                    );
+                });
             });
         }
     );

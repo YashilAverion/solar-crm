@@ -1999,6 +1999,7 @@ app.use('/api/invoice', invoiceRoutes);
 app.use('/combos', comboRoutes);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/compliance', complianceRouter);
+app.use('/api/hr', complianceRouter);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/quotations', quotationRoutes);
 
