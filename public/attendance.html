@@ -1792,7 +1792,7 @@
                     <!-- Computed Payslip Summary Box -->
                     <div class="payslip-summary-box" id="payrollSummaryBox">
                         <div class="payslip-title">
-                            <span>Fair Work Compliant Payslip Summary</span>
+                            <span id="payrollTitleLabel">Fair Work Compliant Payslip Summary</span>
                             <span style="font-size: 11px; text-transform: none; font-weight: 500;" id="payrollDateRangeLabel"></span>
                         </div>
                         <div class="payslip-grid">
@@ -1832,11 +1832,11 @@
                                     <strong id="payrollOtEarnings">$0.00</strong>
                                 </div>
                                 <div class="payslip-item deduction">
-                                    <span>ATO PAYG Tax Withheld:</span>
+                                    <span id="payrollTaxLabel">ATO PAYG Tax Withheld:</span>
                                     <strong id="payrollTaxWithheld">-$0.00</strong>
                                 </div>
                                 <div class="payslip-item">
-                                    <span>Super Contribution (12% SG):</span>
+                                    <span id="payrollSuperLabel">Super Contribution (12% SG):</span>
                                     <strong id="payrollSuperContribution">$0.00</strong>
                                 </div>
                                 <div class="payslip-item net">
@@ -1859,8 +1859,8 @@
                                     <th>Overtime Hours</th>
                                     <th>Remaining Hours</th>
                                     <th>Gross Pay</th>
-                                    <th>Tax Withheld</th>
-                                    <th>Super (12%)</th>
+                                    <th id="payrollTaxHeader">Tax Withheld</th>
+                                    <th id="payrollSuperHeader">Super (12%)</th>
                                     <th>Net Payable</th>
                                     <th>Generated On</th>
                                     <th>Actions</th>
@@ -4996,10 +4996,11 @@ function calculatePayroll() {
         return data;
     })
     .then(data => {
+        const currencySym = activePayrollCompanyFilter === 'Averion Global LLP' ? '₹' : '$';
         // Populate payslip layout
         document.getElementById('payrollDateRangeLabel').textContent = `${start} to ${end}`;
         const isTemplate = data.calculation_metadata && data.calculation_metadata.has_template_rate;
-        document.getElementById('payrollBaseRate').textContent = `$${data.base_rate.toFixed(2)} / hr${isTemplate ? ' (Template Rate)' : ''}`;
+        document.getElementById('payrollBaseRate').textContent = `${currencySym}${data.base_rate.toFixed(2)} / hr${isTemplate ? ' (Template Rate)' : ''}`;
         document.getElementById('payrollActualHours').textContent = `${(data.actual_hours || 0).toFixed(2)} hrs`;
         document.getElementById('payrollOrdHours').textContent = `${data.ordinary_hours.toFixed(2)} hrs`;
         document.getElementById('payrollOtHours').textContent = `${data.overtime_hours.toFixed(2)} hrs`;
@@ -5008,11 +5009,11 @@ function calculatePayroll() {
         const ordEarnings = data.ordinary_hours * data.base_rate;
         const otEarnings = data.gross_pay - ordEarnings;
         
-        document.getElementById('payrollOrdEarnings').textContent = `$${ordEarnings.toFixed(2)}`;
-        document.getElementById('payrollOtEarnings').textContent = `$${Math.max(0, otEarnings).toFixed(2)}`;
-        document.getElementById('payrollTaxWithheld').textContent = `-$${data.tax_withheld.toFixed(2)}`;
-        document.getElementById('payrollSuperContribution').textContent = `$${data.super_contribution.toFixed(2)}`;
-        document.getElementById('payrollNetPay').textContent = `$${data.net_pay.toFixed(2)}`;
+        document.getElementById('payrollOrdEarnings').textContent = `${currencySym}${ordEarnings.toFixed(2)}`;
+        document.getElementById('payrollOtEarnings').textContent = `${currencySym}${Math.max(0, otEarnings).toFixed(2)}`;
+        document.getElementById('payrollTaxWithheld').textContent = `-${currencySym}${data.tax_withheld.toFixed(2)}`;
+        document.getElementById('payrollSuperContribution').textContent = `${currencySym}${data.super_contribution.toFixed(2)}`;
+        document.getElementById('payrollNetPay').textContent = `${currencySym}${data.net_pay.toFixed(2)}`;
         
         // Fetch matching profile details
         fetch('/api/attendance/workers')
@@ -7830,6 +7831,16 @@ function loadPayrollModuleData() {
     
     historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Loading processed payslips ledger...</td></tr>';
     
+    const superHeader = document.getElementById('payrollSuperHeader');
+    const taxHeader = document.getElementById('payrollTaxHeader');
+    if (activePayrollCompanyFilter === 'Averion Global LLP') {
+        if (superHeader) superHeader.textContent = 'EPF / Contributions';
+        if (taxHeader) taxHeader.textContent = 'PT & TDS Withheld';
+    } else {
+        if (superHeader) superHeader.textContent = 'Super (12%)';
+        if (taxHeader) taxHeader.textContent = 'Tax Withheld';
+    }
+    
     // Fetch employee processed payslips
     fetch(`/api/payroll/history/${targetUserId}`)
         .then(res => res.json())
@@ -7841,6 +7852,8 @@ function loadPayrollModuleData() {
             }
             
             rows.forEach(r => {
+                const currencySym = activePayrollCompanyFilter === 'Averion Global LLP' ? '₹' : '$';
+                const taxSign = r.tax_withheld > 0 ? '-' : '';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</td>
@@ -7849,13 +7862,20 @@ function loadPayrollModuleData() {
                     <td>${r.overtime_hours.toFixed(2)} hrs</td>
                     <td>${(r.remaining_hours || 0).toFixed(2)} hrs</td>
                     <td style="font-weight: 600; position: relative;" class="gross-pay-cell" onmouseenter="showGrossPayTooltip(event, this)" onmouseleave="hideGrossPayTooltip()" data-calc="${encodeURIComponent(JSON.stringify(r))}">
-                        $${r.gross_pay.toFixed(2)}
+                        ${currencySym}${r.gross_pay.toFixed(2)}
                     </td>
-                    <td style="color:var(--danger)">-$${r.tax_withheld.toFixed(2)}</td>
-                    <td style="color:var(--primary)">$${r.super_contribution.toFixed(2)}</td>
-                    <td style="font-weight: 700; color:var(--success)">$${r.net_pay.toFixed(2)}</td>
+                    <td style="color:var(--danger)">substituteTaxSign${currencySym}substituteTaxWithheld
+                    <td style="color:var(--primary)">substituteCurrencySymsubstituteSuper
+                    <td style="font-weight: 700; color:var(--success)">substituteCurrencySymsubstituteNetPay
                     <td style="font-size:10px; color:var(--text-muted);">${formatGeneratedOn(r.created_at, r.generated_by)}</td>
                     <td>
+                        <button class="btn-table-action-icon" onclick="printSalarySlip(${r.id}, ${JSON.stringify(r).replace(/"/g, '&quot;')})" style="margin-right:6px;" title="Print/View Salary Slip">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                        </button>
                         <button class="btn-table-action-icon" onclick="editPayrollRecord(${r.id}, ${JSON.stringify(r).replace(/"/g, '&quot;')})" style="margin-right:6px;" title="Edit Payslip">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                                 <path d="M12 20h9"></path>
@@ -8310,6 +8330,418 @@ function updateSelectedWeeksOrFortnights() {
     
     document.getElementById('payrollStart').value = minDate;
     document.getElementById('payrollEnd').value = maxDate;
+}
+
+// Helper to convert number to Indian Rupees in words
+function convertNumberToWords(amount) {
+    const words = {
+        0: 'Zero', 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine',
+        10: 'Ten', 11: 'Eleven', 12: 'Twelve', 13: 'Thirteen', 14: 'Fourteen', 15: 'Fifteen', 16: 'Sixteen',
+        17: 'Seventeen', 18: 'Eighteen', 19: 'Nineteen', 20: 'Twenty', 30: 'Thirty', 40: 'Forty', 50: 'Fifty',
+        60: 'Sixty', 70: 'Seventy', 80: 'Eighty', 90: 'Ninety'
+    };
+    
+    amount = Math.round(amount);
+    if (amount === 0) return 'Zero';
+    
+    function helper(num) {
+        if (num < 20) return words[num];
+        if (num < 100) {
+            const ten = Math.floor(num / 10) * 10;
+            const single = num % 10;
+            return words[ten] + (single ? ' ' + words[single] : '');
+        }
+        if (num < 1000) {
+            const hundred = Math.floor(num / 100);
+            const remain = num % 100;
+            return words[hundred] + ' Hundred' + (remain ? ' ' + helper(remain) : '');
+        }
+        if (num < 100000) {
+            const thousand = Math.floor(num / 1000);
+            const remain = num % 1000;
+            return helper(thousand) + ' Thousand' + (remain ? ' ' + helper(remain) : '');
+        }
+        if (num < 10000000) {
+            const lakh = Math.floor(num / 100000);
+            const remain = num % 100000;
+            return helper(lakh) + ' Lakh' + (remain ? ' ' + helper(remain) : '');
+        }
+        const crore = Math.floor(num / 10000000);
+        const remain = num % 10000000;
+        return helper(crore) + ' Crore' + (remain ? ' ' + helper(remain) : '');
+    }
+    
+    return helper(amount);
+}
+
+function formatDoj(dateStr) {
+    if (!dateStr) return 'As per Company Records';
+    return dateStr.substring(8, 10) + '-' + dateStr.substring(5, 7) + '-' + dateStr.substring(0, 4);
+}
+
+function printSalarySlip(recordId, record) {
+    const user = (window.allWorkers || []).find(u => u.id == record.user_id);
+    if (!user) {
+        showXeroToast('Employee details not found for printing.', 'error');
+        return;
+    }
+
+    const isAverion = user.company_name === 'Averion Global LLP';
+    const currencySym = isAverion ? '₹' : '$';
+    
+    // Parse Date Range
+    const startDate = new Date(record.pay_period_start);
+    const endDate = new Date(record.pay_period_end);
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const periodMonth = months[startDate.getMonth()];
+    const periodYear = startDate.getFullYear();
+    
+    // Compute days
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const totalDays = Math.round(timeDiff / (1000 * 3600 * 24)) + 1;
+    let sundays = 0;
+    let current = new Date(startDate);
+    while (current <= endDate) {
+        if (current.getDay() === 0) sundays++;
+        current.setDate(current.getDate() + 1);
+    }
+    
+    const wd = totalDays;
+    const wo = sundays;
+    const ph = 0;
+    const pd = record.ordinary_hours > 0 ? Math.min(wd, Math.round((record.ordinary_hours / 9.0) * 100) / 100) : wd;
+    const lop = Math.max(0, wd - pd - wo);
+
+    let htmlContent = '';
+    if (isAverion) {
+        const basicActual = record.gross_pay * 0.50;
+        const basicPayable = record.gross_pay * 0.50;
+        const hraActual = record.gross_pay * 0.20;
+        const hraPayable = record.gross_pay * 0.20;
+        const specialActual = record.gross_pay * 0.30;
+        const specialPayable = record.gross_pay * 0.30;
+
+        const amountInWords = convertNumberToWords(record.net_pay);
+
+        htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Salary Slip - ${user.full_name}</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1e293b; padding: 20px; line-height: 1.5; }
+                .slip-wrapper { max-width: 800px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+                .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .header-logo { width: 80px; height: auto; }
+                .company-title { font-size: 16px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
+                .company-addr { font-size: 10px; color: #64748b; }
+                .slip-title-box { text-align: right; }
+                .slip-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px; }
+                .slip-subtitle { font-size: 9px; color: #64748b; text-transform: uppercase; }
+                
+                .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #cbd5e1; }
+                .meta-table td { padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 10px; width: 25%; }
+                .meta-label { font-weight: 600; color: #64748b; }
+                
+                .details-grid { display: grid; grid-template-columns: 1.5fr 3fr 2fr; gap: 0px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
+                .grid-col { border-right: 1px solid #cbd5e1; }
+                .grid-col:last-child { border-right: none; }
+                .col-header { background: #f8fafc; font-weight: 700; text-transform: uppercase; font-size: 9px; padding: 6px; text-align: center; border-bottom: 1px solid #cbd5e1; letter-spacing: 0.5px; }
+                
+                .row-item { display: flex; justify-content: space-between; padding: 5px 8px; font-size: 10px; border-bottom: 1px dashed #f1f5f9; }
+                .row-item:last-child { border-bottom: none; }
+                .row-item span { color: #475569; }
+                .row-item strong { color: #0f172a; }
+                
+                .table-inner { width: 100%; border-collapse: collapse; }
+                .table-inner th, .table-inner td { padding: 5px 8px; font-size: 10px; text-align: left; border-bottom: 1px dashed #f1f5f9; }
+                .table-inner th { background: #f8fafc; font-weight: 600; text-transform: uppercase; font-size: 8px; border-bottom: 1px solid #cbd5e1; }
+                
+                .total-row { background: #f8fafc; font-weight: 700; border-top: 1px solid #cbd5e1; border-bottom: none; }
+                
+                .words-box { border: 1px solid #cbd5e1; padding: 10px; font-size: 10px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+                .words-text { font-style: italic; color: #475569; }
+                .net-box { text-align: right; }
+                .net-amount { font-size: 14px; font-weight: 800; color: #16a34a; }
+                
+                .notice-footer { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 25px; }
+                
+                @media print {
+                    body { padding: 0; }
+                    .slip-wrapper { border: none; box-shadow: none; padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="slip-wrapper">
+                <table class="header-table">
+                    <tr>
+                        <td style="width: 80px;">
+                            <img src="data:image/jpeg;base64,mockLogo" class="header-logo" alt="Logo" style="display:none;">
+                        </td>
+                        <td style="padding-left: 15px;">
+                            <div class="company-title">AVERION GLOBAL LLP</div>
+                            <div class="company-addr">Shop 2, Sthapatya Residency, Near Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060</div>
+                            <div class="company-addr">GSTIN: 24ACMFA7488G1Z0 | PAN: ACMFA7488G</div>
+                        </td>
+                        <td class="slip-title-box">
+                            <div class="slip-subtitle">Form IV B [Rule 26(2)(b)]</div>
+                            <div class="slip-title">Salary Slip</div>
+                            <div style="font-weight: 600; color: #475569; font-size: 10px; margin-top: 3px;">For the Month of ${periodMonth} - ${periodYear}</div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label">Emp. Id</td>
+                        <td>${user.employee_id || user.id}</td>
+                        <td class="meta-label">P.F. No.</td>
+                        <td>${user.uan_number && user.uan_number !== 'As per Company Records' ? user.uan_number : 'N.A.'}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Emp. Name</td>
+                        <td style="font-weight: 700;">${user.full_name}</td>
+                        <td class="meta-label">ESI. No.</td>
+                        <td>${user.esic_number && user.esic_number !== 'As per Company Records' ? user.esic_number : 'N.A.'}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Designation</td>
+                        <td>${user.job_title}</td>
+                        <td class="meta-label">UAN No.</td>
+                        <td>${user.uan_number && user.uan_number !== 'As per Company Records' ? user.uan_number : 'N.A.'}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Department</td>
+                        <td>${user.department || 'Operations'}</td>
+                        <td class="meta-label">Bank</td>
+                        <td>${user.bank_bsb && user.bank_bsb !== 'As per Company Records' ? user.bank_bsb : 'As per Company Records'}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Location</td>
+                        <td>AHMEDABAD</td>
+                        <td class="meta-label">A/c No</td>
+                        <td>${user.bank_account_number && user.bank_account_number !== 'As per Company Records' ? user.bank_account_number : 'As per Company Records'}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">PAN No</td>
+                        <td>${user.pan_number && user.pan_number !== 'As per Company Records' ? user.pan_number : 'As per Company Records'}</td>
+                        <td class="meta-label">D.O.J.</td>
+                        <td>${formatDoj(user.start_date)}</td>
+                    </tr>
+                </table>
+                
+                <div class="details-grid">
+                    <div class="grid-col">
+                        <div class="col-header">Working Details</div>
+                        <div class="row-item"><span>WD</span><strong>substituteWd</strong></div>
+                        <div class="row-item"><span>WO</span><strong>substituteWo</strong></div>
+                        <div class="row-item"><span>PH</span><strong>substitutePh</strong></div>
+                        <div class="row-item"><span>PD</span><strong>substitutePd</strong></div>
+                        <div class="row-item"><span>Coff</span><strong>0.0</strong></div>
+                        <div class="row-item"><span>OD</span><strong>0.0</strong></div>
+                        <div class="row-item"><span>PL</span><strong>0.0</strong></div>
+                        <div class="row-item"><span>CL</span><strong>0.0</strong></div>
+                        <div class="row-item"><span>SL</span><strong>0.0</strong></div>
+                        <div class="row-item"><span>LOP</span><strong>substituteLop</strong></div>
+                        <div class="row-item"><span>OT Hrs.</span><strong>substituteOtHoursExpression</strong></div>
+                        <div class="row-item total-row"><span>TOTAL</span><strong>substitutePdExpression</strong></div>
+                    </div>
+                    
+                    <div class="grid-col">
+                        <div class="col-header">Earning Details</div>
+                        <table class="table-inner">
+                            <thead>
+                                <tr>
+                                    <th>Earnings</th>
+                                    <th style="text-align: right;">Actual</th>
+                                    <th style="text-align: right;">Payable</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic Salary</td>
+                                    <td style="text-align: right;">₹${basicActual.toFixed(2)}</td>
+                                    <td style="text-align: right;">₹substituteBasicPayable</td>
+                                </tr>
+                                <tr>
+                                    <td>HRA</td>
+                                    <td style="text-align: right;">₹${hraActual.toFixed(2)}</td>
+                                    <td style="text-align: right;">₹substituteHraPayable</td>
+                                </tr>
+                                <tr>
+                                    <td>Special Allowance</td>
+                                    <td style="text-align: right;">₹substituteSpecialActual</td>
+                                    <td style="text-align: right;">₹substituteSpecialPayable</td>
+                                </tr>
+                                <tr>
+                                    <td>Incentive</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>OverTime</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                    <td style="text-align: right;">₹substituteOtFormula</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td>Gross Income</td>
+                                    <td style="text-align: right;">₹substituteGrossPayExpression</td>
+                                    <td style="text-align: right;">₹substituteGrossPayExpression</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="grid-col">
+                        <div class="col-header">Deduction Details</div>
+                        <table class="table-inner" style="height: calc(100% - 24px);">
+                            <thead>
+                                <tr>
+                                    <th>Deduction</th>
+                                    <th style="text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>P.F.</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>ESI</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>P.T.</td>
+                                    <td style="text-align: right;">₹substituteTaxWithheldExpression</td>
+                                </tr>
+                                <tr>
+                                    <td>TDS</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>L.W.F.</td>
+                                    <td style="text-align: right;">₹0.00</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td>Total Deduction</td>
+                                    <td style="text-align: right;">₹substituteTaxWithheldExpression</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="words-box">
+                    <div>
+                        <div style="font-weight: 600; color: #64748b; margin-bottom: 2px;">Rupees in Words</div>
+                        <div class="words-text">substituteWordsText Rupees Only</div>
+                    </div>
+                    <div class="net-box">
+                        <div style="font-weight: 600; color: #64748b;">Net Amount</div>
+                        <div class="net-amount">₹substituteNetPayExpression</div>
+                    </div>
+                </div>
+                
+                <div class="notice-footer">This is a computer-generated statement hence does not require a signature.</div>
+            </div>
+        </body>
+        </html>
+        `;
+    } else {
+        htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payslip - substituteUserFullName</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1e293b; padding: 25px; line-height: 1.6; }
+                .payslip-container { max-width: 700px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 25px; border-radius: 6px; }
+                .heading { font-size: 18px; font-weight: 800; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 20px; }
+                .grid-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .grid-table td { padding: 6px 8px; border: 1px solid #e2e8f0; width: 50%; }
+                .section-title { font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+                .table-data { width: 100%; border-collapse: collapse; }
+                .table-data th, .table-data td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+                .table-data th { background-color: #f8fafc; font-weight: 700; }
+                .total-row { font-weight: 700; background-color: #f8fafc; }
+            </style>
+        </head>
+        <body>
+            <div class="payslip-container">
+                <div class="heading">PAYSLIP SUMMARY - substituteCompanyNameExpression</div>
+                <table class="grid-table">
+                    <tr>
+                        <td><strong>Employee Name:</strong> substituteUserFullName</td>
+                        <td><strong>Employment Type:</strong> substituteUserRole</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pay Period:</strong> substitutePeriodStart to substitutePeriodEnd</td>
+                        <td><strong>Hourly Rate:</strong> \$\${record.gross_pay > 0 && record.ordinary_hours > 0 ? (record.gross_pay / record.ordinary_hours).toFixed(2) : '0.00'} / hr</td>
+                    </tr>
+                </table>
+                
+                <div class="section-title">Hours & Earnings</div>
+                <table class="table-data">
+                    <thead>
+                        <tr>
+                            <th>Earning Item</th>
+                            <th>Hours</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ordinary Hours Worked</td>
+                            <td>substituteOrdHoursExpression</td>
+                            <td>\$\${record.gross_pay.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Overtime Hours Worked</td>
+                            <td>substituteOtHoursExpression2</td>
+                            <td>\$0.00</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Gross Earnings</td>
+                            <td>substituteTotalHoursExpression</td>
+                            <td>\$\${record.gross_pay.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="section-title">Deductions & Superannuation</div>
+                <table class="table-data">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ATO PAYG Tax Withheld</td>
+                            <td style="color:red;">-\$\${record.tax_withheld.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Superannuation (12% SG)</td>
+                            <td>\$\${record.super_contribution.toFixed(2)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Net Pay Disbursed</td>
+                            <td style="color:green;">\$\${record.net_pay.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+    
+    const win = window.open('', '_blank');
+    win.document.write(htmlContent);
+    win.document.close();
+    win.print();
 }
 </script>
 
