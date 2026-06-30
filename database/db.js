@@ -1400,6 +1400,20 @@ db.serialize(() => {
         });
     });
 
+    // Phase 2: Employment Documents & Agreements Kit
+    const phase2ProfileColumns = [
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN is_intern INTEGER DEFAULT 0",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN stipend_amount REAL",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN probation_end_date TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN contract_version INTEGER DEFAULT 1"
+    ];
+
+    phase2ProfileColumns.forEach(sql => {
+        db.run(sql, (err) => {
+            // Ignore duplicate column errors silently
+        });
+    });
+
 });
 
 module.exports = db;

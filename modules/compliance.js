@@ -2250,6 +2250,349 @@ function compilePhaseDoc(category, emp, registry) {
             break;
         }
 
+
+        // ── PHASE 2: EMPLOYMENT DOCUMENTS & AGREEMENTS KIT ────────────────────
+
+        case 'Phase2_Offer_Letter': {
+            const offerGross = parseFloat(emp.base_salary || gross || 0);
+            const offerBasic = offerGross * 0.50;
+            const offerHRA   = offerGross * 0.20;
+            const offerSpl   = offerGross * 0.30;
+            const fmtOfferGross = offerGross.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtOfferBasic = offerBasic.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtOfferHRA   = offerHRA.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtOfferSpl   = offerSpl.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const offerDate     = docDate;
+            const offerDeadline = (() => {
+                const d = new Date(); d.setDate(d.getDate() + 7);
+                return formatToDDMMYY(d.toISOString().split('T')[0]);
+            })();
+
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/OL/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 2 — Offer Letter<br>
+                <strong>Offer Date:</strong> ${offerDate}<br>
+                <strong>Offer Valid Until:</strong> ${offerDeadline}
+            </div>
+
+            <div class="doc-title">Conditional Offer of Employment</div>
+
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>On behalf of <strong>Averion Global LLP</strong>, it is with great pleasure that we extend this Conditional Offer of Employment to you for the position of <strong>${emp.designation || 'Associate'}</strong> within the <strong>${emp.department || 'Operations'}</strong> Department. This offer is contingent upon the satisfactory completion of all pre-employment verifications, document submissions, and onboarding formalities as stipulated herein.</p>
+
+            <h3>1. Position & Reporting</h3>
+            <ul>
+                <li><strong>Designation:</strong> ${emp.designation || 'Associate'}</li>
+                <li><strong>Department:</strong> ${emp.department || 'Operations'}</li>
+                <li><strong>Reporting To:</strong> Designated Team Lead / Managing Partner</li>
+                <li><strong>Work Location:</strong> Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad — 380060</li>
+                <li><strong>Proposed Joining Date:</strong> ${docDate}</li>
+            </ul>
+
+            <h3>2. Compensation Package</h3>
+            <ul>
+                <li>Your monthly <strong>Cost to Company (CTC)</strong> has been fixed at <strong>${fmtOfferGross}</strong> as detailed below:</li>
+            </ul>
+            <table class="annexure-table">
+                <thead><tr><th>Salary Component</th><th>%</th><th>Monthly (INR)</th></tr></thead>
+                <tbody>
+                    <tr><td>Basic Salary</td><td>50%</td><td>${fmtOfferBasic}</td></tr>
+                    <tr><td>House Rent Allowance (HRA)</td><td>20%</td><td>${fmtOfferHRA}</td></tr>
+                    <tr><td>Special Allowance</td><td>30%</td><td>${fmtOfferSpl}</td></tr>
+                    <tr style="background-color:#e2e8f0;font-weight:700;"><td>Total Gross CTC</td><td>100%</td><td>${fmtOfferGross}</td></tr>
+                </tbody>
+            </table>
+            <ul>
+                <li>Salary is disbursed on the last working day of each calendar month via bank transfer.</li>
+                <li>Statutory deductions (PF, PT, TDS) will apply as per applicable Indian laws.</li>
+            </ul>
+
+            <h3>3. Probation Period</h3>
+            <ul>
+                <li>You will be on probation for a period of <strong>${probationMonths} (three) months</strong> from the date of joining.</li>
+                <li>Upon successful completion of probation and a satisfactory performance review, your employment will be confirmed in writing.</li>
+                <li>During probation, either party may terminate employment with fifteen (15) calendar days written notice.</li>
+            </ul>
+
+            <h3>4. Shift & Working Hours</h3>
+            <ul>
+                <li>Standard daily shift duration: <strong>9 (nine) hours</strong>, commencing at <strong>${shiftStart} IST</strong> in alignment with Australian client timezone parameters.</li>
+                <li>Weekly off: <strong>Sunday</strong>. Occasional weekend shifts may be required subject to operational needs.</li>
+            </ul>
+
+            <h3>5. Acceptance & Deadline</h3>
+            <ul>
+                <li>This offer shall remain valid until <strong>${offerDeadline}</strong>. Non-response by this date shall render this offer null and void.</li>
+                <li>To formally accept, please sign and return this letter along with the required onboarding documents.</li>
+                <li>If you have any queries, contact HR at <strong>hr@averionglobal.com</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase2_Appointment_Letter': {
+            const apptGross = parseFloat(emp.base_salary || gross || 0);
+            const apptBasic = apptGross * 0.50;
+            const apptHRA   = apptGross * 0.20;
+            const apptSpl   = apptGross * 0.30;
+            const fmtApptGross = apptGross.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtApptBasic = apptBasic.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtApptHRA   = apptHRA.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const fmtApptSpl   = apptSpl.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const recipientAddr = (emp.google_address && emp.google_address !== 'As per Company Records')
+                ? emp.google_address : '';
+
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/AL/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 2 — Appointment Letter<br>
+                <strong>Date of Issue:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Letter of Appointment</div>
+
+            <p><strong>To,</strong><br>
+            Mr./Ms. <strong>${emp.full_name}</strong><br>
+            ${recipientAddr ? recipientAddr + '<br>' : ''}
+            </p>
+
+            <p>Dear Mr./Ms. <strong>${emp.full_name}</strong>,</p>
+            <p>With reference to the selection process conducted and your satisfactory performance therein, we are pleased to appoint you in the capacity of <strong>${emp.designation || 'Associate'}</strong> in the <strong>${emp.department || 'Operations'}</strong> Department of <strong>Averion Global LLP</strong>, with effect from <strong>${docDate}</strong>.</p>
+
+            <h3>1. Terms of Employment</h3>
+            <ul>
+                <li><strong>Designation:</strong> ${emp.designation || 'Associate'}</li>
+                <li><strong>Department:</strong> ${emp.department || 'Operations'}</li>
+                <li><strong>Date of Joining:</strong> ${docDate}</li>
+                <li><strong>Employment Type:</strong> Full-Time, Permanent</li>
+                <li><strong>Place of Work:</strong> Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad — 380060 (or as directed by Management)</li>
+            </ul>
+
+            <h3>2. Remuneration</h3>
+            <ul>
+                <li>Your monthly Gross CTC has been fixed at <strong>${fmtApptGross}</strong> per month.</li>
+            </ul>
+            <table class="annexure-table">
+                <thead><tr><th>Component</th><th>Percentage</th><th>Monthly (INR)</th></tr></thead>
+                <tbody>
+                    <tr><td>Basic Salary</td><td>50%</td><td>${fmtApptBasic}</td></tr>
+                    <tr><td>House Rent Allowance</td><td>20%</td><td>${fmtApptHRA}</td></tr>
+                    <tr><td>Special Allowance</td><td>30%</td><td>${fmtApptSpl}</td></tr>
+                    <tr style="background-color:#e2e8f0;font-weight:700;"><td>Gross Monthly CTC</td><td>100%</td><td>${fmtApptGross}</td></tr>
+                </tbody>
+            </table>
+
+            <h3>3. Probation & Notice Period</h3>
+            <ul>
+                <li>You shall be on probation for <strong>${probationMonths} months</strong>. Post confirmation, the notice period shall be <strong>${noticeDays} days</strong> on either side.</li>
+                <li>During probation, the notice period applicable on either side is fifteen (15) calendar days.</li>
+            </ul>
+
+            <h3>4. Shift Timings & Working Hours</h3>
+            <ul>
+                <li>Daily shift: <strong>9 hours</strong>, commencing at <strong>${shiftStart} IST</strong>. Weekly off: Sunday.</li>
+                <li>The operational shift is aligned to Australian client timezone requirements. Strict punctuality at commencement is an absolute condition of employment.</li>
+            </ul>
+
+            <h3>5. Annual Leave Entitlement</h3>
+            <ul>
+                <li>You shall be entitled to <strong>${leaveQuota} days</strong> of paid annual leave per annum, accrued monthly and subject to HR approval procedures.</li>
+            </ul>
+
+            <h3>6. Governing Jurisdiction</h3>
+            <ul>
+                <li>This Letter of Appointment is governed by the laws of India. All disputes arising here-from shall be subject to the exclusive jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase2_Employment_Agreement': {
+            const empGross  = parseFloat(emp.base_salary || gross || 0);
+            const empBasic  = empGross * 0.50;
+            const empHRA    = empGross * 0.20;
+            const empSpl    = empGross * 0.30;
+            const empPF     = empBasic * 0.12;
+            const empPT     = 200;
+            const empTake   = empGross - empPF - empPT;
+            const fmt = (n) => n.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/CEA/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 2 — Comprehensive Employment Agreement<br>
+                <strong>Execution Date:</strong> ${docDate}
+            </div>
+
+            <div class="doc-title">Comprehensive Employment Agreement</div>
+            <p>This Comprehensive Employment Agreement (<strong>"Agreement"</strong>) is executed at Ahmedabad, Gujarat, India on <strong>${docDate}</strong> by and between:</p>
+            <ul>
+                <li><strong>Averion Global LLP</strong>, GSTIN: 24ACMFA7488G1Z0, PAN: ACMFA7488G, having its principal place of business at Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad — 380060 (hereinafter the <strong>"Company"</strong>)</li>
+                <li>Mr./Ms. <strong>${emp.full_name}</strong>${emp.google_address && emp.google_address !== 'As per Company Records' ? ', residing at ' + emp.google_address : ''} (hereinafter the <strong>"Employee"</strong>)</li>
+            </ul>
+
+            <h3>1. Designation, Department & Reporting</h3>
+            <ul>
+                <li>The Company appoints the Employee as <strong>${emp.designation || 'Associate'}</strong> in the <strong>${emp.department || 'Operations'}</strong> Department with effect from ${docDate}.</li>
+                <li>The Employee shall report directly to the designated Supervisor / Managing Partner, or such other person as the Company may designate in writing from time to time.</li>
+            </ul>
+
+            <h3>2. Compensation, Benefits & Deductions</h3>
+            <table class="annexure-table">
+                <thead><tr><th>Component</th><th>%</th><th>Monthly (INR)</th></tr></thead>
+                <tbody>
+                    <tr><td>Basic Salary</td><td>50%</td><td>${fmt(empBasic)}</td></tr>
+                    <tr><td>House Rent Allowance</td><td>20%</td><td>${fmt(empHRA)}</td></tr>
+                    <tr><td>Special Allowance</td><td>30%</td><td>${fmt(empSpl)}</td></tr>
+                    <tr style="background:#dbeafe;font-weight:700;"><td>Gross Monthly CTC</td><td>100%</td><td>${fmt(empGross)}</td></tr>
+                    <tr><td>Provident Fund (Employee 12%)</td><td>—</td><td>(${fmt(empPF)})</td></tr>
+                    <tr><td>Professional Tax</td><td>—</td><td>(${fmt(empPT)})</td></tr>
+                    <tr style="background:#dcfce7;font-weight:700;"><td>Estimated Net Take-Home</td><td>—</td><td>${fmt(empTake)}</td></tr>
+                </tbody>
+            </table>
+            <ul>
+                <li>Salary is credited on the last working day of each month. Payslips shall be issued digitally.</li>
+                <li>All statutory contributions (EPF, ESIC, PT, TDS) are deducted at source per applicable law.</li>
+                <li>Gratuity is applicable post five (5) years of continuous service per the Payment of Gratuity Act 1972.</li>
+            </ul>
+
+            <h3>3. Probation & Confirmation</h3>
+            <ul>
+                <li>The Employee shall serve a probation period of <strong>${probationMonths} months</strong>. During probation, notice period is <strong>15 calendar days</strong> on either side.</li>
+                <li>Post confirmation, notice period escalates to <strong>${noticeDays} days</strong> from either party, submitted in writing.</li>
+                <li>The Company reserves the right to terminate employment without notice or payment in lieu during probation upon cause.</li>
+            </ul>
+
+            <h3>4. Shift Schedule & Work Hours</h3>
+            <ul>
+                <li>Standard shift: <strong>9 (nine) hours daily</strong> commencing strictly at <strong>${shiftStart} IST</strong>, aligned to Australian client operational timezone.</li>
+                <li>Weekly off: <strong>Sunday</strong>. Work on holidays or Sundays may be required subject to business demands.</li>
+                <li>Annual paid leave entitlement: <strong>${leaveQuota} days</strong> accruing monthly.</li>
+            </ul>
+
+            <h3>5. Confidentiality, NDA & IP Assignment</h3>
+            <ul>
+                <li>All client databases, CRM records, pricing sheets, business proposals, technical outputs, and any deliverables created in scope of employment are the exclusive IP of the Company.</li>
+                <li>The Employee shall maintain strict confidentiality of all proprietary information during and post employment.</li>
+                <li>Any breach of confidentiality shall attract legal action under IPC Section 408 and IT Act Sections 43 & 66.</li>
+            </ul>
+
+            <h3>6. Exclusivity & Anti-Moonlighting</h3>
+            <ul>
+                <li>The Employee shall not engage in any parallel employment, freelancing, consulting, or business activity during the term of employment without explicit written consent from the Company.</li>
+                <li>Client solicitation or poaching for personal or competitor benefit is strictly prohibited.</li>
+            </ul>
+
+            <h3>7. Termination</h3>
+            <ul>
+                <li>The Company may terminate this Agreement immediately for cause (gross misconduct, IP theft, regulatory breach, etc.) without notice or compensation.</li>
+                <li>Voluntary resignation requires submission of written notice adhering to the applicable notice period.</li>
+                <li>All company assets must be returned in full on the last working day. Salary clearance is subject to asset return and exit formalities.</li>
+            </ul>
+
+            <h3>8. Governing Law & Dispute Resolution</h3>
+            <ul>
+                <li>This Agreement is governed by the laws of the Republic of India.</li>
+                <li>All disputes shall be resolved via binding arbitration at Ahmedabad under the Arbitration and Conciliation Act 1996.</li>
+                <li>The exclusive jurisdiction of all disputes under this Agreement is vested in the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
+        case 'Phase2_Internship_Contract': {
+            const internStipend  = parseFloat(emp.stipend_amount || emp.base_salary || 15000);
+            const fmtStipend     = internStipend.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            const internDuration = 6; // months — strictly fixed per company policy
+            const internEndDate  = (() => {
+                const d = emp.onboarding_date ? new Date(emp.onboarding_date) : new Date();
+                d.setMonth(d.getMonth() + internDuration);
+                return formatToDDMMYY(d.toISOString().split('T')[0]);
+            })();
+
+            innerContent = `
+            <div style="font-size: 11px; text-align: right; color: #64748b; margin-bottom: 20px;">
+                <strong>Doc ID:</strong> AVG/HR/IC/${emp.employee_id || '999'}<br>
+                <strong>Category:</strong> Phase 2 — 6-Month Internship / Apprenticeship Contract<br>
+                <strong>Commencement Date:</strong> ${docDate}<br>
+                <strong>Internship End Date:</strong> ${internEndDate}
+            </div>
+
+            <div class="doc-title">6-Month Internship / Apprenticeship Contract</div>
+
+            <p>This Internship/Apprenticeship Contract (<strong>"Contract"</strong>) is entered into at Ahmedabad, Gujarat on <strong>${docDate}</strong> between:</p>
+            <ul>
+                <li><strong>Averion Global LLP</strong>, having its principal office at Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad — 380060 (hereinafter <strong>"the Company"</strong>)</li>
+                <li>Mr./Ms. <strong>${emp.full_name}</strong> (hereinafter <strong>"the Intern"</strong>)</li>
+            </ul>
+
+            <h3>1. Internship Role & Duration</h3>
+            <ul>
+                <li><strong>Role:</strong> ${emp.designation || 'Intern — Sales & Operations'}</li>
+                <li><strong>Department:</strong> ${emp.department || 'Operations'}</li>
+                <li><strong>Duration:</strong> Strictly <strong>${internDuration} (six) months</strong>, non-extendable unless a separate written agreement is executed.</li>
+                <li><strong>Commencement:</strong> ${docDate}</li>
+                <li><strong>Scheduled End:</strong> ${internEndDate}</li>
+            </ul>
+
+            <h3>2. Monthly Stipend</h3>
+            <ul>
+                <li>The Intern shall be entitled to a fixed monthly stipend of <strong>${fmtStipend}</strong>.</li>
+                <li>The Company's standard stipend scale for interns ranges from <strong>Rs 15,000 to Rs 25,000</strong> per month, determined based on profile, skill set, and role requirements.</li>
+                <li>Stipend is disbursed on the last working day of each month via bank transfer. Interns are not entitled to PF, Gratuity, or statutory benefits unless mandated by applicable law.</li>
+                <li>Stipend shall be withheld for unauthorized absences or abandonment of duties without intimation.</li>
+            </ul>
+
+            <h3>3. Shift Hours & Attendance</h3>
+            <ul>
+                <li>Shift duration: <strong>9 hours daily</strong>, commencing at <strong>${shiftStart} IST</strong> in alignment with Australian client timezone parameters.</li>
+                <li>Weekly off: <strong>Sunday</strong>. Attendance is mandatory on all working days. Biometric / HRMS punch-in is compulsory from Day 1.</li>
+                <li>Interns are entitled to <strong>12 days of casual leave</strong> during the 6-month tenure, subject to supervisor approval.</li>
+            </ul>
+
+            <h3>4. Evaluation & Conversion to Employment</h3>
+            <ul>
+                <li>Performance of the Intern shall be evaluated at the end of Month 3 (Mid-Review) and Month 6 (Final Review).</li>
+                <li>Conversion to a permanent employment role is <strong>not guaranteed</strong> and is solely at the Company's discretion based on performance, vacancies, and business needs.</li>
+                <li>In the event of conversion, the Employee will undergo a fresh 3-month probation period, and all terms of the Employment Agreement shall apply anew.</li>
+            </ul>
+
+            <h3>5. Confidentiality & IP Assignment</h3>
+            <ul>
+                <li>All work product, code, designs, data, client interactions, and communications produced by the Intern during the internship remain the exclusive property of the Company.</li>
+                <li>The Intern shall not disclose, share, or leak any proprietary or client-related information to any third party during or after the internship.</li>
+                <li>Breach of this clause constitutes grounds for immediate termination and legal proceedings under IT Act Sections 43 & 66 and IPC Section 408.</li>
+            </ul>
+
+            <h3>6. Exclusivity & Conduct</h3>
+            <ul>
+                <li>The Intern shall not engage in parallel internships, freelancing assignments, or competitive activities during the tenure of this Contract without prior written approval.</li>
+                <li>The Intern agrees to abide by all Company policies, including the Mobile Device, Rest Breaks, and Workplace Surveillance policies.</li>
+            </ul>
+
+            <h3>7. Early Termination</h3>
+            <ul>
+                <li>Either party may terminate this Contract with <strong>7 (seven) calendar days</strong> written notice.</li>
+                <li>The Company reserves the right to terminate this Contract immediately and without notice in cases of gross misconduct, absenteeism, IP misappropriation, or breach of any clause herein.</li>
+            </ul>
+
+            <h3>8. Jurisdiction</h3>
+            <ul>
+                <li>This Contract is governed by the laws of India. All disputes shall be subject to the exclusive jurisdiction of the competent courts of <strong>Ahmedabad, Gujarat</strong>.</li>
+            </ul>
+
+            ${signHtml}
+            `;
+            break;
+        }
+
         default:
             innerContent = `<div class="doc-title">${category.replace(/_/g, ' ')}</div><p>Standard compliance guidelines.</p>${signHtml}`;
             break;
