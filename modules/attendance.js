@@ -1,4 +1,6 @@
 const express = require('express');
+const nodemailer = require('nodemailer');
+const config = require('../config');
 const router = express.Router();
 const db = require('../database/db');
 const { requireAuth } = require('../helpers');
@@ -805,6 +807,72 @@ router.post('/workers/upload-document', requireAuth, (req, res) => {
         const fileUrl = `/uploads/workers/${req.file.filename}`;
         res.json({ success: true, fileUrl: fileUrl, name: req.file.originalname });
     });
+});
+
+router.post('/workers/:id/email-document', requireAuth, async (req, res) => {
+    try {
+        const workerId = req.params.id;
+        const { docType, htmlContent } = req.body;
+        
+        db.get('SELECT * FROM attendance_workers WHERE id = ?', [workerId], async (err, worker) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!worker) return res.status(404).json({ error: 'Worker not found.' });
+            
+            const email = worker.email;
+            if (!email) {
+                return res.status(400).json({ error: 'Worker does not have an email address.' });
+            }
+            
+            const isEmailConfigured = config.email && config.email.host && config.email.port && config.email.user && config.email.pass;
+            if (!isEmailConfigured) {
+                return res.status(400).json({ error: 'SMTP email credentials are not configured in your .env file.' });
+            }
+            
+            const transporter = nodemailer.createTransport({
+                host: config.email.host,
+                port: config.email.port,
+                secure: config.email.secure,
+                auth: {
+                    user: config.email.user,
+                    pass: config.email.pass
+                }
+            });
+            
+            let docTitle = 'Compliance Document';
+            if (docType === 'offer_letter') docTitle = 'Employment Agreement & Offer Letter';
+            else if (docType === 'phone_policy') docTitle = 'Mobile Device Use Policy';
+            else if (docType === 'break_policy') docTitle = 'Rest Breaks & Scheduling Policy';
+            else if (docType === 'data_theft') docTitle = 'Data Protection & Confidentiality Policy';
+            else if (docType === 'leave_policy') docTitle = 'Leave Entitlements & Rules Guide';
+            else if (docType === 'package') docTitle = 'HR Onboarding Compliance Package';
+            
+            const mailOptions = {
+                from: config.email.from || `"Averion Global LLP" <${config.email.user}>`,
+                to: email,
+                subject: `${docTitle} - Averion Global LLP`,
+                html: `
+                    <div style="font-family: sans-serif; max-width: 600px; color: #334155; line-height: 1.6; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <h2 style="color: #0f172a; margin-top: 0;">Averion Global LLP</h2>
+                        <p>Dear <strong>${worker.first_name} ${worker.last_name}</strong>,</p>
+                        <p>Please find attached your official copy of the <strong>${docTitle}</strong>.</p>
+                        <p>Please review and retain this document for your records.</p>
+                        <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 20px 0;">
+                        <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">This is an automated HR notification. Please do not reply directly to this email.</p>
+                    </div>
+                `,
+                attachments: [{
+                    filename: `${docType}_${worker.first_name}_${worker.last_name}.html`,
+                    content: htmlContent
+                }]
+            };
+            
+            await transporter.sendMail(mailOptions);
+            res.json({ success: true });
+        });
+    } catch(err) {
+        console.error('Email error:', err);
+        res.status(500).json({ error: 'Failed to send email: ' + err.message });
+    }
 });
 
 module.exports = router;
