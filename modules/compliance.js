@@ -108,7 +108,8 @@ function getFullEmployeeDetails(employeeId, callback) {
                 
                 surveillance_consent: profile ? profile.surveillance_consent : 0,
                 biometric_consent: profile ? profile.biometric_consent : 0,
-                hrms_consent: profile ? profile.hrms_consent : 0
+                hrms_consent: profile ? profile.hrms_consent : 0,
+                is_overtime_eligible: profile ? (profile.is_overtime_eligible !== undefined ? profile.is_overtime_eligible : 1) : 1
             };
             callback(null, empDetails);
         });
@@ -1606,6 +1607,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
     const survConsent = surveillance_consent ? 1 : 0;
     const bioConsent = biometric_consent ? 1 : 0;
     const hrConsent = hrms_consent ? 1 : 0;
+    const isOtEligible = req.body.is_overtime_eligible !== undefined ? (req.body.is_overtime_eligible ? 1 : 0) : 1;
 
     db.get('SELECT id FROM employee_compliance_profiles WHERE employee_id = ? OR user_id = ?', [employee_id.toString(), parseInt(employee_id, 10)], (checkErr, row) => {
         if (checkErr) return res.status(500).json({ error: checkErr.message });
@@ -1674,7 +1676,8 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     assets_licenses = ?,
                     surveillance_consent = ?,
                     biometric_consent = ?,
-                    hrms_consent = ?
+                    hrms_consent = ?,
+                    is_overtime_eligible = ?
                 WHERE employee_id = ? OR user_id = ?`,
                 [
                     employee_id.toString(),
@@ -1683,7 +1686,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
                     assets_ids || '', assets_access_cards || '', assets_licenses || '',
-                    survConsent, bioConsent, hrConsent,
+                    survConsent, bioConsent, hrConsent, isOtEligible,
                     employee_id.toString(), parseInt(employee_id, 10)
                 ],
                 function(updateErr) {
@@ -1702,8 +1705,8 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
                     assets_laptops, assets_desktops, assets_mobiles, assets_sims,
                     assets_ids, assets_access_cards, assets_licenses,
-                    surveillance_consent, biometric_consent, hrms_consent
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    surveillance_consent, biometric_consent, hrms_consent, is_overtime_eligible
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     employee_id.toString(), parseInt(employee_id, 10), 'Full-Time', '', 25.00, 1,
                     '', '', '', '', '',
@@ -1712,7 +1715,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
                     assets_ids || '', assets_access_cards || '', assets_licenses || '',
-                    survConsent, bioConsent, hrConsent
+                    survConsent, bioConsent, hrConsent, isOtEligible
                 ],
                 function(insertErr) {
                     if (insertErr) return res.status(500).json({ error: insertErr.message });

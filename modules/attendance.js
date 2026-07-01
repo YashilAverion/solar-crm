@@ -493,7 +493,7 @@ router.get('/workers', requireAuth, (req, res) => {
                 c.employment_type, c.modern_award_name, c.base_hourly_rate, c.casual_loading_active,
                 c.tax_file_number, c.tax_scale_code, c.super_fund_name, c.super_usi, c.super_member_number,
                 c.visa_type, c.visa_expiry_date, c.base_salary, c.probation_period_months, c.notice_period_days,
-                c.annual_leave_quota, c.onboarding_date
+                c.annual_leave_quota, c.onboarding_date, c.is_overtime_eligible
          FROM attendance_workers w
          LEFT JOIN employee_compliance_profiles c ON w.id = c.user_id`,
         [],

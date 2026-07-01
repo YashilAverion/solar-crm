@@ -5882,6 +5882,7 @@ function loadEmployeeCompliance(employeeId) {
     document.getElementById('emp_compliance_leaves').value = '24';
     document.getElementById('emp_compliance_gratuity').checked = false;
     document.getElementById('emp_compliance_incentive_hold').checked = false;
+    document.getElementById('emp_compliance_overtime_eligible').checked = true;
     
     document.getElementById('emp_compliance_asset_laptop').value = '';
     document.getElementById('emp_compliance_asset_desktop').value = '';
@@ -5916,6 +5917,7 @@ function loadEmployeeCompliance(employeeId) {
             document.getElementById('emp_compliance_leaves').value = p.annual_leave_quota || 24;
             document.getElementById('emp_compliance_gratuity').checked = p.gratuity_eligible === 1;
             document.getElementById('emp_compliance_incentive_hold').checked = p.incentive_hold_flag === 1;
+            document.getElementById('emp_compliance_overtime_eligible').checked = p.is_overtime_eligible !== 0;
             
             document.getElementById('emp_compliance_asset_laptop').value = p.assets_laptops || '';
             document.getElementById('emp_compliance_asset_desktop').value = p.assets_desktops || '';
@@ -6137,6 +6139,7 @@ function saveOnboardingCompliance(workerId) {
         annual_leave_quota: parseInt(document.getElementById('emp_compliance_leaves').value, 10) || 24,
         gratuity_eligible: document.getElementById('emp_compliance_gratuity').checked ? 1 : 0,
         incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
+        is_overtime_eligible: document.getElementById('emp_compliance_overtime_eligible').checked ? 1 : 0,
         onboarding_date: document.getElementById('emp_compliance_onboarding_date').value || new Date().toISOString().split('T')[0],
         
         assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
@@ -6205,6 +6208,7 @@ function showComplianceDocGenerator() {
         annual_leave_quota: parseInt(document.getElementById('emp_compliance_leaves').value, 10) || 24,
         gratuity_eligible: document.getElementById('emp_compliance_gratuity').checked ? 1 : 0,
         incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
+        is_overtime_eligible: document.getElementById('emp_compliance_overtime_eligible').checked ? 1 : 0,
         onboarding_date: document.getElementById('emp_compliance_onboarding_date').value,
         assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
         assets_desktops: document.getElementById('emp_compliance_asset_desktop').value.trim(),
@@ -9564,6 +9568,10 @@ function printSalarySlip(recordId, record) {
                     <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                         <input type="checkbox" id="emp_compliance_incentive_hold" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
                         <label for="emp_compliance_incentive_hold" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Target-Based Incentive Hold Active</label>
+                    </div>
+                    <div class="field" style="grid-column: span 4; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        <input type="checkbox" id="emp_compliance_overtime_eligible" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" checked>
+                        <label for="emp_compliance_overtime_eligible" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Overtime Payment Eligible (Yes/No)</label>
                     </div>
 
                     <!-- Asset Trackers -->

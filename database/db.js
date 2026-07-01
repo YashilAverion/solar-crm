@@ -1499,6 +1499,11 @@ db.serialize(() => {
         if (err) console.error('[DB] Error creating averion_compliance_audits table:', err.message);
     });
 
+    // Migration: add overtime eligibility column
+    db.run("ALTER TABLE employee_compliance_profiles ADD COLUMN is_overtime_eligible INTEGER DEFAULT 1", (err) => {
+        // Ignore duplicate column errors silently
+    });
+
     db.run("CREATE INDEX IF NOT EXISTS idx_signed_docs_employee_id ON legal_signed_documents (employee_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_signed_docs_document_type ON legal_signed_documents (document_type)", () => {});
 

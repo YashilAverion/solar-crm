@@ -88,6 +88,15 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                         totalOvertimeHours += ot;
                     });
 
+                    // Enforce overtime eligibility constraints
+                    const isOtEligible = (profile.is_overtime_eligible !== undefined && profile.is_overtime_eligible !== null) ? (profile.is_overtime_eligible !== 0) : true;
+                    if (!isOtEligible) {
+                        totalOvertimeHours = 0;
+                        Object.keys(weekHours).forEach(w => {
+                            weekHours[w].otHours = 0;
+                        });
+                    }
+
                     let grossPay = 0;
                     let taxWithheld = 0;
                     let superContribution = 0;
