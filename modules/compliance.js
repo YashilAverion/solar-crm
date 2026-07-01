@@ -115,6 +115,27 @@ function getFullEmployeeDetails(employeeId, callback) {
     });
 }
 
+// Helper to generate the Averion Global LLP Letterhead Header on every page
+function getLetterheadHTML(emp, logoBase64) {
+    const logoImgTag = logoBase64 
+        ? `<img src="${logoBase64}" alt="Averion Global Logo">` 
+        : `<div style="font-size: 24px; font-weight: 800; color: #0078C1;">AVERION GLOBAL</div>`;
+    return `
+    <div class="letterhead-header">
+      <div class="logo-container">
+        ${logoImgTag}
+      </div>
+      <div class="company-info">
+        <div class="company-name">AVERION GLOBAL LLP</div>
+        <div>Shop 2, Sthapatya Residency, Near Nayara Petrol Pump,</div>
+        <div>SP Ring Road, Ognaj, Ahmedabad – 380060, Gujarat, India</div>
+        <div>GST: ${emp.gst || '24ACMFA7488G1Z0'} | PAN: ${emp.pan || 'ACMFA7488G'}</div>
+        <div>Email: hr@averionglobal.co.in | Web: www.averionglobal.co.in</div>
+      </div>
+    </div>
+    `;
+}
+
 // Wrap inner HTML content in a professional letterhead frame
 function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     const docId = `AVG-${docType}-2026-${emp.employee_id || '999'}`;
@@ -291,18 +312,7 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
 </head>
 <body>
   <div class="page">
-    <div class="letterhead-header">
-      <div class="logo-container">
-        ${logoImgTag}
-      </div>
-      <div class="company-info">
-        <div class="company-name">AVERION GLOBAL LLP</div>
-        <div>Shop 2, Sthapatya Residency, Near Nayara Petrol Pump,</div>
-        <div>SP Ring Road, Ognaj, Ahmedabad – 380060, Gujarat, India</div>
-        <div>GST: ${emp.gst || '24ACMFA7488G1Z0'} | PAN: ${emp.pan || 'ACMFA7488G'}</div>
-        <div>Email: hr@averionglobal.co.in | Web: www.averionglobal.co.in</div>
-      </div>
-    </div>
+    ${getLetterheadHTML(emp, logoBase64)}
     
     ${contentHtml}
 
@@ -1973,6 +1983,7 @@ function compilePhaseDoc(category, emp, registry) {
     const docDate = emp.onboarding_date ? formatToDDMMYY(emp.onboarding_date) : today;
     const logoBase64 = getAverionLogoBase64();
     const sigBase64 = getAverionSignatureBase64();
+    const letterheadHTML = getLetterheadHTML(emp, logoBase64);
 
     const regName = registry ? registry.company_name : 'Averion Global LLP';
     const regOffice = registry ? registry.registered_office : 'Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad - 380060';
@@ -2306,6 +2317,7 @@ function compilePhaseDoc(category, emp, registry) {
             </ul>
             </div> <!-- Close Page 1 -->
             <div class="page"> <!-- Open Page 2 -->
+            ${letterheadHTML}
             <h3>3. Probation Period</h3>
             <ul>
                 <li>You will be on probation for a period of ${probationMonths} (three) months from the date of joining.</li>
@@ -2382,6 +2394,7 @@ function compilePhaseDoc(category, emp, registry) {
             </table>
             </div> <!-- Close Page 1 -->
             <div class="page"> <!-- Open Page 2 -->
+            ${letterheadHTML}
             <h3>3. Probation & Notice Period</h3>
             <ul>
                 <li>You shall be on probation for <strong>${probationMonths} months</strong>. Post confirmation, the notice period shall be <strong>${noticeDays} days</strong> on either side.</li>
@@ -2457,6 +2470,7 @@ function compilePhaseDoc(category, emp, registry) {
             </ul>
             </div> <!-- Close Page 1 -->
             <div class="page"> <!-- Open Page 2 -->
+            ${letterheadHTML}
             <h3>3. Probation & Confirmation</h3>
             <ul>
                 <li>The Employee shall serve a probation period of <strong>${probationMonths} months</strong>. During probation, notice period is <strong>15 calendar days</strong> on either side.</li>
@@ -2485,6 +2499,7 @@ function compilePhaseDoc(category, emp, registry) {
             </ul>
             </div> <!-- Close Page 2 -->
             <div class="page"> <!-- Open Page 3 -->
+            ${letterheadHTML}
             <h3>7. Termination</h3>
             <ul>
                 <li>The Company may terminate this Agreement immediately for cause (gross misconduct, IP theft, regulatory breach, etc.) without notice or compensation.</li>
@@ -2545,6 +2560,7 @@ function compilePhaseDoc(category, emp, registry) {
             </ul>
             </div> <!-- Close Page 1 -->
             <div class="page"> <!-- Open Page 2 -->
+            ${letterheadHTML}
             <h3>3. Shift Hours & Attendance</h3>
             <ul>
                 <li>Shift duration: <strong>9 hours daily</strong>, commencing at <strong>${shiftStart} IST</strong> in alignment with Australian client timezone parameters.</li>
@@ -2573,6 +2589,7 @@ function compilePhaseDoc(category, emp, registry) {
             </ul>
             </div> <!-- Close Page 2 -->
             <div class="page"> <!-- Open Page 3 -->
+            ${letterheadHTML}
             <h3>7. Early Termination</h3>
             <ul>
                 <li>Either party may terminate this Contract with <strong>7 (seven) calendar days</strong> written notice.</li>
