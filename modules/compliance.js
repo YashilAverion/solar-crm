@@ -97,6 +97,7 @@ function getFullEmployeeDetails(employeeId, callback) {
                 gratuity_eligible: profile ? profile.gratuity_eligible : 0,
                 incentive_hold_flag: profile ? profile.incentive_hold_flag : 0,
                 onboarding_date: profile ? profile.onboarding_date : (worker.start_date || new Date().toISOString().split('T')[0]),
+                proposed_joining_date: profile ? profile.proposed_joining_date : '',
                 
                 assets_laptops: profile ? profile.assets_laptops : '',
                 assets_desktops: profile ? profile.assets_desktops : '',
@@ -1577,6 +1578,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
         employee_id, full_name, department, designation, base_salary,
         shift_start_time, probation_period_months, notice_period_days,
         annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
+        proposed_joining_date,
         assets_laptops, assets_desktops, assets_mobiles, assets_sims,
         assets_ids, assets_access_cards, assets_licenses,
         surveillance_consent, biometric_consent, hrms_consent
@@ -1667,6 +1669,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     gratuity_eligible = ?,
                     incentive_hold_flag = ?,
                     onboarding_date = ?,
+                    proposed_joining_date = ?,
                     assets_laptops = ?,
                     assets_desktops = ?,
                     assets_mobiles = ?,
@@ -1683,7 +1686,7 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     employee_id.toString(),
                     full_name, department, designation, salary,
                     shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
-                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
+                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date, proposed_joining_date || '',
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
                     assets_ids || '', assets_access_cards || '', assets_licenses || '',
                     survConsent, bioConsent, hrConsent, isOtEligible,
@@ -1702,17 +1705,17 @@ router.post('/onboard-employee', requireAuth, (req, res) => {
                     tax_file_number, tax_scale_code, super_fund_name, super_usi, super_member_number,
                     visa_type, visa_expiry_date, full_name, department, designation, base_salary,
                     shift_start_time, probation_period_months, notice_period_days,
-                    annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date,
+                    annual_leave_quota, gratuity_eligible, incentive_hold_flag, onboarding_date, proposed_joining_date,
                     assets_laptops, assets_desktops, assets_mobiles, assets_sims,
                     assets_ids, assets_access_cards, assets_licenses,
                     surveillance_consent, biometric_consent, hrms_consent, is_overtime_eligible
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     employee_id.toString(), parseInt(employee_id, 10), 'Full-Time', '', 25.00, 1,
                     '', '', '', '', '',
                     '', '', full_name, department, designation, salary,
                     shift_start_time || '03:30 AM', parseInt(probation_period_months, 10) || 3, parseInt(notice_period_days, 10) || 45,
-                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date,
+                    parseInt(annual_leave_quota, 10) || 24, gratEligible, incHold, onboarding_date, proposed_joining_date || '',
                     assets_laptops || '', assets_desktops || '', assets_mobiles || '', assets_sims || '',
                     assets_ids || '', assets_access_cards || '', assets_licenses || '',
                     survConsent, bioConsent, hrConsent, isOtEligible

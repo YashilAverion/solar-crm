@@ -1092,6 +1092,47 @@
             color: var(--primary);
             font-weight: 600;
         }
+
+        /* ========== CHECKBOX CARD STYLING ========== */
+        .checkbox-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .checkbox-card:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+            box-shadow: 0 2px 8px rgba(28, 53, 87, 0.05);
+        }
+        .checkbox-card div {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .checkbox-card .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .checkbox-card .card-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.2;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -5876,6 +5917,8 @@ function loadEmployeeCompliance(employeeId) {
     document.getElementById('emp_compliance_base_salary').value = '';
     document.getElementById('emp_compliance_onboarding_date').value = '';
     document.getElementById('emp_compliance_onboarding_date_text').value = '';
+    document.getElementById('emp_compliance_proposed_joining_date').value = '';
+    document.getElementById('emp_compliance_proposed_joining_date_text').value = '';
     document.getElementById('emp_compliance_shift_start').value = '03:30 AM';
     document.getElementById('emp_compliance_probation').value = '3';
     document.getElementById('emp_compliance_notice').value = '45';
@@ -5911,6 +5954,8 @@ function loadEmployeeCompliance(employeeId) {
             document.getElementById('emp_compliance_base_salary').value = p.base_salary || '';
             document.getElementById('emp_compliance_onboarding_date').value = p.onboarding_date || '';
             document.getElementById('emp_compliance_onboarding_date_text').value = p.onboarding_date ? formatDateToDisplay(p.onboarding_date) : '';
+            document.getElementById('emp_compliance_proposed_joining_date').value = p.proposed_joining_date || '';
+            document.getElementById('emp_compliance_proposed_joining_date_text').value = p.proposed_joining_date ? formatDateToDisplay(p.proposed_joining_date) : '';
             document.getElementById('emp_compliance_shift_start').value = p.shift_start_time || '03:30 AM';
             document.getElementById('emp_compliance_probation').value = p.probation_period_months || 3;
             document.getElementById('emp_compliance_notice').value = p.notice_period_days || 45;
@@ -6141,6 +6186,7 @@ function saveOnboardingCompliance(workerId) {
         incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
         is_overtime_eligible: document.getElementById('emp_compliance_overtime_eligible').checked ? 1 : 0,
         onboarding_date: document.getElementById('emp_compliance_onboarding_date').value || new Date().toISOString().split('T')[0],
+        proposed_joining_date: document.getElementById('emp_compliance_proposed_joining_date').value || '',
         
         assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
         assets_desktops: document.getElementById('emp_compliance_asset_desktop').value.trim(),
@@ -6210,6 +6256,7 @@ function showComplianceDocGenerator() {
         incentive_hold_flag: document.getElementById('emp_compliance_incentive_hold').checked ? 1 : 0,
         is_overtime_eligible: document.getElementById('emp_compliance_overtime_eligible').checked ? 1 : 0,
         onboarding_date: document.getElementById('emp_compliance_onboarding_date').value,
+        proposed_joining_date: document.getElementById('emp_compliance_proposed_joining_date').value || '',
         assets_laptops: document.getElementById('emp_compliance_asset_laptop').value.trim(),
         assets_desktops: document.getElementById('emp_compliance_asset_desktop').value.trim(),
         assets_mobiles: document.getElementById('emp_compliance_asset_mobile').value.trim(),
@@ -9565,6 +9612,15 @@ function printSalarySlip(recordId, record) {
                     </div>
 
                     <div class="field" style="grid-column: span 1;">
+                        <label for="emp_compliance_proposed_joining_date">Proposed Joining Date</label>
+                        <div style="display: flex; align-items: center; position: relative; width: 100%;">
+                            <input type="text" id="emp_compliance_proposed_joining_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box;" oninput="formatAndSyncDateText('emp_compliance_proposed_joining_date')" onblur="formatAndSyncDateText('emp_compliance_proposed_joining_date', true)">
+                            <button type="button" onclick="document.getElementById('emp_compliance_proposed_joining_date').showPicker()" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1;">📅</button>
+                            <input type="date" id="emp_compliance_proposed_joining_date" style="position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;" onchange="syncDateToText('emp_compliance_proposed_joining_date')">
+                        </div>
+                    </div>
+
+                    <div class="field" style="grid-column: span 1;">
                         <label for="emp_compliance_onboarding_date">Onboarding Date</label>
                         <div style="display: flex; align-items: center; position: relative; width: 100%;">
                             <input type="text" id="emp_compliance_onboarding_date_text" placeholder="DD-MM-YYYY" maxlength="10" style="flex: 1; padding-right: 32px; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box;" oninput="formatAndSyncDateText('emp_compliance_onboarding_date')" onblur="formatAndSyncDateText('emp_compliance_onboarding_date', true)">
@@ -9593,18 +9649,33 @@ function printSalarySlip(recordId, record) {
                         <input type="number" id="emp_compliance_leaves" value="24" placeholder="Default 24">
                     </div>
 
-                    <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        <input type="checkbox" id="emp_compliance_gratuity" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                        <label for="emp_compliance_gratuity" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Gratuity Eligible (5+ years service)</label>
-                    </div>
-
-                    <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        <input type="checkbox" id="emp_compliance_incentive_hold" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                        <label for="emp_compliance_incentive_hold" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Target-Based Incentive Hold Active</label>
-                    </div>
-                    <div class="field" style="grid-column: span 4; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        <input type="checkbox" id="emp_compliance_overtime_eligible" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" checked>
-                        <label for="emp_compliance_overtime_eligible" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Overtime Payment Eligible (Yes/No)</label>
+                    <div style="grid-column: span 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: #f8fafc; padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin: 8px 0 16px 0;">
+                        <!-- Gratuity Card -->
+                        <label class="checkbox-card" for="emp_compliance_gratuity">
+                            <input type="checkbox" id="emp_compliance_gratuity" style="width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--primary);">
+                            <div>
+                                <span class="card-title">Gratuity Eligible</span>
+                                <span class="card-subtitle">5+ years service</span>
+                            </div>
+                        </label>
+                        
+                        <!-- Incentive Card -->
+                        <label class="checkbox-card" for="emp_compliance_incentive_hold">
+                            <input type="checkbox" id="emp_compliance_incentive_hold" style="width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--primary);">
+                            <div>
+                                <span class="card-title">Incentive Hold</span>
+                                <span class="card-subtitle">Target-based hold active</span>
+                            </div>
+                        </label>
+                        
+                        <!-- Overtime Card -->
+                        <label class="checkbox-card" for="emp_compliance_overtime_eligible">
+                            <input type="checkbox" id="emp_compliance_overtime_eligible" style="width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--primary);" checked>
+                            <div>
+                                <span class="card-title">Overtime Eligible</span>
+                                <span class="card-subtitle">Eligible for overtime payment</span>
+                            </div>
+                        </label>
                     </div>
 
                     <!-- Asset Trackers -->

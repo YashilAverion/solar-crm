@@ -1245,6 +1245,7 @@ db.serialize(() => {
             gratuity_eligible INTEGER DEFAULT 0,
             incentive_hold_flag INTEGER DEFAULT 0,
             onboarding_date TEXT NOT NULL,
+            proposed_joining_date TEXT,
             assets_laptops TEXT DEFAULT '',
             assets_desktops TEXT DEFAULT '',
             assets_mobiles TEXT DEFAULT '',
@@ -1283,7 +1284,8 @@ db.serialize(() => {
         "ALTER TABLE employee_compliance_profiles ADD COLUMN annual_leave_quota INTEGER DEFAULT 24",
         "ALTER TABLE employee_compliance_profiles ADD COLUMN gratuity_eligible INTEGER DEFAULT 0",
         "ALTER TABLE employee_compliance_profiles ADD COLUMN incentive_hold_flag INTEGER DEFAULT 0",
-        "ALTER TABLE employee_compliance_profiles ADD COLUMN onboarding_date TEXT"
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN onboarding_date TEXT",
+        "ALTER TABLE employee_compliance_profiles ADD COLUMN proposed_joining_date TEXT"
     ];
 
     complianceAlterColumns.forEach(sql => {
