@@ -1546,6 +1546,7 @@ router.get('/:id/download-pdf', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
         });
         const page = await browser.newPage();
+        await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
 
         // 2. Enable request interception to inject secret auth bypass header
         await page.setRequestInterception(true);
@@ -1562,6 +1563,7 @@ router.get('/:id/download-pdf', async (req, res) => {
 
         // 4. Wait for all network calls to load
         await page.goto(quotationUrl, { waitUntil: 'networkidle0', timeout: 35000 });
+        await page.evaluateHandle(() => document.fonts.ready);
 
         // 5. Generate PDF
         const pdfBuffer = await page.pdf({ 

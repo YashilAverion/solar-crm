@@ -228,6 +228,7 @@ function wrapInDocumentBoilerplate(docTitle, contentHTML, emp) {
         <head>
             <title>${docTitle} - ${emp.first_name} ${emp.last_name}</title>
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
                 body {
                     font-family: 'Outfit', 'Inter', sans-serif;
                     color: #1e293b;
@@ -391,9 +392,15 @@ function wrapInDocumentBoilerplate(docTitle, contentHTML, emp) {
             </div>
             
             <script>
-                setTimeout(() => {
-                    window.print();
-                }, 500);
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() {
+                            setTimeout(function() { window.print(); }, 250);
+                        });
+                    } else {
+                        setTimeout(function() { window.print(); }, 500);
+                    }
+                };
             </script>
         </body>
         </html>
@@ -422,6 +429,7 @@ function getCombinedPackageHTML(emp) {
         <head>
             <title>HR Compliance Package - ${emp.first_name} ${emp.last_name}</title>
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
                 body {
                     font-family: 'Outfit', 'Inter', sans-serif;
                     color: #1e293b;
@@ -784,9 +792,15 @@ function getCombinedPackageHTML(emp) {
             </div>
             
             <script>
-                setTimeout(() => {
-                    window.print();
-                }, 500);
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() {
+                            setTimeout(function() { window.print(); }, 250);
+                        });
+                    } else {
+                        setTimeout(function() { window.print(); }, 500);
+                    }
+                };
             </script>
         </body>
         </html>

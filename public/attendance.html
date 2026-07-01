@@ -8475,8 +8475,7 @@ function printSalarySlip(recordId, record) {
         metaItems.push({ label: 'Designation', value: user.job_title || 'Manager' });
         metaItems.push({ label: 'Department', value: user.department || 'Operations' });
 
-        const loc = user.google_address || 'AHMEDABAD';
-        if (isValidValue(loc)) metaItems.push({ label: 'Location', value: loc });
+        // Location field removed permanently as requested
 
         const doj = formatDoj(user.start_date || user.onboarding_date);
         if (isValidValue(doj)) metaItems.push({ label: 'D.O.J.', value: doj });
@@ -8527,10 +8526,11 @@ function printSalarySlip(recordId, record) {
         <head>
             <title>Salary Slip - ${user.full_name}</title>
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                 body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1e293b; padding: 20px; line-height: 1.5; }
                 .slip-wrapper { max-width: 800px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
                 .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                .header-logo { width: 80px; height: auto; }
+                .header-logo { width: 140px; height: auto; }
                 .company-title { font-size: 16px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
                 .company-addr { font-size: 10px; color: #64748b; }
                 .slip-title-box { text-align: right; }
@@ -8577,8 +8577,8 @@ function printSalarySlip(recordId, record) {
             <div class="slip-wrapper">
                 <table class="header-table">
                     <tr>
-                        <td style="width: 80px;">
-                            <img src="/averion_logo.jpg" class="header-logo" alt="Logo" style="width: 70px; height: auto;">
+                        <td style="width: 150px;">
+                            <img src="/averion_logo.jpg" class="header-logo" alt="Logo" style="width: 140px; height: auto;">
                         </td>
                         <td style="padding-left: 15px;">
                             <div class="company-title">AVERION GLOBAL LLP</div>
@@ -8711,6 +8711,17 @@ function printSalarySlip(recordId, record) {
                 
                 <div class="notice-footer">This is a computer-generated statement hence does not require a signature.</div>
             </div>
+            <script>
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() {
+                            setTimeout(function() { window.print(); }, 250);
+                        });
+                    } else {
+                        setTimeout(function() { window.print(); }, 500);
+                    }
+                };
+            </script>
         </body>
         </html>
         `;
@@ -8721,6 +8732,7 @@ function printSalarySlip(recordId, record) {
         <head>
             <title>Payslip - ${user.full_name}</title>
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                 body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1e293b; padding: 25px; line-height: 1.6; }
                 .payslip-container { max-width: 700px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 25px; border-radius: 6px; }
                 @media print {
@@ -8804,6 +8816,17 @@ function printSalarySlip(recordId, record) {
                     </tbody>
                 </table>
             </div>
+            <script>
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() {
+                            setTimeout(function() { window.print(); }, 250);
+                        });
+                    } else {
+                        setTimeout(function() { window.print(); }, 500);
+                    }
+                };
+            </script>
         </body>
         </html>
         `;
@@ -8812,7 +8835,6 @@ function printSalarySlip(recordId, record) {
     const win = window.open('', '_blank');
     win.document.write(htmlContent);
     win.document.close();
-    win.print();
 }
 </script>
 

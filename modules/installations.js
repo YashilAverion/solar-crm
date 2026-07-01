@@ -584,6 +584,7 @@ router.post('/:id/email-invoice', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
         });
         const page = await browser.newPage();
+        await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
 
         // 1.5. Enable request interception to inject secret auth bypass header
         await page.setRequestInterception(true);
@@ -600,6 +601,7 @@ router.post('/:id/email-invoice', async (req, res) => {
 
         // 4. Wait for all network calls (APIs/DOM renders) to finish loading completely
         await page.goto(invoiceUrl, { waitUntil: 'networkidle0', timeout: 30000 });
+        await page.evaluateHandle(() => document.fonts.ready);
 
         // 4.5. Inject Terms & Conditions page dynamically before rendering PDF
         await page.evaluate(() => {
