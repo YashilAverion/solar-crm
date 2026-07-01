@@ -211,6 +211,27 @@ router.post('/calculate-period', requireAuth, (req, res) => {
 
                     const sydneyTime = getSydneyISO();
 
+                    // Define metadata mappings conditionally to prevent reference errors for Averion
+                    const taxCalculation = isAverion ? {
+                        gross: grossPay,
+                        tax: taxWithheld,
+                        formula: `Averion Professional Tax (PT): monthly gross >= 12,000 INR -> 200 INR (pro-rata for pay period)`
+                    } : {
+                        gross: grossPay,
+                        tax: taxWithheld,
+                        formula: `ATO Stage 3 Tax Cuts Scale 2: Weekly Gross = $${weeklyGross.toFixed(2)}. Weekly Tax Withheld = $${(typeof weeklyTaxWithheld !== 'undefined' ? weeklyTaxWithheld : 0)} (a=${a}, b=${b}). Period Multiplier = ${multiplier.toFixed(4)}`
+                    };
+
+                    const superCalculation = isAverion ? {
+                        ordinary_earnings: Math.max(0, grossPay - overtimeEarnings),
+                        rate: 0.0,
+                        super: 0
+                    } : {
+                        ordinary_earnings: ordinaryEarnings,
+                        rate: 0.12,
+                        super: superContribution
+                    };
+
                     const calculationMetadata = {
                         base_rate: baseRate,
                         raw_base_rate: hasTemplateRate ? profile.per_hour_wages_inc_tax : profile.base_hourly_rate,
@@ -218,16 +239,8 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                         weeks: weekHours,
                         has_template_rate: hasTemplateRate,
                         weekly_hours_limit: profile.weekly_hours_limit,
-                        tax_calculation: {
-                            gross: grossPay,
-                            tax: taxWithheld,
-                            formula: `ATO Stage 3 Tax Cuts Scale 2: Weekly Gross = $${weeklyGross.toFixed(2)}. Weekly Tax Withheld = $${weeklyTaxWithheld} (a=${a}, b=${b}). Period Multiplier = ${multiplier.toFixed(4)}`
-                        },
-                        super_calculation: {
-                            ordinary_earnings: ordinaryEarnings,
-                            rate: 0.12,
-                            super: superContribution
-                        }
+                        tax_calculation: taxCalculation,
+                        super_calculation: superCalculation
                     };
 
                     const generatedBy = req.session.user.full_name || req.session.user.username || 'System';
