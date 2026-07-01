@@ -286,13 +286,44 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     }
     .page {
       margin: 0;
-      padding: 1.6cm;
+      padding: 1.2cm;
       box-shadow: none;
       border-radius: 0;
       max-width: 100%;
       min-height: auto;
       page-break-after: always;
       box-sizing: border-box;
+    }
+    .letterhead-header {
+      margin-bottom: 20px !important;
+      padding-bottom: 10px !important;
+    }
+    .doc-title {
+      margin: 15px 0 10px 0 !important;
+    }
+    h3 {
+      margin-top: 15px !important;
+      margin-bottom: 8px !important;
+      padding-bottom: 2px !important;
+    }
+    p, li {
+      margin-bottom: 6px !important;
+    }
+    ol, ul {
+      margin-top: 2px !important;
+    }
+    .annexure-table {
+      margin-top: 8px !important;
+      margin-bottom: 12px !important;
+    }
+    .annexure-table th, .annexure-table td {
+      padding: 6px 10px !important;
+    }
+    .sign-container {
+      margin-top: 25px !important;
+    }
+    .sign-line {
+      height: 40px !important;
     }
     h1, h2, h3, h4, h5, h6 {
       page-break-after: avoid;
