@@ -320,7 +320,12 @@ function wrapInDocumentBoilerplate(docTitle, contentHTML, emp) {
                         margin: 0;
                     }
                     body {
+                        padding: 0;
+                    }
+                    .page {
                         padding: 1.6cm;
+                        box-sizing: border-box;
+                        min-height: auto;
                     }
                     .no-print {
                         display: none;
@@ -484,7 +489,12 @@ function getCombinedPackageHTML(emp) {
                         margin: 0;
                     }
                     body {
+                        padding: 0;
+                    }
+                    .page {
                         padding: 1.6cm;
+                        box-sizing: border-box;
+                        min-height: auto;
                     }
                     .no-print {
                         display: none;

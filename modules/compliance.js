@@ -282,15 +282,17 @@ function wrapInHTMLFrame(contentHtml, docType, emp, logoBase64) {
     }
     body {
       background: none;
-      padding: 1.6cm;
+      padding: 0;
     }
     .page {
       margin: 0;
-      padding: 0;
+      padding: 1.6cm;
       box-shadow: none;
       border-radius: 0;
       max-width: 100%;
+      min-height: auto;
       page-break-after: always;
+      box-sizing: border-box;
     }
     h1, h2, h3, h4, h5, h6 {
       page-break-after: avoid;
