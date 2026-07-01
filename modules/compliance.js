@@ -2304,7 +2304,8 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>Salary is disbursed between 10th to 15th Date of each calendar month via bank transfer.</li>
                 <li>Statutory deductions (PT, TDS) will apply as per applicable Indian laws.</li>
             </ul>
-
+            </div> <!-- Close Page 1 -->
+            <div class="page"> <!-- Open Page 2 -->
             <h3>3. Probation Period</h3>
             <ul>
                 <li>You will be on probation for a period of ${probationMonths} (three) months from the date of joining.</li>
@@ -2379,7 +2380,8 @@ function compilePhaseDoc(category, emp, registry) {
                     <tr style="background-color:#e2e8f0;font-weight:700;"><td>Gross Monthly CTC</td><td>100%</td><td>${fmtApptGross}</td></tr>
                 </tbody>
             </table>
-
+            </div> <!-- Close Page 1 -->
+            <div class="page"> <!-- Open Page 2 -->
             <h3>3. Probation & Notice Period</h3>
             <ul>
                 <li>You shall be on probation for <strong>${probationMonths} months</strong>. Post confirmation, the notice period shall be <strong>${noticeDays} days</strong> on either side.</li>
@@ -2453,7 +2455,8 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>All statutory contributions (EPF, ESIC, PT, TDS) are deducted at source per applicable law.</li>
                 <li>Gratuity is applicable post five (5) years of continuous service per the Payment of Gratuity Act 1972.</li>
             </ul>
-
+            </div> <!-- Close Page 1 -->
+            <div class="page"> <!-- Open Page 2 -->
             <h3>3. Probation & Confirmation</h3>
             <ul>
                 <li>The Employee shall serve a probation period of <strong>${probationMonths} months</strong>. During probation, notice period is <strong>15 calendar days</strong> on either side.</li>
@@ -2480,7 +2483,8 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>The Employee shall not engage in any parallel employment, freelancing, consulting, or business activity during the term of employment without explicit written consent from the Company.</li>
                 <li>Client solicitation or poaching for personal or competitor benefit is strictly prohibited.</li>
             </ul>
-
+            </div> <!-- Close Page 2 -->
+            <div class="page"> <!-- Open Page 3 -->
             <h3>7. Termination</h3>
             <ul>
                 <li>The Company may terminate this Agreement immediately for cause (gross misconduct, IP theft, regulatory breach, etc.) without notice or compensation.</li>
@@ -2539,7 +2543,8 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>Stipend is disbursed on the last working day of each month via bank transfer. Interns are not entitled to PF, Gratuity, or statutory benefits unless mandated by applicable law.</li>
                 <li>Stipend shall be withheld for unauthorized absences or abandonment of duties without intimation.</li>
             </ul>
-
+            </div> <!-- Close Page 1 -->
+            <div class="page"> <!-- Open Page 2 -->
             <h3>3. Shift Hours & Attendance</h3>
             <ul>
                 <li>Shift duration: <strong>9 hours daily</strong>, commencing at <strong>${shiftStart} IST</strong> in alignment with Australian client timezone parameters.</li>
@@ -2566,7 +2571,8 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>The Intern shall not engage in parallel internships, freelancing assignments, or competitive activities during the tenure of this Contract without prior written approval.</li>
                 <li>The Intern agrees to abide by all Company policies, including the Mobile Device, Rest Breaks, and Workplace Surveillance policies.</li>
             </ul>
-
+            </div> <!-- Close Page 2 -->
+            <div class="page"> <!-- Open Page 3 -->
             <h3>7. Early Termination</h3>
             <ul>
                 <li>Either party may terminate this Contract with <strong>7 (seven) calendar days</strong> written notice.</li>
