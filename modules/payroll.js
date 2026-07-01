@@ -104,7 +104,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     if (isAverion) {
                         // Indian monthly pro-rata salary calculation
                         const monthlyGross = profile.base_salary || 25000;
-                        const workedDays = totalOrdinaryHours / 8.0;
+                        const workedDays = totalOrdinaryHours / 9.0;
                         
                         // Count Sundays in the pay period
                         let sundays = 0;
