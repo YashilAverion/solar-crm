@@ -8456,7 +8456,7 @@ function printSalarySlip(recordId, record) {
     const wd = totalDays;
     const wo = sundays;
     const ph = 0;
-    const pd = record.ordinary_hours > 0 ? Math.min(wd, Math.round((record.ordinary_hours / 8.0) * 100) / 100) : wd;
+    const pd = record.ordinary_hours > 0 ? Math.min(wd, Math.round((record.ordinary_hours / 9.0) * 100) / 100) : wd;
     const lop = Math.max(0, wd - pd - wo);
 
     let htmlContent = '';

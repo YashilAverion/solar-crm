@@ -75,11 +75,21 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                         
                         let ord = 0;
                         let ot = 0;
-                        if (hours <= 8) {
-                            ord = hours;
+                        if (isAverion) {
+                            const dailyPaidHours = hours > 0 ? (hours + 1) : 0;
+                            if (dailyPaidHours <= 9) {
+                                ord = dailyPaidHours;
+                            } else {
+                                ord = 9;
+                                ot = dailyPaidHours - 9;
+                            }
                         } else {
-                            ord = 8;
-                            ot = hours - 8;
+                            if (hours <= 8) {
+                                ord = hours;
+                            } else {
+                                ord = 8;
+                                ot = hours - 8;
+                            }
                         }
                         
                         weekHours[weekNum].ordHours += ord;
@@ -113,7 +123,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     if (isAverion) {
                         // Indian monthly pro-rata salary calculation
                         const monthlyGross = profile.base_salary || 25000;
-                        const workedDays = totalOrdinaryHours / 8.0;
+                        const workedDays = totalOrdinaryHours / 9.0;
                         
                         // Count Sundays in the pay period
                         let sundays = 0;
