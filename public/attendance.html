@@ -8462,6 +8462,50 @@ function printSalarySlip(recordId, record) {
     let htmlContent = '';
     if (isAverion) {
         const monthlyGross = parseFloat(user.base_salary || 25000);
+
+        const isValidValue = (val) => {
+            if (!val) return false;
+            const s = String(val).trim().toLowerCase();
+            return s !== 'n.a.' && s !== 'as per company records' && s !== '';
+        };
+
+        const metaItems = [];
+        metaItems.push({ label: 'Emp. Id', value: user.employee_id || user.id });
+        metaItems.push({ label: 'Emp. Name', value: `<strong>${user.full_name}</strong>` });
+        metaItems.push({ label: 'Designation', value: user.job_title || 'Manager' });
+        metaItems.push({ label: 'Department', value: user.department || 'Operations' });
+
+        const loc = user.google_address || 'AHMEDABAD';
+        if (isValidValue(loc)) metaItems.push({ label: 'Location', value: loc });
+
+        const doj = formatDoj(user.start_date || user.onboarding_date);
+        if (isValidValue(doj)) metaItems.push({ label: 'D.O.J.', value: doj });
+
+        if (isValidValue(user.pan_number)) metaItems.push({ label: 'PAN No', value: user.pan_number });
+        if (isValidValue(user.uan_number)) metaItems.push({ label: 'P.F. No.', value: user.uan_number });
+        if (isValidValue(user.esic_number)) metaItems.push({ label: 'ESI. No.', value: user.esic_number });
+        if (isValidValue(user.uan_number)) metaItems.push({ label: 'UAN No.', value: user.uan_number });
+        if (isValidValue(user.bank_bsb)) metaItems.push({ label: 'Bank', value: user.bank_bsb });
+        if (isValidValue(user.bank_account_number)) metaItems.push({ label: 'A/c No', value: user.bank_account_number });
+
+        let metaRowsHTML = '';
+        for (let i = 0; i < metaItems.length; i += 2) {
+            const left = metaItems[i];
+            const right = metaItems[i+1];
+            metaRowsHTML += `
+                <tr>
+                    <td class="meta-label">${left.label}</td>
+                    <td>${left.value}</td>
+                    ${right ? `
+                        <td class="meta-label">${right.label}</td>
+                        <td>${right.value}</td>
+                    ` : `
+                        <td class="meta-label"></td>
+                        <td></td>
+                    `}
+                </tr>
+            `;
+        }
         const basicActual = monthlyGross * 0.50;
         const hraActual = monthlyGross * 0.20;
         const specialActual = monthlyGross * 0.30;
@@ -8494,7 +8538,9 @@ function printSalarySlip(recordId, record) {
                 .slip-subtitle { font-size: 9px; color: #64748b; text-transform: uppercase; }
                 
                 .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #cbd5e1; }
-                .meta-table td { padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 10px; width: 25%; }
+                .meta-table td { padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 10px; }
+                .meta-table td:nth-child(odd) { font-weight: 600; color: #64748b; width: 18%; }
+                .meta-table td:nth-child(even) { width: 32%; }
                 .meta-label { font-weight: 600; color: #64748b; }
                 
                 .details-grid { display: grid; grid-template-columns: 1.5fr 3fr 2fr; gap: 0px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
@@ -8532,7 +8578,7 @@ function printSalarySlip(recordId, record) {
                 <table class="header-table">
                     <tr>
                         <td style="width: 80px;">
-                            <img src="data:image/jpeg;base64,mockLogo" class="header-logo" alt="Logo" style="display:none;">
+                            <img src="/averion_logo.jpg" class="header-logo" alt="Logo" style="width: 70px; height: auto;">
                         </td>
                         <td style="padding-left: 15px;">
                             <div class="company-title">AVERION GLOBAL LLP</div>
@@ -8548,42 +8594,7 @@ function printSalarySlip(recordId, record) {
                 </table>
                 
                 <table class="meta-table">
-                    <tr>
-                        <td class="meta-label">Emp. Id</td>
-                        <td>${user.employee_id || user.id}</td>
-                        <td class="meta-label">P.F. No.</td>
-                        <td>${user.uan_number && user.uan_number !== 'As per Company Records' ? user.uan_number : 'N.A.'}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Emp. Name</td>
-                        <td style="font-weight: 700;">${user.full_name}</td>
-                        <td class="meta-label">ESI. No.</td>
-                        <td>${user.esic_number && user.esic_number !== 'As per Company Records' ? user.esic_number : 'N.A.'}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Designation</td>
-                        <td>${user.job_title}</td>
-                        <td class="meta-label">UAN No.</td>
-                        <td>${user.uan_number && user.uan_number !== 'As per Company Records' ? user.uan_number : 'N.A.'}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Department</td>
-                        <td>${user.department || 'Operations'}</td>
-                        <td class="meta-label">Bank</td>
-                        <td>${user.bank_bsb && user.bank_bsb !== 'As per Company Records' ? user.bank_bsb : 'As per Company Records'}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Location</td>
-                        <td>AHMEDABAD</td>
-                        <td class="meta-label">A/c No</td>
-                        <td>${user.bank_account_number && user.bank_account_number !== 'As per Company Records' ? user.bank_account_number : 'As per Company Records'}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">PAN No</td>
-                        <td>${user.pan_number && user.pan_number !== 'As per Company Records' ? user.pan_number : 'As per Company Records'}</td>
-                        <td class="meta-label">D.O.J.</td>
-                        <td>${formatDoj(user.start_date)}</td>
-                    </tr>
+                    ${metaRowsHTML}
                 </table>
                 
                 <div class="details-grid">
@@ -8650,7 +8661,7 @@ function printSalarySlip(recordId, record) {
                     
                     <div class="grid-col">
                         <div class="col-header">Deduction Details</div>
-                        <table class="table-inner" style="height: calc(100% - 24px);">
+                        <table class="table-inner">
                             <thead>
                                 <tr>
                                     <th>Deduction</th>
