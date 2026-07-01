@@ -8457,14 +8457,21 @@ function printSalarySlip(recordId, record) {
 
     let htmlContent = '';
     if (isAverion) {
-        const basicActual = record.gross_pay * 0.50;
-        const basicPayable = record.gross_pay * 0.50;
-        const hraActual = record.gross_pay * 0.20;
-        const hraPayable = record.gross_pay * 0.20;
-        const specialActual = record.gross_pay * 0.30;
-        const specialPayable = record.gross_pay * 0.30;
+        const monthlyGross = parseFloat(user.base_salary || 25000);
+        const basicActual = monthlyGross * 0.50;
+        const hraActual = monthlyGross * 0.20;
+        const specialActual = monthlyGross * 0.30;
 
-        const amountInWords = convertNumberToWords(record.net_pay);
+        const otPayable = record.overtime_hours * (monthlyGross / 160.0);
+        const proRataBase = Math.max(0, record.gross_pay - otPayable);
+
+        const basicPayable = proRataBase * 0.50;
+        const hraPayable = proRataBase * 0.20;
+        const specialPayable = proRataBase * 0.30;
+
+        const ptDeduction = record.tax_withheld;
+        const netPayable = record.net_pay;
+        const amountInWords = convertNumberToWords(netPayable);
 
         htmlContent = `
         <!DOCTYPE html>
@@ -8578,18 +8585,18 @@ function printSalarySlip(recordId, record) {
                 <div class="details-grid">
                     <div class="grid-col">
                         <div class="col-header">Working Details</div>
-                        <div class="row-item"><span>WD</span><strong>substituteWd</strong></div>
-                        <div class="row-item"><span>WO</span><strong>substituteWo</strong></div>
-                        <div class="row-item"><span>PH</span><strong>substitutePh</strong></div>
-                        <div class="row-item"><span>PD</span><strong>substitutePd</strong></div>
+                        <div class="row-item"><span>WD</span><strong>${wd}</strong></div>
+                        <div class="row-item"><span>WO</span><strong>${wo}</strong></div>
+                        <div class="row-item"><span>PH</span><strong>${ph}</strong></div>
+                        <div class="row-item"><span>PD</span><strong>${pd.toFixed(1)}</strong></div>
                         <div class="row-item"><span>Coff</span><strong>0.0</strong></div>
                         <div class="row-item"><span>OD</span><strong>0.0</strong></div>
                         <div class="row-item"><span>PL</span><strong>0.0</strong></div>
                         <div class="row-item"><span>CL</span><strong>0.0</strong></div>
                         <div class="row-item"><span>SL</span><strong>0.0</strong></div>
-                        <div class="row-item"><span>LOP</span><strong>substituteLop</strong></div>
-                        <div class="row-item"><span>OT Hrs.</span><strong>substituteOtHoursExpression</strong></div>
-                        <div class="row-item total-row"><span>TOTAL</span><strong>substitutePdExpression</strong></div>
+                        <div class="row-item"><span>LOP</span><strong>${lop.toFixed(1)}</strong></div>
+                        <div class="row-item"><span>OT Hrs.</span><strong>${record.overtime_hours.toFixed(1)}</strong></div>
+                        <div class="row-item total-row"><span>TOTAL</span><strong>${wd}</strong></div>
                     </div>
                     
                     <div class="grid-col">
@@ -8606,17 +8613,17 @@ function printSalarySlip(recordId, record) {
                                 <tr>
                                     <td>Basic Salary</td>
                                     <td style="text-align: right;">₹${basicActual.toFixed(2)}</td>
-                                    <td style="text-align: right;">₹substituteBasicPayable</td>
+                                    <td style="text-align: right;">₹${basicPayable.toFixed(2)}</td>
                                 </tr>
                                 <tr>
                                     <td>HRA</td>
                                     <td style="text-align: right;">₹${hraActual.toFixed(2)}</td>
-                                    <td style="text-align: right;">₹substituteHraPayable</td>
+                                    <td style="text-align: right;">₹${hraPayable.toFixed(2)}</td>
                                 </tr>
                                 <tr>
                                     <td>Special Allowance</td>
-                                    <td style="text-align: right;">₹substituteSpecialActual</td>
-                                    <td style="text-align: right;">₹substituteSpecialPayable</td>
+                                    <td style="text-align: right;">₹${specialActual.toFixed(2)}</td>
+                                    <td style="text-align: right;">₹${specialPayable.toFixed(2)}</td>
                                 </tr>
                                 <tr>
                                     <td>Incentive</td>
@@ -8626,12 +8633,12 @@ function printSalarySlip(recordId, record) {
                                 <tr>
                                     <td>OverTime</td>
                                     <td style="text-align: right;">₹0.00</td>
-                                    <td style="text-align: right;">₹substituteOtFormula</td>
+                                    <td style="text-align: right;">₹${otPayable.toFixed(2)}</td>
                                 </tr>
                                 <tr class="total-row">
                                     <td>Gross Income</td>
-                                    <td style="text-align: right;">₹substituteGrossPayExpression</td>
-                                    <td style="text-align: right;">₹substituteGrossPayExpression</td>
+                                    <td style="text-align: right;">₹${monthlyGross.toFixed(2)}</td>
+                                    <td style="text-align: right;">₹${record.gross_pay.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -8657,7 +8664,7 @@ function printSalarySlip(recordId, record) {
                                 </tr>
                                 <tr>
                                     <td>P.T.</td>
-                                    <td style="text-align: right;">₹substituteTaxWithheldExpression</td>
+                                    <td style="text-align: right;">₹${ptDeduction.toFixed(2)}</td>
                                 </tr>
                                 <tr>
                                     <td>TDS</td>
@@ -8669,7 +8676,7 @@ function printSalarySlip(recordId, record) {
                                 </tr>
                                 <tr class="total-row">
                                     <td>Total Deduction</td>
-                                    <td style="text-align: right;">₹substituteTaxWithheldExpression</td>
+                                    <td style="text-align: right;">₹${ptDeduction.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -8679,11 +8686,11 @@ function printSalarySlip(recordId, record) {
                 <div class="words-box">
                     <div>
                         <div style="font-weight: 600; color: #64748b; margin-bottom: 2px;">Rupees in Words</div>
-                        <div class="words-text">substituteWordsText Rupees Only</div>
+                        <div class="words-text">${amountInWords} Rupees Only</div>
                     </div>
                     <div class="net-box">
                         <div style="font-weight: 600; color: #64748b;">Net Amount</div>
-                        <div class="net-amount">₹substituteNetPayExpression</div>
+                        <div class="net-amount">₹${netPayable.toFixed(2)}</div>
                     </div>
                 </div>
                 
@@ -8697,7 +8704,7 @@ function printSalarySlip(recordId, record) {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Payslip - substituteUserFullName</title>
+            <title>Payslip - ${user.full_name}</title>
             <style>
                 body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1e293b; padding: 25px; line-height: 1.6; }
                 .payslip-container { max-width: 700px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 25px; border-radius: 6px; }
@@ -8718,14 +8725,14 @@ function printSalarySlip(recordId, record) {
         </head>
         <body>
             <div class="payslip-container">
-                <div class="heading">PAYSLIP SUMMARY - substituteCompanyNameExpression</div>
+                <div class="heading">PAYSLIP SUMMARY - ${user.company_name}</div>
                 <table class="grid-table">
                     <tr>
-                        <td><strong>Employee Name:</strong> substituteUserFullName</td>
-                        <td><strong>Employment Type:</strong> substituteUserRole</td>
+                        <td><strong>Employee Name:</strong> ${user.full_name}</td>
+                        <td><strong>Employment Type:</strong> ${user.employment_type || 'Full Time'}</td>
                     </tr>
                     <tr>
-                        <td><strong>Pay Period:</strong> substitutePeriodStart to substitutePeriodEnd</td>
+                        <td><strong>Pay Period:</strong> ${record.pay_period_start} to ${record.pay_period_end}</td>
                         <td><strong>Hourly Rate:</strong> \$\${record.gross_pay > 0 && record.ordinary_hours > 0 ? (record.gross_pay / record.ordinary_hours).toFixed(2) : '0.00'} / hr</td>
                     </tr>
                 </table>
@@ -8742,17 +8749,17 @@ function printSalarySlip(recordId, record) {
                     <tbody>
                         <tr>
                             <td>Ordinary Hours Worked</td>
-                            <td>substituteOrdHoursExpression</td>
+                            <td>${record.ordinary_hours.toFixed(1)}</td>
                             <td>\$\${record.gross_pay.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <td>Overtime Hours Worked</td>
-                            <td>substituteOtHoursExpression2</td>
+                            <td>${record.overtime_hours.toFixed(1)}</td>
                             <td>\$0.00</td>
                         </tr>
                         <tr class="total-row">
                             <td>Gross Earnings</td>
-                            <td>substituteTotalHoursExpression</td>
+                            <td>${(record.ordinary_hours + record.overtime_hours).toFixed(1)}</td>
                             <td>\$\${record.gross_pay.toFixed(2)}</td>
                         </tr>
                     </tbody>
