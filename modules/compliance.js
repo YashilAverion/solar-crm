@@ -2334,7 +2334,7 @@ function compilePhaseDoc(category, emp, registry) {
                 <li><strong>Department:</strong> ${emp.department || 'Operations'}</li>
                 <li><strong>Reporting To:</strong> Designated Team Lead / Managing Partner</li>
                 <li><strong>Work Location:</strong> Shop 2, Sthapatya Residency, Nr. Nayara Petrol Pump, SP Ring Road, Ognaj, Ahmedabad — 380060</li>
-                <li><strong>Proposed Joining Date:</strong> ${docDate}</li>
+                <li><strong>Proposed Joining Date:</strong> ${emp.proposed_joining_date ? formatToDDMMYY(emp.proposed_joining_date) : docDate}</li>
             </ul>
 
             <h3>2. Compensation Package</h3>
