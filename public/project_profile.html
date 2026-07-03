@@ -2708,12 +2708,14 @@ function toggleNav(event, element) {
         function validateMandatoryByProductType() {
             let hasBattery = false;
             let hasInverter = false;
+            let hasPanel = false;
 
             document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
                 const type = row.querySelector('.cp-type')?.value;
                 const name = (row.querySelector('.cp-name')?.value || '').trim();
                 if (type === 'Battery' && name) hasBattery = true;
                 if (type === 'Inverter' && name) hasInverter = true;
+                if (type === 'Panel' && name) hasPanel = true;
             });
 
             let missingFields = [];
@@ -2739,14 +2741,27 @@ function toggleNav(event, element) {
                 });
             }
 
+            // Panel mandatory fields
+            if (hasPanel) {
+                const panelSelects = [
+                    { id: 'tc_panel_install', label: 'Panel Install Type' }
+                ];
+                panelSelects.forEach(field => {
+                    const el = document.getElementById(field.id);
+                    if (el && !el.value.trim()) {
+                        const cfRow = el.closest('.cf-row');
+                        if (cfRow) missingFields.push({ el: cfRow, label: field.label });
+                    }
+                });
+            }
+
             // Inverter mandatory fields (selects and radio groups)
             if (hasInverter) {
                 const inverterSelects = [
                     { id: 'tb_roof_type', label: 'Roof Type' },
                     { id: 'tb_roof_angle', label: 'Roof Angle' },
                     { id: 'tb_distributor', label: 'Distributor' },
-                    { id: 'tb_retailer', label: 'Retailer' },
-                    { id: 'tc_panel_install', label: 'Panel Install Type' }
+                    { id: 'tb_retailer', label: 'Retailer' }
                 ];
                 inverterSelects.forEach(field => {
                     const el = document.getElementById(field.id);
