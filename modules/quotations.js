@@ -24,6 +24,219 @@ function dbAll(sql, params = []) {
     });
 }
 
+// Helper to dynamically match products against combo groups and calculate cost/breakdown/capacities
+async function processProductsAndCombos(products) {
+    let totalProductCost = 0;
+    let totalPanelKw = 0;
+    let totalBatteryKwh = 0;
+    let hasExtraRoofInstallation = false;
+    const productsBreakdown = [];
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+        return { totalProductCost, totalPanelKw, totalBatteryKwh, hasExtraRoofInstallation, productsBreakdown };
+    }
+
+    // 1. Fetch DB product details for all active product stock codes in input list
+    const enrichedProducts = [];
+    for (const item of products) {
+        const qty = parseFloat(item.qty) || 0;
+        if (qty <= 0) continue;
+
+        let dbProduct = null;
+        if (item.code) {
+            dbProduct = await dbGet(
+                "SELECT prod_name, purchase_price, purchase_price_ex_gst, panels_capacity_w, usable_battery_kwh, nominal_battery_capacity_kwh, product_category, inv_mppt FROM products WHERE stock_code = ? AND product_status = 'Active'",
+                [item.code.trim()]
+            );
+        }
+        enrichedProducts.push({
+            item: item,
+            dbProduct: dbProduct,
+            usedInCombo: false
+        });
+    }
+
+    // 2. Fetch all active combo groups and their variants
+    const activeCombos = await dbAll(`
+        SELECT cg.id as group_id, cg.group_name, cg.panel_stock_code, cg.inverter_stock_code, cg.battery_stock_code,
+               cv.id as variant_id, cv.variant_name, cv.stock_code as variant_stock_code,
+               cv.panel_qty, cv.inverter_qty, cv.battery_qty,
+               cv.purchase_price, cv.purchase_price_ex_gst
+        FROM combo_groups cg
+        JOIN combo_variants cv ON cg.id = cv.combo_group_id
+        WHERE cg.status = 'Active' AND cv.status = 'Active'
+    `);
+
+    // Sort active combos by the number of components they require (descending),
+    // to match more specific combos first.
+    activeCombos.sort((a, b) => {
+        const score = (x) => 
+            (x.panel_stock_code && x.panel_qty > 0 ? 1 : 0) +
+            (x.inverter_stock_code && x.inverter_qty > 0 ? 1 : 0) +
+            (x.battery_stock_code && x.battery_qty > 0 ? 1 : 0);
+        return score(b) - score(a);
+    });
+
+    const matchedCombos = [];
+
+    // 3. Try to match combinations
+    for (const variant of activeCombos) {
+        const requiredComponents = [];
+        if (variant.panel_stock_code && variant.panel_qty > 0) {
+            requiredComponents.push({ type: 'Panel', code: variant.panel_stock_code.trim(), qty: variant.panel_qty });
+        }
+        if (variant.inverter_stock_code && variant.inverter_qty > 0) {
+            requiredComponents.push({ type: 'Inverter', code: variant.inverter_stock_code.trim(), qty: variant.inverter_qty });
+        }
+        if (variant.battery_stock_code && variant.battery_qty > 0) {
+            requiredComponents.push({ type: 'Battery', code: variant.battery_stock_code.trim(), qty: variant.battery_qty });
+        }
+
+        if (requiredComponents.length === 0) continue;
+
+        // Try to find multiplier N
+        // First, check if the first required component exists in the remaining enrichedProducts
+        const firstComp = requiredComponents[0];
+        const matchingUserProd = enrichedProducts.find(ep => 
+            !ep.usedInCombo && 
+            ep.item.code && 
+            ep.item.code.trim() === firstComp.code
+        );
+        if (!matchingUserProd) continue;
+
+        const userQty = parseFloat(matchingUserProd.item.qty) || 0;
+        const N = userQty / firstComp.qty;
+        
+        // Multiplier must be a positive integer
+        if (N <= 0 || !Number.isInteger(N)) continue;
+
+        // Check if all other required components match with N multiplier
+        let allMatch = true;
+        const matchedUserProds = [matchingUserProd];
+
+        for (let i = 1; i < requiredComponents.length; i++) {
+            const comp = requiredComponents[i];
+            const userProd = enrichedProducts.find(ep => 
+                !ep.usedInCombo && 
+                ep.item.code && 
+                ep.item.code.trim() === comp.code &&
+                (parseFloat(ep.item.qty) || 0) === N * comp.qty
+            );
+            if (!userProd) {
+                allMatch = false;
+                break;
+            }
+            matchedUserProds.push(userProd);
+        }
+
+        if (allMatch) {
+            // Mark all matched products as bundled in the combo
+            matchedUserProds.forEach(ep => ep.usedInCombo = true);
+            matchedCombos.push({
+                variant: variant,
+                qty: N
+            });
+        }
+    }
+
+    // 4. Process all products for capacities (we calculate capacities based on the original individual products,
+    //    regardless of whether they are bundled into a combo or not).
+    for (const ep of enrichedProducts) {
+        const qty = parseFloat(ep.item.qty) || 0;
+        if (ep.dbProduct) {
+            if (ep.dbProduct.product_category === 'Panel') {
+                const capacityW = parseFloat(ep.item.size) || parseFloat(ep.dbProduct.panels_capacity_w) || 0;
+                totalPanelKw += (capacityW * qty) / 1000;
+            } else if (ep.dbProduct.product_category === 'Battery') {
+                const capacityKwh = parseFloat(ep.item.kw) || parseFloat(ep.dbProduct.usable_battery_kwh || ep.dbProduct.nominal_battery_capacity_kwh) || 0;
+                totalBatteryKwh += capacityKwh * qty;
+            } else if (ep.dbProduct.product_category === 'Inverter') {
+                const mpptCount = parseInt(ep.dbProduct.inv_mppt) || 0;
+                if (mpptCount > 2) {
+                    hasExtraRoofInstallation = true;
+                }
+            }
+        } else {
+            // Fallback for non-DB products
+            const itemType = (ep.item.type || '').trim();
+            const itemSize = parseFloat(ep.item.size) || parseFloat(ep.item.kw) || 0;
+            const itemKw = parseFloat(ep.item.kw) || 0;
+
+            if (ep.item.name && ep.item.name.trim()) {
+                if (itemType === 'Panel' && itemSize > 0) {
+                    totalPanelKw += (itemSize * qty) / 1000;
+                } else if (itemType === 'Panel' && itemKw > 0) {
+                    totalPanelKw += itemKw * qty;
+                } else if (itemType === 'Battery' && itemSize > 0) {
+                    totalBatteryKwh += itemSize * qty;
+                } else if (itemType === 'Battery' && itemKw > 0) {
+                    totalBatteryKwh += itemKw * qty;
+                }
+            }
+        }
+    }
+
+    // 5. Build productsBreakdown and totalProductCost
+    // A. Add matched combos
+    for (const mc of matchedCombos) {
+        const variant = mc.variant;
+        const qty = mc.qty;
+        const priceIncGst = parseFloat(variant.purchase_price) || (parseFloat(variant.purchase_price_ex_gst) * 1.1) || 0;
+        const productTotal = priceIncGst * qty;
+        totalProductCost += productTotal;
+
+        productsBreakdown.push({
+            type: 'Combo',
+            name: `${variant.group_name} [${variant.variant_name}]`,
+            code: variant.variant_stock_code || '',
+            qty: qty,
+            rate: priceIncGst,
+            total: productTotal
+        });
+    }
+
+    // B. Add unmatched products
+    for (const ep of enrichedProducts) {
+        if (ep.usedInCombo) continue;
+
+        const qty = parseFloat(ep.item.qty) || 0;
+        if (ep.dbProduct) {
+            const priceIncGst = parseFloat(ep.dbProduct.purchase_price) || (parseFloat(ep.dbProduct.purchase_price_ex_gst) * 1.1) || 0;
+            const productTotal = priceIncGst * qty;
+            totalProductCost += productTotal;
+
+            productsBreakdown.push({
+                type: ep.dbProduct.product_category || ep.item.type,
+                name: ep.dbProduct.prod_name || ep.item.name,
+                code: ep.item.code ? ep.item.code.trim() : '',
+                qty: qty,
+                rate: priceIncGst,
+                total: productTotal
+            });
+        } else {
+            // Fallback for non-DB products
+            if (ep.item.name && ep.item.name.trim()) {
+                productsBreakdown.push({
+                    type: (ep.item.type || '').trim() || 'Unknown',
+                    name: ep.item.name,
+                    code: ep.item.code || '—',
+                    qty: qty,
+                    rate: 0,
+                    total: 0
+                });
+            }
+        }
+    }
+
+    return {
+        totalProductCost,
+        totalPanelKw,
+        totalBatteryKwh,
+        hasExtraRoofInstallation,
+        productsBreakdown
+    };
+}
+
 // Calculate route
 router.post('/calculate', requireAuth, async (req, res) => {
     try {
@@ -98,85 +311,13 @@ router.post('/calculate', requireAuth, async (req, res) => {
         });
 
         // 1. PRODUCT COST (GRAND TOTAL BASE) & DETAILS FOR BREAKDOWN
-        let totalProductCost = 0;
-        let totalPanelKw = 0;
-        let totalBatteryKwh = 0;
-        let hasExtraRoofInstallation = false;
-        const productsBreakdown = [];
-
-        if (products && Array.isArray(products) && products.length > 0) {
-            for (const item of products) {
-                const qty = parseFloat(item.qty) || 0;
-                if (qty <= 0) continue;
-
-                let dbProduct = null;
-                if (item.code) {
-                    dbProduct = await dbGet(
-                        "SELECT prod_name, purchase_price, purchase_price_ex_gst, panels_capacity_w, usable_battery_kwh, nominal_battery_capacity_kwh, product_category, inv_mppt FROM products WHERE stock_code = ? AND product_status = 'Active'",
-                        [item.code.trim()]
-                    );
-                }
-
-                if (dbProduct) {
-                    const priceIncGst = parseFloat(dbProduct.purchase_price) || (parseFloat(dbProduct.purchase_price_ex_gst) * 1.1) || 0;
-                    const productTotal = priceIncGst * qty;
-                    totalProductCost += productTotal;
-
-                    productsBreakdown.push({
-                        type: dbProduct.product_category || item.type,
-                        name: dbProduct.prod_name || item.name,
-                        code: item.code ? item.code.trim() : '',
-                        qty: qty,
-                        rate: priceIncGst,
-                        total: productTotal
-                    });
-
-                    if (dbProduct.product_category === 'Panel') {
-                        const capacityW = parseFloat(item.size) || parseFloat(dbProduct.panels_capacity_w) || 0;
-                        totalPanelKw += (capacityW * qty) / 1000;
-                    } else if (dbProduct.product_category === 'Battery') {
-                        const capacityKwh = parseFloat(item.kw) || parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
-                        totalBatteryKwh += capacityKwh * qty;
-                    } else if (dbProduct.product_category === 'Inverter') {
-                        const mpptCount = parseInt(dbProduct.inv_mppt) || 0;
-                        if (mpptCount > 2) {
-                            hasExtraRoofInstallation = true;
-                        }
-                    }
-                } else {
-                    // Fallback: product not in DB or no stock code — use UI size field for capacity estimation
-                    const itemType = (item.type || '').trim();
-                    const itemSize = parseFloat(item.size) || parseFloat(item.kw) || 0;
-                    const itemKw = parseFloat(item.kw) || 0;
-
-                    // Only add to capacity if the item has a name (not blank row)
-                    if (item.name && item.name.trim()) {
-                        productsBreakdown.push({
-                            type: itemType || 'Unknown',
-                            name: item.name,
-                            code: item.code || '—',
-                            qty: qty,
-                            rate: 0,
-                            total: 0
-                        });
-
-                        if (itemType === 'Panel' && itemSize > 0) {
-                            // itemSize is in Watts for panels
-                            totalPanelKw += (itemSize * qty) / 1000;
-                        } else if (itemType === 'Panel' && itemKw > 0) {
-                            // itemKw is in kW for panels
-                            totalPanelKw += itemKw * qty;
-                        } else if (itemType === 'Battery' && itemSize > 0) {
-                            // itemSize is in kWh for batteries
-                            totalBatteryKwh += itemSize * qty;
-                        } else if (itemType === 'Battery' && itemKw > 0) {
-                            // itemKw is in kWh for batteries
-                            totalBatteryKwh += itemKw * qty;
-                        }
-                    }
-                }
-            }
-        }
+        const {
+            totalProductCost,
+            totalPanelKw,
+            totalBatteryKwh,
+            hasExtraRoofInstallation,
+            productsBreakdown
+        } = await processProductsAndCombos(products);
 
         // 2. INSTALLATION CHARGES
         let totalInstallationFee = 0;
@@ -794,79 +935,13 @@ router.get('/:id/preview-data', async (req, res) => {
             }
         });
 
-        let totalProductCost = 0;
-        let totalPanelKw = 0;
-        let totalBatteryKwh = 0;
-        let hasExtraRoofInstallation = false;
-        const productsBreakdown = [];
-
-        if (products && Array.isArray(products) && products.length > 0) {
-            for (const item of products) {
-                const qty = parseFloat(item.qty) || 0;
-                if (qty <= 0) continue;
-
-                let dbProduct = null;
-                if (item.code) {
-                    dbProduct = await dbGet(
-                        "SELECT prod_name, purchase_price, purchase_price_ex_gst, panels_capacity_w, usable_battery_kwh, nominal_battery_capacity_kwh, product_category, inv_mppt FROM products WHERE stock_code = ? AND product_status = 'Active'",
-                        [item.code.trim()]
-                    );
-                }
-
-                if (dbProduct) {
-                    const priceIncGst = parseFloat(dbProduct.purchase_price) || (parseFloat(dbProduct.purchase_price_ex_gst) * 1.1) || 0;
-                    const productTotal = priceIncGst * qty;
-                    totalProductCost += productTotal;
-
-                    productsBreakdown.push({
-                        type: dbProduct.product_category || item.type,
-                        name: dbProduct.prod_name || item.name,
-                        code: item.code ? item.code.trim() : '',
-                        qty: qty,
-                        rate: priceIncGst,
-                        total: productTotal
-                    });
-
-                    if (dbProduct.product_category === 'Panel') {
-                        const capacityW = parseFloat(item.size) || parseFloat(dbProduct.panels_capacity_w) || 0;
-                        totalPanelKw += (capacityW * qty) / 1000;
-                    } else if (dbProduct.product_category === 'Battery') {
-                        const capacityKwh = parseFloat(item.kw) || parseFloat(dbProduct.usable_battery_kwh || dbProduct.nominal_battery_capacity_kwh) || 0;
-                        totalBatteryKwh += capacityKwh * qty;
-                    } else if (dbProduct.product_category === 'Inverter') {
-                        const mpptCount = parseInt(dbProduct.inv_mppt) || 0;
-                        if (mpptCount > 2) {
-                            hasExtraRoofInstallation = true;
-                        }
-                    }
-                } else {
-                    const itemType = (item.type || '').trim();
-                    const itemSize = parseFloat(item.size) || parseFloat(item.kw) || 0;
-                    const itemKw = parseFloat(item.kw) || 0;
-
-                    if (item.name && item.name.trim()) {
-                        productsBreakdown.push({
-                            type: itemType || 'Unknown',
-                            name: item.name,
-                            code: item.code || '—',
-                            qty: qty,
-                            rate: 0,
-                            total: 0
-                        });
-
-                        if (itemType === 'Panel' && itemSize > 0) {
-                            totalPanelKw += (itemSize * qty) / 1000;
-                        } else if (itemType === 'Panel' && itemKw > 0) {
-                            totalPanelKw += itemKw * qty;
-                        } else if (itemType === 'Battery' && itemSize > 0) {
-                            totalBatteryKwh += itemSize * qty;
-                        } else if (itemType === 'Battery' && itemKw > 0) {
-                            totalBatteryKwh += itemKw * qty;
-                        }
-                    }
-                }
-            }
-        }
+        const {
+            totalProductCost,
+            totalPanelKw,
+            totalBatteryKwh,
+            hasExtraRoofInstallation,
+            productsBreakdown
+        } = await processProductsAndCombos(products);
 
         let totalInstallationFee = 0;
         const installationsBreakdown = [];
