@@ -115,77 +115,78 @@ router.post('/', requireAuth, (req, res) => {
         db.serialize(() => {
             db.run("BEGIN TRANSACTION");
 
-        const groupSql = `
-            INSERT INTO combo_groups (group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter, is_inverter_battery, is_panel_inverter_battery)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        db.run(groupSql, [group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter || 0, is_inverter_battery || 0, is_panel_inverter_battery || 0], function(err) {
-            if (err) {
-                db.run("ROLLBACK");
-                return res.status(500).json({ error: err.message });
-            }
-
-            const groupId = this.lastID;
-            const groupRecord = { id: groupId, group_name, panel_stock_code, inverter_stock_code, battery_stock_code };
-            let variantIndex = 0;
-
-            function insertNextVariant() {
-                if (variantIndex >= variants.length) {
-                    db.run("COMMIT", (commitErr) => {
-                        if (commitErr) {
-                            db.run("ROLLBACK");
-                            return res.status(500).json({ error: commitErr.message });
-                        }
-                        res.json({ success: true, id: groupId });
-                    });
-                    return;
+            const groupSql = `
+                INSERT INTO combo_groups (group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter, is_inverter_battery, is_panel_inverter_battery)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            db.run(groupSql, [group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter || 0, is_inverter_battery || 0, is_panel_inverter_battery || 0], function(err) {
+                if (err) {
+                    db.run("ROLLBACK");
+                    return res.status(500).json({ error: err.message });
                 }
 
-                const v = variants[variantIndex];
-                const variantSql = `
-                    INSERT OR REPLACE INTO combo_variants (
-                        combo_group_id, variant_name, stock_code, 
-                        panel_qty, inverter_qty, battery_qty, 
-                        purchase_price, purchase_price_ex_gst,
-                        panel_stock_code, inverter_stock_code, battery_stock_code
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `;
-                db.run(variantSql, [
-                    groupId, v.variant_name, v.stock_code, 
-                    v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
-                    v.purchase_price || 0, v.purchase_price_ex_gst || 0,
-                    v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
-                ], function(vErr) {
-                    if (vErr) {
-                        db.run("ROLLBACK");
-                        return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
+                const groupId = this.lastID;
+                const groupRecord = { id: groupId, group_name, panel_stock_code, inverter_stock_code, battery_stock_code };
+                let variantIndex = 0;
+
+                function insertNextVariant() {
+                    if (variantIndex >= variants.length) {
+                        db.run("COMMIT", (commitErr) => {
+                            if (commitErr) {
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ error: commitErr.message });
+                            }
+                            res.json({ success: true, id: groupId });
+                        });
+                        return;
                     }
 
-                    const variantRecord = {
-                        variant_name: v.variant_name,
-                        stock_code: v.stock_code,
-                        panel_qty: v.panel_qty || 0,
-                        inverter_qty: v.inverter_qty || 0,
-                        battery_qty: v.battery_qty || 0,
-                        purchase_price: v.purchase_price || 0,
-                        purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
-                        panel_stock_code: v.panel_stock_code || null,
-                        inverter_stock_code: v.inverter_stock_code || null,
-                        battery_stock_code: v.battery_stock_code || null
-                    };
-
-                    syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {
-                        if (syncErr) {
+                    const v = variants[variantIndex];
+                    const variantSql = `
+                        INSERT OR REPLACE INTO combo_variants (
+                            combo_group_id, variant_name, stock_code, 
+                            panel_qty, inverter_qty, battery_qty, 
+                            purchase_price, purchase_price_ex_gst,
+                            panel_stock_code, inverter_stock_code, battery_stock_code
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `;
+                    db.run(variantSql, [
+                        groupId, v.variant_name, v.stock_code, 
+                        v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
+                        v.purchase_price || 0, v.purchase_price_ex_gst || 0,
+                        v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
+                    ], function(vErr) {
+                        if (vErr) {
                             db.run("ROLLBACK");
-                            return res.status(500).json({ error: `Product sync failed: ${syncErr.message}` });
+                            return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
                         }
-                        variantIndex++;
-                        insertNextVariant();
-                    });
-                });
-            }
 
-            insertNextVariant();
+                        const variantRecord = {
+                            variant_name: v.variant_name,
+                            stock_code: v.stock_code,
+                            panel_qty: v.panel_qty || 0,
+                            inverter_qty: v.inverter_qty || 0,
+                            battery_qty: v.battery_qty || 0,
+                            purchase_price: v.purchase_price || 0,
+                            purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
+                            panel_stock_code: v.panel_stock_code || null,
+                            inverter_stock_code: v.inverter_stock_code || null,
+                            battery_stock_code: v.battery_stock_code || null
+                        };
+
+                        syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {
+                            if (syncErr) {
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ error: `Product sync failed: ${syncErr.message}` });
+                            }
+                            variantIndex++;
+                            insertNextVariant();
+                        });
+                    });
+                }
+
+                insertNextVariant();
+            });
         });
     });
 });
@@ -226,92 +227,93 @@ router.put('/:id', requireAuth, (req, res) => {
                 db.serialize(() => {
                     db.run("BEGIN TRANSACTION");
 
-                const groupSql = `
-                    UPDATE combo_groups 
-                    SET group_name = ?, description = ?, panel_stock_code = ?, inverter_stock_code = ?, battery_stock_code = ?,
-                        is_panel_inverter = ?, is_inverter_battery = ?, is_panel_inverter_battery = ?
-                    WHERE id = ?
-                `;
-                db.run(groupSql, [group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter || 0, is_inverter_battery || 0, is_panel_inverter_battery || 0, groupId], (uErr) => {
-                    if (uErr) {
-                        db.run("ROLLBACK");
-                        return res.status(500).json({ error: uErr.message });
-                    }
-
-                    // Delete old variants
-                    db.run("DELETE FROM combo_variants WHERE combo_group_id = ?", [groupId], (delErr) => {
-                        if (delErr) {
+                    const groupSql = `
+                        UPDATE combo_groups 
+                        SET group_name = ?, description = ?, panel_stock_code = ?, inverter_stock_code = ?, battery_stock_code = ?,
+                            is_panel_inverter = ?, is_inverter_battery = ?, is_panel_inverter_battery = ?
+                        WHERE id = ?
+                    `;
+                    db.run(groupSql, [group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter || 0, is_inverter_battery || 0, is_panel_inverter_battery || 0, groupId], (uErr) => {
+                        if (uErr) {
                             db.run("ROLLBACK");
-                            return res.status(500).json({ error: delErr.message });
+                            return res.status(500).json({ error: uErr.message });
                         }
 
-                        // Soft delete corresponding products for old variants
-                        const oldStockCodes = oldVariants.map(ov => ov.stock_code);
-                        if (oldStockCodes.length > 0) {
-                            const placeholders = oldStockCodes.map(() => '?').join(',');
-                            db.run(`UPDATE products SET product_status = 'Deleted' WHERE stock_code IN (${placeholders})`, oldStockCodes);
-                        }
-
-                        const groupRecord = { id: groupId, group_name, panel_stock_code, inverter_stock_code, battery_stock_code };
-                        let variantIndex = 0;
-
-                        function insertNextVariant() {
-                            if (variantIndex >= variants.length) {
-                                db.run("COMMIT", (commitErr) => {
-                                    if (commitErr) {
-                                        db.run("ROLLBACK");
-                                        return res.status(500).json({ error: commitErr.message });
-                                    }
-                                    res.json({ success: true });
-                                });
-                                return;
+                        // Delete old variants
+                        db.run("DELETE FROM combo_variants WHERE combo_group_id = ?", [groupId], (delErr) => {
+                            if (delErr) {
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ error: delErr.message });
                             }
 
-                            const v = variants[variantIndex];
-                            const variantSql = `
-                                INSERT OR REPLACE INTO combo_variants (
-                                    combo_group_id, variant_name, stock_code, 
-                                    panel_qty, inverter_qty, battery_qty, 
-                                    purchase_price, purchase_price_ex_gst,
-                                    panel_stock_code, inverter_stock_code, battery_stock_code
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            `;
-                            db.run(variantSql, [
-                                groupId, v.variant_name, v.stock_code, 
-                                v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
-                                v.purchase_price || 0, v.purchase_price_ex_gst || 0,
-                                v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
-                            ], function(vErr) {
-                                if (vErr) {
-                                    db.run("ROLLBACK");
-                                    return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
+                            // Soft delete corresponding products for old variants
+                            const oldStockCodes = oldVariants.map(ov => ov.stock_code);
+                            if (oldStockCodes.length > 0) {
+                                const placeholders = oldStockCodes.map(() => '?').join(',');
+                                db.run(`UPDATE products SET product_status = 'Deleted' WHERE stock_code IN (${placeholders})`, oldStockCodes);
+                            }
+
+                            const groupRecord = { id: groupId, group_name, panel_stock_code, inverter_stock_code, battery_stock_code };
+                            let variantIndex = 0;
+
+                            function insertNextVariant() {
+                                if (variantIndex >= variants.length) {
+                                    db.run("COMMIT", (commitErr) => {
+                                        if (commitErr) {
+                                            db.run("ROLLBACK");
+                                            return res.status(500).json({ error: commitErr.message });
+                                        }
+                                        res.json({ success: true });
+                                    });
+                                    return;
                                 }
 
-                                const variantRecord = {
-                                    variant_name: v.variant_name,
-                                    stock_code: v.stock_code,
-                                    panel_qty: v.panel_qty || 0,
-                                    inverter_qty: v.inverter_qty || 0,
-                                    battery_qty: v.battery_qty || 0,
-                                    purchase_price: v.purchase_price || 0,
-                                    purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
-                                    panel_stock_code: v.panel_stock_code || null,
-                                    inverter_stock_code: v.inverter_stock_code || null,
-                                    battery_stock_code: v.battery_stock_code || null
-                                };
-
-                                syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {
-                                    if (syncErr) {
+                                const v = variants[variantIndex];
+                                const variantSql = `
+                                    INSERT OR REPLACE INTO combo_variants (
+                                        combo_group_id, variant_name, stock_code, 
+                                        panel_qty, inverter_qty, battery_qty, 
+                                        purchase_price, purchase_price_ex_gst,
+                                        panel_stock_code, inverter_stock_code, battery_stock_code
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                `;
+                                db.run(variantSql, [
+                                    groupId, v.variant_name, v.stock_code, 
+                                    v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
+                                    v.purchase_price || 0, v.purchase_price_ex_gst || 0,
+                                    v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
+                                ], function(vErr) {
+                                    if (vErr) {
                                         db.run("ROLLBACK");
-                                        return res.status(500).json({ error: `Product sync failed: ${syncErr.message}` });
+                                        return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
                                     }
-                                    variantIndex++;
-                                    insertNextVariant();
-                                });
-                            });
-                        }
 
-                        insertNextVariant();
+                                    const variantRecord = {
+                                        variant_name: v.variant_name,
+                                        stock_code: v.stock_code,
+                                        panel_qty: v.panel_qty || 0,
+                                        inverter_qty: v.inverter_qty || 0,
+                                        battery_qty: v.battery_qty || 0,
+                                        purchase_price: v.purchase_price || 0,
+                                        purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
+                                        panel_stock_code: v.panel_stock_code || null,
+                                        inverter_stock_code: v.inverter_stock_code || null,
+                                        battery_stock_code: v.battery_stock_code || null
+                                    };
+
+                                    syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {
+                                        if (syncErr) {
+                                            db.run("ROLLBACK");
+                                            return res.status(500).json({ error: `Product sync failed: ${syncErr.message}` });
+                                        }
+                                        variantIndex++;
+                                        insertNextVariant();
+                                    });
+                                });
+                            }
+
+                            insertNextVariant();
+                        });
                     });
                 });
             });
