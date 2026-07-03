@@ -58,7 +58,10 @@ async function processProductsAndCombos(products) {
 
     // 2. Fetch all active combo groups and their variants
     const activeCombos = await dbAll(`
-        SELECT cg.id as group_id, cg.group_name, cg.panel_stock_code, cg.inverter_stock_code, cg.battery_stock_code,
+        SELECT cg.id as group_id, cg.group_name,
+               COALESCE(cv.panel_stock_code, cg.panel_stock_code) as panel_stock_code,
+               COALESCE(cv.inverter_stock_code, cg.inverter_stock_code) as inverter_stock_code,
+               COALESCE(cv.battery_stock_code, cg.battery_stock_code) as battery_stock_code,
                cv.id as variant_id, cv.variant_name, cv.stock_code as variant_stock_code,
                cv.panel_qty, cv.inverter_qty, cv.battery_qty,
                cv.purchase_price, cv.purchase_price_ex_gst

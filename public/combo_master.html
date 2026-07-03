@@ -108,8 +108,13 @@
         /* ========== BUNDLED VARIANTS BUILDER ========== */
         .variants-builder-section { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 8px; }
         .vb-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .vb-row { display: grid; grid-template-columns: 2fr 1.8fr 1fr 1fr 1fr 1.2fr 1.2fr 36px; gap: 8px; margin-bottom: 8px; align-items: end; }
-        .vb-header { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: grid; grid-template-columns: 2fr 1.8fr 1fr 1fr 1fr 1.2fr 1.2fr 36px; gap: 8px; padding: 0 4px; }
+        .vb-row { background: #ffffff; border: 1px solid #dde3ed; border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .vb-header { display: none; }
+        .vb-row-line1 { display: grid; grid-template-columns: 2fr 1.5fr 1.2fr 1.2fr 36px; gap: 8px; align-items: center; }
+        .vb-row-line2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+        .vb-component-col { display: flex; flex-direction: column; gap: 4px; }
+        .vb-component-col label { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        .vb-component-inputs { display: flex; gap: 8px; align-items: center; }
         .vb-row input { padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; height: 32px; color: var(--text-dark); width: 100%; background: var(--surface); font-size: 12px; }
         .vb-row input:focus { border-color: var(--primary); outline: none; }
         .vb-row input[readonly] { background: #f1f5f9; color: var(--text-muted); border-style: dashed; }
@@ -629,13 +634,27 @@
 
             if (panelInput && !panelInput.value) panelInput.value = panelCode ? "15" : "0";
             if (inverterInput && !inverterInput.value) inverterInput.value = inverterCode ? "1" : "0";
-            if (batteryInput && !batteryInput.value) {
-                batteryInput.value = batteryCode ? "1" : "0";
-                if (!batteryCode) {
-                    batteryInput.readOnly = true;
-                } else {
-                    batteryInput.readOnly = false;
-                }
+            if (batteryInput && !batteryInput.value) batteryInput.value = batteryCode ? "1" : "0";
+
+            const panelCodeInput = row.querySelector('.var-panel-code');
+            const panelDisplayInput = row.querySelector('.var-panel-display');
+            if (panelCodeInput && !panelCodeInput.value && panelCode) {
+                panelCodeInput.value = panelCode;
+                panelDisplayInput.value = getProductDisplayName(panelCode);
+            }
+
+            const inverterCodeInput = row.querySelector('.var-inverter-code');
+            const inverterDisplayInput = row.querySelector('.var-inverter-display');
+            if (inverterCodeInput && !inverterCodeInput.value && inverterCode) {
+                inverterCodeInput.value = inverterCode;
+                inverterDisplayInput.value = getProductDisplayName(inverterCode);
+            }
+
+            const batteryCodeInput = row.querySelector('.var-battery-code');
+            const batteryDisplayInput = row.querySelector('.var-battery-display');
+            if (batteryCodeInput && !batteryCodeInput.value && batteryCode) {
+                batteryCodeInput.value = batteryCode;
+                batteryDisplayInput.value = getProductDisplayName(batteryCode);
             }
         });
     }
@@ -783,36 +802,135 @@
         document.getElementById('comboModal').style.display = 'none';
     }
 
+    function setupRowAutocomplete(row, classDisplay, classCode, category, classDrop) {
+        const input = row.querySelector('.' + classDisplay);
+        const codeInput = row.querySelector('.' + classCode);
+        const drop = row.querySelector('.' + classDrop);
+
+        if (!input || !drop) return;
+
+        function filterList() {
+            const val = input.value.trim().toLowerCase();
+            const filtered = allProducts.filter(p => {
+                if (p.product_category !== category) return false;
+                if (p.product_status === 'Deleted') return false;
+
+                if (!val) return true;
+                return (p.prod_name || '').toLowerCase().includes(val) || 
+                       (p.model_number || '').toLowerCase().includes(val) || 
+                       (p.stock_code || '').toLowerCase().includes(val);
+            });
+
+            drop.innerHTML = '';
+            if (filtered.length === 0) {
+                drop.innerHTML = `<li class="ac-empty">No matching ${category}s found</li>`;
+            } else {
+                filtered.slice(0, 10).forEach((p) => {
+                    const li = document.createElement('li');
+                    li.innerText = `[${p.stock_code}] ${p.prod_name} - ${p.model_number}`;
+                    li.onclick = () => {
+                        input.value = `[${p.stock_code}] ${p.prod_name} - ${p.model_number}`;
+                        codeInput.value = p.stock_code;
+                        drop.style.display = 'none';
+                    };
+                    drop.appendChild(li);
+                });
+            }
+            drop.style.display = 'block';
+        }
+
+        input.addEventListener('focus', filterList);
+        input.addEventListener('input', () => {
+            codeInput.value = '';
+            filterList();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.' + classDisplay) && !e.target.closest('.' + classDrop)) {
+                drop.style.display = 'none';
+                if (!codeInput.value) {
+                    input.value = '';
+                }
+            }
+        });
+    }
+
     function addVariantRow(v = null) {
         const container = document.getElementById('variantsContainer');
         const row = document.createElement('div');
         row.className = 'vb-row';
 
-        const panelCode = document.getElementById('comp_panel_code').value;
-        const inverterCode = document.getElementById('comp_inverter_code').value;
-        const batteryCode = document.getElementById('comp_battery_code').value;
+        const defaultPanelCode = document.getElementById('comp_panel_code').value || '';
+        const defaultInverterCode = document.getElementById('comp_inverter_code').value || '';
+        const defaultBatteryCode = document.getElementById('comp_battery_code').value || '';
 
-        const pQty = v ? v.panel_qty : (panelCode ? "15" : "0");
-        const iQty = v ? v.inverter_qty : (inverterCode ? "1" : "0");
-        const bQty = v ? v.battery_qty : (batteryCode ? "1" : "0");
+        const pCode = v ? (v.panel_stock_code || '') : defaultPanelCode;
+        const iCode = v ? (v.inverter_stock_code || '') : defaultInverterCode;
+        const bCode = v ? (v.battery_stock_code || '') : defaultBatteryCode;
+
+        const pDisplay = pCode ? getProductDisplayName(pCode) : '';
+        const iDisplay = iCode ? getProductDisplayName(iCode) : '';
+        const bDisplay = bCode ? getProductDisplayName(bCode) : '';
+
+        const pQty = v ? v.panel_qty : (pCode ? "15" : "0");
+        const iQty = v ? v.inverter_qty : (iCode ? "1" : "0");
+        const bQty = v ? v.battery_qty : (bCode ? "1" : "0");
+
         const priceInc = v ? parseFloat(v.purchase_price).toFixed(2) : "";
         const priceEx = v ? parseFloat(v.purchase_price_ex_gst).toFixed(2) : "";
         const varName = v ? v.variant_name : "";
         const varCode = v ? v.stock_code : `CBO-${nextStockCodeNum++}`;
 
-        const batteryReadOnly = !batteryCode && !bQty ? "readonly" : "";
-
         row.innerHTML = `
-            <div><input type="text" class="var-name" placeholder="Variant Label (e.g. Standard 6.6kW)" value="${varName}" required></div>
-            <div><input type="text" class="var-code" placeholder="Stock Code (e.g. CBO-001)" value="${varCode}" readonly required></div>
-            <div><input type="number" class="var-panel-qty" placeholder="Panel Qty" value="${pQty}" min="0" required></div>
-            <div><input type="number" class="var-inverter-qty" placeholder="Inv Qty" value="${iQty}" min="0" required></div>
-            <div><input type="number" class="var-battery-qty" placeholder="Bat Qty" value="${bQty}" min="0" ${batteryReadOnly} required></div>
-            <div><input type="number" class="var-price-inc" placeholder="Inc GST ($)" step="0.01" value="${priceInc}" oninput="calcExGst(this)" required></div>
-            <div><input type="number" class="var-price-ex" placeholder="Ex GST ($)" step="0.01" value="${priceEx}" oninput="calcIncGst(this)" required></div>
-            <div><button type="button" class="remove-btn" onclick="removeVariantRow(this)" title="Delete Row">&times;</button></div>
+            <div class="vb-row-line1">
+                <div><input type="text" class="var-name" placeholder="Variant Label (e.g. Standard 6.6kW)" value="${varName}" required></div>
+                <div><input type="text" class="var-code" placeholder="Stock Code (e.g. CBO-001)" value="${varCode}" readonly required></div>
+                <div><input type="number" class="var-price-inc" placeholder="Inc GST ($)" step="0.01" value="${priceInc}" oninput="calcExGst(this)" required></div>
+                <div><input type="number" class="var-price-ex" placeholder="Ex GST ($)" step="0.01" value="${priceEx}" oninput="calcIncGst(this)" required></div>
+                <div><button type="button" class="remove-btn" onclick="removeVariantRow(this)" title="Delete Row">&times;</button></div>
+            </div>
+            <div class="vb-row-line2">
+                <div class="vb-component-col">
+                    <label>Panel Component</label>
+                    <div class="vb-component-inputs">
+                        <div class="ac-wrap" style="flex: 1;">
+                            <input type="text" class="var-panel-display" placeholder="Search panel..." value="${pDisplay}">
+                            <input type="hidden" class="var-panel-code" value="${pCode}">
+                            <ul class="ac-drop var-panel-drop"></ul>
+                        </div>
+                        <input type="number" class="var-panel-qty" placeholder="Qty" style="width: 55px;" min="0" value="${pQty}" required>
+                    </div>
+                </div>
+                <div class="vb-component-col">
+                    <label>Inverter Component</label>
+                    <div class="vb-component-inputs">
+                        <div class="ac-wrap" style="flex: 1;">
+                            <input type="text" class="var-inverter-display" placeholder="Search inverter..." value="${iDisplay}">
+                            <input type="hidden" class="var-inverter-code" value="${iCode}">
+                            <ul class="ac-drop var-inverter-drop"></ul>
+                        </div>
+                        <input type="number" class="var-inverter-qty" placeholder="Qty" style="width: 55px;" min="0" value="${iQty}" required>
+                    </div>
+                </div>
+                <div class="vb-component-col">
+                    <label>Battery Component</label>
+                    <div class="vb-component-inputs">
+                        <div class="ac-wrap" style="flex: 1;">
+                            <input type="text" class="var-battery-display" placeholder="Search battery..." value="${bDisplay}">
+                            <input type="hidden" class="var-battery-code" value="${bCode}">
+                            <ul class="ac-drop var-battery-drop"></ul>
+                        </div>
+                        <input type="number" class="var-battery-qty" placeholder="Qty" style="width: 55px;" min="0" value="${bQty}" required>
+                    </div>
+                </div>
+            </div>
         `;
         container.appendChild(row);
+
+        // Setup autocomplete for this row
+        setupRowAutocomplete(row, 'var-panel-display', 'var-panel-code', 'Panel', 'var-panel-drop');
+        setupRowAutocomplete(row, 'var-inverter-display', 'var-inverter-code', 'Inverter', 'var-inverter-drop');
+        setupRowAutocomplete(row, 'var-battery-display', 'var-battery-code', 'Battery', 'var-battery-drop');
     }
 
     function removeVariantRow(btn) {
@@ -869,8 +987,11 @@
         for (let row of variantRows) {
             const name = row.querySelector('.var-name').value.trim();
             const code = row.querySelector('.var-code').value.trim();
+            const pCode = row.querySelector('.var-panel-code').value.trim();
             const pQty = parseInt(row.querySelector('.var-panel-qty').value) || 0;
+            const iCode = row.querySelector('.var-inverter-code').value.trim();
             const iQty = parseInt(row.querySelector('.var-inverter-qty').value) || 0;
+            const bCode = row.querySelector('.var-battery-code').value.trim();
             const bQty = parseInt(row.querySelector('.var-battery-qty').value) || 0;
             const priceInc = parseFloat(row.querySelector('.var-price-inc').value) || 0;
             const priceEx = parseFloat(row.querySelector('.var-price-ex').value) || 0;
@@ -883,8 +1004,11 @@
             variants.push({
                 variant_name: name,
                 stock_code: code,
+                panel_stock_code: pCode || null,
                 panel_qty: pQty,
+                inverter_stock_code: iCode || null,
                 inverter_qty: iQty,
+                battery_stock_code: bCode || null,
                 battery_qty: bQty,
                 purchase_price: priceInc,
                 purchase_price_ex_gst: priceEx

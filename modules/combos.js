@@ -6,14 +6,18 @@ const { requireAuth, requireManager, getCurrentUser } = require('../helpers');
 // Helper to sync combo variants with products table
 function syncComboVariantToProduct(group, variant, callback) {
     const childProducts = [];
-    if (group.panel_stock_code && variant.panel_qty > 0) {
-        childProducts.push({ code: group.panel_stock_code, qty: variant.panel_qty });
+    const panelCode = variant.panel_stock_code || group.panel_stock_code;
+    const inverterCode = variant.inverter_stock_code || group.inverter_stock_code;
+    const batteryCode = variant.battery_stock_code || group.battery_stock_code;
+
+    if (panelCode && variant.panel_qty > 0) {
+        childProducts.push({ code: panelCode, qty: variant.panel_qty });
     }
-    if (group.inverter_stock_code && variant.inverter_qty > 0) {
-        childProducts.push({ code: group.inverter_stock_code, qty: variant.inverter_qty });
+    if (inverterCode && variant.inverter_qty > 0) {
+        childProducts.push({ code: inverterCode, qty: variant.inverter_qty });
     }
-    if (group.battery_stock_code && variant.battery_qty > 0) {
-        childProducts.push({ code: group.battery_stock_code, qty: variant.battery_qty });
+    if (batteryCode && variant.battery_qty > 0) {
+        childProducts.push({ code: batteryCode, qty: variant.battery_qty });
     }
 
     const childProductsJson = JSON.stringify(childProducts);
@@ -127,10 +131,19 @@ router.post('/', requireAuth, (req, res) => {
 
                 const v = variants[variantIndex];
                 const variantSql = `
-                    INSERT OR REPLACE INTO combo_variants (combo_group_id, variant_name, stock_code, panel_qty, inverter_qty, battery_qty, purchase_price, purchase_price_ex_gst)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT OR REPLACE INTO combo_variants (
+                        combo_group_id, variant_name, stock_code, 
+                        panel_qty, inverter_qty, battery_qty, 
+                        purchase_price, purchase_price_ex_gst,
+                        panel_stock_code, inverter_stock_code, battery_stock_code
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
-                db.run(variantSql, [groupId, v.variant_name, v.stock_code, v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, v.purchase_price || 0, v.purchase_price_ex_gst || 0], function(vErr) {
+                db.run(variantSql, [
+                    groupId, v.variant_name, v.stock_code, 
+                    v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
+                    v.purchase_price || 0, v.purchase_price_ex_gst || 0,
+                    v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
+                ], function(vErr) {
                     if (vErr) {
                         db.run("ROLLBACK");
                         return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
@@ -143,7 +156,10 @@ router.post('/', requireAuth, (req, res) => {
                         inverter_qty: v.inverter_qty || 0,
                         battery_qty: v.battery_qty || 0,
                         purchase_price: v.purchase_price || 0,
-                        purchase_price_ex_gst: v.purchase_price_ex_gst || 0
+                        purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
+                        panel_stock_code: v.panel_stock_code || null,
+                        inverter_stock_code: v.inverter_stock_code || null,
+                        battery_stock_code: v.battery_stock_code || null
                     };
 
                     syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {
@@ -229,10 +245,19 @@ router.put('/:id', requireAuth, (req, res) => {
 
                             const v = variants[variantIndex];
                             const variantSql = `
-                                INSERT OR REPLACE INTO combo_variants (combo_group_id, variant_name, stock_code, panel_qty, inverter_qty, battery_qty, purchase_price, purchase_price_ex_gst)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                INSERT OR REPLACE INTO combo_variants (
+                                    combo_group_id, variant_name, stock_code, 
+                                    panel_qty, inverter_qty, battery_qty, 
+                                    purchase_price, purchase_price_ex_gst,
+                                    panel_stock_code, inverter_stock_code, battery_stock_code
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             `;
-                            db.run(variantSql, [groupId, v.variant_name, v.stock_code, v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, v.purchase_price || 0, v.purchase_price_ex_gst || 0], function(vErr) {
+                            db.run(variantSql, [
+                                groupId, v.variant_name, v.stock_code, 
+                                v.panel_qty || 0, v.inverter_qty || 0, v.battery_qty || 0, 
+                                v.purchase_price || 0, v.purchase_price_ex_gst || 0,
+                                v.panel_stock_code || null, v.inverter_stock_code || null, v.battery_stock_code || null
+                            ], function(vErr) {
                                 if (vErr) {
                                     db.run("ROLLBACK");
                                     return res.status(500).json({ error: `Variant insertion failed: ${vErr.message}` });
@@ -245,7 +270,10 @@ router.put('/:id', requireAuth, (req, res) => {
                                     inverter_qty: v.inverter_qty || 0,
                                     battery_qty: v.battery_qty || 0,
                                     purchase_price: v.purchase_price || 0,
-                                    purchase_price_ex_gst: v.purchase_price_ex_gst || 0
+                                    purchase_price_ex_gst: v.purchase_price_ex_gst || 0,
+                                    panel_stock_code: v.panel_stock_code || null,
+                                    inverter_stock_code: v.inverter_stock_code || null,
+                                    battery_stock_code: v.battery_stock_code || null
                                 };
 
                                 syncComboVariantToProduct(groupRecord, variantRecord, (syncErr) => {

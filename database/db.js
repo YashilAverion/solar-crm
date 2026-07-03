@@ -523,6 +523,10 @@ db.serialize(() => {
     db.run("ALTER TABLE combo_groups ADD COLUMN is_inverter_battery INTEGER DEFAULT 0", () => {});
     db.run("ALTER TABLE combo_groups ADD COLUMN is_panel_inverter_battery INTEGER DEFAULT 0", () => {});
 
+    db.run("ALTER TABLE combo_variants ADD COLUMN panel_stock_code TEXT", () => {});
+    db.run("ALTER TABLE combo_variants ADD COLUMN inverter_stock_code TEXT", () => {});
+    db.run("ALTER TABLE combo_variants ADD COLUMN battery_stock_code TEXT", () => {});
+
     db.run(`
         CREATE TABLE IF NOT EXISTS combo_variants (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -534,6 +538,9 @@ db.serialize(() => {
             battery_qty INTEGER DEFAULT 0,
             purchase_price REAL DEFAULT 0,
             purchase_price_ex_gst REAL DEFAULT 0,
+            panel_stock_code TEXT,
+            inverter_stock_code TEXT,
+            battery_stock_code TEXT,
             status TEXT DEFAULT 'Active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(combo_group_id) REFERENCES combo_groups(id) ON DELETE CASCADE
