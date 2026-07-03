@@ -100,8 +100,20 @@ router.post('/', requireAuth, (req, res) => {
         return res.status(400).json({ error: "At least one variant is required." });
     }
 
-    db.serialize(() => {
-        db.run("BEGIN TRANSACTION");
+    const stockCodes = variants.map(v => v.stock_code).filter(Boolean);
+    if (stockCodes.length === 0) {
+        return res.status(400).json({ error: "Variants must have stock codes." });
+    }
+
+    const placeholders = stockCodes.map(() => '?').join(',');
+    db.get(`SELECT stock_code FROM combo_variants WHERE stock_code IN (${placeholders}) AND status = 'Active'`, stockCodes, (err, conflict) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (conflict) {
+            return res.status(400).json({ error: `Stock code ${conflict.stock_code} is already in use by another combo group.` });
+        }
+
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
 
         const groupSql = `
             INSERT INTO combo_groups (group_name, description, panel_stock_code, inverter_stock_code, battery_stock_code, is_panel_inverter, is_inverter_battery, is_panel_inverter_battery)
@@ -195,12 +207,24 @@ router.put('/:id', requireAuth, (req, res) => {
             return res.status(404).json({ error: "Combo Group not found." });
         }
 
-        // Get old variants of this group to soft-delete their products
-        db.all("SELECT stock_code FROM combo_variants WHERE combo_group_id = ?", [groupId], (err, oldVariants) => {
-            if (err) return res.status(500).json({ error: err.message });
+        const stockCodes = variants.map(v => v.stock_code).filter(Boolean);
+        if (stockCodes.length === 0) {
+            return res.status(400).json({ error: "Variants must have stock codes." });
+        }
 
-            db.serialize(() => {
-                db.run("BEGIN TRANSACTION");
+        const placeholders = stockCodes.map(() => '?').join(',');
+        db.get(`SELECT stock_code FROM combo_variants WHERE stock_code IN (${placeholders}) AND combo_group_id != ? AND status = 'Active'`, [...stockCodes, groupId], (err, conflict) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (conflict) {
+                return res.status(400).json({ error: `Stock code ${conflict.stock_code} is already in use by another combo group.` });
+            }
+
+            // Get old variants of this group to soft-delete their products
+            db.all("SELECT stock_code FROM combo_variants WHERE combo_group_id = ?", [groupId], (err, oldVariants) => {
+                if (err) return res.status(500).json({ error: err.message });
+
+                db.serialize(() => {
+                    db.run("BEGIN TRANSACTION");
 
                 const groupSql = `
                     UPDATE combo_groups 
