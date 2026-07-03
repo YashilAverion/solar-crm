@@ -976,11 +976,11 @@
     // --- DELETE COMBO ---
     async function deleteCombo(id) {
         const { isConfirmed } = await Swal.fire({
-            title: 'Delete Combo Group?',
+            title: 'Are you sure?',
             text: "This will permanently delete the group and remove all synced combo items from the Product Master list.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#b93a20',
+            confirmButtonColor: '#e8681e',
             cancelButtonColor: '#6b7a8d',
             confirmButtonText: 'Yes, delete it!'
         });
