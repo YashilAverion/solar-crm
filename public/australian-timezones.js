@@ -293,6 +293,146 @@
             return tier2.appendChild(newChild);
         };
 
+        // 5b. Inject Notification Bell dynamically if it is not already there
+        if (!tier2.querySelector('.notification-container')) {
+            const notifContainer = document.createElement('div');
+            notifContainer.className = 'notification-container';
+            notifContainer.style.cssText = 'position: relative; display: flex; align-items: center; gap: 10px; margin-right: 12px; z-index: 999999; margin-left: auto;';
+            notifContainer.innerHTML = `
+                <button type="button" id="notificationBellBtn" style="background: none; border: none; cursor: pointer; position: relative; padding: 4px; display: flex; align-items: center; justify-content: center; outline: none;">
+                    <span style="font-size: 18px; color: #64748b;">🔔</span>
+                    <span id="notificationBadge" style="display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; color: #fff; font-size: 9px; font-weight: bold; border-radius: 50%; min-width: 14px; height: 14px; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid #fff;">0</span>
+                </button>
+                <div id="notificationDropdownPanel" style="display: none; position: absolute; top: 32px; right: 0; width: 320px; background: #fff; border: 1px solid #dde3ed; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100000; max-height: 380px; overflow-y: auto; text-align: left; padding: 4px 0; font-family: 'Inter', system-ui, sans-serif;">
+                    <div style="padding: 10px 14px; border-bottom: 1px solid #dde3ed; font-weight: bold; font-size: 12px; color: #1c2b3a; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Alerts & Notifications</span>
+                        <span id="dismissAllNotifsBtn" style="font-size: 10px; color: #e8681e; cursor: pointer; font-weight: 600;">Dismiss All</span>
+                    </div>
+                    <ul id="notificationList" style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
+                        <li style="padding: 14px; text-align: center; color: #6b7a8d; font-size: 12px; font-style: italic;">No new alerts.</li>
+                    </ul>
+                </div>
+            `;
+            
+            const userDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay') || tier2.querySelector('#sidebarAvatar');
+            if (userDisplay) {
+                tier2.insertBefore(notifContainer, userDisplay);
+            } else {
+                tier2.appendChild(notifContainer);
+            }
+        }
+
+        // 5c. Setup Notification Event Listeners & Functions
+        let globalNotifications = [];
+        
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/notifications?t=' + new Date().getTime());
+                if (res.ok) {
+                    globalNotifications = await res.json();
+                    renderNotifications();
+                }
+            } catch(e) {
+                console.error("Error fetching notifications:", e);
+            }
+        }
+        
+        function renderNotifications() {
+            const badge = document.getElementById('notificationBadge');
+            const listEl = document.getElementById('notificationList');
+            if (!badge || !listEl) return;
+            
+            const clearedIds = JSON.parse(localStorage.getItem('cleared_notification_ids') || '[]');
+            const activeNotifications = globalNotifications.filter(n => !clearedIds.includes(n.id));
+            
+            if (activeNotifications.length > 0) {
+                badge.innerText = activeNotifications.length;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            if (activeNotifications.length === 0) {
+                listEl.innerHTML = `<li style="padding: 14px; text-align: center; color: #6b7a8d; font-size: 12px; font-style: italic;">No new alerts.</li>`;
+                return;
+            }
+            
+            listEl.innerHTML = activeNotifications.map(n => {
+                let icon = '⏳';
+                let borderStyle = 'border-left: 4px solid #f59e0b;';
+                let bgColor = '#fffcf5';
+                
+                if (n.action === 'Discount Approved') {
+                    icon = '✅';
+                    borderStyle = 'border-left: 4px solid #10b981;';
+                    bgColor = '#f4fbf7';
+                } else if (n.action === 'Discount Rejected') {
+                    icon = '❌';
+                    borderStyle = 'border-left: 4px solid #ef4444;';
+                    bgColor = '#fef5f5';
+                }
+                
+                const timeStr = new Date(n.created_at).toLocaleString();
+                const leadName = `${n.first_name || ''} ${n.last_name || ''}`.trim() || 'Lead';
+                
+                return `
+                    <li style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; ${borderStyle} background: ${bgColor}; transition: background 0.15s; font-size: 12px;">
+                        <a href="/project_profile.html?id=${n.lead_id}" style="text-decoration: none; color: inherit; display: block;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px; color: #1c2b3a;">
+                                <span>${icon} ${n.action}</span>
+                                <span style="font-size: 10px; color: #94a3b8; font-weight: normal;">${timeStr}</span>
+                            </div>
+                            <div style="color: #6b7a8d; font-size: 11px; margin-bottom: 4px;">
+                                Lead: <strong>${n.project_number || '#' + n.lead_id}</strong> (${leadName})
+                            </div>
+                            <div style="font-size: 11px; color: #1c2b3a; line-height: 1.3;">
+                                ${n.details}
+                            </div>
+                        </a>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        function clearNotifications() {
+            const activeIds = globalNotifications.map(n => n.id);
+            const clearedIds = JSON.parse(localStorage.getItem('cleared_notification_ids') || '[]');
+            const newClearedIds = Array.from(new Set([...clearedIds, ...activeIds]));
+            localStorage.setItem('cleared_notification_ids', JSON.stringify(newClearedIds));
+            renderNotifications();
+        }
+
+        const bellBtn = document.getElementById('notificationBellBtn');
+        const dropdownPanel = document.getElementById('notificationDropdownPanel');
+        const dismissBtn = document.getElementById('dismissAllNotifsBtn');
+        
+        if (bellBtn && dropdownPanel) {
+            bellBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = dropdownPanel.style.display === 'block';
+                dropdownPanel.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    fetchNotifications();
+                }
+            });
+            
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    clearNotifications();
+                });
+            }
+            
+            window.addEventListener('click', function(e) {
+                if (dropdownPanel.style.display === 'block' && !bellBtn.contains(e.target) && !dropdownPanel.contains(e.target)) {
+                    dropdownPanel.style.display = 'none';
+                }
+            });
+            
+            setInterval(fetchNotifications, 10000); // autofresh every 10 seconds
+            setTimeout(fetchNotifications, 500); // initial load
+        }
+
         // Clocks ticking function
         function updateClocks() {
             const now = new Date();

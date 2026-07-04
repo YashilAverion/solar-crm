@@ -667,22 +667,6 @@ function toggleNav(event, element) {
                 <input type="text" id="globalOmniSearchInput" placeholder="Search across all modules by Project No, Customer Name, Phone, Email, Address..." autocomplete="off" style="width:100%; height:32px; padding:0 12px; font-size:13px; border-radius:6px; border:1px solid var(--border); outline:none;">
                 <ul id="globalOmniDropdown" class="ac-drop" style="position:absolute; width:100%; display:none; background:var(--surface); z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.12); border-radius:8px; max-height:300px; overflow-y:auto; padding:6px 0; margin-top:4px; list-style:none; text-align:left;"></ul>
             </div>
-            <!-- Notifications Container -->
-            <div class="notification-container" style="position: relative; margin-left: auto; display: flex; align-items: center; gap: 10px; z-index: 999999;">
-                <button type="button" id="notificationBellBtn" onclick="toggleNotificationDropdown()" style="background: none; border: none; cursor: pointer; position: relative; padding: 4px; display: flex; align-items: center; justify-content: center; outline: none;">
-                    <span style="font-size: 18px; color: #64748b;">🔔</span>
-                    <span id="notificationBadge" style="display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; color: #fff; font-size: 9px; font-weight: bold; border-radius: 50%; min-width: 14px; height: 14px; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid #fff;">0</span>
-                </button>
-                <div id="notificationDropdownPanel" style="display: none; position: absolute; top: 32px; right: 0; width: 320px; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100000; max-height: 380px; overflow-y: auto; text-align: left; padding: 4px 0; font-family: 'Inter', system-ui, sans-serif;">
-                    <div style="padding: 10px 14px; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 12px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center;">
-                        <span>Alerts & Notifications</span>
-                        <span onclick="clearNotifications()" style="font-size: 10px; color: var(--accent); cursor: pointer; font-weight: 600;">Dismiss All</span>
-                    </div>
-                    <ul id="notificationList" style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
-                        <li style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px; font-style: italic;">No new alerts.</li>
-                    </ul>
-                </div>
-            </div>
         </div>
         <div class="metadata-strip" id="metadataStrip">
             <div class="metadata-content" id="metadataContent">
@@ -4227,110 +4211,6 @@ function toggleNav(event, element) {
     } catch(e) { window.location.href = "/login"; }
 })()
 
-// ── NOTIFICATION BELL HANDLERS ───────────────────────────────────────
-let notificationsList = [];
-
-async function fetchNotifications() {
-    try {
-        const res = await fetch('/api/notifications?t=' + new Date().getTime());
-        if (res.ok) {
-            notificationsList = await res.json();
-            renderNotifications();
-        }
-    } catch(e) {
-        console.error("Error fetching notifications:", e);
-    }
-}
-
-function renderNotifications() {
-    const badge = document.getElementById('notificationBadge');
-    const listEl = document.getElementById('notificationList');
-    if (!badge || !listEl) return;
-    
-    const clearedIds = JSON.parse(localStorage.getItem('cleared_notification_ids') || '[]');
-    const activeNotifications = notificationsList.filter(n => !clearedIds.includes(n.id));
-    
-    if (activeNotifications.length > 0) {
-        badge.innerText = activeNotifications.length;
-        badge.style.display = 'inline-flex';
-    } else {
-        badge.style.display = 'none';
-    }
-    
-    if (activeNotifications.length === 0) {
-        listEl.innerHTML = `<li style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px; font-style: italic;">No new alerts.</li>`;
-        return;
-    }
-    
-    listEl.innerHTML = activeNotifications.map(n => {
-        let icon = '⏳';
-        let borderStyle = 'border-left: 4px solid #f59e0b;';
-        let bgColor = '#fffcf5';
-        
-        if (n.action === 'Discount Approved') {
-            icon = '✅';
-            borderStyle = 'border-left: 4px solid #10b981;';
-            bgColor = '#f4fbf7';
-        } else if (n.action === 'Discount Rejected') {
-            icon = '❌';
-            borderStyle = 'border-left: 4px solid #ef4444;';
-            bgColor = '#fef5f5';
-        }
-        
-        const timeStr = new Date(n.created_at).toLocaleString();
-        const leadName = `${n.first_name || ''} ${n.last_name || ''}`.trim() || 'Lead';
-        
-        return `
-            <li style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; ${borderStyle} background: ${bgColor}; transition: background 0.15s; font-size: 12px;">
-                <a href="/project_profile.html?id=${n.lead_id}" style="text-decoration: none; color: inherit; display: block;">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px; color: var(--text-dark);">
-                        <span>${icon} ${n.action}</span>
-                        <span style="font-size: 10px; color: #94a3b8; font-weight: normal;">${timeStr}</span>
-                    </div>
-                    <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;">
-                        Lead: <strong>${n.project_number || '#' + n.lead_id}</strong> (${leadName})
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-dark); line-height: 1.3;">
-                        ${n.details}
-                    </div>
-                </a>
-            </li>
-        `;
-    }).join('');
-}
-
-function toggleNotificationDropdown() {
-    const panel = document.getElementById('notificationDropdownPanel');
-    if (!panel) return;
-    const isVisible = panel.style.display === 'block';
-    panel.style.display = isVisible ? 'none' : 'block';
-    
-    if (!isVisible) {
-        fetchNotifications();
-    }
-}
-
-function clearNotifications() {
-    const activeIds = notificationsList.map(n => n.id);
-    const clearedIds = JSON.parse(localStorage.getItem('cleared_notification_ids') || '[]');
-    const newClearedIds = Array.from(new Set([...clearedIds, ...activeIds]));
-    localStorage.setItem('cleared_notification_ids', JSON.stringify(newClearedIds));
-    renderNotifications();
-}
-
-// Auto-fetch notifications every 30 seconds
-setInterval(fetchNotifications, 30000);
-// Initial fetch
-setTimeout(fetchNotifications, 1000);
-
-// Close dropdown when clicking outside
-window.addEventListener('click', function(e) {
-    const container = document.querySelector('.notification-container');
-    const panel = document.getElementById('notificationDropdownPanel');
-    if (container && panel && !container.contains(e.target)) {
-        panel.style.display = 'none';
-    }
-});
 </script>
 
 <!-- ── SEND EMAIL MODAL ─────────────────────────────────────── -->
