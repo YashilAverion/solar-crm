@@ -1930,6 +1930,45 @@ app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
     });
 });
 
+// GET recent approval/rejection notifications for the user
+app.get('/api/notifications', requireAuth, (req, res) => {
+    const userRole = req.session.user.role || '';
+    const userName = req.session.user.full_name || req.session.user.username;
+    
+    const isTLorAdmin = userRole === 'Admin' || 
+                        userRole === 'Manager' || 
+                        userRole.includes('Manager') || 
+                        userRole.includes('Leader');
+                        
+    let query = "";
+    let params = [];
+    
+    if (isTLorAdmin) {
+        query = `
+            SELECT h.id, h.lead_id, h.action, h.details, h.created_at, l.project_number, l.first_name, l.last_name
+            FROM lead_history h
+            JOIN leads l ON h.lead_id = l.id
+            WHERE (h.action = 'Discount Approved' OR h.action = 'Discount Rejected' OR h.action = 'Discount Requested')
+            ORDER BY h.id DESC LIMIT 15
+        `;
+    } else {
+        query = `
+            SELECT h.id, h.lead_id, h.action, h.details, h.created_at, l.project_number, l.first_name, l.last_name
+            FROM lead_history h
+            JOIN leads l ON h.lead_id = l.id
+            WHERE (h.action = 'Discount Approved' OR h.action = 'Discount Rejected' OR h.action = 'Discount Requested')
+              AND (l.assign_to = ? OR l.created_by = ?)
+            ORDER BY h.id DESC LIMIT 15
+        `;
+        params.push(userName, userName);
+    }
+    
+    db.all(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Database error: ' + err.message });
+        res.json(rows || []);
+    });
+});
+
 // GET Lead deletion approval requests
 app.get('/api/leads/approvals', requireManager, (req, res) => {
     let query = "SELECT * FROM leads WHERE status = 'Pending Deletion'";
