@@ -112,7 +112,17 @@
         .no-access-box a { background:var(--accent); color:#fff; padding:8px 20px; border-radius:7px; text-decoration:none; font-weight:600; font-size:13px; display:inline-block; }
         .tab-btn { transition: all 0.2s; }
         .tab-btn.active-tab { background: var(--primary) !important; color: #fff !important; }
-        .tab-btn.active-tab .tab-badge { background: rgba(255, 255, 255, 0.2) !important; color: #fff !important; }
+        
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
+        .swal2-container { z-index: 9999 !important; }
+        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
+        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--accent); color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--accent-hover); }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/ares_energy_logo.png">
