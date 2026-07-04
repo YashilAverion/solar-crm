@@ -1416,6 +1416,9 @@ db.run("ALTER TABLE leads ADD COLUMN stc_rebate REAL DEFAULT 0", () => { });
 db.run("ALTER TABLE leads ADD COLUMN annual_savings REAL DEFAULT 0", () => { });
 db.run("ALTER TABLE leads ADD COLUMN payback_period REAL DEFAULT 0", () => { });
 db.run("ALTER TABLE leads ADD COLUMN co2_reduction REAL DEFAULT 0", () => { });
+db.run("ALTER TABLE leads ADD COLUMN discount_approval_status TEXT DEFAULT 'None'", () => { });
+db.run("ALTER TABLE leads ADD COLUMN discount_approved_by TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE leads ADD COLUMN recommended_selling_price REAL DEFAULT 0", () => { });
 
 // ── ENSURE MICROSOFT OUTLOOK COLUMNS IN USERS TABLE ─────────────
 db.run("ALTER TABLE users ADD COLUMN outlook_email TEXT DEFAULT NULL", () => { });
@@ -1791,6 +1794,106 @@ app.post('/api/leads/:id/approve-duplicate', (req, res) => {
             });
         });
     });
+});
+
+// ── DISCOUNT APPROVAL ENDPOINTS ───────────────────────────────────────
+
+// 1. Request Discount Approval
+app.post('/api/leads/:id/request-discount-approval', requireAuth, (req, res) => {
+    const leadId = req.params.id;
+    const { recommendedPrice, sellingPrice } = req.body;
+    const userName = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
+
+    if (!recommendedPrice || !sellingPrice) {
+        return res.status(400).json({ error: 'Recommended price and selling price are required.' });
+    }
+
+    db.run(
+        "UPDATE leads SET discount_approval_status = 'Pending', recommended_selling_price = ? WHERE id = ?",
+        [recommendedPrice, leadId],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'Database update failed: ' + err.message });
+            
+            const discountAmt = (parseFloat(recommendedPrice) - parseFloat(sellingPrice)).toFixed(2);
+            db.run(
+                "INSERT INTO lead_history (lead_id, action, details, user_name) VALUES (?, 'Discount Requested', ?, ?)",
+                [leadId, `Requested approval for a discount of $${discountAmt} (Selling: $${sellingPrice}, Recommended: $${recommendedPrice})`, userName]
+            );
+            db.run(
+                "INSERT INTO activity_logs (lead_id, user_name, action_type, from_module, to_module, details) VALUES (?, ?, 'Request Discount', 'Lead Profile', 'TL Approvals', ?)",
+                [leadId, userName, `Submitted discount request of $${discountAmt}`]
+            );
+            res.json({ success: true, message: 'Discount approval requested.' });
+        }
+    );
+});
+
+// 2. Approve Discount
+app.post('/api/leads/:id/approve-discount', requireAuth, (req, res) => {
+    const leadId = req.params.id;
+    const userName = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
+    const userRole = req.session.user.role || '';
+
+    const isTLorAdmin = userRole === 'Admin' || 
+                        userRole === 'Manager' || 
+                        userRole.includes('Manager') || 
+                        userRole.includes('Leader');
+
+    if (!isTLorAdmin) {
+        return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can approve discounts.' });
+    }
+
+    db.run(
+        "UPDATE leads SET discount_approval_status = 'Approved', discount_approved_by = ? WHERE id = ?",
+        [userName, leadId],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'Database update failed: ' + err.message });
+
+            db.run(
+                "INSERT INTO lead_history (lead_id, action, details, user_name) VALUES (?, 'Discount Approved', 'Team Leader approved the discount.', ?)",
+                [leadId, userName]
+            );
+            db.run(
+                "INSERT INTO activity_logs (lead_id, user_name, action_type, from_module, to_module, details) VALUES (?, ?, 'Approve Discount', 'TL Approvals', 'Lead Profile', 'Discount approved by TL.')",
+                [leadId, userName]
+            );
+            res.json({ success: true, message: 'Discount approved successfully.' });
+        }
+    );
+});
+
+// 3. Reject Discount
+app.post('/api/leads/:id/reject-discount', requireAuth, (req, res) => {
+    const leadId = req.params.id;
+    const userName = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
+    const userRole = req.session.user.role || '';
+
+    const isTLorAdmin = userRole === 'Admin' || 
+                        userRole === 'Manager' || 
+                        userRole.includes('Manager') || 
+                        userRole.includes('Leader');
+
+    if (!isTLorAdmin) {
+        return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can reject discounts.' });
+    }
+
+    db.run(
+        "UPDATE leads SET discount_approval_status = 'Rejected', discount_approved_by = NULL WHERE id = ?",
+        [leadId],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'Database update failed: ' + err.message });
+
+            db.run(
+                "INSERT INTO lead_history (lead_id, action, details, user_name) VALUES (?, 'Discount Rejected', 'Team Leader rejected the discount.', ?)",
+                [leadId, userName]
+            );
+            db.run(
+                "INSERT INTO activity_logs (lead_id, user_name, action_type, from_module, to_module, details) VALUES (?, ?, 'Reject Discount', 'TL Approvals', 'Lead Profile', 'Discount rejected by TL.')",
+                [leadId, userName]
+            );
+            res.json({ success: true, message: 'Discount rejected successfully.' });
+        }
+    );
 });
 
 // GET Lead deletion approval requests

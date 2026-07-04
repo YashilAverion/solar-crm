@@ -353,18 +353,36 @@ router.put('/:id/engineering', requireAuth, (req, res) => {
 
     // We store the engineering payload as a JSON string in engineering_details
     const payloadString = JSON.stringify(d);
+    const sellingPrice = parseFloat(d.selling_price) || 0;
 
-    db.run("UPDATE leads SET engineering_details = ? WHERE id = ?", [payloadString, id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    // Check if we need to reset discount_approval_status
+    db.get("SELECT recommended_selling_price, discount_approval_status FROM leads WHERE id = ?", [id], (err, row) => {
+        let updateSql = "UPDATE leads SET engineering_details = ?";
+        let params = [payloadString];
         
-        addHistory(id, 'Engineering Specs Updated', 'Engineering specifications and financial details were saved.', currentUser);
-        
-        if (d.is_create_installation) {
-            // Logic to create installation if needed. Currently just logging.
-            addHistory(id, 'Installation Created', 'Installation record initiated from engineering specs.', currentUser);
+        if (!err && row) {
+            const recommended = parseFloat(row.recommended_selling_price) || 0;
+            // If sellingPrice is >= recommended, reset approval to None (no discount applied)
+            if (sellingPrice >= recommended && row.discount_approval_status !== 'None') {
+                updateSql += ", discount_approval_status = 'None', discount_approved_by = NULL";
+            }
         }
+        
+        updateSql += " WHERE id = ?";
+        params.push(id);
 
-        res.json({ success: true });
+        db.run(updateSql, params, function(err2) {
+            if (err2) return res.status(500).json({ error: err2.message });
+            
+            addHistory(id, 'Engineering Specs Updated', 'Engineering specifications and financial details were saved.', currentUser);
+            
+            if (d.is_create_installation) {
+                // Logic to create installation if needed. Currently just logging.
+                addHistory(id, 'Installation Created', 'Installation record initiated from engineering specs.', currentUser);
+            }
+
+            res.json({ success: true });
+        });
     });
 });
 

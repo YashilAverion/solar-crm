@@ -947,6 +947,10 @@ function toggleNav(event, element) {
                                 <input type="number" id="td_selling_price">
                             </div>
                         </div>
+                        <div class="cf-row" id="discount_approval_row" style="display: none; align-items: center; justify-content: flex-end; gap: 8px; margin-top: -6px; margin-bottom: 6px;">
+                            <span id="discount_badge" style="font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600;"></span>
+                            <div id="discount_actions" style="display: flex; gap: 6px;"></div>
+                        </div>
                         <div class="cf-row"><label>Deposit</label>
                             <div class="cf-price-group">
                                 <span class="cf-price-currency">$</span>
@@ -1350,10 +1354,11 @@ function toggleNav(event, element) {
         let currentProjectId = null;
         let projectData = {};
         let allActiveProducts = [];
+        window.loggedInRole = 'Standard';
         const categoryMap = { "Website":["Toll Free", "Whatsapp", "Email"], "Social Media":["FB","Instagram","Whatsapp"], "Other":["Free Quote"] };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            loadSidebarUser();
+            await loadSidebarUser();
             const productsPromise = fetchActiveProducts();
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
@@ -1372,6 +1377,13 @@ function toggleNav(event, element) {
                 salesTab.addEventListener('change', () => {
                     activateSaveButtons();
                     triggerCalculation();
+                });
+            }
+
+            const sellingPriceInput = document.getElementById('td_selling_price');
+            if (sellingPriceInput) {
+                sellingPriceInput.addEventListener('input', () => {
+                    updateDiscountApprovalUI();
                 });
             }
 
@@ -1853,6 +1865,7 @@ function toggleNav(event, element) {
                         if (btnDownload) {
                             btnDownload.disabled = false;
                         }
+                        updateDiscountApprovalUI();
                     }
                 }
             } catch (err) {
@@ -2376,6 +2389,24 @@ function toggleNav(event, element) {
             // Recalculate financial fields before saving
             await triggerCalculation();
 
+            // Check discount approval status before saving
+            const sellingPrice = parseFloat(document.getElementById('td_selling_price').value) || 0;
+            let recommended = parseFloat(projectData.recommended_selling_price) || 0;
+            if (window.lastCalculationDetails && window.lastCalculationDetails.success) {
+                recommended = parseFloat(window.lastCalculationDetails.sellingPrice) || 0;
+            }
+            if (sellingPrice < recommended && recommended > 0) {
+                const status = projectData.discount_approval_status || 'None';
+                if (status !== 'Approved') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Approval Required',
+                        text: `Selling price ($${sellingPrice.toFixed(2)}) is below recommended price ($${recommended.toFixed(2)}). Please request Team Leader approval and get it approved before saving.`
+                    });
+                    return;
+                }
+            }
+
             // Run validations to highlight fields, but only block saving if creating installation (isCreate === true)
             const hasInverterError = checkMandatoryInverter(true);
             const hasValidationError = validateMandatoryByProductType();
@@ -2467,6 +2498,127 @@ function toggleNav(event, element) {
             }
         }
         
+        function updateDiscountApprovalUI() {
+            const grandTotal = parseFloat(document.getElementById('td_grand_total').value) || 0;
+            const rebates = parseFloat(document.getElementById('td_rebates').value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('td_selling_price').value) || 0;
+            
+            // Standard recommended selling price is stored in projectData when calculation runs, 
+            // or loaded from projectData.recommended_selling_price.
+            let recommended = parseFloat(projectData.recommended_selling_price) || 0;
+            if (window.lastCalculationDetails && window.lastCalculationDetails.success) {
+                recommended = parseFloat(window.lastCalculationDetails.sellingPrice) || 0;
+            }
+
+            const row = document.getElementById('discount_approval_row');
+            const badge = document.getElementById('discount_badge');
+            const actions = document.getElementById('discount_actions');
+
+            if (!row || !badge || !actions) return;
+
+            // Recalculate Margin & Deposit in real-time
+            const calculatedMargin = (sellingPrice + rebates) - grandTotal;
+            const marginEl = document.getElementById('td_margin');
+            if (marginEl) marginEl.value = calculatedMargin.toFixed(2);
+            
+            const depositEl = document.getElementById('td_deposit');
+            if (depositEl) depositEl.value = (sellingPrice * 0.10).toFixed(2);
+
+            // Check if there is a discount
+            if (sellingPrice < recommended && recommended > 0) {
+                row.style.display = 'flex';
+                const discountVal = (recommended - sellingPrice).toFixed(2);
+                const status = projectData.discount_approval_status || 'None';
+
+                // Get current user role
+                const isTLorAdmin = window.loggedInRole === 'Admin' || 
+                                    window.loggedInRole === 'Manager' || 
+                                    (window.loggedInRole && (
+                                        window.loggedInRole.includes('Manager') || 
+                                        window.loggedInRole.includes('Leader')
+                                    ));
+
+                if (status === 'Approved') {
+                    badge.innerText = `✅ TL Approved (Discounted by $${discountVal})`;
+                    badge.style.cssText = 'font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600; background: #e6f4ea; color: #137333; border: 1px solid #137333;';
+                    actions.innerHTML = '';
+                } else if (status === 'Pending') {
+                    badge.innerText = `⏳ TL Approval Pending ($${discountVal} discount)`;
+                    badge.style.cssText = 'font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600; background: #fef7e0; color: #b06000; border: 1px solid #b06000;';
+                    
+                    if (isTLorAdmin) {
+                        actions.innerHTML = `
+                            <button type="button" class="btn-save" onclick="handleDiscountAction('approve')" style="font-size: 10px; padding: 4px 8px; background: #137333; border-color: #137333; margin:0; cursor: pointer; color: white; border-radius: 4px;">Approve</button>
+                            <button type="button" class="btn-save" onclick="handleDiscountAction('reject')" style="font-size: 10px; padding: 4px 8px; background: #c5221f; border-color: #c5221f; margin:0; cursor: pointer; color: white; border-radius: 4px;">Reject</button>
+                        `;
+                    } else {
+                        actions.innerHTML = `<span style="font-size: 11px; color: var(--text-muted); font-style:italic;">Awaiting TL Approval</span>`;
+                    }
+                } else if (status === 'Rejected') {
+                    badge.innerText = `❌ TL Rejected ($${discountVal} discount)`;
+                    badge.style.cssText = 'font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600; background: #fce8e6; color: #c5221f; border: 1px solid #c5221f;';
+                    actions.innerHTML = `<button type="button" class="btn-save" onclick="requestDiscountApproval(${recommended}, ${sellingPrice})" style="font-size: 10px; padding: 4px 8px; margin:0; cursor: pointer; color: white; border-radius: 4px; background: var(--primary);">Re-Request</button>`;
+                } else {
+                    // None or other
+                    badge.innerText = `⚠️ Requires TL Approval ($${discountVal} discount)`;
+                    badge.style.cssText = 'font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600; background: #fef7e0; color: #b06000; border: 1px solid #b06000;';
+                    actions.innerHTML = `<button type="button" class="btn-save" onclick="requestDiscountApproval(${recommended}, ${sellingPrice})" style="font-size: 10px; padding: 4px 8px; margin:0; cursor: pointer; color: white; border-radius: 4px; background: var(--primary);">Request TL Approval</button>`;
+                }
+            } else {
+                row.style.display = 'none';
+                actions.innerHTML = '';
+            }
+        }
+
+        async function requestDiscountApproval(recommended, sellingPrice) {
+            if (window.showAresLoader) window.showAresLoader(null, 'Submitting approval request...');
+            try {
+                const res = await fetch(`/api/leads/${currentProjectId}/request-discount-approval`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recommendedPrice: recommended, sellingPrice: sellingPrice })
+                });
+                
+                if (window.hideAresLoader) window.hideAresLoader();
+                
+                if (res.ok) {
+                    Swal.fire('Success', 'Discount approval requested successfully.', 'success');
+                    projectData.discount_approval_status = 'Pending';
+                    projectData.recommended_selling_price = recommended;
+                    updateDiscountApprovalUI();
+                    activateSaveButtons();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || 'Failed to request approval.', 'error');
+                }
+            } catch (err) {
+                if (window.hideAresLoader) window.hideAresLoader();
+                Swal.fire('Error', 'Network error occurred.', 'error');
+            }
+        }
+
+        async function handleDiscountAction(action) {
+            const url = `/api/leads/${currentProjectId}/${action}-discount`;
+            if (window.showAresLoader) window.showAresLoader(null, `${action === 'approve' ? 'Approving' : 'Rejecting'} discount...`);
+            try {
+                const res = await fetch(url, { method: 'POST' });
+                if (window.hideAresLoader) window.hideAresLoader();
+                
+                if (res.ok) {
+                    Swal.fire('Success', `Discount ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 'success');
+                    projectData.discount_approval_status = action === 'approve' ? 'Approved' : 'Rejected';
+                    updateDiscountApprovalUI();
+                    activateSaveButtons();
+                } else {
+                    const err = await res.json();
+                    Swal.fire('Error', err.error || `Failed to ${action} discount.`, 'error');
+                }
+            } catch (err) {
+                if (window.hideAresLoader) window.hideAresLoader();
+                Swal.fire('Error', 'Network error occurred.', 'error');
+            }
+        }
+
         async function loadSidebarUser() {
             try {
                 const res = await fetch("/api/me");
