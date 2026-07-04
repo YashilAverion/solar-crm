@@ -110,6 +110,9 @@
         .no-access-box h2 { font-size:18px; font-weight:700; color:#b93a20; margin-bottom:8px; }
         .no-access-box p { font-size:13px; color:#475569; margin-bottom:16px; }
         .no-access-box a { background:var(--accent); color:#fff; padding:8px 20px; border-radius:7px; text-decoration:none; font-weight:600; font-size:13px; display:inline-block; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active-tab { background: var(--primary) !important; color: #fff !important; }
+        .tab-btn.active-tab .tab-badge { background: rgba(255, 255, 255, 0.2) !important; color: #fff !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/ares_energy_logo.png">
@@ -328,6 +331,14 @@ function toggleNav(event, element) {
     </div>
 
     <div class="content-area">
+        <div class="approvals-tabs" style="display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+            <button class="tab-btn active-tab" id="tab-deletions" onclick="switchTab('deletions')" style="border: none; background: none; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; color: var(--text-dark);">
+                Deletion Requests <span class="tab-badge" id="deletionsCountBadge" style="background: #e2e8f0; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; color: var(--text-dark);">0</span>
+            </button>
+            <button class="tab-btn" id="tab-discounts" onclick="switchTab('discounts')" style="border: none; background: none; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; color: var(--text-muted);">
+                Discount Approvals <span class="tab-badge" id="discountsCountBadge" style="background: #e2e8f0; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; color: var(--text-dark);">0</span>
+            </button>
+        </div>
         <div class="table-toolbar">
             <span class="tt-count" id="tableCount">0 Leads</span>
         </div>
@@ -342,7 +353,7 @@ function toggleNav(event, element) {
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr>
+                    <tr id="tableHeaders">
                         <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
                         <th>Type</th>
                         <th>Entered Date</th>
@@ -380,7 +391,10 @@ function toggleNav(event, element) {
 </div>
 
 <script>
-    let allLeadsData=[], currentPage=1, rowsPerPage=30;
+    let deletionsData = [];
+    let discountsData = [];
+    let currentTab = 'deletions';
+    let currentPage = 1, rowsPerPage = 30;
     let selectedLeadIds = new Set();
 
     function getAgeDays(dateStr) {
@@ -398,23 +412,51 @@ function toggleNav(event, element) {
             const meRes = await fetch("/api/me");
             if (!meRes.ok) { window.location.href = "/login"; return; }
             const me = await meRes.json();
-            const isMgr = me.role === 'Admin' || me.role === 'Manager' || (me.role && me.role.includes('Manager'));
-            if (!isMgr) return;
+            const isMgr = me.role === 'Admin' || me.role === 'Manager' || (me.role && (me.role.includes('Manager') || me.role.includes('Leader')));
+            if (!isMgr) {
+                document.getElementById('noAccessOverlay').style.display = 'flex';
+                return;
+            }
 
-            const res=await fetch('/api/leads/approvals?t=' + new Date().getTime());
-            allLeadsData=await res.json();
-            document.getElementById('statTotal').innerText=allLeadsData.length;
-            selectedLeadIds.clear(); updateBulkBar(); renderTable();
-        } catch(e) {}
+            const [delRes, discRes] = await Promise.all([
+                fetch('/api/leads/approvals?t=' + new Date().getTime()),
+                fetch('/api/leads/pending-discounts?t=' + new Date().getTime())
+            ]);
+            
+            deletionsData = await delRes.json();
+            discountsData = await discRes.json();
+
+            document.getElementById('deletionsCountBadge').innerText = deletionsData.length;
+            document.getElementById('discountsCountBadge').innerText = discountsData.length;
+
+            const totalPending = deletionsData.length + discountsData.length;
+            document.getElementById('statTotal').innerText = totalPending;
+            
+            selectedLeadIds.clear(); 
+            updateBulkBar(); 
+            renderTable();
+        } catch(e) {
+            console.error("Error loading approvals:", e);
+        }
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-deletions').classList.toggle('active-tab', tab === 'deletions');
+        document.getElementById('tab-discounts').classList.toggle('active-tab', tab === 'discounts');
+        selectedLeadIds.clear();
+        updateBulkBar();
+        renderTable();
     }
 
     function toggleSelectAll(cb) {
+        const currentData = currentTab === 'deletions' ? deletionsData : [];
         const start=(currentPage-1)*rowsPerPage;
-        allLeadsData.slice(start,start+rowsPerPage).forEach(l=>{ if(cb.checked) selectedLeadIds.add(l.id); else selectedLeadIds.delete(l.id); });
+        currentData.slice(start,start+rowsPerPage).forEach(l=>{ if(cb.checked) selectedLeadIds.add(l.id); else selectedLeadIds.delete(l.id); });
         updateBulkBar(); renderTable();
     }
     function toggleRowSelect(id,cb) { if(cb.checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id); updateBulkBar(); }
-    function clearSelection() { selectedLeadIds.clear(); document.getElementById('selectAllCb').checked=false; updateBulkBar(); renderTable(); }
+    function clearSelection() { selectedLeadIds.clear(); const s = document.getElementById('selectAllCb'); if (s) s.checked=false; updateBulkBar(); renderTable(); }
     function updateBulkBar() {
         const n=selectedLeadIds.size;
         document.getElementById('bulkCountLabel').innerText=`${n} Lead${n!==1?'s':''} Selected`;
@@ -423,47 +465,108 @@ function toggleNav(event, element) {
 
     function renderTable() {
         const body=document.getElementById('leadsBody'); body.innerHTML='';
-        document.getElementById('totalLeadsCount').innerText=allLeadsData.length;
-        document.getElementById('tableCount').innerText=`${allLeadsData.length} Leads`;
-        const start=(currentPage-1)*rowsPerPage, visible=allLeadsData.slice(start,start+rowsPerPage);
-        document.getElementById('selectAllCb').checked=visible.length>0&&visible.every(l=>selectedLeadIds.has(l.id));
+        const currentData = currentTab === 'deletions' ? deletionsData : discountsData;
+        
+        document.getElementById('totalLeadsCount').innerText=currentData.length;
+        document.getElementById('tableCount').innerText=`${currentData.length} ${currentTab === 'deletions' ? 'Deletions' : 'Discounts'}`;
+        
+        const headersRow = document.getElementById('tableHeaders');
+        if (currentTab === 'deletions') {
+            headersRow.innerHTML = `
+                <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
+                <th>Type</th>
+                <th>Entered Date</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Source</th>
+                <th>Assigned To</th>
+                <th>Submitted By</th>
+                <th>Age</th>
+                <th>Actions</th>
+            `;
+        } else {
+            headersRow.innerHTML = `
+                <th>Lead No</th>
+                <th>Entered Date</th>
+                <th>Customer</th>
+                <th>Salesperson</th>
+                <th>Recommended Price</th>
+                <th>Selling Price</th>
+                <th>Discount</th>
+                <th>Margin</th>
+                <th>Actions</th>
+            `;
+        }
+        
+        const start=(currentPage-1)*rowsPerPage, visible=currentData.slice(start,start+rowsPerPage);
+        
+        const selectAllEl = document.getElementById('selectAllCb');
+        if (selectAllEl) {
+            selectAllEl.checked = visible.length>0&&visible.every(l=>selectedLeadIds.has(l.id));
+        }
 
         let htmlString = '';
         visible.forEach((l) => {
             const fullName=`${l.first_name||''} ${l.last_name||''}`.trim();
             const mergedAddr=`${l.unit_number||''} ${l.address||''}`.trim();
-            const ageDays=getAgeDays(l.lead_entered_date);
             
-            let agePillHtml='-';
-            if (ageDays!==null) {
-                const cls=ageDays<=3?'ap-green':ageDays<=7?'ap-amber':'ap-red';
-                agePillHtml=`<span class="age-pill ${cls}">${ageDays}d</span>`;
-            }
-            
-            const submittedBy = l.assign_to || '-';
-            const assignedToHtml = `<span style="color:#a0adb8;">— Pending —</span>`;
-            
-            let actHtml=`<div class="actions-cell">`;
-            actHtml+=`<button class="act-btn" style="color:#10b981; border-color:#b3e6cc; background:#edfaf2;" title="Approve" onclick="processAction([${l.id}], 'approve')">✅</button>`;
-            actHtml+=`<button class="act-btn act-btn-del" title="Decline" onclick="processAction([${l.id}], 'decline')">❌</button>`;
-            actHtml+=`<button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
-            actHtml+=`</div>`;
+            if (currentTab === 'deletions') {
+                const ageDays=getAgeDays(l.lead_entered_date);
+                let agePillHtml='-';
+                if (ageDays!==null) {
+                    const cls=ageDays<=3?'ap-green':ageDays<=7?'ap-amber':'ap-red';
+                    agePillHtml=`<span class="age-pill ${cls}">${ageDays}d</span>`;
+                }
+                const submittedBy = l.assign_to || '-';
+                const assignedToHtml = `<span style="color:#a0adb8;">— Pending —</span>`;
+                
+                let actHtml=`<div class="actions-cell">`;
+                actHtml+=`<button class="act-btn" style="color:#10b981; border-color:#b3e6cc; background:#edfaf2;" title="Approve Deletion" onclick="processAction([${l.id}], 'approve')">✅</button>`;
+                actHtml+=`<button class="act-btn act-btn-del" title="Decline Deletion" onclick="processAction([${l.id}], 'decline')">❌</button>`;
+                actHtml+=`<button class="act-btn" title="View Log" onclick="viewHistory(${l.id})">🕒</button>`;
+                actHtml+=`</div>`;
 
-            const isChecked=selectedLeadIds.has(l.id)?'checked':'';
-            htmlString+=`<tr>
-                <td class="cb-col"><input type="checkbox" class="row-cb" ${isChecked} onchange="toggleRowSelect(${l.id},this)"></td>
-                <td>${l.type_of_lead||'-'}</td>
-                <td>${l.lead_entered_date||'-'}</td>
-                <td><span class="customer-name">${fullName||'-'}</span></td>
-                <td>${l.phone_number ? `<div style="display:flex; align-items:center; justify-content:center; gap:4px;"><span>${l.phone_number}</span><button type="button" style="width: 20px; height: 20px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${l.phone_number.replace(/'/g, "\\\\'")}')" title="Call Customer">📞</button></div>` : '-'}</td>
-                <td>${l.email_id_1||'-'}</td>
-                <td>${mergedAddr||'-'}</td>
-                <td>${l.lead_source||'-'}</td>
-                <td>${assignedToHtml}</td>
-                <td>${submittedBy}</td>
-                <td>${agePillHtml}</td>
-                <td>${actHtml}</td>
-            </tr>`;
+                const isChecked=selectedLeadIds.has(l.id)?'checked':'';
+                htmlString+=`<tr>
+                    <td class="cb-col"><input type="checkbox" class="row-cb" ${isChecked} onchange="toggleRowSelect(${l.id},this)"></td>
+                    <td>${l.type_of_lead||'-'}</td>
+                    <td>${l.lead_entered_date||'-'}</td>
+                    <td><span class="customer-name">${fullName||'-'}</span></td>
+                    <td>${l.phone_number ? `<div style="display:flex; align-items:center; justify-content:center; gap:4px;"><span>${l.phone_number}</span><button type="button" style="width: 20px; height: 20px; border: 1px solid #dde3ed; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: #e8681e; background: #ffffff; padding:0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#dde3ed';" onclick="window.triggerVoIPCall('${l.phone_number.replace(/'/g, "\\\\'")}')" title="Call Customer">📞</button></div>` : '-'}</td>
+                    <td>${l.email_id_1||'-'}</td>
+                    <td>${mergedAddr||'-'}</td>
+                    <td>${l.lead_source||'-'}</td>
+                    <td>${assignedToHtml}</td>
+                    <td>${submittedBy}</td>
+                    <td>${agePillHtml}</td>
+                    <td>${actHtml}</td>
+                </tr>`;
+            } else {
+                // Render Discount Approval Row
+                const recVal = parseFloat(l.recommended_selling_price) || 0;
+                const sellVal = parseFloat(l.selling_price) || 0;
+                const discVal = (recVal - sellVal).toFixed(2);
+                const marginVal = parseFloat(l.margin_metrics) || 0;
+                
+                let actHtml=`<div class="actions-cell" style="grid-template-columns: repeat(2, max-content);">`;
+                actHtml+=`<button class="act-btn" style="color:#10b981; border-color:#b3e6cc; background:#edfaf2; width: auto; padding: 0 8px; font-size: 11px; font-weight: bold;" title="Approve Discount" onclick="processDiscountApproval(${l.id}, 'approve')">Approve</button>`;
+                actHtml+=`<button class="act-btn act-btn-del" style="width: auto; padding: 0 8px; font-size: 11px; font-weight: bold;" title="Reject Discount" onclick="processDiscountApproval(${l.id}, 'reject')">Reject</button>`;
+                actHtml+=`</div>`;
+
+                htmlString+=`<tr>
+                    <td><a href="/project_profile.html?id=${l.id}" target="_blank" style="color: var(--accent); font-weight: bold; text-decoration: none;">${l.project_number||l.id}</a></td>
+                    <td>${l.lead_entered_date||'-'}</td>
+                    <td><span class="customer-name">${fullName||'-'}</span></td>
+                    <td>${l.assign_to || '-'}</td>
+                    <td>$${recVal.toFixed(2)}</td>
+                    <td>$${sellVal.toFixed(2)}</td>
+                    <td><span style="color: #c5221f; font-weight: bold;">$${discVal}</span></td>
+                    <td>$${marginVal.toFixed(2)}</td>
+                    <td>${actHtml}</td>
+                </tr>`;
+            }
         });
         body.innerHTML = htmlString;
     }
@@ -485,6 +588,34 @@ function toggleNav(event, element) {
             if (res.ok) { Swal.fire(isApprove ? 'Approved!' : 'Declined!', `Lead(s) successfully processed.`, 'success'); clearSelection(); load(); }
             else Swal.fire('Error', 'Failed to process leads.', 'error');
         } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
+    }
+
+    async function processDiscountApproval(leadId, action) {
+        const { isConfirmed } = await Swal.fire({
+            title: action === 'approve' ? 'Approve Discount?' : 'Reject Discount?',
+            text: action === 'approve' ? 'Salesperson will be allowed to save the project with this discounted price.' : 'Salesperson will be blocked from saving unless they adjust the price.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: action === 'approve' ? '#10b981' : '#ef4444',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: action === 'approve' ? 'Yes, Approve' : 'Yes, Reject'
+        });
+        if (!isConfirmed) return;
+        
+        Swal.fire({ title: 'Processing...', text: `Submitting your decision...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        try {
+            const res = await fetch(`/api/leads/${leadId}/${action}-discount`, { method: 'POST' });
+            if (res.ok) {
+                Swal.fire('Success', `Discount ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 'success');
+                load();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to update discount status.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network error occurred.', 'error');
+        }
     }
 
     async function bulkAction(type) {

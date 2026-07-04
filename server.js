@@ -1896,6 +1896,40 @@ app.post('/api/leads/:id/reject-discount', requireAuth, (req, res) => {
     );
 });
 
+// GET Pending Discount approval requests
+app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
+    const userRole = req.session.user.role || '';
+    const isTLorAdmin = userRole === 'Admin' || 
+                        userRole === 'Manager' || 
+                        userRole.includes('Manager') || 
+                        userRole.includes('Leader');
+                        
+    if (!isTLorAdmin) {
+        return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can view pending discounts.' });
+    }
+
+    let query = "SELECT * FROM leads WHERE discount_approval_status = 'Pending'";
+    const params = [];
+    query = applyAdvancedFilters(req, query, params);
+    query += " ORDER BY id DESC";
+    
+    db.all(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Database error: ' + err.message });
+        const formatted = (rows || []).map(r => {
+            r.lead_entered_date = isoToDisplay(r.lead_entered_date);
+            r.created_date = isoToDisplay(r.created_date);
+            if (r.engineering_details) {
+                try {
+                    const engData = JSON.parse(r.engineering_details);
+                    Object.assign(r, engData);
+                } catch (e) {}
+            }
+            return r;
+        });
+        res.json(formatted);
+    });
+});
+
 // GET Lead deletion approval requests
 app.get('/api/leads/approvals', requireManager, (req, res) => {
     let query = "SELECT * FROM leads WHERE status = 'Pending Deletion'";
