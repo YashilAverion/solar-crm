@@ -1283,6 +1283,9 @@ app.get(/\.html$/, (req, res, next) => {
         try {
             let html = fs.readFileSync(pagePath, 'utf8');
             
+            // Inject cache-busting version for timezone JS to bypass browser and CDN cache
+            html = html.split('/australian-timezones.js').join('/australian-timezones.js?v=202607051');
+            
             // Invalidate server caching to force live changes downstream instantly
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
             res.setHeader('Pragma', 'no-cache');

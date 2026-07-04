@@ -1086,7 +1086,9 @@
         // 4. Inject Topbar Right Container dynamically if it is not already there
         if (!tier2.querySelector('.topbar-right-container')) {
             const oldUserDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay');
-            if (oldUserDisplay) oldUserDisplay.remove();
+            if (oldUserDisplay) {
+                oldUserDisplay.style.setProperty('display', 'none', 'important');
+            }
 
             const rightContainer = document.createElement('div');
             rightContainer.className = 'topbar-right-container';
@@ -1145,7 +1147,15 @@
             
             const userDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay') || tier2.querySelector('#sidebarAvatar');
             if (userDisplay) {
-                tier2.insertBefore(rightContainer, userDisplay);
+                let insertNode = userDisplay;
+                while (insertNode && insertNode.parentNode !== tier2) {
+                    insertNode = insertNode.parentNode;
+                }
+                if (insertNode) {
+                    tier2.insertBefore(rightContainer, insertNode);
+                } else {
+                    tier2.appendChild(rightContainer);
+                }
             } else {
                 tier2.appendChild(rightContainer);
             }
