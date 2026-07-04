@@ -1853,8 +1853,6 @@ function toggleNav(event, element) {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success) {
-                        window.lastCalculationDetails = data;
-                        
                         // Populate Table D fields on frontend
                         const grandTotalEl = document.getElementById('td_grand_total');
                         const rebatesEl = document.getElementById('td_rebates');
@@ -1864,9 +1862,25 @@ function toggleNav(event, element) {
 
                         if (grandTotalEl) grandTotalEl.value = parseFloat(data.grandTotal).toFixed(2);
                         if (rebatesEl) rebatesEl.value = parseFloat(data.rebates).toFixed(2);
-                        if (sellingPriceEl) sellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
-                        if (depositEl) depositEl.value = parseFloat(data.deposit).toFixed(2);
-                        if (marginEl) marginEl.value = parseFloat(data.marginVal).toFixed(2);
+                        
+                        if (sellingPriceEl) {
+                            const currentVal = parseFloat(sellingPriceEl.value) || 0;
+                            const prevRecommended = window.lastCalculationDetails ? (parseFloat(window.lastCalculationDetails.sellingPrice) || 0) : 0;
+                            if (currentVal === 0 || Math.abs(currentVal - prevRecommended) < 0.05) {
+                                sellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
+                            }
+                        }
+                        
+                        window.lastCalculationDetails = data;
+                        
+                        // Re-calculate deposit and margin based on the current selling price
+                        const currentSellingPrice = parseFloat(sellingPriceEl.value) || 0;
+                        if (depositEl) depositEl.value = (currentSellingPrice * 0.10).toFixed(2);
+                        if (marginEl) {
+                            const currentGrandTotal = parseFloat(grandTotalEl.value) || 0;
+                            const currentRebates = parseFloat(rebatesEl.value) || 0;
+                            marginEl.value = ((currentSellingPrice + currentRebates) - currentGrandTotal).toFixed(2);
+                        }
 
                         // Enable View Bifurcation button
                         const btnBif = document.getElementById('btnViewBifurcation');
