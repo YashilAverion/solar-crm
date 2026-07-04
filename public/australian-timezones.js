@@ -1,11 +1,11 @@
 // Australian Timezones Live Clocks & Global Action Shell Controller
-// Injects a Double-Decker top header layout dynamically across all pages and purges the sidebar clock widget completely.
+// (Clocks removed at user request. Dynamic notification bell and layout controller remains active)
 (function() {
     'use strict';
 
     function initTimezoneClocks() {
         // Avoid duplicate injection
-        if (document.querySelector('.topbar-tier1')) return;
+        if (document.querySelector('.notification-container')) return;
 
         const topbar = document.querySelector('.topbar');
         if (!topbar) return;
@@ -17,91 +17,20 @@
             oldSidebarWidgets.forEach(el => el.remove());
         }
 
-        // 2. Define timezone clock components
-        const timezones = [
-            { label: 'WA', zone: 'Australia/Perth', id: 'tz-clock-wa' },
-            { label: 'NT', zone: 'Australia/Darwin', id: 'tz-clock-nt' },
-            { label: 'SA/NSW/VIC/TAS', zone: 'Australia/Sydney', id: 'tz-clock-sa_nsw_vic_tas' },
-            { label: 'IND', zone: 'Asia/Kolkata', id: 'tz-clock-ind' }
-        ];
-
-        // 3. Inject CSS Styles for Sticky Double-Decker layout
+        // 2. Inject CSS Styles for Sticky single tier topbar layout
         const style = document.createElement('style');
         style.innerHTML = `
-            /* Double-Decker Top Header Sticky Layout */
             .topbar {
                 display: flex !important;
                 flex-direction: column !important;
                 height: auto !important;
                 padding: 0 !important;
                 position: sticky !important;
-                top: 0 !important; /* Reset to 0 to remove any offset gaps inside main-wrap */
+                top: 0 !important;
                 z-index: 1000 !important;
                 background: var(--surface) !important;
                 border-bottom: 2px solid var(--accent, #e8681e) !important;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-            
-            /* Tier 1: Clocks Global Fixed Status Bar (full viewport width) */
-            .topbar-tier1 {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important; /* Center the clocks horizontally across the entire width */
-                background: #f8fafc !important; /* Premium light ceiling strip */
-                border-bottom: 1px solid #e2e8f0 !important;
-                padding: 0 16px !important;
-                font-family: 'Inter', system-ui, sans-serif !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-                user-select: none !important;
-                flex-wrap: wrap !important; /* Avoid squishing on small screens */
-                gap: 0 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                height: 26px !important; /* Increased height to 26px (+2 size) */
-                z-index: 2100 !important;
-            }
-            
-            /* Recalibrated Contrast - Premium Light-Badge Theme with Spacing & Margins */
-            .timezone-clock-item {
-                display: inline-flex !important;
-                align-items: center !important;
-                gap: 5px !important;
-                padding: 2px 8px !important;
-                background-color: #ffffff !important;
-                border-radius: 5px !important;
-                font-weight: 600 !important;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                margin-right: 12px !important; /* Increased spacing to 12px */
-                border: 1px solid #e2e8f0 !important;
-                transition: all 0.2s ease !important;
-                margin-left: 0 !important;
-                height: 20px !important; /* Increased height to 20px (+2 size) */
-                box-sizing: border-box !important;
-            }
-            .timezone-clock-item:last-child {
-                margin-right: 0 !important;
-            }
-            .timezone-clock-item:hover {
-                border-color: var(--accent, #e8681e) !important;
-                transform: translateY(-0.5px) !important;
-            }
-            .timezone-clock-label {
-                font-weight: 800 !important;
-                color: #64748b !important;
-                text-transform: uppercase !important;
-                font-size: 10px !important; /* Increased font-size to 10px (+2 size) */
-                letter-spacing: 0.5px !important;
-                line-height: 1 !important;
-            }
-            .timezone-clock-time {
-                font-weight: 700 !important;
-                color: #0f172a !important;
-                font-size: 12px !important; /* Increased font-size to 12px (+2 size) */
-                font-variant-numeric: tabular-nums !important;
-                line-height: 1 !important;
             }
             
             /* Tier 2: Navigation Controls Row */
@@ -171,36 +100,26 @@
                 font-size: 12px !important;
             }
             
-            /* Adjust sidebar and main-wrap to fit under the status bar */
+            /* Reset sidebar and main-wrap to standard height */
             .sidebar {
-                top: 26px !important;
-                height: calc(100vh - 26px) !important;
+                top: 0 !important;
+                height: 100vh !important;
             }
             .main-wrap {
-                margin-top: 26px !important;
-                height: calc(100vh - 26px) !important;
+                margin-top: 0 !important;
+                height: 100vh !important;
             }
         `;
         document.head.appendChild(style);
 
-        // 4. Build Tier 1 (Clock ceiling strip) HTML markup
-        const tier1 = document.createElement('div');
-        tier1.className = 'topbar-tier1';
-        tier1.innerHTML = timezones.map(tz => `
-            <div class="timezone-clock-item" title="${tz.zone} Time">
-                <span class="timezone-clock-label">${tz.label}</span>
-                <span class="timezone-clock-time" id="${tz.id}">--:-- --</span>
-            </div>
-        `).join('');
-
-        // 5. Build Tier 2 and migrate existing topbar contents into it
+        // 3. Build Tier 2 and migrate existing topbar contents into it
         const tier2 = document.createElement('div');
         tier2.className = 'topbar-tier2';
 
         // Move children of topbar to Tier 2
         const children = Array.from(topbar.childNodes);
         children.forEach(child => {
-            if (child !== tier1 && child !== tier2) {
+            if (child !== tier2) {
                 // Remove duplicate manual backup and deployment buttons from pages like admin.html to avoid duplicate layouts
                 if (child.nodeType === Node.ELEMENT_NODE) {
                     const inlineBackupBtn = child.querySelector('button[onclick="startManualBackup()"]') || (child.matches && child.matches('button[onclick="startManualBackup()"]'));
@@ -269,19 +188,16 @@
         topbar.innerHTML = '';
         HTMLElement.prototype.appendChild.call(topbar, tier2);
 
-        // Append Tier 1 (Clock ceiling strip) directly to document.body so it spans 100% viewport width
-        document.body.appendChild(tier1);
-
         // Override DOM insertion methods to redirect dynamic scripts (e.g. responsive.js) to Tier 2
         topbar.appendChild = function(newChild) {
-            if (newChild === tier1 || newChild === tier2 || newChild.tagName === 'STYLE' || newChild.tagName === 'SCRIPT') {
+            if (newChild === tier2 || newChild.tagName === 'STYLE' || newChild.tagName === 'SCRIPT') {
                 return HTMLElement.prototype.appendChild.call(this, newChild);
             }
             return tier2.appendChild(newChild);
         };
 
         topbar.insertBefore = function(newChild, refChild) {
-            if (newChild === tier1 || newChild === tier2 || refChild === tier1 || refChild === tier2) {
+            if (newChild === tier2 || refChild === tier2) {
                 return HTMLElement.prototype.insertBefore.call(this, newChild, refChild);
             }
             if (refChild && tier2.contains(refChild)) {
@@ -293,7 +209,7 @@
             return tier2.appendChild(newChild);
         };
 
-        // 5b. Inject Notification Bell dynamically if it is not already there
+        // 4. Inject Notification Bell dynamically if it is not already there
         if (!tier2.querySelector('.notification-container')) {
             const notifContainer = document.createElement('div');
             notifContainer.className = 'notification-container';
@@ -322,7 +238,7 @@
             }
         }
 
-        // 5c. Setup Notification Event Listeners & Functions
+        // 5. Setup Notification Event Listeners & Functions
         let globalNotifications = [];
         
         async function fetchNotifications() {
@@ -432,28 +348,6 @@
             setInterval(fetchNotifications, 10000); // autofresh every 10 seconds
             setTimeout(fetchNotifications, 500); // initial load
         }
-
-        // Clocks ticking function
-        function updateClocks() {
-            const now = new Date();
-            timezones.forEach(tz => {
-                const el = document.getElementById(tz.id);
-                if (el) {
-                    const options = {
-                        timeZone: tz.zone,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                    };
-                    let timeStr = now.toLocaleTimeString('en-AU', options);
-                    timeStr = timeStr.replace(/\s+/g, ' ');
-                    el.textContent = timeStr.toUpperCase();
-                }
-            });
-        }
-
-        updateClocks();
-        setInterval(updateClocks, 1000);
     }
 
     // Global Actions handlers
