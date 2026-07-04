@@ -662,7 +662,7 @@
     // --- FETCH NEXT STOCK CODE ---
     async function fetchNextStockCode() {
         try {
-            const res = await fetch('/api/combos/next-stock-code');
+            const res = await fetch('/combos/next-stock-code');
             if (res.ok) {
                 const data = await res.json();
                 nextStockCodeNum = data.nextNum;

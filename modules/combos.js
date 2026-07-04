@@ -55,7 +55,12 @@ function syncComboVariantToProduct(group, variant, callback) {
 
 // GET next available variant stock code in series (e.g. CBO-1001)
 router.get('/next-stock-code', requireAuth, (req, res) => {
-    db.all("SELECT stock_code FROM combo_variants", [], (err, rows) => {
+    const sql = `
+        SELECT stock_code FROM combo_variants 
+        UNION 
+        SELECT stock_code FROM products WHERE stock_code LIKE 'CBO-%'
+    `;
+    db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         let maxNum = 1000;
         rows.forEach(r => {
