@@ -474,6 +474,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <button class="tab-chip" id="tab-rate-limits" onclick="switchAdminSection('rate-limits')">🔒 Login Security & Rate Limits</button>
             <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')">📞 VoIP Analytics & Recordings</button>
             <button class="tab-chip" id="tab-storage-backups" onclick="switchAdminSection('storage-backups')">💾 System Storage & Backups</button>
+            <button class="tab-chip" id="tab-telephony-sandbox" onclick="switchAdminSection('telephony-sandbox')">🧪 Telephony Sandbox & Audits</button>
         </div>
  
         <div id="section-rate-limits" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -678,6 +679,100 @@ document.addEventListener("DOMContentLoaded", function() {
                             <!-- Populated dynamically -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telephony Sandbox & Audits Tab Content -->
+        <div id="section-telephony-sandbox" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0; gap: 16px;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; flex: 1; min-height: 0; overflow: auto;">
+                
+                <!-- Left Panel: Test & Simulation Cockpit -->
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); gap: 12px; height: fit-content;">
+                    <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>🧪 Simulation Cockpit</span>
+                    </h3>
+                    
+                    <form onsubmit="runTelephonySimulation(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">SELECT TARGET LEAD</label>
+                            <select id="simTargetLeadSelect" required style="height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 12px; outline: none; background: #fff;">
+                                <option value="">-- Load Active Leads --</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">SIMULATION TRANSCRIPT TEXT</label>
+                            <textarea id="simTranscriptInput" placeholder="Enter simple Australian English transcript fragment (e.g. tin roof, double storey home, three phase grid, inside the garage)..." required style="height: 100px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; outline: none; font-family: inherit; resize: none; background: #fff;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-save" id="btnRunSim" style="margin-top: 4px; height: 32px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+                            <span>🚀 Execute Simulation</span>
+                        </button>
+                    </form>
+                    
+                    <!-- Result Display -->
+                    <div id="simResultBlock" style="display: none; background: #f8fafc; border: 1.5px dashed var(--border); border-radius: 8px; padding: 12px; font-size: 11px; flex-direction: column; gap: 8px;">
+                        <div style="font-weight: 800; color: var(--primary); text-transform: uppercase;">Simulation Outcome</div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-weight: 600; color: var(--text-muted);">Session ID:</span>
+                            <span id="simSessionIdVal" style="font-family: monospace; font-weight: 700;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-weight: 600; color: var(--text-muted);">Latency:</span>
+                            <span id="simLatencyVal" style="color: #10b981; font-weight: 700;">0 ms</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px;">
+                            <span style="font-weight: 700; color: var(--text-dark);">Matched Specs:</span>
+                            <pre id="simMatchedSpecsVal" style="margin: 0; background: #fff; border: 1px solid var(--border); padding: 6px; border-radius: 4px; font-family: monospace; overflow-x: auto; max-height: 80px;"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Force Sync trigger -->
+                    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                        <h4 style="font-size: 12px; font-weight: 700; color: var(--text-dark); margin: 0; text-transform: uppercase;">🔄 Force Sync Evaluator</h4>
+                        <button type="button" onclick="triggerForceSyncEvaluator()" class="act-btn" style="width: 100%; height: 32px; font-size: 12px; background: #f8fafc; border-color: var(--border); color: var(--text-dark); margin: 0;">
+                            Trigger Sync Evaluation
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Telemetry Historical Logs -->
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 400px; flex: 1; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin: 0; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                            <span>📋 Historical Log Sheet</span>
+                        </h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="exportTelephonyReports()" class="act-btn" style="width: auto; height: 28px; padding: 0 12px; font-size: 11px; margin: 0; background: #10b981; border-color: #059669; color: #fff;" title="Download CSV Report">
+                                📥 Export Report
+                            </button>
+                            <button type="button" onclick="loadTelephonyAuditLogs()" class="act-btn" style="width: auto; height: 28px; padding: 0 12px; font-size: 11px; margin: 0;" title="Refresh list">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-wrap" style="flex: 1; min-height: 0; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Session ID</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Lead Info</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Representative</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: right; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Latency</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: center; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Probability</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: left; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Logged At</th>
+                                    <th style="padding: 10px 12px; border-bottom: 2px solid var(--border); text-align: center; background: #f8fafc; color: var(--text-dark); font-size: 11px; text-transform: uppercase; font-weight: 700;">Transcript</th>
+                                </tr>
+                            </thead>
+                            <tbody id="telephonyAuditLogsBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No historical logs found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -966,11 +1061,13 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-rate-limits').style.display = target === 'rate-limits' ? 'flex' : 'none';
         document.getElementById('section-voip-analytics').style.display = target === 'voip-analytics' ? 'flex' : 'none';
         document.getElementById('section-storage-backups').style.display = target === 'storage-backups' ? 'flex' : 'none';
+        document.getElementById('section-telephony-sandbox').style.display = target === 'telephony-sandbox' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
         document.getElementById('tab-voip-analytics').classList.toggle('active-chip', target === 'voip-analytics');
         document.getElementById('tab-storage-backups').classList.toggle('active-chip', target === 'storage-backups');
+        document.getElementById('tab-telephony-sandbox').classList.toggle('active-chip', target === 'telephony-sandbox');
         
         if (target === 'rate-limits') {
             loadRateLimits();
@@ -979,6 +1076,8 @@ document.addEventListener("DOMContentLoaded", function() {
             loadVoipAnalytics();
         } else if (target === 'storage-backups') {
             loadStorageStatsAndBackups();
+        } else if (target === 'telephony-sandbox') {
+            loadTelephonyAuditLogs();
         }
     }
 
@@ -2604,6 +2703,235 @@ Initializing deployment stream...
             confirmButtonText: 'Close'
         });
     };
+
+    let allTelephonyLogs = [];
+
+    async function loadTelephonyAuditLogs() {
+        try {
+            const leadsRes = await fetch('/api/telephony-admin/active-leads');
+            if (leadsRes.ok) {
+                const leads = await leadsRes.json();
+                const select = document.getElementById('simTargetLeadSelect');
+                if (select) {
+                    select.innerHTML = '<option value="">-- Load Active Leads --</option>';
+                    leads.forEach(l => {
+                        const label = `${l.project_number || 'Lead ' + l.id} - ${l.first_name || ''} ${l.last_name || ''}`;
+                        const opt = document.createElement('option');
+                        opt.value = l.id;
+                        opt.innerText = label;
+                        select.appendChild(opt);
+                    });
+                }
+            }
+
+            const logsRes = await fetch('/api/telephony-admin/sessions');
+            if (logsRes.ok) {
+                const logs = await logsRes.json();
+                allTelephonyLogs = logs;
+                renderTelephonyAuditLogsTable(logs);
+            }
+        } catch (e) {
+            console.error('[Telephony Admin] Error loading audits:', e);
+        }
+    }
+
+    function renderTelephonyAuditLogsTable(logs) {
+        const body = document.getElementById('telephonyAuditLogsBody');
+        if (!body) return;
+
+        if (logs.length === 0) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No historical logs found.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = '';
+        logs.forEach(log => {
+            let prob = 50;
+            try {
+                if (log.calculated_metrics_json) {
+                    const parsed = JSON.parse(log.calculated_metrics_json);
+                    prob = parsed.purchase_probability !== undefined ? parsed.purchase_probability : 50;
+                }
+            } catch(e) {}
+
+            let probColor = '#10b981';
+            if (prob < 40) probColor = '#ef4444';
+            else if (prob < 70) probColor = '#f59e0b';
+
+            const leadLabel = `${log.first_name || ''} ${log.last_name || ''}`.trim() || `Lead ${log.lead_id}`;
+            const dateStr = log.logged_at ? new Date(log.logged_at).toLocaleString() : '-';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 10px 12px; font-family: monospace; border-bottom: 1px solid var(--border); font-size: 11px;">${log.session_id || ''}</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600;">${leadLabel} (ID: ${log.lead_id})</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px;">${log.rep_name || 'System'} (${log.voipline_extension || 'N/A'})</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-align: right; color: #10b981; font-weight: 700;">${log.execution_latency_ms || 0} ms</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: center;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${probColor}15; color: ${probColor}; border: 1px solid ${probColor}30;">
+                        <span style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background-color: ${probColor};"></span>
+                        ${prob}%
+                    </span>
+                </td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-muted);">${dateStr}</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: center;">
+                    <button type="button" class="act-btn" style="width: auto; height: 20px; font-size: 10px; padding: 0 8px; margin: 0;" onclick="viewFullTelephonyTranscript(this)" data-idx="${logs.indexOf(log)}">View</button>
+                </td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    window.viewFullTelephonyTranscript = function(btn) {
+        const idx = btn.getAttribute('data-idx');
+        const log = allTelephonyLogs[idx];
+        if (!log) return;
+        
+        Swal.fire({
+            title: 'Full Transcript Snapshot',
+            html: `<div style="text-align: left; background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; border: 1px solid var(--border); color: #334155;">${escapeHtml(log.full_transcript_snapshot)}</div>`,
+            confirmButtonText: 'Close',
+            confirmButtonColor: 'var(--primary)'
+        });
+    };
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    async function runTelephonySimulation(event) {
+        event.preventDefault();
+        const leadId = document.getElementById('simTargetLeadSelect').value;
+        const text = document.getElementById('simTranscriptInput').value.trim();
+        const btn = document.getElementById('btnRunSim');
+        
+        if (!leadId || !text) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="width: 10px; height: 10px; border-width: 2px;"></span>Running...';
+        
+        try {
+            const res = await fetch('/api/telephony-admin/simulate-payload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lead_id: leadId, text_fragment: text })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('simResultBlock').style.display = 'flex';
+                document.getElementById('simSessionIdVal').innerText = data.session_id || '-';
+                document.getElementById('simLatencyVal').innerText = `${data.latency_ms} ms`;
+                document.getElementById('simMatchedSpecsVal').innerText = JSON.stringify(data.extracted_fields, null, 2);
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Simulation completed successfully.',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+                
+                loadTelephonyAuditLogs();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                Swal.fire('Error', err.error || 'Simulation execution failed.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Network error during simulation.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Execute Simulation';
+        }
+    }
+
+    function exportTelephonyReports() {
+        if (allTelephonyLogs.length === 0) {
+            Swal.fire('No Data', 'No historical session logs to export.', 'info');
+            return;
+        }
+
+        let csv = 'Session ID,Lead ID,Representative,Latency (ms),Probability (%),Logged At,Transcript Snapshot\n';
+        allTelephonyLogs.forEach(log => {
+            let prob = 50;
+            try {
+                if (log.calculated_metrics_json) {
+                    const parsed = JSON.parse(log.calculated_metrics_json);
+                    prob = parsed.purchase_probability !== undefined ? parsed.purchase_probability : 50;
+                }
+            } catch(e) {}
+
+            const repName = `${log.rep_name || 'System'} (${log.voipline_extension || 'N/A'})`;
+            const dateStr = log.logged_at ? new Date(log.logged_at).toLocaleString() : '-';
+            const escapedTranscript = `"${(log.full_transcript_snapshot || '').replace(/"/g, '""')}"`;
+            
+            csv += `"${log.session_id || ''}",${log.lead_id},"${repName}",${log.execution_latency_ms || 0},${prob},"${dateStr}",${escapedTranscript}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `telephony_session_audit_report_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    async function triggerForceSyncEvaluator() {
+        const leadId = document.getElementById('simTargetLeadSelect').value;
+        if (!leadId) {
+            Swal.fire('Warning', 'Please select a target Lead from the Simulation dropdown first.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Confirm Force Sync',
+            text: 'This will force a temporary evaluation of compliance rules over the lead\'s current transcript sync state. Proceed?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--primary)',
+            confirmButtonText: 'Run Sync Evaluation'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/compliance/fetch-matrix?lead_id=${leadId}`);
+                    if (res.ok) {
+                        const matrixData = await res.json();
+                        const transcript = matrixData.live_voice_sync ? matrixData.live_voice_sync.live_captions_transcript : '';
+                        
+                        if (!transcript) {
+                            Swal.fire('No Transcript', 'This lead does not have any active call voice transcript to sync.', 'info');
+                            return;
+                        }
+
+                        const simRes = await fetch('/api/telephony-admin/simulate-payload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ lead_id: leadId, text_fragment: '[Force Sync Evaluation] ' + transcript })
+                        });
+
+                        if (simRes.ok) {
+                            Swal.fire('Success', 'Force sync evaluation resolved successfully. Database details synchronized.', 'success');
+                            loadTelephonyAuditLogs();
+                        } else {
+                            Swal.fire('Error', 'Sync evaluation failed.', 'error');
+                        }
+                    } else {
+                        Swal.fire('Error', 'Failed to retrieve active lead transcript context.', 'error');
+                    }
+                } catch(e) {
+                    Swal.fire('Error', 'Failed to run sync evaluation.', 'error');
+                }
+            }
+        });
+    }
 
     (async function loadSidebarUser() {
         try {

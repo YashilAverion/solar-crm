@@ -1614,6 +1614,20 @@ db.serialize(() => {
         )
     `);
 
+    // 3.11 telephony_admin_audit_logs table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS telephony_admin_audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            lead_id INTEGER,
+            rep_user_id INTEGER,
+            full_transcript_snapshot TEXT,
+            calculated_metrics_json TEXT,
+            execution_latency_ms INTEGER,
+            logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists

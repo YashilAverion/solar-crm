@@ -2835,6 +2835,106 @@ function logFileOperation(userId, actionType, fileName, fileSize, callback) {
     });
 }
 
+// ── TELEPHONY ADMIN SANDBOX & AUDIT ENDPOINTS ──
+app.get('/api/telephony-admin/active-leads', requireManager, (req, res) => {
+    db.all("SELECT id, project_number, first_name, last_name FROM leads WHERE is_deleted = 0 ORDER BY id DESC LIMIT 100", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows || []);
+    });
+});
+
+app.get('/api/telephony-admin/sessions', requireManager, (req, res) => {
+    const sql = `
+        SELECT a.*, l.first_name, l.last_name, u.full_name as rep_name, u.voipline_extension
+        FROM telephony_admin_audit_logs a
+        LEFT JOIN leads l ON a.lead_id = l.id
+        LEFT JOIN users u ON a.rep_user_id = u.id
+        ORDER BY a.id DESC LIMIT 100
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows || []);
+    });
+});
+
+app.post('/api/telephony-admin/simulate-payload', requireManager, (req, res) => {
+    const { lead_id, text_fragment } = req.body;
+    if (!lead_id || !text_fragment) {
+        return res.status(400).json({ error: 'lead_id and text_fragment are required.' });
+    }
+
+    const startTime = process.hrtime();
+    const repUserId = req.session.user.id;
+
+    db.get("SELECT state FROM leads WHERE id = ?", [lead_id], (err, leadRow) => {
+        if (err || !leadRow) {
+            return res.status(404).json({ error: 'Lead not found.' });
+        }
+
+        const stateCode = leadRow.state || 'NSW';
+
+        processTranscriptAndAutoFill(lead_id, text_fragment, stateCode, (parseErr, result) => {
+            if (parseErr) {
+                return res.status(500).json({ error: parseErr.message });
+            }
+
+            const diff = process.hrtime(startTime);
+            const latencyMs = Math.round((diff[0] * 1e9 + diff[1]) / 1e6);
+            const sessionId = `sim_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+            db.run(
+                `INSERT INTO telephony_admin_audit_logs (
+                    session_id, lead_id, rep_user_id, full_transcript_snapshot, calculated_metrics_json, execution_latency_ms
+                ) VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    sessionId,
+                    lead_id,
+                    repUserId,
+                    text_fragment,
+                    JSON.stringify(result.intentAnalytics || {}),
+                    latencyMs
+                ],
+                (insertErr) => {
+                    if (insertErr) {
+                        console.error('[Telephony Admin Audit] Insert log error:', insertErr.message);
+                    }
+
+                    // Broadcast updates to the active owner as well so frontend updates live!
+                    const eventPayload = {
+                        leadId: lead_id,
+                        transcriptText: text_fragment,
+                        extractedFields: result.extractedFields,
+                        allFields: result.allFields,
+                        intentAnalytics: result.intentAnalytics
+                    };
+
+                    const io = req.app.get('io');
+                    db.get("SELECT username FROM users WHERE id = ?", [repUserId], (uErr, userRow) => {
+                        if (!uErr && userRow && io) {
+                            io.to(userRow.username).emit('voipline-transcript-parsed', eventPayload);
+                            
+                            if (sseClients[userRow.username]) {
+                                const ssePayload = JSON.stringify(eventPayload);
+                                sseClients[userRow.username].forEach(client => {
+                                    client.write(`data: ${ssePayload}\n\n`);
+                                });
+                            }
+                        }
+                    });
+
+                    res.json({
+                        success: true,
+                        session_id: sessionId,
+                        extracted_fields: result.extractedFields,
+                        intent_analytics: result.intentAnalytics,
+                        latency_ms: latencyMs
+                    });
+                }
+            );
+        });
+    });
+});
+
 // ── GET STORAGE STATS API ──
 app.get('/api/system/storage-stats', requireManager, (req, res) => {
     getStorageCapacityStats((err, stats) => {
