@@ -4567,6 +4567,14 @@ async function loadComplianceGuidance() {
                     isConsoleExpanded = data.live_telemetry_state.is_console_expanded || 0;
                 }
 
+                if (data.live_voice_sync) {
+                    const captionsEl = document.getElementById('overlay_live_captions_text');
+                    if (captionsEl && data.live_voice_sync.live_captions_transcript) {
+                        captionsEl.innerText = data.live_voice_sync.live_captions_transcript;
+                    }
+                    updateIntentAnalyticsUI(data.live_voice_sync.intent_analytics);
+                }
+
                 renderComplianceConsole();
                 applyConsoleToggleUI();
                 updateTelemetryUI(null);
@@ -5157,6 +5165,212 @@ function applyConsoleToggleUI() {
         }
     }
 }
+
+// ── TELEPHONY VOICE Sync & Simulation Cockpit ────────────────────────
+async function sendVoiceTelemetryStream(textFragment) {
+    if (!currentProjectId) return;
+
+    try {
+        const res = await fetch('/api/telephony-voice/stream-payload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: currentProjectId,
+                text_fragment: textFragment
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                const captionsEl = document.getElementById('overlay_live_captions_text');
+                if (captionsEl) {
+                    captionsEl.innerText = data.live_captions_transcript;
+                    const parentBox = captionsEl.parentElement;
+                    if (parentBox) parentBox.scrollTop = parentBox.scrollHeight;
+                }
+
+                updateIntentAnalyticsUI(data.intent_analytics);
+                applyFormFillingAutomation(data.extracted_fields);
+            }
+        }
+    } catch(err) {
+        console.error('[TELEPHONY VOICE] Stream sync error:', err);
+    }
+}
+
+function updateIntentAnalyticsUI(analytics) {
+    if (!analytics) return;
+
+    const probVal = document.getElementById('intent_prob_val');
+    const probBar = document.getElementById('intent_prob_bar');
+    if (probVal) probVal.innerText = `${analytics.purchase_probability}%`;
+    if (probBar) {
+        probBar.style.width = `${analytics.purchase_probability}%`;
+        if (analytics.purchase_probability >= 70) {
+            probBar.style.background = '#10b981';
+        } else if (analytics.purchase_probability >= 40) {
+            probBar.style.background = '#f59e0b';
+        } else {
+            probBar.style.background = '#ef4444';
+        }
+    }
+
+    const compInd = document.getElementById('intent_indicator_competitor');
+    const compVal = document.getElementById('intent_val_competitor');
+    if (compVal) compVal.innerText = analytics.competitor_quote_status;
+    if (compInd) {
+        if (analytics.competitor_quote_status === 'Yes') {
+            compInd.style.borderColor = '#ef4444';
+            compInd.style.background = '#fef2f2';
+            compVal.style.color = '#ef4444';
+        } else {
+            compInd.style.borderColor = 'var(--border)';
+            compInd.style.background = '#f8fafc';
+            compVal.style.color = 'var(--text-dark)';
+        }
+    }
+
+    const finInd = document.getElementById('intent_indicator_finance');
+    const finVal = document.getElementById('intent_val_finance');
+    if (finVal) finVal.innerText = analytics.financial_barriers;
+    if (finInd) {
+        if (analytics.financial_barriers === 'Yes') {
+            finInd.style.borderColor = '#f59e0b';
+            finInd.style.background = '#fffbeb';
+            finVal.style.color = '#b45309';
+        } else {
+            finInd.style.borderColor = 'var(--border)';
+            finInd.style.background = '#f8fafc';
+            finVal.style.color = 'var(--text-dark)';
+        }
+    }
+
+    const timeInd = document.getElementById('intent_indicator_timeline');
+    const timeVal = document.getElementById('intent_val_timeline');
+    if (timeVal) timeVal.innerText = analytics.timeline_fear_metrics;
+    if (timeInd) {
+        if (analytics.timeline_fear_metrics === 'Yes') {
+            timeInd.style.borderColor = '#b45309';
+            timeInd.style.background = '#fffbeb';
+            timeVal.style.color = '#b45309';
+        } else {
+            timeInd.style.borderColor = 'var(--border)';
+            timeInd.style.background = '#f8fafc';
+            timeVal.style.color = 'var(--text-dark)';
+        }
+    }
+}
+
+function applyFormFillingAutomation(fields) {
+    if (!fields || Object.keys(fields).length === 0) return;
+
+    let formChanged = false;
+
+    if (fields.tb_house_storey) {
+        const radio = document.querySelector(`input[name="tb_house_storey"][value="${fields.tb_house_storey}"]`);
+        if (radio && !radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tb_roof_type) {
+        const select = document.getElementById('tb_roof_type');
+        if (select && select.value !== fields.tb_roof_type) {
+            select.value = fields.tb_roof_type;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tb_phase) {
+        const radio = document.querySelector(`input[name="tb_phase"][value="${fields.tb_phase}"]`);
+        if (radio && !radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tb_export_limit) {
+        const select = document.getElementById('tb_export_limit');
+        if (select && select.value !== fields.tb_export_limit) {
+            select.value = fields.tb_export_limit;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tc_battery_location) {
+        const radio = document.querySelector(`input[name="tc_battery_location"][value="${fields.tc_battery_location}"]`);
+        if (radio && !radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tc_site_visit) {
+        const radio = document.querySelector(`input[name="tc_site_visit"][value="${fields.tc_site_visit}"]`);
+        if (radio && !radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            formChanged = true;
+        }
+    }
+
+    if (fields.tb_daily_usage !== undefined) {
+        const input = document.getElementById('tb_daily_usage');
+        if (input && parseFloat(input.value) !== fields.tb_daily_usage) {
+            input.value = fields.tb_daily_usage.toFixed(1);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            const complianceUsage = document.getElementById('compliance_daily_usage');
+            const overlayUsage = document.getElementById('overlay_daily_usage');
+            if (complianceUsage) complianceUsage.value = fields.tb_daily_usage.toFixed(1);
+            if (overlayUsage) overlayUsage.value = fields.tb_daily_usage.toFixed(1);
+            
+            formChanged = true;
+        }
+    }
+
+    if (formChanged) {
+        console.log('[TELEPHONY COCKPIT] Zero-click form filling synced attributes:', fields);
+        activateMasterSaveButton();
+        triggerCalculation();
+    }
+}
+
+function triggerSimulatedSpeechInput() {
+    const input = document.getElementById('sim_speech_input');
+    if (!input || !input.value.trim()) return;
+    
+    const text = input.value.trim();
+    input.value = '';
+    sendVoiceTelemetryStream(text);
+}
+
+function triggerSimulatedSpeechPreset(presetKey) {
+    let text = '';
+    if (presetKey === 'tin-3phase') {
+        text = "We have a three phase meter and a tin roof with standard clearances.";
+    } else if (presetKey === 'double-storey') {
+        text = "The house is double storey and we want the battery location outside.";
+    } else if (presetKey === 'outside-battery') {
+        text = "We want battery location outside and export limit is 5kW.";
+    } else if (presetKey === 'quote-expensive') {
+        text = "Your competitor offered a cheaper price. The solar is expensive and we got a quote from other company.";
+    } else if (presetKey === 'ready-buy') {
+        text = "We are happy to proceed, buy the system and ready to sign up the contract today.";
+    }
+    
+    if (text) {
+        sendVoiceTelemetryStream(text);
+    }
+}
 </script>
 
 <style>
@@ -5189,6 +5403,63 @@ function applyConsoleToggleUI() {
     <!-- Scrollable content area -->
     <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
         
+        <!-- Speech Simulation Test Suite (Ares Cockpit) -->
+        <div style="background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Speech Auto-Fill Simulation</span>
+                <span style="font-size: 8px; background: var(--accent); color: #fff; padding: 1px 4px; border-radius: 3px;">TEST SUITE</span>
+            </div>
+            
+            <div style="display: flex; gap: 4px;">
+                <input type="text" id="sim_speech_input" placeholder="Type simulated customer speech..." style="flex:1; height: 24px; padding: 0 6px; border: 1px solid var(--border); border-radius: 4px; font-size:11.5px;">
+                <button type="button" onclick="triggerSimulatedSpeechInput()" style="background: var(--primary); color: #fff; border: none; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Send</button>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                <button type="button" onclick="triggerSimulatedSpeechPreset('tin-3phase')" class="btn-micro" style="padding: 2.5px 5px; font-size: 9.5px; flex: 1;">Tin + 3Phase</button>
+                <button type="button" onclick="triggerSimulatedSpeechPreset('double-storey')" class="btn-micro" style="padding: 2.5px 5px; font-size: 9.5px; flex: 1;">Double Storey</button>
+                <button type="button" onclick="triggerSimulatedSpeechPreset('outside-battery')" class="btn-micro" style="padding: 2.5px 5px; font-size: 9.5px; flex: 1;">Outside Battery</button>
+                <button type="button" onclick="triggerSimulatedSpeechPreset('quote-expensive')" class="btn-micro" style="padding: 2.5px 5px; font-size: 9.5px; flex: 1; color: #ef4444; border-color: #fca5a5;">Quote Fear</button>
+                <button type="button" onclick="triggerSimulatedSpeechPreset('ready-buy')" class="btn-micro" style="padding: 2.5px 5px; font-size: 9.5px; flex: 1; color: #10b981; border-color: #b3e6cc;">Ready to Buy</button>
+            </div>
+        </div>
+
+        <!-- Live Captions Box -->
+        <div style="background: #0f172a; color: #38bdf8; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; flex-shrink: 0;">
+            <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #1e293b; padding-bottom: 3px; margin-bottom: 3px;">LIVE CAPTIONS STREAM</div>
+            <div id="overlay_live_captions_text" style="line-height: 1.4; color: #e2e8f0; font-style: italic; white-space: pre-wrap;">Awaiting voice connection...</div>
+        </div>
+
+        <!-- Live Conversion Intent Analytics -->
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px;">Live Conversion Intent Analytics</div>
+            
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 4px;">
+                    <span>Purchase Probability</span>
+                    <span id="intent_prob_val">50%</span>
+                </div>
+                <div style="background: #e2e8f0; border-radius: 4px; height: 8px; overflow: hidden; width: 100%;">
+                    <div id="intent_prob_bar" style="background: #10b981; width: 50%; height: 100%; transition: width 0.4s ease;"></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                <div id="intent_indicator_competitor" style="border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 4px; text-align: center; background: #f8fafc;">
+                    <div style="font-size: 8px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing:0.3px;">Competitors</div>
+                    <div id="intent_val_competitor" style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin-top:2px;">None</div>
+                </div>
+                <div id="intent_indicator_finance" style="border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 4px; text-align: center; background: #f8fafc;">
+                    <div style="font-size: 8px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing:0.3px;">Price Strain</div>
+                    <div id="intent_val_finance" style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin-top:2px;">None</div>
+                </div>
+                <div id="intent_indicator_timeline" style="border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 4px; text-align: center; background: #f8fafc;">
+                    <div style="font-size: 8px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing:0.3px;">Timeline Fear</div>
+                    <div id="intent_val_timeline" style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin-top:2px;">None</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Alerts & Warnings -->
         <div id="overlay_interruption_alert" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 6px; padding: 8px 10px; font-size: 11.5px; color: #b45309; font-weight: 600; align-items: center; gap: 8px; flex-shrink: 0;">
             <span>⚠️</span>

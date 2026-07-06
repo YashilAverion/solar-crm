@@ -1559,6 +1559,19 @@ db.serialize(() => {
     db.run("ALTER TABLE sales_telemetry_live_state ADD COLUMN is_console_expanded INTEGER DEFAULT 0", (err) => {});
     db.run("ALTER TABLE sales_telemetry_live_state ADD COLUMN last_telemetry_event TEXT", (err) => {});
 
+    // 3.5 telephony_live_voice_sync table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS telephony_live_voice_sync (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lead_id INTEGER UNIQUE,
+            live_captions_transcript TEXT,
+            extracted_intent_analytics_json TEXT,
+            automation_sync_status TEXT,
+            last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists
