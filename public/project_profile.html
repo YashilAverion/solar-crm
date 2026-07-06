@@ -5375,6 +5375,12 @@ function initVoiceSocketListeners() {
                 dot.style.boxShadow = '0 0 8px #10b981';
             }
 
+            // Directly invoke the CSS transform methods to cleanly slide open the right-side "COMPLIANCE CONSOLE" overlay onto the screen
+            const overlay = document.getElementById('telephony_compliance_overlay');
+            if (overlay) {
+                overlay.style.transform = 'translateX(0)';
+            }
+
             console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
             
             isConsoleExpanded = 1;

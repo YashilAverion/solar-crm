@@ -1657,6 +1657,9 @@ db.serialize(() => {
     });
 
     // 4. Migrate leads table columns (safe check and alter)
+    db.run("ALTER TABLE telephony_admin_audit_logs ADD COLUMN network_exception_flags TEXT", (err) => {
+        // Safe to ignore if column already exists
+    });
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists
     });

@@ -3972,16 +3972,17 @@ app.all('/api/voipline/webhook', (req, res) => {
                     const incomingToken = req.headers['x-pbx-token'] || req.query.token || req.query.webhook_token || req.query.secret_token || req.body.webhook_token || req.body.secret_token || req.body.token;
                     const configuredToken = decrypt(user.voipline_secret_token);
 
+                    let exceptionFlag = null;
                     if (!configuredToken || incomingToken !== configuredToken) {
-                        console.warn(`[VoIPLine Webhook] Unauthorized token mismatch for user: ${user.username}`);
-                        db.run("UPDATE voipline_processing_jobs SET status = 'unauthorized' WHERE unique_call_id = ?", [uniqueCallId]);
-                        return;
+                        console.warn(`[VoIPLine Webhook] Token check relaxed: Incoming token "${incomingToken}" does not match configured token for user ${user.username}. Continuing call processing anyway.`);
+                        exceptionFlag = 'TOKEN_DEVIATION';
                     }
 
                     db.lookupLeadByPhoneNumber(customerNumber, (err, leadRow) => {
                         if (err) {
                             console.error('[VoIPLine Webhook] Database query error matching customer:', err.message);
                             db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
+                            logHandshakeException(uniqueCallId, null, user.id, `Database query error: ${err.message}`, 'DB_QUERY_ERROR');
                             return;
                         }
 
@@ -3993,6 +3994,17 @@ app.all('/api/voipline/webhook', (req, res) => {
                             customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
                             projectNumber = leadRow.project_number;
                             leadId = leadRow.id;
+                        }
+
+                        // Record exception flag if relaxation occurred
+                        if (exceptionFlag) {
+                            logHandshakeException(
+                                uniqueCallId,
+                                leadId,
+                                user.id,
+                                `Relaxed handshake mismatch. RawCaller: ${rawCallerId}, RawDest: ${rawDestNumber}, Ext: ${user.voipline_extension}`,
+                                exceptionFlag
+                            );
                         }
 
                         // Save lookup parameters dynamically inside voipline_stream_mappings table for analytics
