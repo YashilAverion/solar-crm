@@ -1504,6 +1504,7 @@ function toggleNav(event, element) {
             currentProjectId = id;
             await productsPromise;
             openProjectProfile(id);
+            initVoiceSocketListeners();
             
             const salesTab = document.getElementById('tab-sales');
             if (salesTab) {
@@ -5149,14 +5150,14 @@ function applyConsoleToggleUI() {
     
     if (overlay) {
         if (isConsoleExpanded === 1) {
-            overlay.style.right = '16px';
+            overlay.style.transform = 'translateX(0)';
             if (toggleIcon) toggleIcon.innerText = '◀';
             if (toggleBtn) {
                 toggleBtn.style.background = 'var(--accent)';
                 toggleBtn.style.borderColor = 'var(--accent)';
             }
         } else {
-            overlay.style.right = '-460px';
+            overlay.style.transform = 'translateX(460px)';
             if (toggleIcon) toggleIcon.innerText = '▶';
             if (toggleBtn) {
                 toggleBtn.style.background = 'var(--primary)';
@@ -5178,6 +5179,37 @@ function adjustSimulationConsoleVisibility() {
             simSuite.style.display = 'none';
         }
     }
+}
+
+function initVoiceSocketListeners() {
+    let checkCount = 0;
+    const checkInterval = setInterval(() => {
+        checkCount++;
+        if (window.voipSocket) {
+            clearInterval(checkInterval);
+            console.log('[COMPLIANCE OVERLAY] Successfully hooked to real-time VoIP broadcast socket.');
+            
+            window.voipSocket.on('voipline-incoming-call', (data) => {
+                if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
+                    console.log('[COMPLIANCE OVERLAY] Inbound call event matched current lead. Instantly auto-expanding console.', data);
+                    
+                    isConsoleExpanded = 1;
+                    applyConsoleToggleUI();
+                    
+                    fetch('/api/compliance-sales/toggle-console-view', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            lead_id: currentProjectId,
+                            is_console_expanded: 1
+                        })
+                    }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
+                }
+            });
+        } else if (checkCount > 100) {
+            clearInterval(checkInterval);
+        }
+    }, 100);
 }
 
 // ── TELEPHONY VOICE Sync & Simulation Cockpit ────────────────────────
@@ -5447,7 +5479,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
 </style>
 
 <!-- Floating Telephony & Compliance Overlay -->
-<div id="telephony_compliance_overlay" style="position: fixed; top: 90px; right: -460px; width: 440px; height: calc(100vh - 110px); background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; box-shadow: -8px 0 24px rgba(0,0,0,0.1); z-index: 1005; display: flex; flex-direction: column; transition: right 0.3s ease; overflow: hidden; padding: 12px; gap: 10px;">
+<div id="telephony_compliance_overlay" style="position: fixed; top: 90px; right: 16px; width: 440px; height: calc(100vh - 110px); background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; box-shadow: -8px 0 24px rgba(0,0,0,0.1); z-index: 1005; display: flex; flex-direction: column; transform: translateX(460px); will-change: transform; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; padding: 12px; gap: 10px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f8; padding-bottom: 8px; flex-shrink: 0; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1;">
             <span style="font-weight: 700; color: var(--primary); font-size: 12px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Compliance Console</span>

@@ -3531,12 +3531,13 @@ async function transcribeAudio(remoteUrl) {
 // ── VOIPLINE TELECOM INTEGRATION ───────────────────────────
 
 app.post('/api/voipline/webhook', (req, res) => {
-    console.log('[VoIPLine Webhook] Received call event payload:', JSON.stringify(req.body));
+    const startTime = process.hrtime();
 
     const callerId = req.body.caller_id || req.body.callerid || req.body.caller || req.body.cli || req.body.from;
     const dialedNumber = req.body.dialed_number || req.body.dialedNumber || req.body.destination || req.body.to;
     const timeOfCall = req.body.time_of_call || req.body.timeOfCall || req.body.timestamp || new Date().toISOString();
     const eventType = req.body.event || req.body.type || 'incoming_call';
+    const uniqueCallId = req.body.unique_call_id || req.body.call_id || req.body.callid || `${Date.now()}-${Math.random()}`;
 
     if (!dialedNumber) {
         return res.status(400).json({ error: 'dialed_number is missing from payload' });
@@ -3545,169 +3546,176 @@ app.post('/api/voipline/webhook', (req, res) => {
         return res.status(400).json({ error: 'caller_id is missing from payload' });
     }
 
-    const clientIp = req.ip || req.socket.remoteAddress || '';
-    const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
+    // Immediately release the client by sending 200 OK (sub-millisecond benchmark)
+    res.json({
+        success: true,
+        message: 'Payload received, processing asynchronously.',
+        unique_call_id: uniqueCallId
+    });
 
-    // Check Whitelisted IP access configurations
-    db.all("SELECT ip FROM ip_whitelist", [], (err, whitelistRows) => {
-        if (err) {
-            console.error('[VoIPLine Webhook] Database error fetching whitelist:', err.message);
-        }
-        const whitelistedIps = (whitelistRows || []).map(r => r.ip.trim());
-        
-        // If whitelist is configured, enforce that the client IP is whitelisted
-        if (whitelistedIps.length > 0 && !whitelistedIps.includes(normalizedIp)) {
-            console.warn(`[VoIPLine Webhook] Request from unauthorized client IP blocked: ${normalizedIp}`);
-            return res.status(403).json({ error: `Forbidden: Client IP (${normalizedIp}) is not whitelisted.` });
-        }
+    // Run VoIP processing pipeline inside isolated execution block to avoid blocking I/O
+    setImmediate(() => {
+        const clientIp = req.ip || req.socket.remoteAddress || '';
+        const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
 
-        // Retrieve all users configured with a voipline extension to find a match for dialedNumber routing
-        db.all(
-            "SELECT id, username, full_name, voipline_extension, voipline_secret_token FROM users WHERE voipline_extension IS NOT NULL AND voipline_extension != ''",
-            [],
-            (err, users) => {
+        // Asynchronously log the telemetry processing job
+        db.run(
+            `INSERT OR IGNORE INTO voipline_processing_jobs (unique_call_id, caller_id, dialed_number, status, payload) VALUES (?, ?, ?, 'processing', ?)`,
+            [uniqueCallId, callerId, dialedNumber, JSON.stringify(req.body)],
+            function(err) {
                 if (err) {
-                    console.error('[VoIPLine Webhook] Database error fetching users:', err.message);
-                    return res.status(500).json({ error: 'Database error' });
+                    console.error('[VoIPLine Webhook] Job insertion error:', err.message);
                 }
-
-                // Clean & match dialedNumber against voipline_extension
-                const cleanDialed = String(dialedNumber).trim();
-                const cleanCaller = String(callerId).trim();
-                
-                let matchedUser = null;
-                let direction = 'incoming';
-                let customerNumber = callerId;
-                
-                // Try to match dialedNumber to user extension first (incoming call)
-                matchedUser = (users || []).find(u => {
-                    const ext = String(u.voipline_extension).trim();
-                    return cleanDialed === ext || cleanDialed.endsWith(ext) || ext.endsWith(cleanDialed);
-                });
-                
-                // If no match, try to match callerId to user extension (outgoing call)
-                if (!matchedUser) {
-                    matchedUser = (users || []).find(u => {
-                        const ext = String(u.voipline_extension).trim();
-                        return cleanCaller === ext || cleanCaller.endsWith(ext) || ext.endsWith(cleanCaller);
-                    });
-                    if (matchedUser) {
-                        direction = 'outgoing';
-                        customerNumber = dialedNumber;
-                    }
-                }
-
-                if (!matchedUser) {
-                    console.warn(`[VoIPLine Webhook] No user found matching dialed number/extension: ${dialedNumber}`);
-                    return res.status(404).json({ error: 'No user configured with this VoIP extension' });
-                }
-
-                // Verify webhook incoming payloads via the 'x-pbx-token' header
-                const incomingToken = req.headers['x-pbx-token'];
-                const configuredToken = decrypt(matchedUser.voipline_secret_token);
-
-                if (!configuredToken || incomingToken !== configuredToken) {
-                    console.warn(`[VoIPLine Webhook] Unauthorized request. Token mismatch for user: ${matchedUser.username}`);
-                    return res.status(401).json({ error: 'Unauthorized. Invalid x-pbx-token.' });
-                }
-
-                // Clean customerNumber to match against phone number suffixes in database (9-digit match suffix)
-                const cleanCustNumber = String(customerNumber).replace(/\D/g, '');
-                const suffix = cleanCustNumber.length >= 9 ? cleanCustNumber.slice(-9) : cleanCustNumber;
-                const searchPattern = `%${suffix}`;
-
-                // Search leads table for matching customer
-                db.get(
-                    `SELECT id, first_name, last_name, project_number
-                     FROM leads
-                     WHERE is_deleted = 0 AND (
-                         replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
-                         replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
-                         replace(replace(replace(replace(landline_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?
-                     ) LIMIT 1`,
-                    [searchPattern, searchPattern, searchPattern],
-                    async (err, leadRow) => {
-                        if (err) {
-                            console.error('[VoIPLine Webhook] Database query error matching customer:', err.message);
-                            return res.status(500).json({ error: 'Database query error' });
-                        }
-
-                        let customerName = 'Unknown';
-                        let projectNumber = null;
-                        let leadId = null;
-
-                        if (leadRow) {
-                            customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
-                            projectNumber = leadRow.project_number;
-                            leadId = leadRow.id;
-                        }
-
-                        const io = req.app.get('io');
-                        
-                        // Check if it is a completed/recording event
-                        const isCompletedEvent = eventType === 'recording_completed' || req.body.recording_url || eventType === 'call_completed';
-                        if (isCompletedEvent) {
-                            const recordingUrl = req.body.recording_url || '';
-                            const duration = parseInt(req.body.duration || req.body.billsec || 0, 10);
-                            
-                            // Get transcript text (Mocked or real Whisper)
-                            const transcript = recordingUrl ? await transcribeAudio(recordingUrl) : '';
-                            
-                            db.run(
-                                "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                [matchedUser.id, customerNumber, projectNumber, direction, duration, recordingUrl, transcript],
-                                function(insertErr) {
-                                    if (insertErr) {
-                                        console.error('[VoIPLine Webhook] Error writing call log:', insertErr.message);
-                                    } else {
-                                        console.log('[VoIPLine Webhook] Call log saved successfully. ID:', this.lastID);
-                                        if (io) {
-                                            io.emit('voipline-call-log-added', { id: this.lastID });
-                                        }
-                                    }
-                                }
-                            );
-                            
-                            return res.json({
-                                success: true,
-                                event: 'recording_logged',
-                                matched: !!leadRow,
-                                projectNumber
-                            });
-                        }
-
-                        if (!io) {
-                            console.warn('[VoIPLine Webhook] Socket.IO instance not initialized on app');
-                            return res.json({ success: true, message: 'Socket.IO not initialized' });
-                        }
-
-                        const eventData = {
-                            callerNumber: callerId,
-                            customerName,
-                            projectNumber,
-                            leadId,
-                            timeOfCall: timeOfCall
-                        };
-
-                        // Broadcast real-time event via WebSocket specifically to the corresponding extension user
-                        const room1 = matchedUser.username;
-                        const room2 = matchedUser.full_name;
-
-                        console.log(`[VoIPLine Webhook] Broadcasting event to rooms: [${room1}], [${room2}]`);
-                        if (room1) io.to(room1).emit('voipline-incoming-call', eventData);
-                        if (room2 && room2 !== room1) io.to(room2).emit('voipline-incoming-call', eventData);
-
-                        res.json({
-                            success: true,
-                            matched: !!leadRow,
-                            leadId,
-                            customerName,
-                            projectNumber
-                        });
-                    }
-                );
             }
         );
+
+        db.all("SELECT ip FROM ip_whitelist", [], (err, whitelistRows) => {
+            if (err) {
+                console.error('[VoIPLine Webhook] Database error fetching whitelist:', err.message);
+            }
+            const whitelistedIps = (whitelistRows || []).map(r => r.ip.trim());
+            
+            if (whitelistedIps.length > 0 && !whitelistedIps.includes(normalizedIp)) {
+                console.warn(`[VoIPLine Webhook] Unauthorized client IP blocked: ${normalizedIp}`);
+                db.run("UPDATE voipline_processing_jobs SET status = 'blocked' WHERE unique_call_id = ?", [uniqueCallId]);
+                return;
+            }
+
+            db.all(
+                "SELECT id, username, full_name, voipline_extension, voipline_secret_token FROM users WHERE voipline_extension IS NOT NULL AND voipline_extension != ''",
+                [],
+                (err, users) => {
+                    if (err) {
+                        console.error('[VoIPLine Webhook] Database error fetching users:', err.message);
+                        db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
+                        return;
+                    }
+
+                    const cleanDialed = String(dialedNumber).trim();
+                    const cleanCaller = String(callerId).trim();
+                    
+                    let matchedUser = null;
+                    let direction = 'incoming';
+                    let customerNumber = callerId;
+                    
+                    matchedUser = (users || []).find(u => {
+                        const ext = String(u.voipline_extension).trim();
+                        return cleanDialed === ext || cleanDialed.endsWith(ext) || ext.endsWith(cleanDialed);
+                    });
+                    
+                    if (!matchedUser) {
+                        matchedUser = (users || []).find(u => {
+                            const ext = String(u.voipline_extension).trim();
+                            return cleanCaller === ext || cleanCaller.endsWith(ext) || ext.endsWith(cleanCaller);
+                        });
+                        if (matchedUser) {
+                            direction = 'outgoing';
+                            customerNumber = dialedNumber;
+                        }
+                    }
+
+                    if (!matchedUser) {
+                        console.warn(`[VoIPLine Webhook] No user found matching dialed number/extension: ${dialedNumber}`);
+                        db.run("UPDATE voipline_processing_jobs SET status = 'unmatched_user' WHERE unique_call_id = ?", [uniqueCallId]);
+                        return;
+                    }
+
+                    const incomingToken = req.headers['x-pbx-token'];
+                    const configuredToken = decrypt(matchedUser.voipline_secret_token);
+
+                    if (!configuredToken || incomingToken !== configuredToken) {
+                        console.warn(`[VoIPLine Webhook] Unauthorized token mismatch for user: ${matchedUser.username}`);
+                        db.run("UPDATE voipline_processing_jobs SET status = 'unauthorized' WHERE unique_call_id = ?", [uniqueCallId]);
+                        return;
+                    }
+
+                    const cleanCustNumber = String(customerNumber).replace(/\D/g, '');
+                    const suffix = cleanCustNumber.length >= 9 ? cleanCustNumber.slice(-9) : cleanCustNumber;
+                    const searchPattern = `%${suffix}`;
+
+                    db.get(
+                        `SELECT id, first_name, last_name, project_number
+                         FROM leads
+                         WHERE is_deleted = 0 AND (
+                             replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
+                             replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
+                             replace(replace(replace(replace(landline_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?
+                         ) LIMIT 1`,
+                        [searchPattern, searchPattern, searchPattern],
+                        async (err, leadRow) => {
+                            if (err) {
+                                console.error('[VoIPLine Webhook] Database query error matching customer:', err.message);
+                                db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
+                                return;
+                            }
+
+                            let customerName = 'Unknown';
+                            let projectNumber = null;
+                            let leadId = null;
+
+                            if (leadRow) {
+                                customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
+                                projectNumber = leadRow.project_number;
+                                leadId = leadRow.id;
+                            }
+
+                            const io = req.app.get('io');
+                            const isCompletedEvent = eventType === 'recording_completed' || req.body.recording_url || eventType === 'call_completed';
+
+                            if (isCompletedEvent) {
+                                const recordingUrl = req.body.recording_url || '';
+                                const duration = parseInt(req.body.duration || req.body.billsec || 0, 10);
+                                
+                                setImmediate(async () => {
+                                    const transcript = recordingUrl ? await transcribeAudio(recordingUrl) : '';
+                                    db.run(
+                                        "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                        [matchedUser.id, customerNumber, projectNumber, direction, duration, recordingUrl, transcript],
+                                        function(insertErr) {
+                                            if (insertErr) {
+                                                console.error('[VoIPLine Webhook] Error writing call log:', insertErr.message);
+                                            } else {
+                                                console.log('[VoIPLine Webhook] Call log saved successfully. ID:', this.lastID);
+                                                if (io) {
+                                                    io.emit('voipline-call-log-added', { id: this.lastID });
+                                                }
+                                            }
+                                        }
+                                    );
+                                });
+                                
+                                db.run("UPDATE voipline_processing_jobs SET status = 'completed' WHERE unique_call_id = ?", [uniqueCallId]);
+                            } else {
+                                if (io) {
+                                    const eventData = {
+                                        callerNumber: callerId,
+                                        customerName,
+                                        projectNumber,
+                                        leadId,
+                                        timeOfCall: timeOfCall,
+                                        uniqueCallId: uniqueCallId
+                                    };
+
+                                    const room1 = matchedUser.username;
+                                    const room2 = matchedUser.full_name;
+
+                                    console.log(`[VoIPLine Webhook] Broadcasting event to rooms: [${room1}], [${room2}]`);
+                                    if (room1) io.to(room1).emit('voipline-incoming-call', eventData);
+                                    if (room2 && room2 !== room1) io.to(room2).emit('voipline-incoming-call', eventData);
+                                }
+
+                                db.run("UPDATE voipline_processing_jobs SET status = 'processed' WHERE unique_call_id = ?", [uniqueCallId]);
+                            }
+
+                            // Performance latency benchmark calculation
+                            const diff = process.hrtime(startTime);
+                            const latencyMs = (diff[0] * 1e9 + diff[1]) / 1e6;
+                            console.log(`[VoIPLine Telemetry Benchmark] Webhook event routing for unique_call_id ${uniqueCallId} resolved in ${latencyMs.toFixed(3)} ms (Target < 500ms)`);
+                        }
+                    );
+                }
+            );
+        });
     });
 });
 

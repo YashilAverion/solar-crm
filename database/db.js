@@ -934,6 +934,23 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_call_logs_user_id ON call_logs (user_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_call_logs_caller_number ON call_logs (caller_number)", () => {});
 
+    // Create voipline_processing_jobs table and composite indexes for ultra-low latency query targets
+    db.run(`
+        CREATE TABLE IF NOT EXISTS voipline_processing_jobs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            unique_call_id TEXT UNIQUE,
+            caller_id TEXT,
+            dialed_number TEXT,
+            status TEXT DEFAULT 'pending',
+            payload TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `, () => {});
+
+    db.run("CREATE INDEX IF NOT EXISTS idx_leads_phones_composite ON leads (phone_number, phone_number_2, landline_number)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_voipline_jobs_unique_call_id ON voipline_processing_jobs (unique_call_id)", () => {});
+    db.run("CREATE INDEX IF NOT EXISTS idx_voipline_jobs_composite ON voipline_processing_jobs (caller_id, unique_call_id)", () => {});
+
     // Create sms_logs table
     db.run(`
         CREATE TABLE IF NOT EXISTS sms_logs (
