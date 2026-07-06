@@ -707,42 +707,13 @@ function toggleNav(event, element) {
                         <div class="ws-panel-title" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px;">
                             <span>TABLE A: PRODUCT SELECTION</span>
                             <div class="combo-quick-buttons" style="display: flex; gap: 8px; align-items: center;">
-                                <button type="button" class="btn-quick-combo" onclick="showQuickComboDropdown('is_panel_inverter', this)" title="Panel + Inverter Combos">
-                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
-                                        <rect x="2" y="2" width="8" height="12" rx="1"></rect>
-                                        <line x1="2" y1="6" x2="10" y2="6"></line>
-                                        <line x1="2" y1="10" x2="10" y2="10"></line>
-                                        <line x1="6" y1="2" x2="6" y2="14"></line>
-                                        <rect x="14" y="6" width="8" height="12" rx="1"></rect>
-                                        <path d="M16 12h4"></path>
-                                        <path d="M17 10v4"></path>
-                                        <path d="M11 8h2" stroke-width="1.5"></path>
-                                    </svg>
-                                </button>
-                                <button type="button" class="btn-quick-combo" onclick="showQuickComboDropdown('is_inverter_battery', this)" title="Inverter + Battery Combos">
-                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
-                                        <rect x="2" y="6" width="8" height="12" rx="1"></rect>
-                                        <path d="M4 12h4"></path>
-                                        <rect x="14" y="3" width="8" height="16" rx="1.5"></rect>
-                                        <line x1="16" y1="2" x2="20" y2="2"></line>
-                                        <line x1="14" y1="8" x2="22" y2="8"></line>
-                                        <line x1="14" y1="14" x2="22" y2="14"></line>
-                                        <path d="M11 11h2" stroke-width="1.5"></path>
-                                    </svg>
-                                </button>
-                                <button type="button" class="btn-quick-combo" onclick="showQuickComboDropdown('is_panel_inverter_battery', this)" title="Panel + Inverter + Battery Combos">
-                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; vertical-align: middle;">
-                                        <rect x="2" y="2" width="7" height="9" rx="0.5"></rect>
-                                        <line x1="2" y1="5" x2="9" y2="5"></line>
-                                        <line x1="2" y1="8" x2="9" y2="8"></line>
-                                        <line x1="5.5" y1="2" x2="5.5" y2="11"></line>
-                                        <rect x="14" y="2" width="8" height="9" rx="0.5"></rect>
-                                        <path d="M16 6.5h4"></path>
-                                        <rect x="8" y="14" width="8" height="9" rx="1"></rect>
-                                        <line x1="10" y1="13" x2="14" y2="13"></line>
-                                        <line x1="8" y1="17" x2="16" y2="17"></line>
-                                        <line x1="8" y1="20" x2="16" y2="20"></line>
-                                    </svg>
+                                <span style="font-size: 11px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 5px;">
+                                    <span id="telephony_glowing_dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981; animation: pulse-glowing-dot 1.5s infinite;"></span>
+                                    <span>LIVE CALL SYNC</span>
+                                </span>
+                                <button type="button" class="btn-micro" id="btn_toggle_telephony_console" onclick="toggleTelephonyConsoleView()" style="background: var(--primary); color: #fff; border: 1px solid var(--primary); padding: 4px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 26px;">
+                                    <span>Compliance Console</span>
+                                    <span id="telephony_toggle_icon">▶</span>
                                 </button>
                             </div>
                         </div>
@@ -1894,6 +1865,9 @@ function toggleNav(event, element) {
                 checkDCPowerLimit(false);
                 updateWarrantyInfoFromRows();
                 await triggerCalculation();
+                
+                // Initialize compliance console guidance and live telemetry state
+                loadComplianceGuidance();
 
             } catch (err) {
                 Swal.fire('Error', 'Failed to load project details.', 'error');
@@ -4535,6 +4509,7 @@ let telemetrySystemType = 'PV';
 let telemetryInterruptionCounter = 0;
 let telemetryRecordingActive = 1;
 let telemetryPhotosLogged = { rafters: false, meter: false, board: false, roof: false };
+let isConsoleExpanded = 0;
 
 async function loadComplianceGuidance() {
     if (!currentProjectId) return;
@@ -4570,7 +4545,12 @@ async function loadComplianceGuidance() {
                 if (data.lead_saved_state) {
                     if (window._isComplianceFirstLoad === undefined) {
                         currentComplianceStage = data.lead_saved_state.compliance_stage || 'Greeting';
-                        document.getElementById('comp_stage_select').value = currentComplianceStage;
+                        if (document.getElementById('comp_stage_select')) {
+                            document.getElementById('comp_stage_select').value = currentComplianceStage;
+                        }
+                        if (document.getElementById('overlay_stage_select')) {
+                            document.getElementById('overlay_stage_select').value = currentComplianceStage;
+                        }
                         window._isComplianceFirstLoad = false;
                         
                         if (currentComplianceStage !== data.current_stage) {
@@ -4584,9 +4564,11 @@ async function loadComplianceGuidance() {
                 if (data.live_telemetry_state) {
                     telemetryInterruptionCounter = data.live_telemetry_state.interruption_counter || 0;
                     telemetryRecordingActive = data.live_telemetry_state.is_recording_active !== undefined ? data.live_telemetry_state.is_recording_active : 1;
+                    isConsoleExpanded = data.live_telemetry_state.is_console_expanded || 0;
                 }
 
                 renderComplianceConsole();
+                applyConsoleToggleUI();
                 updateTelemetryUI(null);
                 startComplianceTelemetryLoop();
             }
@@ -4600,50 +4582,58 @@ function renderComplianceConsole() {
     if (!activeComplianceGuidance) return;
     const data = activeComplianceGuidance;
 
-    document.getElementById('comp_system_badge').innerText = data.system_type;
-    document.getElementById('comp_state_badge').innerText = data.state_code;
+    // Badges update
+    const setBadgeText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+    setBadgeText('comp_system_badge', data.system_type);
+    setBadgeText('overlay_system_badge', data.system_type);
+    setBadgeText('comp_state_badge', data.state_code);
+    setBadgeText('overlay_state_badge', data.state_code);
 
-    const speechContainer = document.getElementById('compliance_speech_container');
-    speechContainer.innerHTML = '';
+    // Speech containers
+    const renderSpeechList = (containerId, checkboxPrefix) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        const questions = data.script.mandatory_questions || [];
+        if (questions.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:11px; padding: 6px; text-align:center;">No speech blueprints registered for this stage.</div>';
+        } else {
+            questions.forEach(q => {
+                const isCompleted = completedComplianceQuestions.includes(q.id);
+                
+                let badgeColor = '#10b981';
+                let badgeBg = '#edfaf2';
+                if (q.badge === 'WAIT FOR CUSTOMER') {
+                    badgeColor = '#b45309';
+                    badgeBg = '#fffbeb';
+                } else if (q.badge.startsWith('COURTESY ALERT')) {
+                    badgeColor = '#ef4444';
+                    badgeBg = '#fef2f2';
+                }
 
-    const questions = data.script.mandatory_questions || [];
-    if (questions.length === 0) {
-        speechContainer.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:12px; padding: 10px; text-align:center;">No speech blueprints registered for this stage.</div>';
-    } else {
-        questions.forEach(q => {
-            const isCompleted = completedComplianceQuestions.includes(q.id);
-            
-            let badgeColor = '#10b981';
-            let badgeBg = '#edfaf2';
-            if (q.badge === 'WAIT FOR CUSTOMER') {
-                badgeColor = '#b45309';
-                badgeBg = '#fffbeb';
-            } else if (q.badge.startsWith('COURTESY ALERT')) {
-                badgeColor = '#ef4444';
-                badgeBg = '#fef2f2';
-            }
+                const checkedAttr = isCompleted ? 'checked' : '';
+                const textStyle = isCompleted ? 'text-decoration: line-through; color: var(--text-muted); font-weight: 400;' : 'font-weight: 600; color: var(--text-dark);';
 
-            const checkedAttr = isCompleted ? 'checked' : '';
-            const textStyle = isCompleted ? 'text-decoration: line-through; color: var(--text-muted); font-weight: 400;' : 'font-weight: 600; color: var(--text-dark);';
-
-            const block = document.createElement('div');
-            block.style.cssText = 'display: flex; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; align-items: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.02);';
-            block.innerHTML = `
-                <input type="checkbox" id="chk_speech_${q.id}" ${checkedAttr} onchange="toggleSpeechCheckbox('${q.id}')" style="width: 15px; height: 15px; margin-top: 1px; cursor: pointer; accent-color: var(--accent);">
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="font-size: 8.5px; font-weight: 800; text-transform: uppercase; padding: 1.5px 5px; border-radius: 4px; color: ${badgeColor}; background: ${badgeBg}; border: 1.5px solid ${badgeColor}40; letter-spacing:0.3px;">${q.badge}</span>
+                const block = document.createElement('div');
+                block.style.cssText = 'display: flex; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; background: #ffffff; align-items: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.01);';
+                block.innerHTML = `
+                    <input type="checkbox" id="${checkboxPrefix}_${q.id}" ${checkedAttr} onchange="toggleSpeechCheckbox('${q.id}')" style="width: 14px; height: 14px; margin-top: 1px; cursor: pointer; accent-color: var(--accent);">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 4px; border-radius: 3px; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeColor}30; letter-spacing:0.2px;">${q.badge}</span>
+                        </div>
+                        <div style="font-size: 11.5px; line-height: 1.4; ${textStyle}">${q.text}</div>
                     </div>
-                    <div style="font-size: 12px; line-height: 1.45; ${textStyle}">${q.text}</div>
-                </div>
-            `;
-            speechContainer.appendChild(block);
-        });
-    }
+                `;
+                container.appendChild(block);
+            });
+        }
+    };
 
-    const metricsContent = document.getElementById('compliance_metrics_content');
-    metricsContent.innerHTML = '';
+    renderSpeechList('compliance_speech_container', 'chk_speech');
+    renderSpeechList('overlay_speech_container', 'overlay_chk_speech');
 
+    // Metrics reference update
     const eng = data.engineering || {};
     const reb = data.rebate || {};
 
@@ -4656,7 +4646,7 @@ function renderComplianceConsole() {
     } else if (data.current_stage === 'Pre-Qualification') {
         metricItems = [
             `<strong>State Solar Hours multiplier:</strong> ${eng.peak_sun_hours} hrs average peak sun`,
-            `<strong>Rebate target:</strong> ${reb.state_rebate_name} (${reb.state_rebate_details ? reb.state_rebate_details.substring(0, 75) + '...' : ''})`
+            `<strong>Rebate target:</strong> ${reb.state_rebate_name} (${reb.state_rebate_details ? reb.state_rebate_details.substring(0, 65) + '...' : ''})`
         ];
     } else if (data.current_stage === 'Engineering Proposal') {
         metricItems = [
@@ -4679,99 +4669,136 @@ function renderComplianceConsole() {
         ];
     }
 
-    metricItems.forEach(item => {
-        const div = document.createElement('div');
-        div.style.cssText = 'padding: 4px 6px; background: #ffffff; border-radius: 4px; border: 1.5px solid var(--border); font-size:11px;';
-        div.innerHTML = item;
-        metricsContent.appendChild(div);
-    });
+    const renderMetrics = (containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        metricItems.forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 4px 6px; background: #ffffff; border-radius: 4px; border: 1px solid var(--border); font-size:10.5px;';
+            div.innerHTML = item;
+            container.appendChild(div);
+        });
+    };
 
-    const docsContent = document.getElementById('compliance_docs_content');
-    docsContent.innerHTML = '';
+    renderMetrics('compliance_metrics_content');
+    renderMetrics('overlay_metrics_content');
 
-    const docList = data.document_checklist || [];
-    docList.forEach(doc => {
-        const isTicked = complianceChecklistDocs.some(d => d.name === doc && d.completed);
-        const checkedAttr = isTicked ? 'checked' : '';
+    // Documents Checklist render
+    const renderDocs = (containerId, checkboxPrefix) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        const docList = data.document_checklist || [];
+        docList.forEach(doc => {
+            const isTicked = complianceChecklistDocs.some(d => d.name === doc && d.completed);
+            const checkedAttr = isTicked ? 'checked' : '';
 
-        const div = document.createElement('div');
-        div.style.cssText = 'display: flex; gap: 8px; align-items: center; font-size:11.5px;';
-        div.innerHTML = `
-            <input type="checkbox" id="chk_doc_${doc.replace(/\s+/g, '_')}" ${checkedAttr} onchange="toggleDocCheckbox('${doc.replace(/'/g, "\\'")}')" style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent);">
-            <label for="chk_doc_${doc.replace(/\s+/g, '_')}" style="color: var(--text-dark); cursor: pointer; font-weight: 500;">${doc}</label>
-        `;
-        docsContent.appendChild(div);
-    });
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; gap: 6px; align-items: center; font-size:11px;';
+            div.innerHTML = `
+                <input type="checkbox" id="${checkboxPrefix}_doc_${doc.replace(/\s+/g, '_')}" ${checkedAttr} onchange="toggleDocCheckbox('${doc.replace(/'/g, "\\'")}')" style="width: 13px; height: 13px; cursor: pointer; accent-color: var(--accent);">
+                <label for="${checkboxPrefix}_doc_${doc.replace(/\s+/g, '_')}" style="color: var(--text-dark); cursor: pointer; font-weight: 500;">${doc}</label>
+            `;
+            container.appendChild(div);
+        });
+    };
+
+    renderDocs('compliance_docs_content', 'chk');
+    renderDocs('overlay_docs_content', 'overlay_chk');
 
     renderObjectionsList();
 }
 
 function renderObjectionsList() {
     if (!activeComplianceGuidance) return;
-    const listEl = document.getElementById('objection_qa_list');
-    listEl.innerHTML = '';
+    const renderList = (containerId) => {
+        const listEl = document.getElementById(containerId);
+        if (!listEl) return;
+        listEl.innerHTML = '';
 
-    const matrix = activeComplianceGuidance.objection_matrix || [];
-    const filtered = matrix.filter(o => o.category === currentObjectionCategory);
+        const matrix = activeComplianceGuidance.objection_matrix || [];
+        const filtered = matrix.filter(o => o.category === currentObjectionCategory);
 
-    if (filtered.length === 0) {
-        listEl.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:12px; padding: 12px; text-align:center;">No objection matrix records for this category.</div>';
-    } else {
-        filtered.forEach(obj => {
-            const card = document.createElement('div');
-            card.style.cssText = 'border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 4px;';
-            
-            let formulas = null;
-            try { formulas = obj.formula_parameters_json ? JSON.parse(obj.formula_parameters_json) : null; } catch(e){}
-            
-            let docs = [];
-            try { docs = obj.documentation_checklist_json ? JSON.parse(obj.documentation_checklist_json) : []; } catch(e){}
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:11px; padding: 8px; text-align:center;">No objection matrix records.</div>';
+        } else {
+            filtered.forEach(obj => {
+                const card = document.createElement('div');
+                card.style.cssText = 'border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.01); display: flex; flex-direction: column; gap: 3px;';
+                
+                let formulas = null;
+                try { formulas = obj.formula_parameters_json ? JSON.parse(obj.formula_parameters_json) : null; } catch(e){}
+                
+                let docs = [];
+                try { docs = obj.documentation_checklist_json ? JSON.parse(obj.documentation_checklist_json) : []; } catch(e){}
 
-            let formulasHTML = '';
-            if (formulas && Object.keys(formulas).length > 0) {
-                const inner = Object.entries(formulas).map(([k, v]) => `<span style="background:#eef2f8; padding: 1.5px 4px; border-radius:3px; margin-right:4px;">${k.replace(/_/g, ' ')}: <strong>${v}</strong></span>`).join('');
-                formulasHTML = `<div style="font-size: 10px; color: var(--text-muted); margin-top:4px;">${inner}</div>`;
-            }
+                let formulasHTML = '';
+                if (formulas && Object.keys(formulas).length > 0) {
+                    const inner = Object.entries(formulas).map(([k, v]) => `<span style="background:#eef2f8; padding: 1px 3px; border-radius:2px; margin-right:3px;">${k.replace(/_/g, ' ')}: <strong>${v}</strong></span>`).join('');
+                    formulasHTML = `<div style="font-size: 9.5px; color: var(--text-muted); margin-top:2px;">${inner}</div>`;
+                }
 
-            let docsHTML = '';
-            if (docs && docs.length > 0) {
-                docsHTML = `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;"><span style="color: var(--accent); font-weight:700;">Required:</span> ${docs.join(', ')}</div>`;
-            }
+                let docsHTML = '';
+                if (docs && docs.length > 0) {
+                    docsHTML = `<div style="font-size: 10px; color: var(--text-muted); margin-top: 1px;"><span style="color: var(--accent); font-weight:700;">Required:</span> ${docs.join(', ')}</div>`;
+                }
 
-            card.innerHTML = `
-                <div style="font-weight: 700; color: var(--primary); font-size: 12.5px; display: flex; gap: 6px; align-items: flex-start;">
-                    <span style="color: var(--accent);">Q:</span>
-                    <span>${obj.objection}</span>
-                </div>
-                <div style="font-size: 12px; line-height: 1.45; color: var(--text-dark); display: flex; gap: 6px; align-items: flex-start; padding-left: 8px; border-left: 2px solid var(--border);">
-                    <span style="color: #10b981; font-weight: 700;">A:</span>
-                    <span>${obj.response}</span>
-                </div>
-                ${formulasHTML}
-                ${docsHTML}
-            `;
-            listEl.appendChild(card);
-        });
-    }
+                card.innerHTML = `
+                    <div style="font-weight: 700; color: var(--primary); font-size: 11.5px; display: flex; gap: 4px; align-items: flex-start;">
+                        <span style="color: var(--accent);">Q:</span>
+                        <span>${obj.objection}</span>
+                    </div>
+                    <div style="font-size: 11px; line-height: 1.4; color: var(--text-dark); display: flex; gap: 4px; align-items: flex-start; padding-left: 6px; border-left: 2px solid var(--border);">
+                        <span style="color: #10b981; font-weight: 700;">A:</span>
+                        <span>${obj.response}</span>
+                    </div>
+                    ${formulasHTML}
+                    ${docsHTML}
+                `;
+                listEl.appendChild(card);
+            });
+        }
+    };
+
+    renderList('objection_qa_list');
+    renderList('overlay_qa_list');
 }
 
 function switchObjectionCategory(catName, btnEl) {
     currentObjectionCategory = catName;
-    document.querySelectorAll('#objection_category_tabs .tab-capsule').forEach(btn => btn.classList.remove('active'));
-    btnEl.classList.add('active');
+    
+    document.querySelectorAll('#objection_category_tabs .tab-capsule, #overlay_objection_tabs .tab-capsule').forEach(btn => {
+        if (btn.innerText === btnEl.innerText || btn.getAttribute('onclick')?.includes(catName)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
     renderObjectionsList();
 }
 
 function changeComplianceStage(val) {
     currentComplianceStage = val;
+    const s1 = document.getElementById('comp_stage_select');
+    const s2 = document.getElementById('overlay_stage_select');
+    if (s1) s1.value = val;
+    if (s2) s2.value = val;
+    
     loadComplianceGuidance();
 }
 
 function toggleSpeechCheckbox(qId) {
-    const chk = document.getElementById('chk_speech_' + qId);
-    if (!chk) return;
-
-    if (chk.checked) {
+    const chkMain = document.getElementById('chk_speech_' + qId);
+    const chkOverlay = document.getElementById('overlay_chk_speech_' + qId);
+    
+    const isChecked = (chkMain && chkMain.checked) || (chkOverlay && chkOverlay.checked);
+    
+    if (chkMain) chkMain.checked = isChecked;
+    if (chkOverlay) chkOverlay.checked = isChecked;
+    
+    if (isChecked) {
         if (!completedComplianceQuestions.includes(qId)) {
             completedComplianceQuestions.push(qId);
         }
@@ -4781,28 +4808,36 @@ function toggleSpeechCheckbox(qId) {
     
     saveComplianceState(false);
     
-    const labelEl = chk.nextElementSibling?.querySelector('div:last-child');
-    if (labelEl) {
-        if (chk.checked) {
-            labelEl.style.textDecoration = 'line-through';
-            labelEl.style.color = 'var(--text-muted)';
-            labelEl.style.fontWeight = '400';
-        } else {
-            labelEl.style.textDecoration = 'none';
-            labelEl.style.color = 'var(--text-dark)';
-            labelEl.style.fontWeight = '600';
+    [chkMain, chkOverlay].forEach(chk => {
+        if (!chk) return;
+        const labelEl = chk.nextElementSibling?.querySelector('div:last-child');
+        if (labelEl) {
+            if (isChecked) {
+                labelEl.style.textDecoration = 'line-through';
+                labelEl.style.color = 'var(--text-muted)';
+                labelEl.style.fontWeight = '400';
+            } else {
+                labelEl.style.textDecoration = 'none';
+                labelEl.style.color = 'var(--text-dark)';
+                labelEl.style.fontWeight = '600';
+            }
         }
-    }
+    });
 }
 
 function toggleDocCheckbox(docName) {
-    const chk = document.getElementById('chk_doc_' + docName.replace(/\s+/g, '_'));
-    if (!chk) return;
+    const chkMain = document.getElementById('chk_doc_' + docName.replace(/\s+/g, '_'));
+    const chkOverlay = document.getElementById('overlay_chk_doc_' + docName.replace(/\s+/g, '_'));
+    
+    const isChecked = (chkMain && chkMain.checked) || (chkOverlay && chkOverlay.checked);
+    
+    if (chkMain) chkMain.checked = isChecked;
+    if (chkOverlay) chkOverlay.checked = isChecked;
 
     complianceChecklistDocs = complianceChecklistDocs.filter(d => d.name !== docName);
     complianceChecklistDocs.push({
         name: docName,
-        completed: chk.checked
+        completed: isChecked
     });
 
     saveComplianceState(false);
@@ -4811,7 +4846,7 @@ function toggleDocCheckbox(docName) {
 async function saveComplianceState(showToast = true) {
     if (!currentProjectId) return;
 
-    const dailyUsageInput = document.getElementById('compliance_daily_usage')?.value || '';
+    const dailyUsageInput = document.getElementById('compliance_daily_usage')?.value || document.getElementById('overlay_daily_usage')?.value || '';
     if (dailyUsageInput) {
         const usageField = document.getElementById('tb_daily_usage');
         if (usageField) usageField.value = dailyUsageInput;
@@ -4879,25 +4914,29 @@ async function syncTelemetryState(complianceMetaCallback = null) {
 }
 
 function updateTelemetryUI(metadata) {
-    // Update Interruption Badge
     const intBadge = document.getElementById('telemetry_interrupt_badge');
+    const intOverlayBadge = document.getElementById('overlay_interrupt_badge');
     if (intBadge) intBadge.innerText = telemetryInterruptionCounter;
+    if (intOverlayBadge) intOverlayBadge.innerText = telemetryInterruptionCounter;
 
-    // Update Recording Badge
     const recBadge = document.getElementById('telemetry_rec_badge');
-    if (recBadge) {
+    const recOverlayBadge = document.getElementById('overlay_rec_badge');
+    
+    [recBadge, recOverlayBadge].forEach(badge => {
+        if (!badge) return;
         if (telemetryRecordingActive === 1) {
-            recBadge.innerText = 'ACTIVE';
-            recBadge.style.background = '#10b981';
+            badge.innerText = 'ACTIVE';
+            badge.style.background = '#10b981';
         } else {
-            recBadge.innerText = 'MUTED';
-            recBadge.style.background = '#64748b';
+            badge.innerText = 'MUTED';
+            badge.style.background = '#64748b';
         }
-    }
+    });
 
-    // Update Warning Alert Banner
     const alertEl = document.getElementById('telemetry_interruption_alert');
     const msgEl = document.getElementById('telemetry_interruption_msg');
+    const overlayAlertEl = document.getElementById('overlay_interruption_alert');
+    const overlayMsgEl = document.getElementById('overlay_interruption_msg');
     
     let warningMsg = '';
     if (telemetryInterruptionCounter > 0) {
@@ -4908,11 +4947,12 @@ function updateTelemetryUI(metadata) {
         warningMsg += metadata.warnings.join(' | ');
     }
 
-    if (warningMsg && msgEl && alertEl) {
-        msgEl.innerHTML = warningMsg;
-        alertEl.style.display = 'flex';
-    } else if (alertEl) {
-        alertEl.style.display = 'none';
+    if (warningMsg) {
+        if (msgEl && alertEl) { msgEl.innerHTML = warningMsg; alertEl.style.display = 'flex'; }
+        if (overlayMsgEl && overlayAlertEl) { overlayMsgEl.innerHTML = warningMsg; overlayAlertEl.style.display = 'flex'; }
+    } else {
+        if (alertEl) alertEl.style.display = 'none';
+        if (overlayAlertEl) overlayAlertEl.style.display = 'none';
     }
 }
 
@@ -4932,52 +4972,90 @@ function toggleTelemetryRecording() {
 }
 
 function togglePhotoLogged(photoType) {
-    const el = document.getElementById('photo_placeholder_' + photoType);
-    if (!el) return;
-
+    const elMain = document.getElementById('photo_placeholder_' + photoType);
+    const elOverlay = document.getElementById('overlay_photo_' + photoType);
+    
     telemetryPhotosLogged[photoType] = !telemetryPhotosLogged[photoType];
+    const isLogged = telemetryPhotosLogged[photoType];
 
-    if (telemetryPhotosLogged[photoType]) {
-        el.style.border = '1.5px solid #10b981';
-        el.style.background = '#edfaf2';
-        el.style.color = '#10b981';
-        
-        // Push this doc check status
-        const docName = `Site Photos Log: ${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
-        if (!complianceChecklistDocs.some(d => d.name === docName)) {
-            complianceChecklistDocs.push({ name: docName, completed: true });
+    [elMain, elOverlay].forEach(el => {
+        if (!el) return;
+        if (isLogged) {
+            el.style.border = '1.5px solid #10b981';
+            el.style.background = '#edfaf2';
+            el.style.color = '#10b981';
+        } else {
+            el.style.border = '1.5px dashed var(--border)';
+            el.style.background = '#fff';
+            el.style.color = '#10b981';
+            el.style.color = 'var(--text-muted)';
         }
-    } else {
-        el.style.border = '1.5px dashed var(--border)';
-        el.style.background = '#fff';
-        el.style.color = 'var(--text-muted)';
+    });
 
-        const docName = `Site Photos Log: ${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
-        complianceChecklistDocs = complianceChecklistDocs.filter(d => d.name !== docName);
+    const docName = `Site Photos Log: ${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+    complianceChecklistDocs = complianceChecklistDocs.filter(d => d.name !== docName);
+    if (isLogged) {
+        complianceChecklistDocs.push({ name: docName, completed: true });
     }
     
     saveComplianceState(false);
 }
 
+function togglePhotoLoggedOverlay(photoType) {
+    togglePhotoLogged(photoType);
+}
+
 function calculateAverageBillUsage() {
     let sum = 0, count = 0;
-    if (document.getElementById('bill_q1').checked) { sum += 16; count++; }
-    if (document.getElementById('bill_q2').checked) { sum += 18; count++; }
-    if (document.getElementById('bill_q3').checked) { sum += 22; count++; }
-    if (document.getElementById('bill_q4').checked) { sum += 17; count++; }
+    
+    const billQ1 = document.getElementById('bill_q1')?.checked || document.getElementById('overlay_bill_q1')?.checked || false;
+    const billQ2 = document.getElementById('bill_q2')?.checked || document.getElementById('overlay_bill_q2')?.checked || false;
+    const billQ3 = document.getElementById('bill_q3')?.checked || document.getElementById('overlay_bill_q3')?.checked || false;
+    const billQ4 = document.getElementById('bill_q4')?.checked || document.getElementById('overlay_bill_q4')?.checked || false;
+    
+    if (document.getElementById('bill_q1')) document.getElementById('bill_q1').checked = billQ1;
+    if (document.getElementById('overlay_bill_q1')) document.getElementById('overlay_bill_q1').checked = billQ1;
+    if (document.getElementById('bill_q2')) document.getElementById('bill_q2').checked = billQ2;
+    if (document.getElementById('overlay_bill_q2')) document.getElementById('overlay_bill_q2').checked = billQ2;
+    if (document.getElementById('bill_q3')) document.getElementById('bill_q3').checked = billQ3;
+    if (document.getElementById('overlay_bill_q3')) document.getElementById('overlay_bill_q3').checked = billQ3;
+    if (document.getElementById('bill_q4')) document.getElementById('bill_q4').checked = billQ4;
+    if (document.getElementById('overlay_bill_q4')) document.getElementById('overlay_bill_q4').checked = billQ4;
+    
+    if (billQ1) { sum += 16; count++; }
+    if (billQ2) { sum += 18; count++; }
+    if (billQ3) { sum += 22; count++; }
+    if (billQ4) { sum += 17; count++; }
     
     const avg = count > 0 ? (sum / count) : 0;
+    
     const displayEl = document.getElementById('avg_bill_calc_display');
-    if (displayEl) {
-        displayEl.innerText = `Avg: ${avg.toFixed(1)} kWh/day`;
-    }
+    if (displayEl) displayEl.innerText = `Avg: ${avg.toFixed(1)} kWh/day`;
+    const overlayDisplayEl = document.getElementById('overlay_avg_bill_display');
+    if (overlayDisplayEl) overlayDisplayEl.innerText = `Avg: ${avg.toFixed(1)} kWh/day`;
 
     const usageInput = document.getElementById('compliance_daily_usage');
-    if (usageInput && avg > 0) {
-        usageInput.value = avg.toFixed(1);
+    const overlayUsageInput = document.getElementById('overlay_daily_usage');
+    
+    if (avg > 0) {
+        if (usageInput) usageInput.value = avg.toFixed(1);
+        if (overlayUsageInput) overlayUsageInput.value = avg.toFixed(1);
     }
 
     saveComplianceState(false);
+}
+
+function calculateAverageBillUsageOverlay() {
+    calculateAverageBillUsage();
+}
+
+function saveComplianceStateOverlay(showToast) {
+    const overlayVal = document.getElementById('overlay_daily_usage')?.value || '';
+    if (overlayVal) {
+        const mainUsage = document.getElementById('compliance_daily_usage');
+        if (mainUsage) mainUsage.value = overlayVal;
+    }
+    saveComplianceState(showToast);
 }
 
 // ── COMPLIANCE TELEMETRY SYNC LOOP ───────────────────────────────────
@@ -4998,17 +5076,18 @@ function stopComplianceTelemetryLoop() {
 function checkTelemetryStateChanges() {
     if (!currentProjectId) return;
     
+    const isOverlayOpen = isConsoleExpanded === 1;
     const compTab = document.getElementById('tab-compliance');
-    if (!compTab || compTab.style.display === 'none') {
+    const isTabOpen = compTab && compTab.style.display !== 'none';
+    
+    if (!isOverlayOpen && !isTabOpen) {
         stopComplianceTelemetryLoop();
         return;
     }
 
-    // Evaluate active form State code
     const stateInput = document.getElementById('me_state')?.value || projectData?.state || 'NSW';
     const activeState = stateInput.trim().toUpperCase();
 
-    // Evaluate active form System profile type
     const leadTypeInput = document.getElementById('me_type_of_lead')?.value || projectData?.type_of_lead || 'PV';
     let systemType = 'PV';
     if (leadTypeInput === 'PV+Battery' || leadTypeInput === 'Combined') {
@@ -5017,7 +5096,6 @@ function checkTelemetryStateChanges() {
         systemType = 'Battery';
     }
 
-    // Trigger re-fetch on attribute changes
     if (activeState !== telemetryStateCode || systemType !== telemetrySystemType) {
         console.log('[TELEMETRY LOOP] Form metadata change detected! Updating console...', { activeState, systemType });
         telemetryStateCode = activeState;
@@ -5025,7 +5103,214 @@ function checkTelemetryStateChanges() {
         loadComplianceGuidance();
     }
 }
+
+// ── CONSOLE TOGGLE OPERATIONS ────────────────────────────────────────
+async function toggleTelephonyConsoleView() {
+    if (!currentProjectId) return;
+    
+    isConsoleExpanded = isConsoleExpanded === 1 ? 0 : 1;
+    
+    try {
+        const res = await fetch('/api/compliance-sales/toggle-console-view', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: currentProjectId,
+                is_console_expanded: isConsoleExpanded
+            })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                applyConsoleToggleUI();
+                if (isConsoleExpanded === 1) {
+                    loadComplianceGuidance();
+                }
+            }
+        }
+    } catch(err) {
+        console.error('Error toggling console view:', err);
+    }
+}
+
+function applyConsoleToggleUI() {
+    const overlay = document.getElementById('telephony_compliance_overlay');
+    const toggleIcon = document.getElementById('telephony_toggle_icon');
+    const toggleBtn = document.getElementById('btn_toggle_telephony_console');
+    
+    if (overlay) {
+        if (isConsoleExpanded === 1) {
+            overlay.style.right = '16px';
+            if (toggleIcon) toggleIcon.innerText = '◀';
+            if (toggleBtn) {
+                toggleBtn.style.background = 'var(--accent)';
+                toggleBtn.style.borderColor = 'var(--accent)';
+            }
+        } else {
+            overlay.style.right = '-460px';
+            if (toggleIcon) toggleIcon.innerText = '▶';
+            if (toggleBtn) {
+                toggleBtn.style.background = 'var(--primary)';
+                toggleBtn.style.borderColor = 'var(--primary)';
+            }
+        }
+    }
+}
 </script>
+
+<style>
+@keyframes pulse-glowing-dot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+</style>
+
+<!-- Floating Telephony & Compliance Overlay -->
+<div id="telephony_compliance_overlay" style="position: fixed; top: 90px; right: -460px; width: 440px; height: calc(100vh - 110px); background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; box-shadow: -8px 0 24px rgba(0,0,0,0.1); z-index: 1005; display: flex; flex-direction: column; transition: right 0.3s ease; overflow: hidden; padding: 12px; gap: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f8; padding-bottom: 8px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 700; color: var(--primary); font-size: 13px; text-transform: uppercase;">Compliance Console</span>
+            <span id="overlay_rec_badge" style="background:#10b981; color:#fff; font-weight:800; padding:2px 5px; border-radius:3px; font-size:9px; text-transform:uppercase;">ACTIVE</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <select id="overlay_stage_select" onchange="changeComplianceStage(this.value)" style="height: 24px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--border); background: #f8fafc; font-weight: 700; color: var(--primary); font-size: 11px;">
+                <option value="Greeting">Greeting & Intro</option>
+                <option value="Pre-Qualification">Pre-Qualification</option>
+                <option value="Engineering Proposal">Engineering & Formulas</option>
+                <option value="Financials & Rebates">Financials & Rebates</option>
+                <option value="Agreement">ACL Verbal Agreement</option>
+            </select>
+            <button type="button" onclick="toggleTelephonyConsoleView()" style="background: none; border: none; font-size: 14px; font-weight: bold; color: var(--text-muted); cursor: pointer; padding: 0 4px;">✕</button>
+        </div>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+        
+        <!-- Alerts & Warnings -->
+        <div id="overlay_interruption_alert" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 6px; padding: 8px 10px; font-size: 11.5px; color: #b45309; font-weight: 600; align-items: center; gap: 8px; flex-shrink: 0;">
+            <span>⚠️</span>
+            <span style="flex: 1;" id="overlay_interruption_msg">Interruption warning.</span>
+            <button type="button" onclick="resetInterruptionCounter()" style="background:#f59e0b; color:#fff; border:none; padding:1px 4px; border-radius:2px; font-size:9px; cursor:pointer;">Clear</button>
+        </div>
+
+        <!-- Live Telemetry Stats Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; gap: 10px; flex-shrink: 0;">
+            <div style="font-size: 11px; display: flex; gap: 4px; align-items: center;">
+                <span style="color: var(--text-muted);">State:</span>
+                <strong id="overlay_state_badge">NSW</strong>
+                <span style="color: var(--text-muted); margin-left: 6px;">PV:</span>
+                <strong id="overlay_system_badge">PV</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+                <span style="font-weight: 700; color: var(--text-muted);">Alerts:</span>
+                <span id="overlay_interrupt_badge" style="background:#ef4444; color:#fff; font-weight:800; padding:1.5px 4px; border-radius:3px; font-size:9.5px;">0</span>
+                <button type="button" onclick="incrementInterruptionCounter()" style="background:var(--primary); color:#fff; border:none; width:16px; height:16px; border-radius:3px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+            </div>
+        </div>
+
+        <!-- Live Speech Blueprint -->
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px;">Live Speech Blueprint</div>
+            <div id="overlay_speech_container" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Speech nodes -->
+            </div>
+        </div>
+
+        <!-- Reference Metrics -->
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="overlay_metrics_strip">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">Active Stage Metrics</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-dark);" id="overlay_metrics_content">
+                <!-- Metrics -->
+            </div>
+        </div>
+
+        <!-- Objection categories & Q&As -->
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px;">Objection Speed Handler</div>
+            <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 4px;" id="overlay_objection_tabs">
+                <button type="button" class="tab-capsule active" style="padding: 3px 6px; font-size: 10px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">Roof</button>
+                <button type="button" class="tab-capsule" style="padding: 3px 6px; font-size: 10px; border-radius: 4px;" onclick="switchObjectionCategory('PV Tech', this)">PV Tech</button>
+                <button type="button" class="tab-capsule" style="padding: 3px 6px; font-size: 10px; border-radius: 4px;" onclick="switchObjectionCategory('Battery/VPP', this)">Battery</button>
+                <button type="button" class="tab-capsule" style="padding: 3px 6px; font-size: 10px; border-radius: 4px;" onclick="switchObjectionCategory('Rebates', this)">Rebates</button>
+                <button type="button" class="tab-capsule" style="padding: 3px 6px; font-size: 10px; border-radius: 4px;" onclick="switchObjectionCategory('Legal', this)">Legal</button>
+            </div>
+            <div id="overlay_qa_list" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Objection QA -->
+            </div>
+        </div>
+
+        <!-- Quarter-Wise Bills Checklist -->
+        <div style="background: #eef2f8; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="overlay_bills_strip">
+            <div style="font-size: 9.5px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>Quarter-Wise Bills Checklist</span>
+                <span style="font-size: 9.5px; color: var(--text-muted); font-weight: normal;" id="overlay_avg_bill_display">Avg: 0 kWh/day</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
+                <label style="display: flex; flex-direction: column; align-items: center; font-size: 9.5px; background: #fff; border: 1px solid var(--border); padding: 3px; border-radius: 4px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="overlay_bill_q1" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 2px;">
+                    <span>Q1 Bill</span>
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; font-size: 9.5px; background: #fff; border: 1px solid var(--border); padding: 3px; border-radius: 4px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="overlay_bill_q2" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 2px;">
+                    <span>Q2 Bill</span>
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; font-size: 9.5px; background: #fff; border: 1px solid var(--border); padding: 3px; border-radius: 4px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="overlay_bill_q3" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 2px;">
+                    <span>Q3 Bill</span>
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; font-size: 9.5px; background: #fff; border: 1px solid var(--border); padding: 3px; border-radius: 4px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="overlay_bill_q4" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 2px;">
+                    <span>Q4 Bill</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 6px; font-size: 11px; align-items: center;">
+                <span>Daily Usage:</span>
+                <input type="number" id="overlay_daily_usage" oninput="saveComplianceStateOverlay(false)" style="width: 60px; height: 18px; font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px;" placeholder="kWh/day">
+                <span>kWh/day</span>
+            </div>
+        </div>
+
+        <!-- Required Documentation Checklist -->
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="overlay_docs_strip">
+            <div style="font-size: 10px; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #fde68a; padding-bottom: 4px;">Required Documents</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;" id="overlay_docs_content">
+                <!-- Docs -->
+            </div>
+        </div>
+
+        <!-- Site Photo Placeholders -->
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="overlay_photos_strip">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">Site Photo Logs</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                <div id="overlay_photo_rafters" onclick="togglePhotoLoggedOverlay('rafters')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 4px 2px; text-align: center; background: #fff; font-size: 9.5px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+                    <span style="font-size:11px;">🏠</span>
+                    <span>Rafters</span>
+                </div>
+                <div id="overlay_photo_meter" onclick="togglePhotoLoggedOverlay('meter')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 4px 2px; text-align: center; background: #fff; font-size: 9.5px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+                    <span style="font-size:11px;">⚡</span>
+                    <span>Meter</span>
+                </div>
+                <div id="overlay_photo_board" onclick="togglePhotoLoggedOverlay('board')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 4px 2px; text-align: center; background: #fff; font-size: 9.5px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+                    <span style="font-size:11px;">🎛️</span>
+                    <span>Board</span>
+                </div>
+                <div id="overlay_photo_roof" onclick="togglePhotoLoggedOverlay('roof')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 4px 2px; text-align: center; background: #fff; font-size: 9.5px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+                    <span style="font-size:11px;">🛸</span>
+                    <span>Roof</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Save Progress Button -->
+    <div style="flex-shrink: 0; padding-top: 6px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-save" style="padding: 5px 12px; font-size: 11px; height: 26px; border-radius: 4px;" onclick="saveComplianceStateOverlay(true)">Save Overlay Progress</button>
+    </div>
+</div>
     <script src="/responsive.js"></script>
 </body>
 </html>

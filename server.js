@@ -4781,7 +4781,8 @@ function sendCompliancePayload(res, state_code, system_type, current_stage, mand
             active_state_code: telemetryRow.active_state_code,
             current_script_node: telemetryRow.current_script_node,
             interruption_counter: telemetryRow.interruption_counter,
-            is_recording_active: telemetryRow.is_recording_active
+            is_recording_active: telemetryRow.is_recording_active,
+            is_console_expanded: telemetryRow.is_console_expanded
         } : null
     });
 }
@@ -4977,6 +4978,39 @@ app.post('/api/compliance-sales/update-telemetry-state', (req, res) => {
                     stc_multiplier: stcMultiplier,
                     warnings: warnings
                 }
+            });
+        }
+    );
+});
+
+app.post('/api/compliance-sales/toggle-console-view', (req, res) => {
+    const { lead_id, is_console_expanded } = req.body;
+
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required.' });
+    }
+
+    const expanded = parseInt(is_console_expanded) || 0;
+
+    db.run(
+        `INSERT INTO sales_telemetry_live_state (
+            lead_id, is_console_expanded, last_updated_at
+         ) VALUES (?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(lead_id) DO UPDATE SET
+            is_console_expanded = excluded.is_console_expanded,
+            last_updated_at = CURRENT_TIMESTAMP`,
+        [lead_id, expanded],
+        function(err) {
+            if (err) {
+                console.error('[COMPLIANCE TELEMETRY] Toggle error:', err.message);
+                return res.status(500).json({ error: 'Failed to toggle console view' });
+            }
+
+            res.json({
+                success: true,
+                lead_id,
+                is_console_expanded: expanded,
+                presentation_mode: expanded === 1 ? 'overlay' : 'split-screen'
             });
         }
     );

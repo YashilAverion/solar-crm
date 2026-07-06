@@ -1549,10 +1549,15 @@ db.serialize(() => {
             current_script_node TEXT,
             interruption_counter INTEGER DEFAULT 0,
             is_recording_active INTEGER DEFAULT 1,
+            is_console_expanded INTEGER DEFAULT 0,
+            last_telemetry_event TEXT,
             last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE
         )
     `);
+
+    db.run("ALTER TABLE sales_telemetry_live_state ADD COLUMN is_console_expanded INTEGER DEFAULT 0", (err) => {});
+    db.run("ALTER TABLE sales_telemetry_live_state ADD COLUMN last_telemetry_event TEXT", (err) => {});
 
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
