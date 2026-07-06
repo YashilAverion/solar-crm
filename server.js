@@ -4708,7 +4708,7 @@ app.delete('/api/voip/phonebook/:id', (req, res) => {
 
 
 // ── COMPLIANCE & OBJECTION HANDLING APIs ───────────────────────────
-function sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow) {
+function sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow) {
     let peakSunHours = 3.9;
     if (state_code === 'VIC' || state_code === 'TAS') peakSunHours = 3.6;
     else if (state_code === 'QLD' || state_code === 'WA') peakSunHours = 4.2;
@@ -4776,6 +4776,12 @@ function sendCompliancePayload(res, state_code, system_type, current_stage, mand
             compliance_stage: leadRow.compliance_stage || 'Greeting',
             completed_questions: leadRow.compliance_completed_questions ? JSON.parse(leadRow.compliance_completed_questions) : [],
             checklist_status: leadRow.compliance_checklist_status ? JSON.parse(leadRow.compliance_checklist_status) : []
+        } : null,
+        live_telemetry_state: telemetryRow ? {
+            active_state_code: telemetryRow.active_state_code,
+            current_script_node: telemetryRow.current_script_node,
+            interruption_counter: telemetryRow.interruption_counter,
+            is_recording_active: telemetryRow.is_recording_active
         } : null
     });
 }
@@ -4829,11 +4835,20 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
                             if (leadErr) {
                                 console.error('[COMPLIANCE ENGINE] Lead fetch error:', leadErr.message);
                             }
-                            sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow);
+                            db.get(
+                                "SELECT active_state_code, current_script_node, interruption_counter, is_recording_active FROM sales_telemetry_live_state WHERE lead_id = ?",
+                                [lead_id],
+                                (telemetryErr, telemetryRow) => {
+                                    if (telemetryErr) {
+                                        console.error('[COMPLIANCE ENGINE] Telemetry fetch error:', telemetryErr.message);
+                                    }
+                                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow);
+                                }
+                            );
                         }
                     );
                 } else {
-                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, null);
+                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, null, null);
                 }
             });
         }
@@ -4887,6 +4902,82 @@ app.post('/api/compliance-sales/save-state', (req, res) => {
                     res.json({ success: true, changes: this.changes });
                 }
             );
+        }
+    );
+});
+
+app.post('/api/compliance-sales/update-telemetry-state', (req, res) => {
+    const { lead_id, active_state_code, current_script_node, interruption_counter, is_recording_active } = req.body;
+
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required.' });
+    }
+
+    const stateCode = (active_state_code || 'NSW').trim().toUpperCase();
+    const scriptNode = (current_script_node || 'Greeting').trim();
+    const interruptCount = parseInt(interruption_counter) || 0;
+    const recActive = is_recording_active !== undefined ? parseInt(is_recording_active) : 1;
+
+    db.run(
+        `INSERT INTO sales_telemetry_live_state (
+            lead_id, active_state_code, current_script_node, interruption_counter, is_recording_active, last_updated_at
+         ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(lead_id) DO UPDATE SET
+            active_state_code = excluded.active_state_code,
+            current_script_node = excluded.current_script_node,
+            interruption_counter = excluded.interruption_counter,
+            is_recording_active = excluded.is_recording_active,
+            last_updated_at = CURRENT_TIMESTAMP`,
+        [lead_id, stateCode, scriptNode, interruptCount, recActive],
+        function(err) {
+            if (err) {
+                console.error('[COMPLIANCE TELEMETRY] Telemetry update error:', err.message);
+                return res.status(500).json({ error: 'Failed to update live telemetry state' });
+            }
+
+            let warnings = [];
+            let stcMultiplier = 1.0;
+
+            if (stateCode === 'VIC') {
+                stcMultiplier = 1.15;
+                warnings.push("AS/NZS 5033: Victoria requires strict minimum 200mm roof margin offset boundaries.");
+                warnings.push("AS/NZS 5139: Battery placement prohibited on timber-clad or combustible walls; non-combustible backing plate (e.g., cement sheeting) extending 300mm past edges is mandatory.");
+            } else if (stateCode === 'NSW') {
+                stcMultiplier = 1.2;
+                warnings.push("AS/NZS 5033: Minimum 200mm structural spacing margin must be maintained around array boundary lines.");
+                warnings.push("AS/NZS 5139: Battery fire safety clearance of 300mm from doors, windows, and non-combustible surfaces is mandatory.");
+            } else if (stateCode === 'SA') {
+                stcMultiplier = 1.2;
+                warnings.push("AS/NZS 5033: Maintain 200mm edge spacing to avoid wind-lift dynamic loads.");
+                warnings.push("AS/NZS 5139: SA Power Networks (SAPN) strict battery VPP configuration compliance and dynamic export limits (1.5kW capacity limit).");
+            } else if (stateCode === 'QLD') {
+                stcMultiplier = 1.3;
+                warnings.push("AS/NZS 5033: Cyclone wind zone spacing guidelines for PV structure mounting must be verified.");
+                warnings.push("AS/NZS 5139: Outdoor battery installation clearance offset from windows/vents must be maintained.");
+            } else if (stateCode === 'WA') {
+                stcMultiplier = 1.3;
+                warnings.push("AS/NZS 5033: Western Power grid connection limits apply (5kVA export limit per phase).");
+                warnings.push("AS/NZS 5139: Inverter/battery proximity clearance specifications on residential roofs.");
+            } else {
+                stcMultiplier = 1.1;
+                warnings.push("AS/NZS 5033: Standard wind zone mount boundaries apply.");
+                warnings.push("AS/NZS 5139: Structural wall fire rating must be verified before mounting battery systems.");
+            }
+
+            res.json({
+                success: true,
+                lead_id,
+                telemetry: {
+                    active_state_code: stateCode,
+                    current_script_node: scriptNode,
+                    interruption_counter: interruptCount,
+                    is_recording_active: recActive
+                },
+                compliance_metadata: {
+                    stc_multiplier: stcMultiplier,
+                    warnings: warnings
+                }
+            });
         }
     );
 });

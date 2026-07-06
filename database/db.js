@@ -1540,7 +1540,21 @@ db.serialize(() => {
         )
     `);
 
-    // 3. Migrate leads table columns (safe check and alter)
+    // 3. sales_telemetry_live_state table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS sales_telemetry_live_state (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lead_id INTEGER UNIQUE,
+            active_state_code TEXT,
+            current_script_node TEXT,
+            interruption_counter INTEGER DEFAULT 0,
+            is_recording_active INTEGER DEFAULT 1,
+            last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE
+        )
+    `);
+
+    // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists
     });

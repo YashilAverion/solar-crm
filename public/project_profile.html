@@ -1039,6 +1039,28 @@ function toggleNav(event, element) {
                 <div style="display: flex; gap: 12px; flex: 1; min-height: 0;">
                     <!-- Left Panel: Live Speech Blueprint -->
                     <div style="flex: 1.2; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                        
+                        <!-- Telemetry Interruption Alert Banner -->
+                        <div id="telemetry_interruption_alert" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 12px; color: #b45309; font-weight: 600; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <span>⚠️</span>
+                            <span style="flex: 1;" id="telemetry_interruption_msg">COURTESY ALERT: Apologise & Await Turn if interrupted! Customer spoke out of turn.</span>
+                            <button type="button" onclick="resetInterruptionCounter()" style="background:#f59e0b; color:#fff; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">Dismiss</button>
+                        </div>
+
+                        <!-- VoIP Live Telemetry Control bar -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; gap: 10px; flex-shrink: 0;">
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+                                <span style="font-weight: 700; color: var(--text-muted);">VoIP Rec:</span>
+                                <span id="telemetry_rec_badge" style="background:#10b981; color:#fff; font-weight:800; padding:2px 5px; border-radius:3px; font-size:9.5px; text-transform:uppercase;">ACTIVE</span>
+                                <button type="button" onclick="toggleTelemetryRecording()" style="background:none; border:none; color:var(--primary); text-decoration:underline; font-size:10px; cursor:pointer; padding:0;">Toggle</button>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+                                <span style="font-weight: 700; color: var(--text-muted);">Interruptions:</span>
+                                <span id="telemetry_interrupt_badge" style="background:#ef4444; color:#fff; font-weight:800; padding:2px 5px; border-radius:3px; font-size:9.5px;">0</span>
+                                <button type="button" onclick="incrementInterruptionCounter()" style="background:var(--primary); color:#fff; border:none; width:16px; height:16px; border-radius:3px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+                            </div>
+                        </div>
+
                         <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; flex-shrink: 0;">
                             <span>Live Speech Blueprint</span>
                             <span style="font-size: 10px; color: var(--text-muted); text-transform: none; font-weight: 500;">Read out loud exactly as shown</span>
@@ -1060,14 +1082,14 @@ function toggleNav(event, element) {
                         </div>
                     </div>
 
-                    <!-- Right Panel: Speed Objection Handler & Document Checklists -->
-                    <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 10px; flex-shrink: 0;">
+                    <!-- Right Panel: Speed Objection Handler, Checklist & Site-Photos -->
+                    <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow-y: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.02); gap: 10px;">
+                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; flex-shrink: 0;">
                             Objection Handler & Document Checklist
                         </div>
 
                         <!-- Objection Matrix Tabs -->
-                        <div style="display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; flex-shrink: 0;" id="objection_category_tabs">
+                        <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 6px; flex-shrink: 0;" id="objection_category_tabs">
                             <button type="button" class="tab-capsule active" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">House/Roof</button>
                             <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('PV Tech', this)">PV Tech</button>
                             <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Battery/VPP', this)">Battery/VPP</button>
@@ -1076,17 +1098,73 @@ function toggleNav(event, element) {
                         </div>
 
                         <!-- Objection Q&A List -->
-                        <div id="objection_qa_list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                        <div id="objection_qa_list" style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
                             <!-- Populated dynamically -->
                         </div>
 
+                        <!-- Electricity Bills Quarter-Wise Checklist -->
+                        <div style="background: #eef2f8; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_bills_strip">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; display: flex; justify-content: space-between;">
+                                <span>Quarter-Wise Bills Checklist</span>
+                                <span style="font-size: 10px; color: var(--text-muted); font-weight: normal;" id="avg_bill_calc_display">Avg: 0 kWh/day</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px;">
+                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="bill_q1" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
+                                    <span>Q1 Bill</span>
+                                </label>
+                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="bill_q2" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
+                                    <span>Q2 Bill</span>
+                                </label>
+                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="bill_q3" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
+                                    <span>Q3 Bill</span>
+                                </label>
+                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="bill_q4" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
+                                    <span>Q4 Bill</span>
+                                </label>
+                            </div>
+                            <div style="display: flex; gap: 8px; font-size: 11px; align-items: center;">
+                                <span>Daily Usage:</span>
+                                <input type="number" id="compliance_daily_usage" oninput="saveComplianceState(false)" style="width: 70px; height: 20px; font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px;" placeholder="kWh/day">
+                                <span>kWh/day</span>
+                            </div>
+                        </div>
+
                         <!-- Required Documentation Checklist -->
-                        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; margin-top: 10px; flex-shrink: 0;" id="compliance_docs_strip">
+                        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_docs_strip">
                             <div style="font-size: 10px; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #fde68a; padding-bottom: 4px;">
                                 Required Documents Checklist
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 6px;" id="compliance_docs_content">
                                 <!-- Dynamic document checklist -->
+                            </div>
+                        </div>
+
+                        <!-- Site Photo Placeholders -->
+                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_photos_strip">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
+                                Structural Site-Photo Placeholders
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <div id="photo_placeholder_rafters" onclick="togglePhotoLogged('rafters')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
+                                    <span style="font-size:12px;">🏠</span>
+                                    <span>Rafters</span>
+                                </div>
+                                <div id="photo_placeholder_meter" onclick="togglePhotoLogged('meter')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
+                                    <span style="font-size:12px;">⚡</span>
+                                    <span>Meter Box</span>
+                                </div>
+                                <div id="photo_placeholder_board" onclick="togglePhotoLogged('board')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
+                                    <span style="font-size:12px;">🎛️</span>
+                                    <span>Switchboard</span>
+                                </div>
+                                <div id="photo_placeholder_roof" onclick="togglePhotoLogged('roof')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
+                                    <span style="font-size:12px;">🛸</span>
+                                    <span>Roof View</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4451,18 +4529,25 @@ let complianceChecklistDocs = [];
 let currentComplianceStage = 'Greeting';
 let currentObjectionCategory = 'House/Roof';
 
+// Live Telemetry Variables
+let telemetryStateCode = 'NSW';
+let telemetrySystemType = 'PV';
+let telemetryInterruptionCounter = 0;
+let telemetryRecordingActive = 1;
+let telemetryPhotosLogged = { rafters: false, meter: false, board: false, roof: false };
+
 async function loadComplianceGuidance() {
     if (!currentProjectId) return;
     
     const stateInput = document.getElementById('me_state')?.value || projectData?.state || 'NSW';
-    const state_code = stateInput.trim().toUpperCase();
+    telemetryStateCode = stateInput.trim().toUpperCase();
     
     const leadTypeInput = document.getElementById('me_type_of_lead')?.value || projectData?.type_of_lead || 'PV';
-    let system_type = 'PV';
+    telemetrySystemType = 'PV';
     if (leadTypeInput === 'PV+Battery' || leadTypeInput === 'Combined') {
-        system_type = 'Combined';
+        telemetrySystemType = 'Combined';
     } else if (leadTypeInput === 'Battery') {
-        system_type = 'Battery';
+        telemetrySystemType = 'Battery';
     }
 
     try {
@@ -4470,8 +4555,8 @@ async function loadComplianceGuidance() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                state_code,
-                system_type,
+                state_code: telemetryStateCode,
+                system_type: telemetrySystemType,
                 current_stage: currentComplianceStage,
                 lead_id: currentProjectId
             })
@@ -4496,7 +4581,14 @@ async function loadComplianceGuidance() {
                     complianceChecklistDocs = data.lead_saved_state.checklist_status || [];
                 }
 
+                if (data.live_telemetry_state) {
+                    telemetryInterruptionCounter = data.live_telemetry_state.interruption_counter || 0;
+                    telemetryRecordingActive = data.live_telemetry_state.is_recording_active !== undefined ? data.live_telemetry_state.is_recording_active : 1;
+                }
+
                 renderComplianceConsole();
+                updateTelemetryUI(null);
+                startComplianceTelemetryLoop();
             }
         }
     } catch (err) {
@@ -4719,6 +4811,12 @@ function toggleDocCheckbox(docName) {
 async function saveComplianceState(showToast = true) {
     if (!currentProjectId) return;
 
+    const dailyUsageInput = document.getElementById('compliance_daily_usage')?.value || '';
+    if (dailyUsageInput) {
+        const usageField = document.getElementById('tb_daily_usage');
+        if (usageField) usageField.value = dailyUsageInput;
+    }
+
     try {
         const res = await fetch('/api/compliance-sales/save-state', {
             method: 'POST',
@@ -4746,6 +4844,185 @@ async function saveComplianceState(showToast = true) {
         }
     } catch(err) {
         console.error('Error saving compliance progress:', err);
+    }
+}
+
+// ── TELEMETRY STATE SYNC & CONTROL FUNCTIONS ───────────────────────
+async function syncTelemetryState(complianceMetaCallback = null) {
+    if (!currentProjectId) return;
+
+    try {
+        const res = await fetch('/api/compliance-sales/update-telemetry-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: currentProjectId,
+                active_state_code: telemetryStateCode,
+                current_script_node: currentComplianceStage,
+                interruption_counter: telemetryInterruptionCounter,
+                is_recording_active: telemetryRecordingActive
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                updateTelemetryUI(data.compliance_metadata);
+                if (complianceMetaCallback) {
+                    complianceMetaCallback(data.compliance_metadata);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Telemetry state sync failure:', err);
+    }
+}
+
+function updateTelemetryUI(metadata) {
+    // Update Interruption Badge
+    const intBadge = document.getElementById('telemetry_interrupt_badge');
+    if (intBadge) intBadge.innerText = telemetryInterruptionCounter;
+
+    // Update Recording Badge
+    const recBadge = document.getElementById('telemetry_rec_badge');
+    if (recBadge) {
+        if (telemetryRecordingActive === 1) {
+            recBadge.innerText = 'ACTIVE';
+            recBadge.style.background = '#10b981';
+        } else {
+            recBadge.innerText = 'MUTED';
+            recBadge.style.background = '#64748b';
+        }
+    }
+
+    // Update Warning Alert Banner
+    const alertEl = document.getElementById('telemetry_interruption_alert');
+    const msgEl = document.getElementById('telemetry_interruption_msg');
+    
+    let warningMsg = '';
+    if (telemetryInterruptionCounter > 0) {
+        warningMsg += `COURTESY ALERT: Apologise & Await Turn if interrupted! Customer spoke out of turn (${telemetryInterruptionCounter} times). `;
+    }
+
+    if (metadata && metadata.warnings && metadata.warnings.length > 0) {
+        warningMsg += metadata.warnings.join(' | ');
+    }
+
+    if (warningMsg && msgEl && alertEl) {
+        msgEl.innerHTML = warningMsg;
+        alertEl.style.display = 'flex';
+    } else if (alertEl) {
+        alertEl.style.display = 'none';
+    }
+}
+
+function incrementInterruptionCounter() {
+    telemetryInterruptionCounter++;
+    syncTelemetryState();
+}
+
+function resetInterruptionCounter() {
+    telemetryInterruptionCounter = 0;
+    syncTelemetryState();
+}
+
+function toggleTelemetryRecording() {
+    telemetryRecordingActive = telemetryRecordingActive === 1 ? 0 : 1;
+    syncTelemetryState();
+}
+
+function togglePhotoLogged(photoType) {
+    const el = document.getElementById('photo_placeholder_' + photoType);
+    if (!el) return;
+
+    telemetryPhotosLogged[photoType] = !telemetryPhotosLogged[photoType];
+
+    if (telemetryPhotosLogged[photoType]) {
+        el.style.border = '1.5px solid #10b981';
+        el.style.background = '#edfaf2';
+        el.style.color = '#10b981';
+        
+        // Push this doc check status
+        const docName = `Site Photos Log: ${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+        if (!complianceChecklistDocs.some(d => d.name === docName)) {
+            complianceChecklistDocs.push({ name: docName, completed: true });
+        }
+    } else {
+        el.style.border = '1.5px dashed var(--border)';
+        el.style.background = '#fff';
+        el.style.color = 'var(--text-muted)';
+
+        const docName = `Site Photos Log: ${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+        complianceChecklistDocs = complianceChecklistDocs.filter(d => d.name !== docName);
+    }
+    
+    saveComplianceState(false);
+}
+
+function calculateAverageBillUsage() {
+    let sum = 0, count = 0;
+    if (document.getElementById('bill_q1').checked) { sum += 16; count++; }
+    if (document.getElementById('bill_q2').checked) { sum += 18; count++; }
+    if (document.getElementById('bill_q3').checked) { sum += 22; count++; }
+    if (document.getElementById('bill_q4').checked) { sum += 17; count++; }
+    
+    const avg = count > 0 ? (sum / count) : 0;
+    const displayEl = document.getElementById('avg_bill_calc_display');
+    if (displayEl) {
+        displayEl.innerText = `Avg: ${avg.toFixed(1)} kWh/day`;
+    }
+
+    const usageInput = document.getElementById('compliance_daily_usage');
+    if (usageInput && avg > 0) {
+        usageInput.value = avg.toFixed(1);
+    }
+
+    saveComplianceState(false);
+}
+
+// ── COMPLIANCE TELEMETRY SYNC LOOP ───────────────────────────────────
+function startComplianceTelemetryLoop() {
+    if (window.complianceTelemetryInterval) {
+        clearInterval(window.complianceTelemetryInterval);
+    }
+    window.complianceTelemetryInterval = setInterval(checkTelemetryStateChanges, 2000);
+}
+
+function stopComplianceTelemetryLoop() {
+    if (window.complianceTelemetryInterval) {
+        clearInterval(window.complianceTelemetryInterval);
+        window.complianceTelemetryInterval = null;
+    }
+}
+
+function checkTelemetryStateChanges() {
+    if (!currentProjectId) return;
+    
+    const compTab = document.getElementById('tab-compliance');
+    if (!compTab || compTab.style.display === 'none') {
+        stopComplianceTelemetryLoop();
+        return;
+    }
+
+    // Evaluate active form State code
+    const stateInput = document.getElementById('me_state')?.value || projectData?.state || 'NSW';
+    const activeState = stateInput.trim().toUpperCase();
+
+    // Evaluate active form System profile type
+    const leadTypeInput = document.getElementById('me_type_of_lead')?.value || projectData?.type_of_lead || 'PV';
+    let systemType = 'PV';
+    if (leadTypeInput === 'PV+Battery' || leadTypeInput === 'Combined') {
+        systemType = 'Combined';
+    } else if (leadTypeInput === 'Battery') {
+        systemType = 'Battery';
+    }
+
+    // Trigger re-fetch on attribute changes
+    if (activeState !== telemetryStateCode || systemType !== telemetrySystemType) {
+        console.log('[TELEMETRY LOOP] Form metadata change detected! Updating console...', { activeState, systemType });
+        telemetryStateCode = activeState;
+        telemetrySystemType = systemType;
+        loadComplianceGuidance();
     }
 }
 </script>
