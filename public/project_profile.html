@@ -689,6 +689,7 @@ function toggleNav(event, element) {
                     <button class="tab-capsule" onclick="switchTab('installation', this)">Installation Data</button>
                     <button class="tab-capsule" onclick="switchTab('documents', this)">Documents</button>
                     <button class="tab-capsule" onclick="switchTab('satellite', this)">Satellite Roof View</button>
+                    <button class="tab-capsule" onclick="switchTab('compliance', this)">Compliance Console</button>
                 </div>
                 <div class="status-badge-container">
                     <span class="status-badge sb-planned" id="projectStatusBadge">LOADING...</span>
@@ -1004,6 +1005,90 @@ function toggleNav(event, element) {
                 <div id="satelliteMapContainer" style="flex: 1; width: 100%; min-height: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #eee; position: relative;">
                     <div id="satelliteMap" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted);">
                         Loading satellite imagery...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance & Objection Tab -->
+            <div class="content-card tab-content" id="tab-compliance" style="display: none; height: 100%; flex-direction: column; overflow: hidden; gap: 12px; min-height: 520px; padding: 12px; background: #f4f6f9; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">Compliance & Objection Console</span>
+                        <select id="comp_stage_select" onchange="changeComplianceStage(this.value)" style="height: 28px; padding: 0 8px; border-radius: 5px; border: 1px solid var(--border); background: #f8fafc; font-weight: 700; color: var(--primary); outline: none; font-size: 12px;">
+                            <option value="Greeting">Greeting & Intro</option>
+                            <option value="Pre-Qualification">Pre-Qualification</option>
+                            <option value="Engineering Proposal">Engineering & Formulas</option>
+                            <option value="Financials & Rebates">Financials & Rebates</option>
+                            <option value="Agreement">ACL Verbal Agreement</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                            <span style="font-weight: 600; color: var(--text-muted);">System Type:</span>
+                            <span id="comp_system_badge" class="status-badge" style="background: #eef2f8; color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">PV</span>
+                        </div>
+                        <div style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                            <span style="font-weight: 600; color: var(--text-muted);">State:</span>
+                            <span id="comp_state_badge" class="status-badge" style="background: #eef2f8; color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">NSW</span>
+                        </div>
+                        <button type="button" class="btn-save" style="padding: 6px 14px; font-size: 12px; height: 30px; border-radius: 5px;" onclick="saveComplianceState(true)">Save Stage Progress</button>
+                    </div>
+                </div>
+
+                <!-- Main Split-view Container -->
+                <div style="display: flex; gap: 12px; flex: 1; min-height: 0;">
+                    <!-- Left Panel: Live Speech Blueprint -->
+                    <div style="flex: 1.2; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; flex-shrink: 0;">
+                            <span>Live Speech Blueprint</span>
+                            <span style="font-size: 10px; color: var(--text-muted); text-transform: none; font-weight: 500;">Read out loud exactly as shown</span>
+                        </div>
+
+                        <!-- Chronological speech blocks area -->
+                        <div id="compliance_speech_container" style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; padding-right: 4px;">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Engineering and Rebates Metrics Strip -->
+                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-top: 10px; flex-shrink: 0;" id="compliance_metrics_strip">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
+                                Active Stage Reference Metrics
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 11.5px; line-height: 1.4; color: var(--text-dark);" id="compliance_metrics_content">
+                                <!-- Dynamic metrics payload -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Speed Objection Handler & Document Checklists -->
+                    <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 10px; flex-shrink: 0;">
+                            Objection Handler & Document Checklist
+                        </div>
+
+                        <!-- Objection Matrix Tabs -->
+                        <div style="display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; flex-shrink: 0;" id="objection_category_tabs">
+                            <button type="button" class="tab-capsule active" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">House/Roof</button>
+                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('PV Tech', this)">PV Tech</button>
+                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Battery/VPP', this)">Battery/VPP</button>
+                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Rebates', this)">Rebates</button>
+                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Legal', this)">Legal</button>
+                        </div>
+
+                        <!-- Objection Q&A List -->
+                        <div id="objection_qa_list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Required Documentation Checklist -->
+                        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; margin-top: 10px; flex-shrink: 0;" id="compliance_docs_strip">
+                            <div style="font-size: 10px; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #fde68a; padding-bottom: 4px;">
+                                Required Documents Checklist
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px;" id="compliance_docs_content">
+                                <!-- Dynamic document checklist -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2340,6 +2425,8 @@ function toggleNav(event, element) {
 
             if (tabId === 'satellite') {
                 setTimeout(loadSatelliteMap, 100);
+            } else if (tabId === 'compliance') {
+                setTimeout(loadComplianceGuidance, 100);
             }
         }
 
@@ -4354,6 +4441,311 @@ async function sendEmailToCustomer() {
     } finally {
         sendBtn.disabled = false;
         sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Email';
+    }
+}
+
+// ── COMPLIANCE & OBJECTION MODULE FRONTEND HANDLERS ─────────────────
+let activeComplianceGuidance = null;
+let completedComplianceQuestions = [];
+let complianceChecklistDocs = [];
+let currentComplianceStage = 'Greeting';
+let currentObjectionCategory = 'House/Roof';
+
+async function loadComplianceGuidance() {
+    if (!currentProjectId) return;
+    
+    const stateInput = document.getElementById('me_state')?.value || projectData?.state || 'NSW';
+    const state_code = stateInput.trim().toUpperCase();
+    
+    const leadTypeInput = document.getElementById('me_type_of_lead')?.value || projectData?.type_of_lead || 'PV';
+    let system_type = 'PV';
+    if (leadTypeInput === 'PV+Battery' || leadTypeInput === 'Combined') {
+        system_type = 'Combined';
+    } else if (leadTypeInput === 'Battery') {
+        system_type = 'Battery';
+    }
+
+    try {
+        const res = await fetch('/api/compliance-sales/fetch-guidance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                state_code,
+                system_type,
+                current_stage: currentComplianceStage,
+                lead_id: currentProjectId
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                activeComplianceGuidance = data;
+                
+                if (data.lead_saved_state) {
+                    if (window._isComplianceFirstLoad === undefined) {
+                        currentComplianceStage = data.lead_saved_state.compliance_stage || 'Greeting';
+                        document.getElementById('comp_stage_select').value = currentComplianceStage;
+                        window._isComplianceFirstLoad = false;
+                        
+                        if (currentComplianceStage !== data.current_stage) {
+                            return loadComplianceGuidance();
+                        }
+                    }
+                    completedComplianceQuestions = data.lead_saved_state.completed_questions || [];
+                    complianceChecklistDocs = data.lead_saved_state.checklist_status || [];
+                }
+
+                renderComplianceConsole();
+            }
+        }
+    } catch (err) {
+        console.error('Error fetching compliance guidance:', err);
+    }
+}
+
+function renderComplianceConsole() {
+    if (!activeComplianceGuidance) return;
+    const data = activeComplianceGuidance;
+
+    document.getElementById('comp_system_badge').innerText = data.system_type;
+    document.getElementById('comp_state_badge').innerText = data.state_code;
+
+    const speechContainer = document.getElementById('compliance_speech_container');
+    speechContainer.innerHTML = '';
+
+    const questions = data.script.mandatory_questions || [];
+    if (questions.length === 0) {
+        speechContainer.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:12px; padding: 10px; text-align:center;">No speech blueprints registered for this stage.</div>';
+    } else {
+        questions.forEach(q => {
+            const isCompleted = completedComplianceQuestions.includes(q.id);
+            
+            let badgeColor = '#10b981';
+            let badgeBg = '#edfaf2';
+            if (q.badge === 'WAIT FOR CUSTOMER') {
+                badgeColor = '#b45309';
+                badgeBg = '#fffbeb';
+            } else if (q.badge.startsWith('COURTESY ALERT')) {
+                badgeColor = '#ef4444';
+                badgeBg = '#fef2f2';
+            }
+
+            const checkedAttr = isCompleted ? 'checked' : '';
+            const textStyle = isCompleted ? 'text-decoration: line-through; color: var(--text-muted); font-weight: 400;' : 'font-weight: 600; color: var(--text-dark);';
+
+            const block = document.createElement('div');
+            block.style.cssText = 'display: flex; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; align-items: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.02);';
+            block.innerHTML = `
+                <input type="checkbox" id="chk_speech_${q.id}" ${checkedAttr} onchange="toggleSpeechCheckbox('${q.id}')" style="width: 15px; height: 15px; margin-top: 1px; cursor: pointer; accent-color: var(--accent);">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 8.5px; font-weight: 800; text-transform: uppercase; padding: 1.5px 5px; border-radius: 4px; color: ${badgeColor}; background: ${badgeBg}; border: 1.5px solid ${badgeColor}40; letter-spacing:0.3px;">${q.badge}</span>
+                    </div>
+                    <div style="font-size: 12px; line-height: 1.45; ${textStyle}">${q.text}</div>
+                </div>
+            `;
+            speechContainer.appendChild(block);
+        });
+    }
+
+    const metricsContent = document.getElementById('compliance_metrics_content');
+    metricsContent.innerHTML = '';
+
+    const eng = data.engineering || {};
+    const reb = data.rebate || {};
+
+    let metricItems = [];
+    if (data.current_stage === 'Greeting') {
+        metricItems = [
+            `<strong>Firm Brand Identity:</strong> Averion Global LLP (ACL Licensed PV/Battery provider)`,
+            `<strong>Australia Consumer Law (ACL):</strong> cooling-off provisions apply`
+        ];
+    } else if (data.current_stage === 'Pre-Qualification') {
+        metricItems = [
+            `<strong>State Solar Hours multiplier:</strong> ${eng.peak_sun_hours} hrs average peak sun`,
+            `<strong>Rebate target:</strong> ${reb.state_rebate_name} (${reb.state_rebate_details ? reb.state_rebate_details.substring(0, 75) + '...' : ''})`
+        ];
+    } else if (data.current_stage === 'Engineering Proposal') {
+        metricItems = [
+            `<strong>AS/NZS 5033 Offsets:</strong> ${eng.as_nzs_5033_boundary_mm}mm roof boundary margins`,
+            `<strong>AS/NZS 5139 Boundaries:</strong> ${eng.as_nzs_5139_clearance_mm}mm clearance backing plate boundaries`,
+            `<strong>Linear PV Panel Degradation:</strong> ${eng.annual_degradation_pct}% maximum per year`,
+            `<strong>Production math:</strong> ${eng.yield_formula}`
+        ];
+    } else if (data.current_stage === 'Financials & Rebates') {
+        metricItems = [
+            `<strong>Rebate Scheme:</strong> ${reb.state_rebate_name}`,
+            `<strong>Victoria/NSW/SA specific math:</strong> ${reb.state_rebate_details}`,
+            `<strong>Financial pre-approval step-logs:</strong> ${reb.pre_approval_steps}`
+        ];
+    } else if (data.current_stage === 'Agreement') {
+        metricItems = [
+            `<strong>Verification of ownership:</strong> Required before grid approval`,
+            `<strong>Cooling-off timeline:</strong> Strict 10-business-day cooling-off period`,
+            `<strong>Warranty references:</strong> Product, performance, and workmanship guarantees`
+        ];
+    }
+
+    metricItems.forEach(item => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding: 4px 6px; background: #ffffff; border-radius: 4px; border: 1.5px solid var(--border); font-size:11px;';
+        div.innerHTML = item;
+        metricsContent.appendChild(div);
+    });
+
+    const docsContent = document.getElementById('compliance_docs_content');
+    docsContent.innerHTML = '';
+
+    const docList = data.document_checklist || [];
+    docList.forEach(doc => {
+        const isTicked = complianceChecklistDocs.some(d => d.name === doc && d.completed);
+        const checkedAttr = isTicked ? 'checked' : '';
+
+        const div = document.createElement('div');
+        div.style.cssText = 'display: flex; gap: 8px; align-items: center; font-size:11.5px;';
+        div.innerHTML = `
+            <input type="checkbox" id="chk_doc_${doc.replace(/\s+/g, '_')}" ${checkedAttr} onchange="toggleDocCheckbox('${doc.replace(/'/g, "\\'")}')" style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent);">
+            <label for="chk_doc_${doc.replace(/\s+/g, '_')}" style="color: var(--text-dark); cursor: pointer; font-weight: 500;">${doc}</label>
+        `;
+        docsContent.appendChild(div);
+    });
+
+    renderObjectionsList();
+}
+
+function renderObjectionsList() {
+    if (!activeComplianceGuidance) return;
+    const listEl = document.getElementById('objection_qa_list');
+    listEl.innerHTML = '';
+
+    const matrix = activeComplianceGuidance.objection_matrix || [];
+    const filtered = matrix.filter(o => o.category === currentObjectionCategory);
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:12px; padding: 12px; text-align:center;">No objection matrix records for this category.</div>';
+    } else {
+        filtered.forEach(obj => {
+            const card = document.createElement('div');
+            card.style.cssText = 'border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 4px;';
+            
+            let formulas = null;
+            try { formulas = obj.formula_parameters_json ? JSON.parse(obj.formula_parameters_json) : null; } catch(e){}
+            
+            let docs = [];
+            try { docs = obj.documentation_checklist_json ? JSON.parse(obj.documentation_checklist_json) : []; } catch(e){}
+
+            let formulasHTML = '';
+            if (formulas && Object.keys(formulas).length > 0) {
+                const inner = Object.entries(formulas).map(([k, v]) => `<span style="background:#eef2f8; padding: 1.5px 4px; border-radius:3px; margin-right:4px;">${k.replace(/_/g, ' ')}: <strong>${v}</strong></span>`).join('');
+                formulasHTML = `<div style="font-size: 10px; color: var(--text-muted); margin-top:4px;">${inner}</div>`;
+            }
+
+            let docsHTML = '';
+            if (docs && docs.length > 0) {
+                docsHTML = `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;"><span style="color: var(--accent); font-weight:700;">Required:</span> ${docs.join(', ')}</div>`;
+            }
+
+            card.innerHTML = `
+                <div style="font-weight: 700; color: var(--primary); font-size: 12.5px; display: flex; gap: 6px; align-items: flex-start;">
+                    <span style="color: var(--accent);">Q:</span>
+                    <span>${obj.objection}</span>
+                </div>
+                <div style="font-size: 12px; line-height: 1.45; color: var(--text-dark); display: flex; gap: 6px; align-items: flex-start; padding-left: 8px; border-left: 2px solid var(--border);">
+                    <span style="color: #10b981; font-weight: 700;">A:</span>
+                    <span>${obj.response}</span>
+                </div>
+                ${formulasHTML}
+                ${docsHTML}
+            `;
+            listEl.appendChild(card);
+        });
+    }
+}
+
+function switchObjectionCategory(catName, btnEl) {
+    currentObjectionCategory = catName;
+    document.querySelectorAll('#objection_category_tabs .tab-capsule').forEach(btn => btn.classList.remove('active'));
+    btnEl.classList.add('active');
+    renderObjectionsList();
+}
+
+function changeComplianceStage(val) {
+    currentComplianceStage = val;
+    loadComplianceGuidance();
+}
+
+function toggleSpeechCheckbox(qId) {
+    const chk = document.getElementById('chk_speech_' + qId);
+    if (!chk) return;
+
+    if (chk.checked) {
+        if (!completedComplianceQuestions.includes(qId)) {
+            completedComplianceQuestions.push(qId);
+        }
+    } else {
+        completedComplianceQuestions = completedComplianceQuestions.filter(id => id !== qId);
+    }
+    
+    saveComplianceState(false);
+    
+    const labelEl = chk.nextElementSibling?.querySelector('div:last-child');
+    if (labelEl) {
+        if (chk.checked) {
+            labelEl.style.textDecoration = 'line-through';
+            labelEl.style.color = 'var(--text-muted)';
+            labelEl.style.fontWeight = '400';
+        } else {
+            labelEl.style.textDecoration = 'none';
+            labelEl.style.color = 'var(--text-dark)';
+            labelEl.style.fontWeight = '600';
+        }
+    }
+}
+
+function toggleDocCheckbox(docName) {
+    const chk = document.getElementById('chk_doc_' + docName.replace(/\s+/g, '_'));
+    if (!chk) return;
+
+    complianceChecklistDocs = complianceChecklistDocs.filter(d => d.name !== docName);
+    complianceChecklistDocs.push({
+        name: docName,
+        completed: chk.checked
+    });
+
+    saveComplianceState(false);
+}
+
+async function saveComplianceState(showToast = true) {
+    if (!currentProjectId) return;
+
+    try {
+        const res = await fetch('/api/compliance-sales/save-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: currentProjectId,
+                compliance_stage: currentComplianceStage,
+                completed_questions: completedComplianceQuestions,
+                checklist_status: complianceChecklistDocs
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && showToast) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Compliance Stage Progress Saved.',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        }
+    } catch(err) {
+        console.error('Error saving compliance progress:', err);
     }
 }
 </script>

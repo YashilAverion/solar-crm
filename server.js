@@ -4707,6 +4707,190 @@ app.delete('/api/voip/phonebook/:id', (req, res) => {
 // Make io accessible in routing modules (e.g., req.app.get('io'))
 
 
+// ── COMPLIANCE & OBJECTION HANDLING APIs ───────────────────────────
+function sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow) {
+    let peakSunHours = 3.9;
+    if (state_code === 'VIC' || state_code === 'TAS') peakSunHours = 3.6;
+    else if (state_code === 'QLD' || state_code === 'WA') peakSunHours = 4.2;
+    else if (state_code === 'SA') peakSunHours = 4.0;
+
+    const engineering = {
+        peak_sun_hours: peakSunHours,
+        annual_degradation_pct: 0.5,
+        performance_warranty_years: 25,
+        as_nzs_5033_boundary_mm: 200,
+        as_nzs_5139_clearance_mm: 300,
+        yield_formula: `Daily Yield (kWh) = System Size (kW) * Peak Sun Hours (${peakSunHours}) * System Efficiency (0.82)`
+    };
+
+    let rebateInfo = {
+        stc_deeming_years: 9,
+        stc_formula: "STC Count = System Size (kW) * Zone Rating * Deeming Years (9)"
+    };
+
+    if (state_code === 'VIC') {
+        rebateInfo.state_rebate_name = "Solar Victoria Rebate";
+        rebateInfo.state_rebate_details = "Up to $1,400 subsidy + matching interest-free loan option for eligible owner-occupiers with household income < $210k.";
+        rebateInfo.pre_approval_steps = "1. Customer submits income verification to Solar Victoria. 2. Averion uploads quote details. 3. Voucher generated before installation.";
+    } else if (state_code === 'NSW') {
+        rebateInfo.state_rebate_name = "NSW Peak Demand Reduction Scheme (PDRS)";
+        rebateInfo.state_rebate_details = "Energy Savings Scheme certificate incentives available for battery installations supporting peak grid windows.";
+        rebateInfo.pre_approval_steps = "1. Record battery model & serials. 2. Verify connection capability. 3. Submit PDRS claim via accredited certificate provider.";
+    } else if (state_code === 'SA') {
+        rebateInfo.state_rebate_name = "SA VPP & Flexible Exports";
+        rebateInfo.state_rebate_details = "SA Virtual Power Plant eligibility. SAPN enforces dynamic export limits (capable of limiting exports down to 1.5kW to prevent grid congestion).";
+        rebateInfo.pre_approval_steps = "1. Check VPP-approved inverter list. 2. Register with SAPN as flexible export capable site. 3. Finalize VPP agreement.";
+    } else {
+        rebateInfo.state_rebate_name = "Standard STC Rebate";
+        rebateInfo.state_rebate_details = "Federal Small-scale Technology Certificate (STC) rebate applied directly as an upfront discount.";
+        rebateInfo.pre_approval_steps = "1. System sizing calculations. 2. CER-approved components validation. 3. Assign STCs to Averion on completion.";
+    }
+
+    const documentChecklist = [
+        "Grid Connection Pre-Approval Notification",
+        "Site Photos Log (Meter box, main switchboard, roof structure, tile/metal rafters)",
+        "CES/COC Electrical Safety Certificate"
+    ];
+
+    if (system_type === 'Battery' || system_type === 'Combined') {
+        documentChecklist.push("AS/NZS 5139 Fire Safety Location Compliance Checklist");
+    }
+    if (state_code === 'VIC') {
+        documentChecklist.push("Solar Victoria Voucher Agreement");
+    }
+
+    res.json({
+        success: true,
+        state_code,
+        system_type,
+        current_stage,
+        script: {
+            stage: current_stage,
+            mandatory_questions: mandatoryQuestions
+        },
+        engineering,
+        rebate: rebateInfo,
+        document_checklist: documentChecklist,
+        objection_matrix: matrixRows,
+        lead_saved_state: leadRow ? {
+            compliance_stage: leadRow.compliance_stage || 'Greeting',
+            completed_questions: leadRow.compliance_completed_questions ? JSON.parse(leadRow.compliance_completed_questions) : [],
+            checklist_status: leadRow.compliance_checklist_status ? JSON.parse(leadRow.compliance_checklist_status) : []
+        } : null
+    });
+}
+
+app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
+    let { state_code, system_type, current_stage, lead_id } = req.body;
+
+    state_code = (state_code || 'NSW').trim().toUpperCase();
+    system_type = (system_type || 'PV').trim();
+    current_stage = (current_stage || 'Greeting').trim();
+
+    if (system_type === 'PV+Battery') {
+        system_type = 'Combined';
+    }
+
+    db.get(
+        "SELECT * FROM sales_compliance_scripts WHERE state_code = ? AND system_type = ? AND current_stage = ?",
+        [state_code, system_type, current_stage],
+        (scriptErr, scriptRow) => {
+            if (scriptErr) {
+                console.error('[COMPLIANCE ENGINE] Script fetch error:', scriptErr.message);
+                return res.status(500).json({ error: 'Database error fetching script' });
+            }
+
+            let mandatoryQuestions = [];
+            if (scriptRow && scriptRow.mandatory_questions_json) {
+                try {
+                    mandatoryQuestions = JSON.parse(scriptRow.mandatory_questions_json);
+                } catch(e) {
+                    mandatoryQuestions = [];
+                }
+            } else {
+                mandatoryQuestions = [
+                    { id: 'fb_1', text: `Verify state specific requirements for ${state_code} and system ${system_type}.`, badge: "READ NOW" },
+                    { id: 'fb_2', text: "Ask customer if they have any initial questions.", badge: "WAIT FOR CUSTOMER" },
+                    { id: 'fb_3', text: "State: Averion Global LLP complies with all Australian Consumer Law guidelines.", badge: "READ NOW" }
+                ];
+            }
+
+            db.all("SELECT * FROM compliance_objection_matrix", [], (matrixErr, matrixRows) => {
+                if (matrixErr) {
+                    console.error('[COMPLIANCE ENGINE] Matrix fetch error:', matrixErr.message);
+                    return res.status(500).json({ error: 'Database error fetching objection matrix' });
+                }
+
+                if (lead_id) {
+                    db.get(
+                        "SELECT compliance_stage, compliance_completed_questions, compliance_checklist_status FROM leads WHERE id = ?",
+                        [lead_id],
+                        (leadErr, leadRow) => {
+                            if (leadErr) {
+                                console.error('[COMPLIANCE ENGINE] Lead fetch error:', leadErr.message);
+                            }
+                            sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow);
+                        }
+                    );
+                } else {
+                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, null);
+                }
+            });
+        }
+    );
+});
+
+app.post('/api/compliance-sales/save-state', (req, res) => {
+    const { lead_id, compliance_stage, completed_questions, checklist_status } = req.body;
+
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required.' });
+    }
+
+    const stage = compliance_stage || 'Greeting';
+    const compQuestions = typeof completed_questions === 'string' ? completed_questions : JSON.stringify(completed_questions || []);
+    const chkStatus = typeof checklist_status === 'string' ? checklist_status : JSON.stringify(checklist_status || []);
+
+    db.run(
+        `UPDATE leads SET 
+            compliance_stage = ?,
+            compliance_completed_questions = ?,
+            compliance_checklist_status = ?,
+            updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [stage, compQuestions, chkStatus, lead_id],
+        function(err) {
+            if (err) {
+                console.error('[COMPLIANCE ENGINE] Save state error:', err.message);
+                return res.status(500).json({ error: 'Failed to save compliance state' });
+            }
+
+            const userName = req.session && req.session.user ? req.session.user.full_name || req.session.user.username : 'System';
+            const logDetails = `Sales rep updated compliance stage to "${stage}" with completed check questions.`;
+            
+            const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+            const yyyy = d.getFullYear();
+            const mm   = String(d.getMonth() + 1).padStart(2, '0');
+            const dd   = String(d.getDate()).padStart(2, '0');
+            const hh   = String(d.getHours()).padStart(2, '0');
+            const min  = String(d.getMinutes()).padStart(2, '0');
+            const ss   = String(d.getSeconds()).padStart(2, '0');
+            const sydneyTime = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+
+            db.run(
+                `INSERT INTO lead_history (lead_id, action, details, user_name, created_at) VALUES (?, ?, ?, ?, ?)`,
+                [lead_id, 'Compliance Progress Saved', logDetails, userName, sydneyTime],
+                (histErr) => {
+                    if (histErr) {
+                        console.error('[COMPLIANCE ENGINE] Log history error:', histErr.message);
+                    }
+                    res.json({ success: true, changes: this.changes });
+                }
+            );
+        }
+    );
+});
+
 app.set('io', io);
 
 // Start VoIPLine background poller
