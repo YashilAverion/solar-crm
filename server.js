@@ -3867,6 +3867,8 @@ function logHandshakeException(sessionId, leadId, repUserId, details, exceptionF
 
 const voipWebhookHandler = (req, res) => {
     const startTime = process.hrtime();
+    const clientIp = req.ip || req.socket.remoteAddress || '';
+    const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
 
     // Log the raw incoming ingress payload and headers to the database
     db.run(
@@ -3874,13 +3876,19 @@ const voipWebhookHandler = (req, res) => {
         [JSON.stringify({ query: req.query, body: req.body }), JSON.stringify(req.headers)]
     );
 
-    // Extract tracking tokens using absolute fallback structure
-    const rawCallerId = req.query.caller_id || req.body.caller_id || req.query.callerid || req.body.unique_call_id || req.query.caller || req.body.caller || req.query.cli || req.body.cli || req.query.from || req.body.from || '';
-    const rawDestNumber = req.query.dest_number || req.body.dest_number || req.query.dialed_number || req.body.dialed_number || req.query.dialedNumber || req.body.dialedNumber || req.query.destination || req.body.destination || req.query.to || req.body.to || '';
-    const rawUserNumber = req.query.user_number || req.body.user_number || req.query.extension || req.body.extension || req.query.agent || req.body.agent || '';
+    // Save logs to telephony_ingress_production_logs
+    db.run(
+        "INSERT INTO telephony_ingress_production_logs (origin_ip, raw_body_json, processed_status) VALUES (?, ?, ?)",
+        [normalizedIp, JSON.stringify({ query: req.query, body: req.body }), 'processed']
+    );
 
-    const callerId = VoIPPayloadSanitizer.sanitizePhone(rawCallerId);
-    const dialedNumber = VoIPPayloadSanitizer.sanitizePhone(rawDestNumber);
+    // Extract tracking parameters using absolute cascading fallback system
+    const targetCaller = req.body.caller_id || req.body.unique_call_id || req.query.caller_id || '';
+    const targetDest = req.body.dest_number || req.body.user_number || req.query.dest_number || '';
+    const rawUserNumber = req.body.user_number || req.body.extension || req.query.user_number || req.query.extension || '';
+
+    const callerId = VoIPPayloadSanitizer.sanitizePhone(targetCaller);
+    const dialedNumber = VoIPPayloadSanitizer.sanitizePhone(targetDest);
     const userNumber = VoIPPayloadSanitizer.sanitizeExtension(rawUserNumber);
 
     const timeOfCall = req.query.time_of_call || req.query.timeOfCall || req.query.timestamp ||
