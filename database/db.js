@@ -1603,6 +1603,17 @@ db.serialize(() => {
         )
     `);
 
+    // 3.9 telephony_compliance_rules_matrix table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS telephony_compliance_rules_matrix (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            state_code TEXT,
+            target_field TEXT,
+            matching_keywords TEXT,
+            action_value TEXT
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists
@@ -1780,6 +1791,29 @@ db.serialize(() => {
                 });
                 stmt.finalize();
             });
+        }
+    });
+
+    db.get("SELECT COUNT(*) as count FROM telephony_compliance_rules_matrix", [], (err, checkRow) => {
+        if (!err && (!checkRow || checkRow.count === 0)) {
+            console.log('[COMPLIANCE] Seeding telephony compliance rules matrix...');
+            const defaultRules = [
+                { state_code: 'ALL', target_field: 'roof_type', matching_keywords: 'tin roof,corrugated iron,colorbond sheet,tin,colorbond,metal roof,sheet metal', action_value: 'Tin' },
+                { state_code: 'ALL', target_field: 'roof_type', matching_keywords: 'tile roof,concrete tile,terracotta tile,tiles,tile,clay tile', action_value: 'Tile' },
+                { state_code: 'ALL', target_field: 'phase', matching_keywords: 'three phase grid,3-phase setup,polyphase system,three phase,3 phase,three-phase,3-phase', action_value: '3' },
+                { state_code: 'ALL', target_field: 'phase', matching_keywords: 'single phase,1 phase,single-phase,1-phase', action_value: '1' },
+                { state_code: 'ALL', target_field: 'house_storey', matching_keywords: 'double storey,two levels,upstairs array,double-storey,two storey,two-storey', action_value: 'Double' },
+                { state_code: 'ALL', target_field: 'house_storey', matching_keywords: 'single storey,one level,single-storey,one storey,one-storey', action_value: 'Single' },
+                { state_code: 'ALL', target_field: 'house_storey', matching_keywords: 'multi storey,three levels,multi-storey,three storey,three-storey', action_value: 'Multi' },
+                { state_code: 'ALL', target_field: 'battery_location', matching_keywords: 'inside the garage,interior mounting,inside,garage,indoors,indoor', action_value: 'Inside' },
+                { state_code: 'ALL', target_field: 'battery_location', matching_keywords: 'outside,outdoors,exterior mounting,exterior,outdoor', action_value: 'Outside' }
+            ];
+
+            const stmt = db.prepare("INSERT INTO telephony_compliance_rules_matrix (state_code, target_field, matching_keywords, action_value) VALUES (?, ?, ?, ?)");
+            defaultRules.forEach(r => {
+                stmt.run(r.state_code, r.target_field, r.matching_keywords, r.action_value);
+            });
+            stmt.finalize();
         }
     });
 

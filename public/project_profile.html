@@ -5314,10 +5314,65 @@ function initVoiceSocketListeners() {
                     }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
                 }
             });
+
+            window.voipSocket.on('voipline-transcript-parsed', (data) => {
+                handleIncomingParsedTranscript(data);
+            });
+
+            if (window.EventSource) {
+                const sseSource = new EventSource('/api/telephony-voice/sse');
+                sseSource.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleIncomingParsedTranscript(data);
+                    } catch (e) {
+                        console.error('[SSE] Error parsing transcript event payload:', e);
+                    }
+                };
+                sseSource.onerror = (err) => {
+                    console.warn('[SSE] EventSource connection encountered an error.', err);
+                };
+            }
         } else if (checkCount > 100) {
             clearInterval(checkInterval);
         }
     }, 100);
+}
+
+function handleIncomingParsedTranscript(data) {
+    if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
+        const isActiveOwner = (
+            projectData &&
+            projectData.assign_to &&
+            (
+                String(projectData.assign_to).toLowerCase() === String(window.loggedInUsername || '').toLowerCase() ||
+                String(projectData.assign_to).toLowerCase() === String(window.loggedInUser || '').toLowerCase()
+            )
+        );
+        
+        if (!isActiveOwner) {
+            console.log('[COMPLIANCE OVERLAY] Skipping auto-fill from post-call: Logged-in user is not active owner.', projectData?.assign_to);
+            return;
+        }
+
+        console.log('[COMPLIANCE OVERLAY] Parsing metrics received dynamically:', data);
+        
+        if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
+            applyFormFillingAutomation(data.extractedFields);
+        }
+
+        if (data.allFields) {
+            Object.assign(projectData, data.allFields);
+        }
+
+        if (data.intentAnalytics) {
+            updateIntentAnalyticsUI(data.intentAnalytics);
+        }
+
+        if (typeof fetchClosingAdvice === 'function') {
+            fetchClosingAdvice();
+        }
+    }
 }
 
 // ── TELEPHONY VOICE Sync & Simulation Cockpit ────────────────────────

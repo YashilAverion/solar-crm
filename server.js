@@ -3524,8 +3524,155 @@ async function transcribeAudio(remoteUrl) {
         }
         // Network or file error
         console.error('[VoIPLine Transcription] Unexpected error:', err.message);
-        return `[Transcription failed — ${err.message}. Recording: ${remoteUrl}]`;
     }
+}
+
+// Server-Sent Events client registry
+let sseClients = {};
+
+app.get('/api/telephony-voice/sse', (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).end();
+    }
+    const username = req.session.user.username;
+    if (!username) {
+        return res.status(401).end();
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    if (!sseClients[username]) {
+        sseClients[username] = [];
+    }
+    sseClients[username].push(res);
+
+    req.on('close', () => {
+        if (sseClients[username]) {
+            sseClients[username] = sseClients[username].filter(c => c !== res);
+            if (sseClients[username].length === 0) {
+                delete sseClients[username];
+            }
+        }
+    });
+});
+
+/**
+ * Parses raw transcript texts, maps target fields, updates database and emits realtime events.
+ */
+function processTranscriptAndAutoFill(leadId, transcriptText, stateCode, callback) {
+    if (!leadId || !transcriptText) {
+        return callback(null, {});
+    }
+
+    db.get("SELECT engineering_details, state FROM leads WHERE id = ?", [leadId], (err, leadRow) => {
+        if (err || !leadRow) {
+            return callback(err || new Error("Lead not found"), {});
+        }
+
+        const currentState = (stateCode || leadRow.state || 'NSW').trim().toUpperCase();
+        let existingDetails = {};
+        try {
+            existingDetails = JSON.parse(leadRow.engineering_details || '{}');
+        } catch (e) {}
+
+        db.all(
+            "SELECT target_field, matching_keywords, action_value FROM telephony_compliance_rules_matrix WHERE state_code = 'ALL' OR state_code = ?",
+            [currentState],
+            (rulesErr, rules) => {
+                if (rulesErr || !rules) {
+                    return callback(rulesErr || new Error("Rules fetch failed"), {});
+                }
+
+                const extracted = {};
+                const textLower = transcriptText.toLowerCase();
+
+                rules.forEach(rule => {
+                    const keywords = (rule.matching_keywords || '').split(',').map(k => k.trim().toLowerCase());
+                    const matched = keywords.some(keyword => {
+                        const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        const regex = new RegExp('(?:\\b|\\s)' + escapedKeyword + '(?:\\b|\\s)', 'i');
+                        return regex.test(textLower);
+                    });
+
+                    if (matched) {
+                        extracted[rule.target_field] = rule.action_value;
+                    }
+                });
+
+                // Merge into engineering details
+                const updatedDetails = { ...existingDetails };
+                if (extracted.roof_type) {
+                    updatedDetails.roof_type = extracted.roof_type;
+                }
+                if (extracted.phase) {
+                    updatedDetails.electricity_phase = extracted.phase;
+                    updatedDetails.phase = extracted.phase;
+                }
+                if (extracted.house_storey) {
+                    updatedDetails.house_storey = extracted.house_storey;
+                }
+                if (extracted.battery_location) {
+                    updatedDetails.battery_location = extracted.battery_location;
+                }
+
+                // Compute intent analytics
+                let purchaseProbability = 50;
+                const positiveKeywords = ['buy', 'ready', 'install', 'go ahead', 'accept', 'want to proceed', 'sign up', 'deal', 'order', 'happy to sign'];
+                positiveKeywords.forEach(kw => {
+                    if (textLower.includes(kw)) purchaseProbability += 15;
+                });
+                const negativeKeywords = ['expensive', 'wait', 'quote collector', 'too high', 'think about it', 'cancel', 'not now', 'delay'];
+                negativeKeywords.forEach(kw => {
+                    if (textLower.includes(kw)) purchaseProbability -= 10;
+                });
+                purchaseProbability = Math.max(0, Math.min(100, purchaseProbability));
+
+                const competitorQuoteStatus = (textLower.includes('quote') || textLower.includes('competitor') || textLower.includes('other quote') || textLower.includes('cheaper price') || textLower.includes('got a price')) ? 'Yes' : 'No';
+                const financialBarriers = (textLower.includes('expensive') || textLower.includes('price too high') || textLower.includes('finance') || textLower.includes('loan') || textLower.includes('budget') || textLower.includes('cannot afford') || textLower.includes('pricey')) ? 'Yes' : 'No';
+                const timelineFearMetrics = (textLower.includes('delay') || textLower.includes('waiting') || textLower.includes('risk') || textLower.includes('fear') || textLower.includes('long time') || textLower.includes('scared') || textLower.includes('install when') || textLower.includes('how long')) ? 'Yes' : 'No';
+
+                const analytics = {
+                    purchase_probability: purchaseProbability,
+                    competitor_quote_status: competitorQuoteStatus,
+                    financial_barriers: financialBarriers,
+                    timeline_fear_metrics: timelineFearMetrics
+                };
+
+                db.run(
+                    "UPDATE leads SET engineering_details = ? WHERE id = ?",
+                    [JSON.stringify(updatedDetails), leadId],
+                    function(updateErr) {
+                        if (updateErr) {
+                            console.error('[Transcript Parser] Error updating engineering_details:', updateErr.message);
+                            return callback(updateErr, {});
+                        }
+
+                        db.run(
+                            `INSERT INTO telephony_live_voice_sync (
+                                lead_id, live_captions_transcript, extracted_intent_analytics_json, automation_sync_status, last_updated_at
+                            ) VALUES (?, ?, ?, 'synced', CURRENT_TIMESTAMP)
+                            ON CONFLICT(lead_id) DO UPDATE SET
+                                live_captions_transcript = excluded.live_captions_transcript,
+                                extracted_intent_analytics_json = excluded.extracted_intent_analytics_json,
+                                automation_sync_status = 'synced',
+                                last_updated_at = CURRENT_TIMESTAMP`,
+                            [leadId, transcriptText, JSON.stringify(analytics)],
+                            (syncErr) => {
+                                callback(syncErr, {
+                                    extractedFields: extracted,
+                                    allFields: updatedDetails,
+                                    intentAnalytics: analytics
+                                });
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    });
 }
 
 // ── VOIPLINE TELECOM INTEGRATION ───────────────────────────
@@ -3668,6 +3815,34 @@ app.post('/api/voipline/webhook', (req, res) => {
                                 
                                 setImmediate(async () => {
                                     const transcript = recordingUrl ? await transcribeAudio(recordingUrl) : '';
+                                    
+                                    if (leadId && transcript) {
+                                        processTranscriptAndAutoFill(leadId, transcript, leadRow ? leadRow.state : 'NSW', (err, result) => {
+                                            if (!err && result && result.extractedFields && Object.keys(result.extractedFields).length > 0) {
+                                                console.log(`[Transcript Parser] Auto-filled fields for Lead ${leadId}:`, result.extractedFields);
+                                                
+                                                const eventPayload = {
+                                                    leadId: leadId,
+                                                    transcriptText: transcript,
+                                                    extractedFields: result.extractedFields,
+                                                    allFields: result.allFields,
+                                                    intentAnalytics: result.intentAnalytics
+                                                };
+
+                                                if (io && matchedUser) {
+                                                    io.to(matchedUser.username).emit('voipline-transcript-parsed', eventPayload);
+                                                }
+
+                                                if (matchedUser && sseClients[matchedUser.username]) {
+                                                    const ssePayload = JSON.stringify(eventPayload);
+                                                    sseClients[matchedUser.username].forEach(client => {
+                                                        client.write(`data: ${ssePayload}\n\n`);
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    }
+
                                     db.run(
                                         "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, ?, ?, ?, ?)",
                                         [matchedUser.id, customerNumber, projectNumber, direction, duration, recordingUrl, transcript],
