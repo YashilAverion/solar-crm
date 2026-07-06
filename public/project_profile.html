@@ -5329,27 +5329,8 @@ function initVoiceSocketListeners() {
     let checkCount = 0;
     
     const handleIncomingCallLogic = (data) => {
-        let isMatch = false;
-        if (data.forceConnected === true) {
-            isMatch = true;
-        } else if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
-            isMatch = true;
-        } else if (projectData) {
-            const cleanCaller = String(data.callerNumber || '').replace(/\D/g, '');
-            const suffixCaller = cleanCaller.length >= 9 ? cleanCaller.slice(-9) : cleanCaller;
-
-            const cleanP1 = String(projectData.phone_number || '').replace(/\D/g, '');
-            const cleanP2 = String(projectData.phone_number_2 || '').replace(/\D/g, '');
-            const cleanLand = String(projectData.landline_number || '').replace(/\D/g, '');
-
-            if (suffixCaller && (
-                (cleanP1 && cleanP1.endsWith(suffixCaller)) ||
-                (cleanP2 && cleanP2.endsWith(suffixCaller)) ||
-                (cleanLand && cleanLand.endsWith(suffixCaller))
-            )) {
-                isMatch = true;
-            }
-        }
+        // Completely ignore any strict number comparison or name lookups
+        let isMatch = true;
 
         if (isMatch) {
             // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"

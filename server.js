@@ -3867,6 +3867,7 @@ function logHandshakeException(sessionId, leadId, repUserId, details, exceptionF
 
 const voipWebhookHandler = (req, res) => {
     const startTime = process.hrtime();
+    const callerNum = req.body.caller_id || req.query.caller_id || req.body.unique_call_id || req.query.callerid || '';
     const clientIp = req.ip || req.socket.remoteAddress || '';
     const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
 
@@ -3882,12 +3883,10 @@ const voipWebhookHandler = (req, res) => {
         [normalizedIp, JSON.stringify({ query: req.query, body: req.body }), 'processed']
     );
 
-    // Extract tracking parameters using absolute cascading fallback system
-    const targetCaller = req.body.caller_id || req.body.unique_call_id || req.query.caller_id || '';
     const targetDest = req.body.dest_number || req.body.user_number || req.query.dest_number || '';
     const rawUserNumber = req.body.user_number || req.body.extension || req.query.user_number || req.query.extension || '';
 
-    const callerId = VoIPPayloadSanitizer.sanitizePhone(targetCaller);
+    const callerId = VoIPPayloadSanitizer.sanitizePhone(callerNum);
     const dialedNumber = VoIPPayloadSanitizer.sanitizePhone(targetDest);
     const userNumber = VoIPPayloadSanitizer.sanitizeExtension(rawUserNumber);
 
@@ -3902,6 +3901,47 @@ const voipWebhookHandler = (req, res) => {
     if (!callerId || !dialedNumber) {
         console.warn(`[VoIPLine Webhook] WARNING: Unlinked webhook originating from empty PBX component blocks. Payload:`, req.body);
     }
+
+    // Immediate global broadcast switch: bypass matching user checks and force-pump down to ALL active server SSE/WebSocket channels
+    db.lookupLeadByPhoneNumber(callerId, (err, leadRow) => {
+        let customerName = 'Live Session';
+        let leadId = null;
+        let projectNumber = null;
+        if (!err && leadRow) {
+            customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
+            leadId = leadRow.id;
+            projectNumber = leadRow.project_number;
+        }
+
+        const io = req.app.get('io');
+        const forcePayload = {
+            callerNumber: callerId || '1001',
+            customerName: customerName,
+            projectNumber: projectNumber,
+            leadId: leadId,
+            timeOfCall: new Date().toISOString(),
+            uniqueCallId: uniqueCallId,
+            forceConnected: true
+        };
+
+        console.log(`[VoIPLine Webhook] Global broadcast switch activated. Forcing active state flags trigger to all rooms/clients.`);
+        if (io) {
+            io.emit('voipline-incoming-call', forcePayload);
+        }
+        
+        // Broadcast to ALL active SSE clients
+        Object.keys(sseClients).forEach(username => {
+            if (sseClients[username]) {
+                const sseData = JSON.stringify({
+                    event: 'voipline-incoming-call',
+                    ...forcePayload
+                });
+                sseClients[username].forEach(client => {
+                    client.write(`data: ${sseData}\n\n`);
+                });
+            }
+        });
+    });
 
     // Immediately release the client by sending 200 OK (sub-millisecond benchmark)
     res.json({
