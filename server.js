@@ -4877,6 +4877,97 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
     );
 });
 
+app.get('/api/compliance/fetch-matrix', (req, res) => {
+    let state_code = (req.query.state_code || 'NSW').trim().toUpperCase();
+    let system_type = (req.query.system_type || 'PV').trim();
+    const lead_id = req.query.lead_id;
+
+    if (system_type === 'PV+Battery') {
+        system_type = 'Combined';
+    }
+
+    db.all(
+        "SELECT current_stage, mandatory_questions_json FROM sales_compliance_scripts WHERE state_code = ? AND system_type = ?",
+        [state_code, system_type],
+        (err, scriptRows) => {
+            if (err) {
+                console.error('[COMPLIANCE MATRIX] Script query error:', err.message);
+                return res.status(500).json({ error: 'Database error fetching compliance scripts' });
+            }
+
+            db.all("SELECT * FROM compliance_objection_matrix", [], (matrixErr, matrixRows) => {
+                if (matrixErr) {
+                    console.error('[COMPLIANCE MATRIX] Objection query error:', matrixErr.message);
+                    return res.status(500).json({ error: 'Database error fetching objection matrix' });
+                }
+
+                const buildMatrixResponse = (voiceRow) => {
+                    let analytics = {
+                        purchase_probability: 50,
+                        competitor_quote_status: 'No',
+                        financial_barriers: 'No',
+                        timeline_fear_metrics: 'No'
+                    };
+
+                    if (voiceRow && voiceRow.extracted_intent_analytics_json) {
+                        try {
+                            analytics = JSON.parse(voiceRow.extracted_intent_analytics_json);
+                        } catch(e) {}
+                    }
+
+                    const hesitation_counters = [];
+
+                    if (analytics.competitor_quote_status === 'Yes') {
+                        hesitation_counters.push({
+                            trigger: "Competitor Quote Match",
+                            narrative: "I completely understand that price is a major factor, but it's crucial to compare the system engineering design. Ares Energy operates strictly under CEC compliance. Many budget installers avoid using robust boundary margins or skip necessary AS/NZS 5033/5139 isolation switches, risking solar safety. Our package includes tier-1 Jinko modules, Growatt/Fox ESS battery configurations, and local maintenance support, matching any valid written quote on CEC-accredited components."
+                        });
+                    }
+
+                    if (analytics.financial_barriers === 'Yes') {
+                        hesitation_counters.push({
+                            trigger: "Price Strain & Cash-Flow Fears",
+                            narrative: "Solar shouldn't be a financial burden; it should pay for itself from day one. By taking advantage of our flexible payment options and government schemes (such as the Solar Victoria rebate and loan or NSW PDRS incentives), we can structure the system so that your monthly electricity savings exceed the system cost, creating immediate positive cash-flow."
+                        });
+                    }
+
+                    if (analytics.timeline_fear_metrics === 'Yes') {
+                        hesitation_counters.push({
+                            trigger: "Timeline & Grid Approval Delay",
+                            narrative: "If you're worried about delays, rest assured that Ares Energy handles the entire connection process. We submit grid pre-approvals to distributors (SAPN, Ausgrid, Western Power, etc.) within 24 hours of agreement. Grid approval normally clears in under 14 days, and physical installation is executed within 3 weeks of approval, securing your STC rebate rates immediately."
+                        });
+                    }
+
+                    if (hesitation_counters.length === 0) {
+                        hesitation_counters.push({
+                            trigger: "Standard closing value pitch",
+                            narrative: "Since we've verified your technical site parameters, let's look at long-term reliability. We install premium Jinko N-type panels with a 25-year performance warranty and CEC-compliant inverters. The entire system is engineered for structural longevity, shielding your home from rising power bills."
+                        });
+                    }
+
+                    res.json({
+                        success: true,
+                        state_code,
+                        system_type,
+                        scripts: scriptRows,
+                        objections: matrixRows,
+                        intent_analytics: analytics,
+                        hesitation_counters: hesitation_counters
+                    });
+                };
+
+                if (lead_id) {
+                    db.get("SELECT extracted_intent_analytics_json FROM telephony_live_voice_sync WHERE lead_id = ?", [lead_id], (err, voiceRow) => {
+                        buildMatrixResponse(voiceRow);
+                    });
+                } else {
+                    buildMatrixResponse(null);
+                }
+            });
+        }
+    );
+});
+
 app.post('/api/compliance-sales/save-state', (req, res) => {
     const { lead_id, compliance_stage, completed_questions, checklist_status } = req.body;
 

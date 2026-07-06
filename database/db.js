@@ -1618,457 +1618,168 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_sales_comp_scripts ON sales_compliance_scripts (state_code, system_type, current_stage)");
     db.run("CREATE INDEX IF NOT EXISTS idx_comp_obj_matrix_cat ON compliance_objection_matrix (category)");
 
-    // 5. Seed default compliance scripts & objection matrix if empty
-    db.get("SELECT COUNT(*) as count FROM sales_compliance_scripts", [], (err, row) => {
-        if (!err && row && row.count === 0) {
-            console.log('[COMPLIANCE] Seeding default sales compliance scripts...');
-            const defaultScripts = [
-                // VIC PV
-                {
-                    state_code: 'VIC', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_greet_1', text: "State your full name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'vic_greet_2', text: "Ask if they are the registered owner of the property.", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'vic_greet_3', text: "Request courtesy consent to record/note call details.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_pre_1', text: "Confirm average quarterly power bill is above $300.", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'vic_pre_2', text: "Verify roof is tin or tile with minimal shading.", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'vic_pre_3', text: "Ask if they have received the Solar Victoria rebate before (only eligible once).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_eng_1', text: "Explain CEC/CER approved PV system standards.", badge: "READ NOW" },
-                        { id: 'vic_eng_2', text: "Provide the expected daily yield calculations for Victoria (avg. 3.6 hours peak sun).", badge: "READ NOW" },
-                        { id: 'vic_eng_3', text: "Explain roof boundary offsets (minimum 200mm margin) as per AS/NZS 5033.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_fin_1', text: "Outline Solar Victoria rebate eligibility ($1400 rebate and interest-free loan option).", badge: "READ NOW" },
-                        { id: 'vic_fin_2', text: "Provide STC rebate integration breakdown.", badge: "READ NOW" },
-                        { id: 'vic_fin_3', text: "Confirm 10-business-day cooling-off period under Australian Consumer Law.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_agr_1', text: "Perform formal verbal contract sign-off including system components.", badge: "READ NOW" },
-                        { id: 'vic_agr_2', text: "Read the cooling-off declaration and cancellation terms out loud.", badge: "READ NOW" },
-                        { id: 'vic_agr_3', text: "Advise that NMI and grid connection pre-approval will be submitted.", badge: "READ NOW" }
-                    ])
-                },
-                // VIC Battery
-                {
-                    state_code: 'VIC', system_type: 'Battery', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_bat_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'vic_bat_greet_2', text: "Verify property ownership for battery installation.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Battery', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_bat_pre_1', text: "Verify an existing solar PV system is installed.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Battery', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_bat_eng_1', text: "Explain AS/NZS 5139 safety boundaries for battery placement.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Battery', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_bat_fin_1', text: "Outline Peak Demand Reduction Scheme or other active battery rebates.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Battery', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_bat_agr_1', text: "Disclose cooling-off rights and complete the verbal sign-off.", badge: "READ NOW" }
-                    ])
-                },
-                // VIC Combined
-                {
-                    state_code: 'VIC', system_type: 'Combined', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_comb_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'vic_comb_greet_2', text: "Verify property ownership for combined PV+Battery installation.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Combined', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_comb_pre_1', text: "Verify high daily usage (ideal for battery storage).", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'vic_comb_pre_2', text: "Ask if they have an existing solar system or need a new one.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Combined', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_comb_eng_1', text: "Explain AS/NZS 5139 battery safety boundaries and non-combustible backing requirements.", badge: "READ NOW" },
-                        { id: 'vic_comb_eng_2', text: "Present combined PV panels and battery storage kW/kWh output calculations.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Combined', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_comb_fin_1', text: "Explain STC and Solar Victoria battery rebate options if available.", badge: "READ NOW" },
-                        { id: 'vic_comb_fin_2', text: "Outline battery yield savings, peak time usage arbitrage, and ROI.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'VIC', system_type: 'Combined', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'vic_comb_agr_1', text: "Obtain formal consent for combined PV + Battery purchase.", badge: "READ NOW" },
-                        { id: 'vic_comb_agr_2', text: "Disclose Australian Consumer Law cooling-off rights.", badge: "READ NOW" }
-                    ])
-                },
-                // NSW PV
-                {
-                    state_code: 'NSW', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'nsw_greet_2', text: "Verify property ownership in NSW.", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'nsw_greet_3', text: "COURTESY ALERT: Apologise & Await Turn if customer speaks or interrupts.", badge: "COURTESY ALERT: Apologise & Await Turn if interrupted" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_pre_1', text: "Verify that quarterly energy bill exceeds $350.", badge: "WAIT FOR CUSTOMER" },
-                        { id: 'nsw_pre_2', text: "Confirm roof material (Tin/Tile/etc.) and storey count.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_eng_1', text: "Explain CEC/CER compliant PV panel metrics & system degradation rates (0.5% yearly).", badge: "READ NOW" },
-                        { id: 'nsw_eng_2', text: "Detail expected output using the NSW solar multiplier (avg 3.9 peak sun hours).", badge: "READ NOW" },
-                        { id: 'nsw_eng_3', text: "Explain AS/NZS 5033 wind loading & 200mm margin roof offsets.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_fin_1', text: "Outline the upfront STC discount on panels.", badge: "READ NOW" },
-                        { id: 'nsw_fin_2', text: "Advise that NSW Peak Demand Reduction Scheme (PDRS) might offer future benefits.", badge: "READ NOW" },
-                        { id: 'nsw_fin_3', text: "Outline the 10-business-day cooling-off period under ACL.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_agr_1', text: "Conduct the mandatory verbal agreement script including price, models, and warranties.", badge: "READ NOW" },
-                        { id: 'nsw_agr_2', text: "Confirm NMI number and property address details for grid connection.", badge: "READ NOW" }
-                    ])
-                },
-                // NSW Battery
-                {
-                    state_code: 'NSW', system_type: 'Battery', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_bat_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'nsw_bat_greet_2', text: "Verify property ownership for battery installation in NSW.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Battery', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_bat_pre_1', text: "Confirm if they have existing solar or if they want to operate in blackout support mode.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Battery', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_bat_eng_1', text: "Present AS/NZS 5139 safety boundary requirements (FC backing, clearances from doors/windows).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Battery', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_bat_fin_1', text: "Present the NSW PDRS Peak Demand reduction incentive for battery systems.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Battery', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_bat_agr_1', text: "Confirm verbal agreement and standard 10-day cooling-off policy.", badge: "READ NOW" }
-                    ])
-                },
-                // NSW Combined
-                {
-                    state_code: 'NSW', system_type: 'Combined', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_comb_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'nsw_comb_greet_2', text: "Verify property ownership for combined PV+Battery in NSW.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Combined', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_comb_pre_1', text: "Confirm high daily usage and interest in grid self-reliance.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Combined', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_comb_eng_1', text: "Outline AS/NZS 5033 offsets and AS/NZS 5139 battery safety guidelines.", badge: "READ NOW" },
-                        { id: 'nsw_comb_eng_2', text: "Present combined PV + Battery technical sizing and production parameters.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Combined', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_comb_fin_1', text: "Explain combined STC and PDRS battery rebate discount amounts.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'NSW', system_type: 'Combined', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'nsw_comb_agr_1', text: "Obtain formal verbal agreement and detail ACL cooling-off protections.", badge: "READ NOW" }
-                    ])
-                },
-                // SA PV
-                {
-                    state_code: 'SA', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'sa_greet_2', text: "Verify property ownership in South Australia.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'SA', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_pre_1', text: "Confirm NMI number and distributor is SAPN.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'SA', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_eng_1', text: "Explain SA flexible export limits (1.5kW dynamic limit under peak congestion) as per SAPN rules.", badge: "READ NOW" },
-                        { id: 'sa_eng_2', text: "Provide expected daily yield calculations (avg. 4.0 peak hours sun).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'SA', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_fin_1', text: "State standard STC solar rebate discount.", badge: "READ NOW" },
-                        { id: 'sa_fin_2', text: "State 10-business-day cooling-off rights under ACL.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'SA', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_agr_1', text: "Obtain verbal consent for the solar PV purchase.", badge: "READ NOW" }
-                    ])
-                },
-                // SA Battery / Combined
-                {
-                    state_code: 'SA', system_type: 'Combined', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'sa_comb_eng_1', text: "Explain SA VPP (Virtual Power Plant) dynamic connection export limits.", badge: "READ NOW" },
-                        { id: 'sa_comb_eng_2', text: "Explain AS/NZS 5139 safety boundary zones for batteries.", badge: "READ NOW" }
-                    ])
-                },
-                // Default fallback records for other states
-                {
-                    state_code: 'QLD', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'qld_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'qld_greet_2', text: "Verify property ownership in Queensland.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'QLD', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'qld_pre_1', text: "Verify bill and check roof structure.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'QLD', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'qld_eng_1', text: "Describe Region C/D cyclone wind-rating brackets for mounts.", badge: "READ NOW" },
-                        { id: 'qld_eng_2', text: "Present expected daily yield calculations (avg. 4.2 peak sun hours).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'QLD', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'qld_fin_1', text: "Detail STC rebate and feed-in tariffs.", badge: "READ NOW" },
-                        { id: 'qld_fin_2', text: "Outline 10-business-day cooling-off rights under ACL.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'QLD', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'qld_agr_1', text: "Secure formal verbal agreement under Australian Consumer Law.", badge: "READ NOW" }
-                    ])
-                },
-                // WA PV
-                {
-                    state_code: 'WA', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'wa_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'wa_greet_2', text: "Verify property ownership in WA.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'WA', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'wa_pre_1', text: "Verify distributor is Western Power or Horizon Power.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'WA', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'wa_eng_1', text: "Describe Synergy/Horizon grid connection limits and export limits (typically 5kW).", badge: "READ NOW" },
-                        { id: 'wa_eng_2', text: "Present expected daily yield calculations (avg. 4.2 peak sun hours).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'WA', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'wa_fin_1', text: "Detail STC rebate discount.", badge: "READ NOW" },
-                        { id: 'wa_fin_2', text: "Outline 10-business-day cooling-off rights under ACL.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'WA', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'wa_agr_1', text: "Secure formal verbal agreement under Australian Consumer Law.", badge: "READ NOW" }
-                    ])
-                },
-                // TAS PV
-                {
-                    state_code: 'TAS', system_type: 'PV', current_stage: 'Greeting',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'tas_greet_1', text: "State name and company: Averion Global LLP.", badge: "READ NOW" },
-                        { id: 'tas_greet_2', text: "Verify property ownership in Tasmania.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'TAS', system_type: 'PV', current_stage: 'Pre-Qualification',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'tas_pre_1', text: "Verify distributor is TasNetworks.", badge: "WAIT FOR CUSTOMER" }
-                    ])
-                },
-                {
-                    state_code: 'TAS', system_type: 'PV', current_stage: 'Engineering Proposal',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'tas_eng_1', text: "Present expected daily yield calculations (avg. 3.6 peak sun hours).", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'TAS', system_type: 'PV', current_stage: 'Financials & Rebates',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'tas_fin_1', text: "Detail STC rebate discount and TasNetworks feed-in rates.", badge: "READ NOW" }
-                    ])
-                },
-                {
-                    state_code: 'TAS', system_type: 'PV', current_stage: 'Agreement',
-                    mandatory_questions_json: JSON.stringify([
-                        { id: 'tas_agr_1', text: "Secure formal verbal agreement under Australian Consumer Law.", badge: "READ NOW" }
-                    ])
-                }
-            ];
+    // 5. Seed default compliance scripts & objection matrix if empty or missing new premium values
+    db.get("SELECT COUNT(*) as count FROM sales_compliance_scripts WHERE mandatory_questions_json LIKE '%Jinko%' OR mandatory_questions_json LIKE '%Ares Energy%'", [], (err, checkRow) => {
+        if (!err && (!checkRow || checkRow.count === 0)) {
+            console.log('[COMPLIANCE] Reseeding default sales compliance scripts with premium closing matrix...');
+            db.run("DELETE FROM sales_compliance_scripts", () => {
+                const defaultScripts = [];
+                const states = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS'];
+                const systems = ['PV', 'Battery', 'Combined'];
+                const stages = ['Greeting', 'Pre-Qualification', 'Engineering Proposal', 'Financials & Rebates', 'Agreement'];
 
-            const stmt = db.prepare("INSERT INTO sales_compliance_scripts (state_code, system_type, current_stage, mandatory_questions_json) VALUES (?, ?, ?, ?)");
-            defaultScripts.forEach(s => {
-                stmt.run(s.state_code, s.system_type, s.current_stage, s.mandatory_questions_json);
+                states.forEach(st => {
+                    systems.forEach(sys => {
+                        stages.forEach(stage => {
+                            let questions = [];
+                            if (stage === 'Greeting') {
+                                questions = [
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_1`, text: `State your name and company: Averion Global LLP. Establish professional identity and confidence with a warm Australian greeting: 'Good day! Thanks for speaking with us today. This is Ares Energy.'`, badge: "READ NOW" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_2`, text: `Ask if they are the registered property owner, establishing a diagnostic hook.`, badge: "WAIT FOR CUSTOMER" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_3`, text: `COURTESY ALERT: Apologise & Await Turn if interrupted. Remind that Averion Global complies with Australian Consumer Law.`, badge: "COURTESY ALERT" }
+                                ];
+                            } else if (stage === 'Pre-Qualification') {
+                                questions = [
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_pre_1`, text: `Confirm average quarterly power bill is above $300 to qualify for high yield returns.`, badge: "WAIT FOR CUSTOMER" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_pre_2`, text: `Confirm roof structure suitability (tin/tile), storing site photo trackers for rafters, meter, board, and roof.`, badge: "WAIT FOR CUSTOMER" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_pre_3`, text: `Verify electrical phase layout (single phase vs three phase) and house storey counts.`, badge: "WAIT FOR CUSTOMER" }
+                                ];
+                            } else if (stage === 'Engineering Proposal') {
+                                questions = [
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_eng_1`, text: `Detail expected daily yield math calculation: Daily Yield (kWh) = System Size (kW) * Peak Sun Hours * 0.82 efficiency.`, badge: "READ NOW" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_eng_2`, text: `Explain strict wind loading boundary offsets (minimum 200mm margin) as per AS/NZS 5033 guidelines.`, badge: "CRUCIAL COMPLIANCE BOUNDARY" }
+                                ];
+                                if (sys === 'Battery' || sys === 'Combined') {
+                                    questions.push({ id: `${st.toLowerCase()}_${sys.toLowerCase()}_eng_3`, text: `Explain AS/NZS 5139 fire safety clearances, non-combustible backing plate installation, and ventilation requirements for Fox ESS battery.`, badge: "CRUCIAL COMPLIANCE BOUNDARY" });
+                                } else {
+                                    questions.push({ id: `${st.toLowerCase()}_${sys.toLowerCase()}_eng_3`, text: `Verify meter board space clearances for Growatt inverter mounting.`, badge: "READ NOW" });
+                                }
+                            } else if (stage === 'Financials & Rebates') {
+                                if (st === 'VIC') {
+                                    questions = [
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_1`, text: `Outline Solar Victoria rebate eligibility ($1400 subsidy and matching interest-free loan option).`, badge: "READ NOW" },
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_2`, text: `Outline upfront Federal STC rebate discount applied directly to the invoice.`, badge: "READ NOW" }
+                                    ];
+                                } else if (st === 'NSW') {
+                                    questions = [
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_1`, text: `Detail NSW Peak Demand Reduction Scheme (PDRS) battery certificate returns to discount upfront cost.`, badge: "READ NOW" },
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_2`, text: `Outline upfront Federal STC rebate discount applied directly to the invoice.`, badge: "READ NOW" }
+                                    ];
+                                } else if (st === 'SA') {
+                                    questions = [
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_1`, text: `Detail SA Virtual Power Plant (VPP) eligibility and distributor dynamic flexible export limits (1.5kW to 10kW).`, badge: "READ NOW" },
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_2`, text: `Outline upfront Federal STC rebate discount applied directly to the invoice.`, badge: "READ NOW" }
+                                    ];
+                                } else {
+                                    questions = [
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_1`, text: `Explain Small-scale Technology Certificate (STC) rebate multipliers and local distributor connection approvals.`, badge: "READ NOW" },
+                                        { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_2`, text: `Outline upfront Federal STC rebate discount applied directly to the invoice.`, badge: "READ NOW" }
+                                    ];
+                                }
+                                questions.push({ id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_3`, text: `State: Averion Global complies with Australian Consumer Law providing a 10-business-day cooling-off period.`, badge: "CRUCIAL COMPLIANCE BOUNDARY" });
+                            } else if (stage === 'Agreement') {
+                                questions = [
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_agr_1`, text: `Detail premium component selection: Jinko PV modules (N-type, 25-yr performance warranty) and Growatt/Fox ESS configurations.`, badge: "READ NOW" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_agr_2`, text: `Secure formal verbal agreement under Australian Consumer Law, confirming NMI and installation address.`, badge: "READ NOW" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_agr_3`, text: `Verify connection pre-approval submission timeline (within 24 hours of verbal deposit).`, badge: "READ NOW" }
+                                ];
+                            }
+
+                            defaultScripts.push({
+                                state_code: st,
+                                system_type: sys,
+                                current_stage: stage,
+                                mandatory_questions_json: JSON.stringify(questions)
+                            });
+                        });
+                    });
+                });
+
+                const stmt = db.prepare("INSERT INTO sales_compliance_scripts (state_code, system_type, current_stage, mandatory_questions_json) VALUES (?, ?, ?, ?)");
+                defaultScripts.forEach(s => {
+                    stmt.run(s.state_code, s.system_type, s.current_stage, s.mandatory_questions_json);
+                });
+                stmt.finalize();
             });
-            stmt.finalize();
         }
     });
 
-    db.get("SELECT COUNT(*) as count FROM compliance_objection_matrix", [], (err, row) => {
-        if (!err && row && row.count === 0) {
-            console.log('[COMPLIANCE] Seeding default compliance objection matrix...');
-            const defaultObjections = [
-                {
-                    category: 'House/Roof',
-                    objection: "My roof is shaded by trees in the afternoon. Can I still install solar?",
-                    response: "No worries! Under AS/NZS 5033 regulations, we design around shade. We can utilize micro-inverters or DC optimizers so that shade on one module doesn't drag down the whole array. We maintain a strict 200mm boundary offset from all roof edges for structural stability in high winds.",
-                    formula_parameters_json: JSON.stringify({ shading_impact_reduction_pct: 15, roof_edge_boundary_mm: 200 }),
-                    documentation_checklist_json: JSON.stringify(["Structural Compliance Waiver", "Site Photo Log: Afternoon Shading Area"])
-                },
-                {
-                    category: 'House/Roof',
-                    objection: "Is my roof angle okay for solar?",
-                    response: "Most Australian roofs are pitched between 15 and 30 degrees, which is perfect for solar. If your roof is flat or steep, we adjust the output metrics or design special tilt frames to maximize the yield. Under AS/NZS 5033, the rails must be securely clamped to rafters.",
-                    formula_parameters_json: JSON.stringify({ optimal_pitch_deg: "15-30", mounting_standard: "AS/NZS 5033" }),
-                    documentation_checklist_json: JSON.stringify(["Site Photo Log: Rafter Pitch Check", "Roof Structural Certification"])
-                },
-                {
-                    category: 'PV Tech',
-                    objection: "What is the degradation rate of the solar PV system?",
-                    response: "Averion Global only supplies premium tier-1 panels. The standard performance warranty guarantees that the output will not degrade by more than 0.5% per year, meaning you will still have at least 80% to 85% of original power output after 25 years.",
-                    formula_parameters_json: JSON.stringify({ annual_degradation_rate: 0.005, performance_warranty_years: 25 }),
-                    documentation_checklist_json: JSON.stringify(["Panel Datasheet", "Manufacturer Linear Warranty Certificate"])
-                },
-                {
-                    category: 'PV Tech',
-                    objection: "What inverter are you quoting and what is its efficiency?",
-                    response: "We supply premium CEC-approved inverters (e.g. Fronius or Sungrow) with peak efficiency metrics of 97% to 98%. The inverter has a standard 10-year manufacturer replacement warranty. It must be installed in a shaded, well-ventilated area.",
-                    formula_parameters_json: JSON.stringify({ inverter_peak_efficiency: 0.98, inverter_warranty_years: 10 }),
-                    documentation_checklist_json: JSON.stringify(["Inverter Datasheet", "Electrical Connection Safety Plan"])
-                },
-                {
-                    category: 'Battery/VPP',
-                    objection: "Where will you install the battery, and is it safe?",
-                    response: "Safety is our absolute priority. We comply 100% with AS/NZS 5139. The battery must be installed on a non-combustible backing plate (e.g., FC sheet) and cannot be located near doors, windows, steps, or directly under habitable rooms. Outdoor installation is highly recommended.",
-                    formula_parameters_json: JSON.stringify({ as_nzs_5139_compliant: true, battery_heat_ventilation_clearance_mm: 300 }),
-                    documentation_checklist_json: JSON.stringify(["Site Photo Log: Battery Backing & Clearances", "Fire Safety Compliance Declaration"])
-                },
-                {
-                    category: 'Battery/VPP',
-                    objection: "What is a VPP and what is the dynamic export limit?",
-                    response: "A Virtual Power Plant (VPP) allows a network provider or retailer to draw energy from your battery to support the grid during high-demand peaks, in exchange for regular credits or discounted electricity. In SA, SAPN enforces dynamic export limits which can adjust exports from 1.5kW to 10kW depending on grid congestion.",
-                    formula_parameters_json: JSON.stringify({ sa_vpp_flexible_export_limit_kw: 1.5, battery_discharge_power_kw: 5.0 }),
-                    documentation_checklist_json: JSON.stringify(["VPP Terms & Consent Form", "Distributor Grid Export Pre-Approval"])
-                },
-                {
-                    category: 'Rebates',
-                    objection: "How does the Solar Victoria rebate work?",
-                    response: "For Victorian residents, the Solar Victoria program provides a rebate of up to $1,400, plus the option of an interest-free loan of the same amount. We submit the pre-approval request on your behalf, and you must verify your income status via the Solar Victoria portal to release the voucher before installation.",
-                    formula_parameters_json: JSON.stringify({ vic_rebate_max_amount: 1400, interest_free_loan_eligible: true }),
-                    documentation_checklist_json: JSON.stringify(["Solar Victoria Voucher Pre-Approval", "Electricity Retailer NMI Match File"])
-                },
-                {
-                    category: 'Rebates',
-                    objection: "What are NSW PDRS certificates?",
-                    response: "In New South Wales, the Peak Demand Reduction Scheme (PDRS) rewards you with Energy Savings Certificates for installing battery systems that can support the grid. The certificates reduce the upfront cost of your battery by hundreds of dollars depending on battery capacity.",
-                    formula_parameters_json: JSON.stringify({ pdrs_certificate_coefficient: 0.12, average_pdrs_rebate_aud: 800 }),
-                    documentation_checklist_json: JSON.stringify(["NSW Grid Connect Application", "PDRS Certificate Consent Form"])
-                },
-                {
-                    category: 'Legal',
-                    objection: "Can I cancel the agreement if I change my mind?",
-                    response: "Absolutely. Under the Australian Consumer Law, we provide a mandatory 10-business-day cooling-off period. During these 10 days, you can cancel the verbal or written contract for any reason without penalty and receive a full refund of your deposit.",
-                    formula_parameters_json: JSON.stringify({ cooling_off_days: 10, refund_policy: "100% Refundable" }),
-                    documentation_checklist_json: JSON.stringify(["Signed Quotation Agreement", "ACL Consumer Rights Statement"])
-                },
-                {
-                    category: 'Legal',
-                    objection: "Who submits the grid connection pre-approval?",
-                    response: "Averion Global handles the entire grid connection pre-approval application on your behalf. We will not begin physical installation until we receive written approval from your distributor (SAPN, Ausgrid, Western Power, etc.). This ensures compliance and guarantees you can feed solar back into the grid.",
-                    formula_parameters_json: JSON.stringify({ grid_approval_timeout_days: 14 }),
-                    documentation_checklist_json: JSON.stringify(["Grid Connection Pre-Approval Application", "Electricity Bill NMI Verification"])
-                }
-            ];
+    db.get("SELECT COUNT(*) as count FROM compliance_objection_matrix WHERE response LIKE '%Fox ESS%'", [], (err, checkRow) => {
+        if (!err && (!checkRow || checkRow.count === 0)) {
+            console.log('[COMPLIANCE] Reseeding default compliance objection matrix...');
+            db.run("DELETE FROM compliance_objection_matrix", () => {
+                const defaultObjections = [
+                    {
+                        category: 'House/Roof',
+                        objection: "My roof is shaded by trees in the afternoon. Can I still install solar?",
+                        response: "No worries! Under AS/NZS 5033 regulations, we design around shade. We can utilize micro-inverters or DC optimizers so that shade on one module doesn't drag down the whole array. We maintain a strict 200mm boundary offset from all roof edges for structural stability in high winds.",
+                        formula_parameters_json: JSON.stringify({ shading_impact_reduction_pct: 15, roof_edge_boundary_mm: 200 }),
+                        documentation_checklist_json: JSON.stringify(["Structural Compliance Waiver", "Site Photo Log: Afternoon Shading Area"])
+                    },
+                    {
+                        category: 'House/Roof',
+                        objection: "Is my roof angle okay for solar?",
+                        response: "Most Australian roofs are pitched between 15 and 30 degrees, which is perfect for solar. If your roof is flat or steep, we adjust the output metrics or design special tilt frames to maximize the yield. Under AS/NZS 5033, the rails must be securely clamped to rafters.",
+                        formula_parameters_json: JSON.stringify({ optimal_pitch_deg: "15-30", mounting_standard: "AS/NZS 5033" }),
+                        documentation_checklist_json: JSON.stringify(["Site Photo Log: Rafter Pitch Check", "Roof Structural Certification"])
+                    },
+                    {
+                        category: 'PV Tech',
+                        objection: "What panels and inverters do you supply?",
+                        response: "We install premium tier-1 Jinko PV modules (N-type technology with a 25-year linear performance warranty) and CEC-approved Growatt inverters. These components have a standard 10-year manufacturer replacement warranty and guarantee structural longevity against extreme Australian weather.",
+                        formula_parameters_json: JSON.stringify({ optimal_panel_type: "Jinko PV Modules", optimal_inverter_type: "Growatt Inverters" }),
+                        documentation_checklist_json: JSON.stringify(["Panel Datasheet", "Manufacturer Linear Warranty Certificate"])
+                    },
+                    {
+                        category: 'PV Tech',
+                        objection: "What is the degradation rate of the solar PV system?",
+                        response: "Jinko N-type panels guarantee extremely low degradation—no more than 1% in the first year and 0.4% per year thereafter. This ensures you still receive at least 87.4% of original power output after 25 years.",
+                        formula_parameters_json: JSON.stringify({ annual_degradation_rate: 0.004, performance_warranty_years: 25 }),
+                        documentation_checklist_json: JSON.stringify(["Panel Datasheet", "Manufacturer Linear Warranty Certificate"])
+                    },
+                    {
+                        category: 'Battery/VPP',
+                        objection: "Where will you install the battery, and is it safe?",
+                        response: "Safety is our absolute priority. We comply 100% with AS/NZS 5139. The Fox ESS battery must be installed on a non-combustible backing plate (FC sheet) and cannot be located near doors, windows, steps, or directly under habitable rooms. We provide full fire safety location compliance.",
+                        formula_parameters_json: JSON.stringify({ as_nzs_5139_compliant: true, battery_heat_ventilation_clearance_mm: 300 }),
+                        documentation_checklist_json: JSON.stringify(["Site Photo Log: Battery Backing & Clearances", "Fire Safety Compliance Declaration"])
+                    },
+                    {
+                        category: 'Battery/VPP',
+                        objection: "What is a VPP and what is the dynamic export limit?",
+                        response: "A Virtual Power Plant (VPP) allows a network provider or retailer to draw energy from your battery to support the grid during high-demand peaks, in exchange for regular credits or discounted electricity. In SA, SAPN enforces dynamic export limits which can adjust exports from 1.5kW to 10kW depending on grid congestion.",
+                        formula_parameters_json: JSON.stringify({ sa_vpp_flexible_export_limit_kw: 1.5, battery_discharge_power_kw: 5.0 }),
+                        documentation_checklist_json: JSON.stringify(["VPP Terms & Consent Form", "Distributor Grid Export Pre-Approval"])
+                    },
+                    {
+                        category: 'Rebates',
+                        objection: "How does the Solar Victoria rebate work?",
+                        response: "For Victorian residents, the Solar Victoria program provides a rebate of up to $1,400, plus the option of an interest-free loan of the same amount. We submit the pre-approval request on your behalf, and you must verify your income status via the Solar Victoria portal to release the voucher before installation.",
+                        formula_parameters_json: JSON.stringify({ vic_rebate_max_amount: 1400, interest_free_loan_eligible: true }),
+                        documentation_checklist_json: JSON.stringify(["Solar Victoria Voucher Pre-Approval", "Electricity Retailer NMI Match File"])
+                    },
+                    {
+                        category: 'Rebates',
+                        objection: "What are NSW PDRS certificates?",
+                        response: "In New South Wales, the Peak Demand Reduction Scheme (PDRS) rewards you with Energy Savings Certificates for installing battery systems that can support the grid. The certificates reduce the upfront cost of your battery by hundreds of dollars depending on battery capacity.",
+                        formula_parameters_json: JSON.stringify({ pdrs_certificate_coefficient: 0.12, average_pdrs_rebate_aud: 800 }),
+                        documentation_checklist_json: JSON.stringify(["NSW Grid Connect Application", "PDRS Certificate Consent Form"])
+                    },
+                    {
+                        category: 'Legal',
+                        objection: "Can I cancel the agreement if I change my mind?",
+                        response: "Absolutely. Under the Australian Consumer Law, we provide a mandatory 10-business-day cooling-off period. During these 10 days, you can cancel the verbal or written contract for any reason without penalty and receive a full refund of your deposit.",
+                        formula_parameters_json: JSON.stringify({ cooling_off_days: 10, refund_policy: "100% Refundable" }),
+                        documentation_checklist_json: JSON.stringify(["Signed Quotation Agreement", "ACL Consumer Rights Statement"])
+                    }
+                ];
 
-            const stmt = db.prepare("INSERT INTO compliance_objection_matrix (category, objection, response, formula_parameters_json, documentation_checklist_json) VALUES (?, ?, ?, ?, ?)");
-            defaultObjections.forEach(obj => {
-                stmt.run(obj.category, obj.objection, obj.response, obj.formula_parameters_json, obj.documentation_checklist_json);
+                const stmt = db.prepare("INSERT INTO compliance_objection_matrix (category, objection, response, formula_parameters_json, documentation_checklist_json) VALUES (?, ?, ?, ?, ?)");
+                defaultObjections.forEach(obj => {
+                    stmt.run(obj.category, obj.objection, obj.response, obj.formula_parameters_json, obj.documentation_checklist_json);
+                });
+                stmt.finalize();
             });
-            stmt.finalize();
         }
     });
 

@@ -1059,6 +1059,17 @@ function toggleNav(event, element) {
                             Objection Handler & Document Checklist
                         </div>
 
+                        <!-- Real-time AI Closing Advice -->
+                        <div id="compliance_closing_advice_container" style="display: none; background: #fffbeb; border: 1.5px solid var(--accent); border-radius: 8px; padding: 10px; flex-direction: column; gap: 6px; flex-shrink: 0; box-shadow: 0 0 8px rgba(232, 104, 30, 0.15); margin-bottom: 8px;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid rgba(232, 104, 30, 0.2); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>💡 Real-time AI Closing Advice</span>
+                                <span class="pulse-dot" style="width:6px; height:6px; background:var(--accent); border-radius:50%; display:inline-block; box-shadow: 0 0 6px var(--accent);"></span>
+                            </div>
+                            <div id="compliance_closing_advice_content" style="display: flex; flex-direction: column; gap: 6px;">
+                                <!-- Dynamically populated hesitation narratives -->
+                            </div>
+                        </div>
+
                         <!-- Objection Matrix Tabs -->
                         <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 6px; flex-shrink: 0;" id="objection_category_tabs">
                             <button type="button" class="tab-capsule active" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">House/Roof</button>
@@ -4580,10 +4591,55 @@ async function loadComplianceGuidance() {
                 applyConsoleToggleUI();
                 updateTelemetryUI(null);
                 startComplianceTelemetryLoop();
+                loadClosingAdvice();
             }
         }
     } catch (err) {
         console.error('Error fetching compliance guidance:', err);
+    }
+}
+
+async function loadClosingAdvice() {
+    if (!currentProjectId) return;
+    try {
+        const res = await fetch(`/api/compliance/fetch-matrix?state_code=${telemetryStateCode}&system_type=${telemetrySystemType}&lead_id=${currentProjectId}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.hesitation_counters) {
+                updateClosingAdviceUI(data.hesitation_counters);
+            }
+        }
+    } catch(err) {
+        console.error('[CLOSING ADVICE] Error loading advice matrix:', err);
+    }
+}
+
+function updateClosingAdviceUI(counters) {
+    const mainContainer = document.getElementById('compliance_closing_advice_container');
+    const mainContent = document.getElementById('compliance_closing_advice_content');
+    const overlayContainer = document.getElementById('overlay_closing_advice_container');
+    const overlayContent = document.getElementById('overlay_closing_advice_content');
+
+    const buildHTML = (list) => {
+        return list.map(c => `
+            <div style="font-size: 11px; padding: 6px; border: 1px solid #fed7aa; border-radius: 4px; background: #fffcf8; text-align: left;">
+                <div style="font-weight: 700; color: #ea580c; display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+                    <span style="font-size: 9px; background: #ffedd5; color: #ea580c; padding: 1px 4px; border-radius: 2px; text-transform: uppercase;">${c.trigger}</span>
+                </div>
+                <div style="color: var(--text-dark); line-height: 1.35; font-style: italic;">"${c.narrative}"</div>
+            </div>
+        `).join('');
+    };
+
+    if (counters && counters.length > 0) {
+        const html = buildHTML(counters);
+        if (mainContent) mainContent.innerHTML = html;
+        if (mainContainer) mainContainer.style.display = 'flex';
+        if (overlayContent) overlayContent.innerHTML = html;
+        if (overlayContainer) overlayContainer.style.display = 'flex';
+    } else {
+        if (mainContainer) mainContainer.style.display = 'none';
+        if (overlayContainer) overlayContainer.style.display = 'none';
     }
 }
 
@@ -4604,6 +4660,40 @@ function renderComplianceConsole() {
         if (!container) return;
         container.innerHTML = '';
         const questions = data.script.mandatory_questions || [];
+
+        const highlightKeywords = (text) => {
+            if (!text) return '';
+            const keywords = [
+                'Averion Global LLP',
+                'Ares Energy',
+                'AS/NZS 5033',
+                'AS/NZS 5139',
+                'Solar Victoria',
+                'NSW Peak Demand Reduction Scheme',
+                'PDRS',
+                'SA Virtual Power Plant',
+                'VPP',
+                'Jinko PV modules',
+                'Growatt inverters',
+                'Fox ESS battery',
+                'Fox ESS batteries',
+                '10-business-day cooling-off period',
+                'Australian Consumer Law',
+                'Federal STC rebate',
+                'Daily Yield \\(kWh\\) = System Size \\(kW\\) \\* Peak Sun Hours \\* 0.82 efficiency',
+                'wind loading boundary offsets',
+                '200mm margin',
+                'fire safety clearances',
+                'non-combustible backing plate'
+            ];
+            let highlighted = text;
+            keywords.forEach(kw => {
+                const regex = new RegExp(`(${kw})`, 'gi');
+                highlighted = highlighted.replace(regex, '<strong style="color: var(--accent, #e8681e);">$1</strong>');
+            });
+            return highlighted;
+        };
+
         if (questions.length === 0) {
             container.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:11px; padding: 6px; text-align:center;">No speech blueprints registered for this stage.</div>';
         } else {
@@ -4615,6 +4705,9 @@ function renderComplianceConsole() {
                 if (q.badge === 'WAIT FOR CUSTOMER') {
                     badgeColor = '#b45309';
                     badgeBg = '#fffbeb';
+                } else if (q.badge === 'CRUCIAL COMPLIANCE BOUNDARY') {
+                    badgeColor = '#ef4444';
+                    badgeBg = '#fef2f2';
                 } else if (q.badge.startsWith('COURTESY ALERT')) {
                     badgeColor = '#ef4444';
                     badgeBg = '#fef2f2';
@@ -4631,7 +4724,7 @@ function renderComplianceConsole() {
                         <div style="display: flex; align-items: center; gap: 4px;">
                             <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 4px; border-radius: 3px; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeColor}30; letter-spacing:0.2px;">${q.badge}</span>
                         </div>
-                        <div style="font-size: 11.5px; line-height: 1.4; ${textStyle}">${q.text}</div>
+                        <div style="font-size: 11.5px; line-height: 1.4; ${textStyle}">${highlightKeywords(q.text)}</div>
                     </div>
                 `;
                 container.appendChild(block);
@@ -5238,6 +5331,7 @@ async function sendVoiceTelemetryStream(textFragment) {
 
                 updateIntentAnalyticsUI(data.intent_analytics);
                 applyFormFillingAutomation(data.extracted_fields);
+                loadClosingAdvice();
 
                 if (data.completed_questions) {
                     completedComplianceQuestions = data.completed_questions;
@@ -5592,6 +5686,17 @@ function triggerSimulatedSpeechPreset(presetKey) {
             <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">Active Stage Metrics</div>
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-dark);" id="overlay_metrics_content">
                 <!-- Metrics -->
+            </div>
+        </div>
+
+        <!-- Real-time AI Closing Advice -->
+        <div id="overlay_closing_advice_container" style="display: none; background: #fffbeb; border: 1.5px solid var(--accent); border-radius: 8px; padding: 10px; flex-direction: column; gap: 6px; flex-shrink: 0; box-shadow: 0 0 8px rgba(232, 104, 30, 0.15);">
+            <div style="font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid rgba(232, 104, 30, 0.2); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span>💡 Real-time AI Closing Advice</span>
+                <span class="pulse-dot" style="width:6px; height:6px; background:var(--accent); border-radius:50%; display:inline-block; box-shadow: 0 0 6px var(--accent);"></span>
+            </div>
+            <div id="overlay_closing_advice_content" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Dynamically populated hesitation narratives -->
             </div>
         </div>
 
