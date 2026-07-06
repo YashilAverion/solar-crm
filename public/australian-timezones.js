@@ -180,6 +180,11 @@
                 background-color: #f18a31 !important;
                 color: #ffffff !important;
             }
+            body.theme-ares-sunburst tr:hover td span[style*="background"],
+            body.theme-ares-sunburst tr:hover td span[style*="background-color"],
+            body.theme-ares-sunburst tr:hover td .user-role-badge {
+                color: #0f172a !important;
+            }
             body.theme-ares-sunburst tr:hover td a:not(.proj-num),
             body.theme-ares-sunburst tr:hover td .assign-date,
             body.theme-ares-sunburst tr:hover td .assignee-cell {
@@ -410,6 +415,11 @@
             body.theme-dark tr:hover td {
                 background-color: #f18a31 !important;
                 color: #ffffff !important;
+            }
+            body.theme-dark tr:hover td span[style*="background"],
+            body.theme-dark tr:hover td span[style*="background-color"],
+            body.theme-dark tr:hover td .user-role-badge {
+                color: #0f172a !important;
             }
 
             /* Dark Mode Contrast Overrides for Text & Controls */
@@ -1041,13 +1051,7 @@
                 backupBtn.innerHTML = '🔒 Backup Now';
                 backupBtn.onclick = startGlobalManualBackup;
 
-                const deployBtn = document.createElement('button');
-                deployBtn.className = 'topbar-btn btn-deploy';
-                deployBtn.innerHTML = '🚀 Deploy to Live';
-                deployBtn.onclick = triggerGlobalDeployment;
-
                 actionsContainer.appendChild(backupBtn);
-                actionsContainer.appendChild(deployBtn);
 
                 const userDisplay = tier2.querySelector('.user-profile') || tier2.querySelector('.profile-select-wrap') || tier2.querySelector('#currentUserDisplay') || tier2.querySelector('#sidebarAvatar');
                 if (userDisplay) {

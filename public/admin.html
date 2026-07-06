@@ -436,7 +436,6 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="tb-spacer"></div>
         <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()">&#128190; Restore from Backup</button>
         <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()">&#128190; Backup Now</button>
-        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px; background:#10b981; color:#fff; border-color:#10b981;" onclick="triggerDeployment()">🚀 Deploy to Live</button>
         <button class="tb-btn btn-add" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()">+ Add User</button>
     </div>
 
@@ -1409,7 +1408,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     <td style="text-align: left; padding-left: 20px;"><strong>${u.full_name || '-'}</strong></td>
                     <td>${u.username || '-'}</td>
                     <td>${u.email || '-'}</td>
-                    <td><span style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-weight:600;">${u.role || 'Standard'}</span></td>
+                    <td><span class="user-role-badge" style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-weight:600; color:var(--text-dark);">${u.role || 'Standard'}</span></td>
                     <td><span class="status-badge ${statusBadge}">${u.status || 'Active'}</span></td>
                     <td style="min-width:170px;">${outlookCell}</td>
                     <td>
