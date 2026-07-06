@@ -1867,7 +1867,8 @@ db.serialize(() => {
 // Telephone number normalizer helper: extracts the last 9 digits of a numeric string
 db.normalizePhoneToSuffix = function(num) {
     if (!num) return '';
-    const clean = String(num).replace(/\D/g, '');
+    // Strip out all non-numeric characters, whitespaces, and international symbols
+    const clean = String(num).replace(/[\s\+\-\(\)]/g, '').replace(/\D/g, '');
     return clean.length >= 9 ? clean.slice(-9) : clean;
 };
 
