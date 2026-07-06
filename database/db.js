@@ -1641,6 +1641,17 @@ db.serialize(() => {
         )
     `);
 
+    // 3.13 voipline_stream_mappings table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS voipline_stream_mappings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            extension TEXT UNIQUE,
+            stream_url TEXT,
+            is_active INTEGER DEFAULT 1,
+            last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists

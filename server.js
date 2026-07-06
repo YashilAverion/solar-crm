@@ -5827,8 +5827,27 @@ app.post('/api/telephony-voice/process-stream-chunk', (req, res) => {
 
 app.set('io', io);
 
+// Centralized global error-handling wrapper middleware for telephony gateways
+app.use((err, req, res, next) => {
+    const isTelephonyRoute = req.path.startsWith('/api/compliance-sales') || 
+                             req.path.startsWith('/api/voipline') || 
+                             req.path.startsWith('/api/telephony-admin') ||
+                             req.path.startsWith('/api/telephony-voice');
+                             
+    if (isTelephonyRoute) {
+        console.error(`[Telephony Global Error Handler] Failure at ${req.method} ${req.path}:`, err.stack || err.message || err);
+        return res.status(500).json({
+            error: 'Internal Telephony Server Error',
+            message: err.message || 'An unexpected telemetry error occurred.'
+        });
+    }
+    next(err);
+});
+
 // Start VoIPLine background poller
-startVoIPLinePolling();
+if (typeof startVoIPLinePolling === 'function') {
+    startVoIPLinePolling();
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
