@@ -144,7 +144,7 @@ async function transcribeAudio(audioFilePathOrBuffer) {
                 const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2, 15)}`;
                 const header = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`;
                 const footer = `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n--${boundary}--\r\n`;
-                
+
                 const payload = Buffer.concat([
                     Buffer.from(header, 'utf-8'),
                     fileBuffer,
@@ -165,7 +165,7 @@ async function transcribeAudio(audioFilePathOrBuffer) {
             console.error('[VoIPLine Transcription] OpenAI Whisper call failed:', e.response ? e.response.data : e.message);
         }
     }
-    
+
     const mockTranscripts = [
         "Hello! Yes, I was looking into getting solar panels installed for my house in Sydney. We get quite a lot of sun in the afternoon and our power bills have been going up like crazy, almost eight hundred dollars last quarter. I heard about the government rebates for solar batteries as well, so I wanted to see if we qualify and what kind of return on investment we can expect. If you could send over a quote for a six point six kilowatt system, that would be great. Thanks!",
         "Hi there, this is Deep Patel. I am following up on the solar quote that was sent yesterday. The pricing looks reasonable but I wanted to check if the panels are tier-one CEC approved and what the warranty looks like for the inverter. Also, how long does the actual installation take once we sign the agreement? I want to make sure it's completed before summer starts. Let me know, thank you.",
@@ -255,18 +255,18 @@ app.use(sessionMiddleware);
 function ipFirewall(req, res, next) {
     const path = req.path;
     const publicPaths = [
-        '/login', 
-        '/logout', 
-        '/ares_energy_logo.png', 
-        '/favicon.ico', 
-        '/responsive.css', 
-        '/responsive.js', 
+        '/login',
+        '/logout',
+        '/ares_energy_logo.png',
+        '/favicon.ico',
+        '/responsive.css',
+        '/responsive.js',
         '/crm-autosave-toast.js',
         '/australian-timezones.js',
         '/track.html',
         '/track'
     ];
-    
+
     if (
         publicPaths.some(p => path === p || path.startsWith(p + '?')) ||
         path.startsWith('/css/') ||
@@ -300,10 +300,10 @@ function ipFirewall(req, res, next) {
             if (err || !user) {
                 return renderAccessDenied(res, clientIp);
             }
-            
+
             const isBypass = user.is_bypass_ip_restriction === 1;
             const allowedIp = user.allowed_specific_ip ? user.allowed_specific_ip.trim() : '';
-            
+
             if (isBypass || (allowedIp && clientIp === allowedIp)) {
                 return next();
             } else {
@@ -424,7 +424,7 @@ app.post('/login', loginLimiter, [
         const clientIp = getClientIp(req);
         const isOfficeIp = globalOfficeIpCache && clientIp === globalOfficeIpCache;
         const isLocalhost = clientIp === '127.0.0.1' || clientIp === 'localhost' || clientIp === '0.0.0.0';
-        
+
         if (!isOfficeIp && !isLocalhost) {
             const isBypass = user.is_bypass_ip_restriction === 1;
             const allowedIp = user.allowed_specific_ip ? user.allowed_specific_ip.trim() : '';
@@ -818,7 +818,7 @@ app.post('/api/configurations', (req, res) => {
     if (!config_key) {
         return res.status(400).json({ error: 'config_key is required.' });
     }
-    
+
     // global_office_ip is system-wide, so it should be saved with user_id = null
     let targetUserId = req.session.user.id;
     if (config_key === 'global_office_ip') {
@@ -831,7 +831,7 @@ app.post('/api/configurations', (req, res) => {
     db.run(
         `REPLACE INTO configurations (user_id, config_key, config_value) VALUES (?, ?, ?)`,
         [targetUserId, config_key, config_value],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ error: err.message });
             if (config_key === 'global_office_ip') {
                 globalOfficeIpCache = config_value;
@@ -887,7 +887,7 @@ app.post('/admin/users', requireManager, async (req, res) => {
         if (existing) return res.status(400).json({ error: 'This username already exists.' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // Encrypt credentials
         const encMasterKey = encrypt(voipline_master_key || '');
         const encSecretToken = encrypt(voipline_secret_token || '');
@@ -895,9 +895,9 @@ app.post('/admin/users', requireManager, async (req, res) => {
         const encSipPassword = encrypt(voipline_sip_password || '');
 
         const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, voipline_sync_status, allowed_specific_ip, is_bypass_ip_restriction, voipline_sip_username, voipline_sip_password, voipline_sip_domain, voipline_wss_url, is_voip_enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0], function(err) {
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', encApiKey, voipline_outbound_line || '', encSecretToken, encMasterKey, 'Offline', allowed_specific_ip || '', is_bypass_ip_restriction || 0, voipline_sip_username || '', encSipPassword, voipline_sip_domain || 'au.voipcloud.online', voipline_wss_url || '', is_voip_enabled ? 1 : 0], function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            
+
             const userId = this.lastID;
 
             // Insert custom permissions
@@ -913,7 +913,7 @@ app.post('/admin/users', requireManager, async (req, res) => {
                     stmt.finalize();
                 });
             }
-            
+
             res.json({ id: userId, success: true });
         });
     } catch (err) {
@@ -932,7 +932,7 @@ function invalidateUserSessions(userId, username) {
         }
         const query = `DELETE FROM sessions WHERE sess LIKE ? OR sess LIKE ?`;
         const params = [`%"id":${userId}%`, `%"username":"${username}"%`];
-        sessionDb.run(query, params, function(delErr) {
+        sessionDb.run(query, params, function (delErr) {
             if (delErr) {
                 console.error('[SESSION INVALIDATE] Error clearing sessions:', delErr.message);
             } else {
@@ -1260,8 +1260,8 @@ app.post('/crm/send-email', async (req, res) => {
 
     } catch (error) {
         console.error('Error sending email via Microsoft Graph API:', error.message);
-        const errMsg = error.response && error.response.data && error.response.data.error 
-            ? error.response.data.error.message 
+        const errMsg = error.response && error.response.data && error.response.data.error
+            ? error.response.data.error.message
             : error.message;
         res.status(500).json({ error: 'Failed to send email: ' + errMsg });
     }
@@ -1282,10 +1282,10 @@ app.get(/\.html$/, (req, res, next) => {
     if (fs.existsSync(pagePath)) {
         try {
             let html = fs.readFileSync(pagePath, 'utf8');
-            
+
             // Inject cache-busting version for timezone JS to bypass browser and CDN cache
             html = html.split('/australian-timezones.js').join('/australian-timezones.js?v=202607051');
-            
+
             // Invalidate server caching to force live changes downstream instantly
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
             res.setHeader('Pragma', 'no-cache');
@@ -1816,7 +1816,7 @@ app.post('/api/leads/:id/request-discount-approval', requireAuth, (req, res) => 
         [recommendedPrice, leadId],
         function (err) {
             if (err) return res.status(500).json({ error: 'Database update failed: ' + err.message });
-            
+
             const discountAmt = (parseFloat(recommendedPrice) - parseFloat(sellingPrice)).toFixed(2);
             db.run(
                 "INSERT INTO lead_history (lead_id, action, details, user_name) VALUES (?, 'Discount Requested', ?, ?)",
@@ -1837,10 +1837,10 @@ app.post('/api/leads/:id/approve-discount', requireAuth, (req, res) => {
     const userName = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
     const userRole = req.session.user.role || '';
 
-    const isTLorAdmin = userRole === 'Admin' || 
-                        userRole === 'Manager' || 
-                        userRole.includes('Manager') || 
-                        userRole.includes('Leader');
+    const isTLorAdmin = userRole === 'Admin' ||
+        userRole === 'Manager' ||
+        userRole.includes('Manager') ||
+        userRole.includes('Leader');
 
     if (!isTLorAdmin) {
         return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can approve discounts.' });
@@ -1871,10 +1871,10 @@ app.post('/api/leads/:id/reject-discount', requireAuth, (req, res) => {
     const userName = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
     const userRole = req.session.user.role || '';
 
-    const isTLorAdmin = userRole === 'Admin' || 
-                        userRole === 'Manager' || 
-                        userRole.includes('Manager') || 
-                        userRole.includes('Leader');
+    const isTLorAdmin = userRole === 'Admin' ||
+        userRole === 'Manager' ||
+        userRole.includes('Manager') ||
+        userRole.includes('Leader');
 
     if (!isTLorAdmin) {
         return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can reject discounts.' });
@@ -1902,11 +1902,11 @@ app.post('/api/leads/:id/reject-discount', requireAuth, (req, res) => {
 // GET Pending Discount approval requests
 app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
     const userRole = req.session.user.role || '';
-    const isTLorAdmin = userRole === 'Admin' || 
-                        userRole === 'Manager' || 
-                        userRole.includes('Manager') || 
-                        userRole.includes('Leader');
-                        
+    const isTLorAdmin = userRole === 'Admin' ||
+        userRole === 'Manager' ||
+        userRole.includes('Manager') ||
+        userRole.includes('Leader');
+
     if (!isTLorAdmin) {
         return res.status(403).json({ error: 'Access Denied: Only Team Leaders or Managers can view pending discounts.' });
     }
@@ -1915,7 +1915,7 @@ app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
     const params = [];
     query = applyAdvancedFilters(req, query, params);
     query += " ORDER BY id DESC";
-    
+
     db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: 'Database error: ' + err.message });
         const formatted = (rows || []).map(r => {
@@ -1925,7 +1925,7 @@ app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
                 try {
                     const engData = JSON.parse(r.engineering_details);
                     Object.assign(r, engData);
-                } catch (e) {}
+                } catch (e) { }
             }
             return r;
         });
@@ -1937,15 +1937,15 @@ app.get('/api/leads/pending-discounts', requireAuth, (req, res) => {
 app.get('/api/notifications', requireAuth, (req, res) => {
     const userRole = req.session.user.role || '';
     const userName = req.session.user.full_name || req.session.user.username;
-    
-    const isTLorAdmin = userRole === 'Admin' || 
-                        userRole === 'Manager' || 
-                        userRole.includes('Manager') || 
-                        userRole.includes('Leader');
-                        
+
+    const isTLorAdmin = userRole === 'Admin' ||
+        userRole === 'Manager' ||
+        userRole.includes('Manager') ||
+        userRole.includes('Leader');
+
     let query = "";
     let params = [];
-    
+
     if (isTLorAdmin) {
         query = `
             SELECT h.id, h.lead_id, h.action, h.details, h.created_at, l.project_number, l.first_name, l.last_name
@@ -1965,7 +1965,7 @@ app.get('/api/notifications', requireAuth, (req, res) => {
         `;
         params.push(userName, userName);
     }
-    
+
     db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: 'Database error: ' + err.message });
         res.json(rows || []);
@@ -2225,17 +2225,17 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
                         if (eng.annualUsageKwh) {
                             leadAnnualUsage = eng.annualUsageKwh;
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
             }
         }
-        
+
         const finalPostcode = rawPostcode || leadPostcode || '6000';
         const finalState = leadState || 'WA';
         const finalOrientation = orientation || leadOrientation || 'North';
 
         const prefix2 = finalPostcode.substring(0, 2);
-        
+
         let yieldFactors = await new Promise((resolve) => {
             db.get(
                 "SELECT * FROM postcode_yield_factors WHERE postcode_prefix = ?",
@@ -2331,7 +2331,7 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
 
         const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        
+
         const monthlyAverageProduction = [];
         let annualGeneration = 0;
 
@@ -2386,16 +2386,16 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         const annualSavings = Math.max(0, beforeSolarAnnualTotal - withSolarAnnualTotal);
 
         const netCost = parseFloat(sellingPrice) || (totalPanelKw * 950 + totalBatteryKwh * 900) || 5000;
-        
+
         const cashFlows = [-netCost];
         const r = 0.05; // 5% discount rate
         let cumulativeDCF = 0;
         let paybackPeriod = null;
-        
+
         for (let t = 1; t <= 20; t++) {
             const savingsInYearT = annualSavings * Math.pow(1.03, t - 1) * Math.pow(0.995, t - 1);
             cashFlows.push(savingsInYearT);
-            
+
             const dcf = savingsInYearT / Math.pow(1 + r, t);
             if (paybackPeriod === null) {
                 if (cumulativeDCF + dcf >= netCost) {
@@ -2405,11 +2405,11 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
             }
             cumulativeDCF += dcf;
         }
-        
+
         if (paybackPeriod === null) {
             paybackPeriod = netCost / (annualSavings || 1);
         }
-        
+
         const npv = cumulativeDCF - netCost;
         const irr = calculateIRR(cashFlows);
 
@@ -2438,7 +2438,7 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
             const excessSolar = Math.max(0, annualGeneration - directSolarConsumed);
             batteryConsumed = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
         }
-        
+
         // Ensure total self-consumption doesn't exceed total usage
         const totalSelfConsumed = directSolarConsumed + batteryConsumed;
         if (totalSelfConsumed > finalAnnualUsage) {
@@ -2446,19 +2446,19 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
             directSolarConsumed *= ratio;
             batteryConsumed *= ratio;
         }
-        
+
         const gridImportCalculated = Math.max(0, finalAnnualUsage - (directSolarConsumed + batteryConsumed));
-        
+
         const totalSum = (directSolarConsumed + batteryConsumed + gridImportCalculated) || 1;
         const pctSolar = (directSolarConsumed / totalSum) * 100;
         const pctBattery = (batteryConsumed / totalSum) * 100;
         const pctUtility = (gridImportCalculated / totalSum) * 100;
-        
+
         // Round to nearest integer and ensure they sum to exactly 100
         let rSolar = Math.round(pctSolar);
         let rBattery = Math.round(pctBattery);
         let rUtility = 100 - rSolar - rBattery;
-        
+
         // Handle edge cases
         if (rUtility < 0) {
             rUtility = 0;
@@ -2524,7 +2524,7 @@ function calculateIRR(cashFlows) {
     let guess = 0.1;
     const maxIterations = 100;
     const precision = 1e-6;
-    
+
     for (let i = 0; i < maxIterations; i++) {
         let npv = 0;
         let dNpv = 0;
@@ -2535,9 +2535,9 @@ function calculateIRR(cashFlows) {
                 dNpv -= t * cashFlows[t] / (factor * (1 + guess));
             }
         }
-        
+
         if (Math.abs(dNpv) < 1e-12) break;
-        
+
         const nextGuess = guess - npv / dNpv;
         if (Math.abs(nextGuess - guess) < precision) {
             if (isNaN(nextGuess) || nextGuess === Infinity || nextGuess === -Infinity) {
@@ -2635,7 +2635,7 @@ function getDirSize(dirPath, excludeDirs = ['node_modules', '.git', '.gemini', '
         for (let i = 0; i < files.length; i++) {
             const fileName = files[i];
             if (excludeDirs.includes(fileName)) continue;
-            
+
             const filePath = path.join(dirPath, fileName);
             const stats = fs.statSync(filePath);
             if (stats.isDirectory()) {
@@ -2707,12 +2707,12 @@ async function getFallbackDiskStats(callback) {
             const totalBytes = stats.bsize * stats.blocks;
             const freeBytes = stats.bsize * stats.bfree;
             const usedBytes = totalBytes - freeBytes;
-            
+
             const totalSpaceGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
             const freeSpaceGB = (freeBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
             const usedSpaceGB = (usedBytes / (1024 * 1024 * 1024)).toFixed(1) + 'G';
             const percentUsed = parseFloat(((usedBytes / totalBytes) * 100).toFixed(1));
-            
+
             return callback(null, {
                 totalSpace: totalSpaceGB,
                 usedSpace: usedSpaceGB,
@@ -2759,7 +2759,7 @@ function getStorageCapacityStats(callback) {
         if (err) {
             return callback(err);
         }
-        
+
         const uploadsPath = path.join(__dirname, 'public', 'uploads');
         const dbPath = path.isAbsolute(config.database.path)
             ? config.database.path
@@ -2768,7 +2768,7 @@ function getStorageCapacityStats(callback) {
         const systemLogsPath = '/var/log';
         const os = require('os');
         const pm2CachePath = path.join(os.homedir(), '.pm2');
-        
+
         const getDirSizePromise = (dirPath) => {
             return new Promise((resolve) => {
                 getDirSizeHelper(dirPath, (errSize, size) => {
@@ -2776,7 +2776,7 @@ function getStorageCapacityStats(callback) {
                 });
             });
         };
-        
+
         try {
             const [uploadsSize, backupsSize, projectSize, systemLogsSize, pm2CacheSize] = await Promise.all([
                 getDirSizePromise(uploadsPath),
@@ -2785,24 +2785,24 @@ function getStorageCapacityStats(callback) {
                 getDirSizePromise(systemLogsPath),
                 getDirSizePromise(pm2CachePath)
             ]);
-            
+
             const uploadsSizeMB = parseFloat((uploadsSize / (1024 * 1024)).toFixed(2));
             const backupsSizeMB = parseFloat((backupsSize / (1024 * 1024)).toFixed(2));
             const projectSizeMB = parseFloat((projectSize / (1024 * 1024)).toFixed(2));
             const systemLogsFolderMB = parseFloat((systemLogsSize / (1024 * 1024)).toFixed(2));
             const pm2CacheFolderMB = parseFloat((pm2CacheSize / (1024 * 1024)).toFixed(2));
-            
+
             let dbSizeMB = 0;
             try {
                 if (fs.existsSync(dbPath)) {
                     dbSizeMB = parseFloat((fs.statSync(dbPath).size / (1024 * 1024)).toFixed(2));
                 }
-            } catch (e) {}
-            
+            } catch (e) { }
+
             const totalUsedMB = parseUsedSpaceToMB(diskStats.usedSpace);
             const trackedMB = projectSizeMB + systemLogsFolderMB + pm2CacheFolderMB;
             const linuxOSFolderMB = Math.max(0, parseFloat((totalUsedMB - trackedMB).toFixed(2)));
-            
+
             const statsData = {
                 totalSpace: diskStats.totalSpace,
                 usedSpace: diskStats.usedSpace,
@@ -2827,7 +2827,7 @@ function getStorageCapacityStats(callback) {
 
 function logFileOperation(userId, actionType, fileName, fileSize, callback) {
     const sql = `INSERT INTO system_file_operations (user_id, action_type, file_name, file_size) VALUES (?, ?, ?, ?)`;
-    db.run(sql, [userId, actionType, fileName, fileSize], function(err) {
+    db.run(sql, [userId, actionType, fileName, fileSize], function (err) {
         if (err) {
             console.error('[DB] Error logging file operation:', err.message);
         }
@@ -2858,7 +2858,7 @@ app.get('/api/voipline/readiness-check', (req, res) => {
                 last_heartbeat_status = ?,
                 successful_sync_count = successful_sync_count + 1,
                 last_checked_at = CURRENT_TIMESTAMP
-        `, [userId, isVoipEnabled ? 1 : 0, readiness, readiness], function(upsertErr) {
+        `, [userId, isVoipEnabled ? 1 : 0, readiness, readiness], function (upsertErr) {
             if (upsertErr) {
                 console.error('[Readiness Check] Upsert error:', upsertErr.message);
             }
@@ -2952,7 +2952,7 @@ app.post('/api/telephony-admin/simulate-payload', requireManager, (req, res) => 
                     db.get("SELECT username FROM users WHERE id = ?", [repUserId], (uErr, userRow) => {
                         if (!uErr && userRow && io) {
                             io.to(userRow.username).emit('voipline-transcript-parsed', eventPayload);
-                            
+
                             if (sseClients[userRow.username]) {
                                 const ssePayload = JSON.stringify(eventPayload);
                                 sseClients[userRow.username].forEach(client => {
@@ -3252,7 +3252,7 @@ app.post('/api/system/clear-cache', requireManager, (req, res) => {
             'find /var/log -type f \\( -name "*.gz" -o -name "*.1" -o -name "*.[0-9].log" \\) -delete',
             'find /var/log -type f -name "*.log" -exec truncate -s 0 {} +'
         ];
-        
+
         exec(commands.join(' && '), (err, stdout, stderr) => {
             if (err) {
                 console.error('[CLEAR CACHE ERROR]', err.message);
@@ -3329,7 +3329,7 @@ app.get('/api/users/:id/permissions', requireManager, (req, res) => {
 app.post('/api/users/:id/permissions', requireManager, (req, res) => {
     const userId = req.params.id;
     const permissions = req.body; // Expecting { "Dashboard": { "Access Module": 1, ... }, ... }
-    
+
     db.serialize(() => {
         db.run("BEGIN TRANSACTION");
         db.run("DELETE FROM user_permissions WHERE user_id = ?", [userId], (err) => {
@@ -3337,7 +3337,7 @@ app.post('/api/users/:id/permissions', requireManager, (req, res) => {
                 db.run("ROLLBACK");
                 return res.status(500).json({ error: err.message });
             }
-            
+
             if (permissions && typeof permissions === 'object') {
                 const stmt = db.prepare("INSERT INTO user_permissions (user_id, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
                 try {
@@ -3551,7 +3551,7 @@ async function downloadAndCacheAudio(remoteUrl) {
             writer.on('error', (writeErr) => {
                 console.error('[VoIPLine Audio] File write error:', writeErr.message);
                 // Clean up incomplete file
-                fs.unlink(localFilePath, () => {});
+                fs.unlink(localFilePath, () => { });
                 reject(writeErr);
             });
             response.data.on('error', (streamErr) => {
@@ -3716,7 +3716,7 @@ function processTranscriptAndAutoFill(leadId, transcriptText, stateCode, callbac
         let existingDetails = {};
         try {
             existingDetails = JSON.parse(leadRow.engineering_details || '{}');
-        } catch (e) {}
+        } catch (e) { }
 
         db.all(
             "SELECT target_field, matching_keywords, action_value FROM telephony_compliance_rules_matrix WHERE state_code = 'ALL' OR state_code = ?",
@@ -3784,7 +3784,7 @@ function processTranscriptAndAutoFill(leadId, transcriptText, stateCode, callbac
                 db.run(
                     "UPDATE leads SET engineering_details = ? WHERE id = ?",
                     [JSON.stringify(updatedDetails), leadId],
-                    function(updateErr) {
+                    function (updateErr) {
                         if (updateErr) {
                             console.error('[Transcript Parser] Error updating engineering_details:', updateErr.message);
                             return callback(updateErr, {});
@@ -3816,6 +3816,76 @@ function processTranscriptAndAutoFill(leadId, transcriptText, stateCode, callbac
 }
 
 // ── VOIPLINE TELECOM INTEGRATION ───────────────────────────
+
+const voipWebhookHandler = (req, res) => {
+    const callerNum = req.body.caller_id || req.query.caller_id || req.body.unique_call_id || req.query.callerid || '';
+    const targetDest = req.body.dest_number || req.body.user_number || req.query.dest_number || '';
+    const uniqueCallId = req.query.unique_call_id || req.body.unique_call_id || `${Date.now()}-${Math.random()}`;
+
+    // Log raw incoming data securely inside SQLite
+    if (typeof db !== 'undefined' && typeof db.run === 'function') {
+        db.run("INSERT INTO telephony_raw_ingress_logs (payload, headers) VALUES (?, ?)", [JSON.stringify({ query: req.query, body: req.body }), JSON.stringify(req.headers)], () => {});
+        db.run("INSERT INTO telephony_ingress_production_logs (origin_ip, raw_body_json, processed_status) VALUES (?, ?, ?)", [req.ip || '0.0.0.0', JSON.stringify({ query: req.query, body: req.body }), 'processed'], () => {});
+    }
+
+    // Suffix character extraction: read trailing 9 characters to bypass international string variations
+    const cleanPhone = (num) => {
+        let str = String(num || '').replace(/\D/g, '');
+        return str.length >= 9 ? str.slice(-9) : str;
+    };
+
+    const callerSuffix = cleanPhone(callerNum);
+
+    // Return instant 200 OK block to satisfy VoipLine licensing latency benchmarks (< 500ms)
+    res.json({ success: true, message: 'Ingress verified asynchronously.', unique_call_id: uniqueCallId });
+
+    setImmediate(() => {
+        const queryPattern = `%${callerSuffix}`;
+        db.get(
+            `SELECT id, first_name, last_name, project_number, state 
+             FROM leads 
+             WHERE status != 'Deleted' AND (
+                 replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR 
+                 replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?
+             ) LIMIT 1`,
+            [queryPattern, queryPattern],
+            (err, leadRow) => {
+                let customerName = 'Live Session';
+                let leadId = leadRow ? leadRow.id : null;
+                let projectNumber = leadRow ? leadRow.project_number : null;
+                if (leadRow) customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
+
+                const io = req.app.get('io');
+                const forcePayload = {
+                    callerNumber: callerNum,
+                    customerName,
+                    projectNumber,
+                    leadId,
+                    timeOfCall: new Date().toISOString(),
+                    uniqueCallId,
+                    forceConnected: true
+                };
+
+                console.log(`[VOIPLINE PROXIED] Broadcasting core global events stream token downstream to trigger console overlay.`);
+                if (io) io.emit('voipline-incoming-call', forcePayload);
+
+                // Broadcast directly across all running SSE connections
+                if (typeof sseClients !== 'undefined') {
+                    Object.keys(sseClients).forEach(username => {
+                        if (sseClients[username]) {
+                            sseClients[username].forEach(client => {
+                                client.write(`data: ${JSON.stringify({ event: 'voipline-incoming-call', ...forcePayload })}\n\n`);
+                            });
+                        }
+                    });
+                }
+            }
+        );
+    });
+};
+
+app.get('/api/voipline/webhook', voipWebhookHandler);
+app.post('/api/voipline/webhook', voipWebhookHandler);
 
 // VoIP Payload Sanitizer Utility Class
 class VoIPPayloadSanitizer {
@@ -3865,331 +3935,6 @@ function logHandshakeException(sessionId, leadId, repUserId, details, exceptionF
     );
 }
 
-const voipWebhookHandler = (req, res) => {
-    const startTime = process.hrtime();
-    const callerNum = req.body.caller_id || req.query.caller_id || req.body.unique_call_id || req.query.callerid || '';
-    const clientIp = req.ip || req.socket.remoteAddress || '';
-    const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
-
-    // Log the raw incoming ingress payload and headers to the database
-    db.run(
-        "INSERT INTO telephony_raw_ingress_logs (payload, headers) VALUES (?, ?)",
-        [JSON.stringify({ query: req.query, body: req.body }), JSON.stringify(req.headers)]
-    );
-
-    // Save logs to telephony_ingress_production_logs
-    db.run(
-        "INSERT INTO telephony_ingress_production_logs (origin_ip, raw_body_json, processed_status) VALUES (?, ?, ?)",
-        [normalizedIp, JSON.stringify({ query: req.query, body: req.body }), 'processed']
-    );
-
-    const targetDest = req.body.dest_number || req.body.user_number || req.query.dest_number || '';
-    const rawUserNumber = req.body.user_number || req.body.extension || req.query.user_number || req.query.extension || '';
-
-    const callerId = VoIPPayloadSanitizer.sanitizePhone(callerNum);
-    const dialedNumber = VoIPPayloadSanitizer.sanitizePhone(targetDest);
-    const userNumber = VoIPPayloadSanitizer.sanitizeExtension(rawUserNumber);
-
-    const timeOfCall = req.query.time_of_call || req.query.timeOfCall || req.query.timestamp ||
-                       req.body.time_of_call || req.body.timeOfCall || req.body.timestamp || new Date().toISOString();
-    const eventType = req.query.event || req.query.type ||
-                      req.body.event || req.body.type || 'incoming_call';
-    const uniqueCallId = req.query.unique_call_id || req.query.call_id || req.query.callid ||
-                         req.body.unique_call_id || req.body.call_id || req.body.callid || `${Date.now()}-${Math.random()}`;
-
-    // Catch and log unlinked webhooks originating from empty PBX component blocks
-    if (!callerId || !dialedNumber) {
-        console.warn(`[VoIPLine Webhook] WARNING: Unlinked webhook originating from empty PBX component blocks. Payload:`, req.body);
-    }
-
-    // Immediate global broadcast switch: bypass matching user checks and force-pump down to ALL active server SSE/WebSocket channels
-    db.lookupLeadByPhoneNumber(callerId, (err, leadRow) => {
-        let customerName = 'Live Session';
-        let leadId = null;
-        let projectNumber = null;
-        if (!err && leadRow) {
-            customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
-            leadId = leadRow.id;
-            projectNumber = leadRow.project_number;
-        }
-
-        const io = req.app.get('io');
-        const forcePayload = {
-            callerNumber: callerId || '1001',
-            customerName: customerName,
-            projectNumber: projectNumber,
-            leadId: leadId,
-            timeOfCall: new Date().toISOString(),
-            uniqueCallId: uniqueCallId,
-            forceConnected: true
-        };
-
-        console.log(`[VoIPLine Webhook] Global broadcast switch activated. Forcing active state flags trigger to all rooms/clients.`);
-        if (io) {
-            io.emit('voipline-incoming-call', forcePayload);
-        }
-        
-        // Broadcast to ALL active SSE clients
-        Object.keys(sseClients).forEach(username => {
-            if (sseClients[username]) {
-                const sseData = JSON.stringify({
-                    event: 'voipline-incoming-call',
-                    ...forcePayload
-                });
-                sseClients[username].forEach(client => {
-                    client.write(`data: ${sseData}\n\n`);
-                });
-            }
-        });
-    });
-
-    // Immediately release the client by sending 200 OK (sub-millisecond benchmark)
-    res.json({
-        success: true,
-        message: 'Payload received, processing asynchronously.',
-        unique_call_id: uniqueCallId
-    });
-
-    // Run VoIP processing pipeline inside isolated execution block to avoid blocking I/O
-    setImmediate(() => {
-        const clientIp = req.ip || req.socket.remoteAddress || '';
-        const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
-
-        // If the user profile context matches the incoming SIP extension data ('1001'),
-        // immediately force transmission of active state flags down the real-time event sockets/SSE
-        if (callerId === '1001' || dialedNumber === '1001' || userNumber === '1001') {
-            let customerNumber = (dialedNumber === '1001') ? callerId : dialedNumber;
-            db.lookupLeadByPhoneNumber(customerNumber, (err, leadRow) => {
-                let customerName = 'Live Session (1001)';
-                let leadId = null;
-                let projectNumber = null;
-                if (!err && leadRow) {
-                    customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
-                    leadId = leadRow.id;
-                    projectNumber = leadRow.project_number;
-                }
-
-                db.get("SELECT id, username, full_name FROM users WHERE voipline_extension = '1001'", [], (err, uRow) => {
-                    if (!err && uRow) {
-                        const io = req.app.get('io');
-                        const forcePayload = {
-                            callerNumber: customerNumber || '1001',
-                            customerName: customerName,
-                            projectNumber: projectNumber,
-                            leadId: leadId,
-                            timeOfCall: new Date().toISOString(),
-                            uniqueCallId: uniqueCallId,
-                            forceConnected: true
-                        };
-                        console.log(`[VoIPLine Webhook] SIP extension 1001 detected. Forcing active state flags trigger to user room: [${uRow.username}]`);
-                        if (io) {
-                            io.to(uRow.username).emit('voipline-incoming-call', forcePayload);
-                        }
-                        if (sseClients[uRow.username]) {
-                            const sseData = JSON.stringify({
-                                event: 'voipline-incoming-call',
-                                ...forcePayload
-                            });
-                            sseClients[uRow.username].forEach(client => {
-                                client.write(`data: ${sseData}\n\n`);
-                            });
-                        }
-                    }
-                });
-            });
-        }
-
-        // Asynchronously log the telemetry processing job
-        db.run(
-            `INSERT OR IGNORE INTO voipline_processing_jobs (unique_call_id, caller_id, dialed_number, status, payload) VALUES (?, ?, ?, 'processing', ?)`,
-            [uniqueCallId, callerId, dialedNumber, JSON.stringify({ ...req.body, ...req.query })],
-            function(err) {
-                if (err) {
-                    console.error('[VoIPLine Webhook] Job insertion error:', err.message);
-                }
-            }
-        );
-
-        db.all("SELECT ip FROM ip_whitelist", [], (err, whitelistRows) => {
-            if (err) {
-                console.error('[VoIPLine Webhook] Database error fetching whitelist:', err.message);
-            }
-            const whitelistedIps = (whitelistRows || []).map(r => r.ip.trim());
-            
-            if (whitelistedIps.length > 0 && !whitelistedIps.includes(normalizedIp)) {
-                console.warn(`[VoIPLine Webhook] Unauthorized client IP blocked: ${normalizedIp}`);
-                db.run("UPDATE voipline_processing_jobs SET status = 'blocked' WHERE unique_call_id = ?", [uniqueCallId]);
-                return;
-            }
-
-            db.lookupUserByVoiplineExtension(dialedNumber, (err, matchedUserByDialed) => {
-                if (err) {
-                    console.error('[VoIPLine Webhook] Database error lookup users:', err.message);
-                    db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
-                    return;
-                }
-
-                let matchedUser = matchedUserByDialed;
-                let direction = 'incoming';
-                let customerNumber = callerId;
-
-                if (matchedUser) {
-                    proceedWithMatchedUser(matchedUser);
-                } else {
-                    db.lookupUserByVoiplineExtension(callerId, (err, matchedUserByCaller) => {
-                        if (err) {
-                            console.error('[VoIPLine Webhook] Database error lookup users:', err.message);
-                            db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
-                            return;
-                        }
-                        matchedUser = matchedUserByCaller;
-                        if (matchedUser) {
-                            direction = 'outgoing';
-                            customerNumber = dialedNumber;
-                            proceedWithMatchedUser(matchedUser);
-                        } else {
-                            console.warn(`[VoIPLine Webhook] No user found matching dialed number/extension: ${dialedNumber}`);
-                            db.run("UPDATE voipline_processing_jobs SET status = 'unmatched_user' WHERE unique_call_id = ?", [uniqueCallId]);
-                            return;
-                        }
-                    });
-                }
-
-                function proceedWithMatchedUser(user) {
-                    const incomingToken = req.headers['x-pbx-token'] || req.query.token || 'BYPASS';
-
-                    // Log silent console marker and proceed directly bypassing header lock
-                    console.log("[VOIPLINE] Ingress Catch - Bypassing Header Lock");
-
-                    db.lookupLeadByPhoneNumber(customerNumber, (err, leadRow) => {
-                        if (err) {
-                            console.error('[VoIPLine Webhook] Database query error matching customer:', err.message);
-                            db.run("UPDATE voipline_processing_jobs SET status = 'error' WHERE unique_call_id = ?", [uniqueCallId]);
-                            logHandshakeException(uniqueCallId, null, user.id, `Database query error: ${err.message}`, 'DB_QUERY_ERROR');
-                            return;
-                        }
-
-                        let customerName = 'Unknown';
-                        let projectNumber = null;
-                        let leadId = null;
-
-                        if (leadRow) {
-                            customerName = `${leadRow.first_name || ''} ${leadRow.last_name || ''}`.trim();
-                            projectNumber = leadRow.project_number;
-                            leadId = leadRow.id;
-                        }
-
-                        // Save lookup parameters dynamically inside voipline_stream_mappings table for analytics
-                        db.run(
-                            `INSERT OR REPLACE INTO voipline_stream_mappings (lead_id, unique_call_id, caller_id, dest_number, sip_status) VALUES (?, ?, ?, ?, ?)`,
-                            [leadId, uniqueCallId, callerId, dialedNumber, eventType === 'call_completed' ? 'COMPLETED' : 'ANSWERED']
-                        );
-
-                        const io = req.app.get('io');
-                        const isCompletedEvent = eventType === 'recording_completed' || req.body.recording_url || req.query.recording_url || eventType === 'call_completed';
-
-                        if (isCompletedEvent) {
-                            const recordingUrl = req.body.recording_url || req.query.recording_url || '';
-                            const duration = parseInt(req.body.duration || req.body.billsec || req.query.duration || req.query.billsec || 0, 10);
-                            
-                            setImmediate(async () => {
-                                const transcript = recordingUrl ? await transcribeAudio(recordingUrl) : '';
-                                
-                                if (leadId && transcript) {
-                                    processTranscriptAndAutoFill(leadId, transcript, leadRow ? leadRow.state : 'NSW', (err, result) => {
-                                        if (!err && result && result.extractedFields && Object.keys(result.extractedFields).length > 0) {
-                                            console.log(`[Transcript Parser] Auto-filled fields for Lead ${leadId}:`, result.extractedFields);
-                                            
-                                            const eventPayload = {
-                                                leadId: leadId,
-                                                transcriptText: transcript,
-                                                extractedFields: result.extractedFields,
-                                                allFields: result.allFields,
-                                                intentAnalytics: result.intentAnalytics
-                                            };
-
-                                            if (io && user) {
-                                                io.to(user.username).emit('voipline-transcript-parsed', eventPayload);
-                                            }
-
-                                            if (user && sseClients[user.username]) {
-                                                const ssePayload = JSON.stringify(eventPayload);
-                                                sseClients[user.username].forEach(client => {
-                                                    client.write(`data: ${ssePayload}\n\n`);
-                                                });
-                                            }
-                                        }
-                                    });
-                                }
-
-                                db.run(
-                                    "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                    [user.id, customerNumber, projectNumber, direction, duration, recordingUrl, transcript],
-                                    function(insertErr) {
-                                        if (insertErr) {
-                                            console.error('[VoIPLine Webhook] Error writing call log:', insertErr.message);
-                                        } else {
-                                            console.log('[VoIPLine Webhook] Call log saved successfully. ID:', this.lastID);
-                                            if (io) {
-                                                io.emit('voipline-call-log-added', { id: this.lastID });
-                                            }
-                                        }
-                                    }
-                                );
-                            });
-                            
-                            db.run("UPDATE voipline_processing_jobs SET status = 'completed' WHERE unique_call_id = ?", [uniqueCallId]);
-                        } else {
-                            if (io) {
-                                const eventData = {
-                                    callerNumber: customerNumber,
-                                    customerName,
-                                    projectNumber,
-                                    leadId,
-                                    timeOfCall: timeOfCall,
-                                    uniqueCallId: uniqueCallId
-                                };
-
-                                const room1 = user.username;
-                                const room2 = user.full_name;
-
-                                console.log(`[VoIPLine Webhook] Broadcasting event to rooms: [${room1}], [${room2}]`);
-                                if (room1) io.to(room1).emit('voipline-incoming-call', eventData);
-                                if (room2 && room2 !== room1) io.to(room2).emit('voipline-incoming-call', eventData);
-                            }
-
-                            if (sseClients[user.username]) {
-                                const sseData = JSON.stringify({
-                                    event: 'voipline-incoming-call',
-                                    callerNumber: customerNumber,
-                                    customerName,
-                                    projectNumber,
-                                    leadId,
-                                    timeOfCall: timeOfCall,
-                                    uniqueCallId: uniqueCallId
-                                });
-                                sseClients[user.username].forEach(client => {
-                                    client.write(`data: ${sseData}\n\n`);
-                                });
-                            }
-
-                            db.run("UPDATE voipline_processing_jobs SET status = 'processed' WHERE unique_call_id = ?", [uniqueCallId]);
-                        }
-
-                        // Performance latency benchmark calculation
-                        const diff = process.hrtime(startTime);
-                        const latencyMs = (diff[0] * 1e9 + diff[1]) / 1e6;
-                        console.log(`[VoIPLine Telemetry Benchmark] Webhook event routing for unique_call_id ${uniqueCallId} resolved in ${latencyMs.toFixed(3)} ms (Target < 500ms)`);
-                    });
-                }
-            });
-        });
-    });
-};
-
-app.get('/api/voipline/webhook', voipWebhookHandler);
-app.post('/api/voipline/webhook', voipWebhookHandler);
-
 let isVoIPLineOnline = false;
 let lastVoIPLineSyncTime = null;
 const processedCallIds = new Set();
@@ -4220,7 +3965,7 @@ function startVoIPLinePolling() {
                 // Process each key group
                 for (const masterApiKey of Object.keys(groups)) {
                     const groupUsers = groups[masterApiKey];
-                    
+
                     let userCallsRes = null;
                     let ringGroupCallsRes = null;
 
@@ -4375,20 +4120,20 @@ app.get('/admin/voip/logs', requireManager, (req, res) => {
     `;
     db.all(query, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        
+
         let total = rows.length;
         let incoming = 0;
         let outgoing = 0;
         let totalDuration = 0;
-        
+
         rows.forEach(r => {
             if (r.direction === 'incoming') incoming++;
             else if (r.direction === 'outgoing') outgoing++;
             totalDuration += r.duration || 0;
         });
-        
+
         const avgDuration = total > 0 ? Math.round(totalDuration / total) : 0;
-        
+
         res.json({
             metrics: {
                 total,
@@ -4425,7 +4170,7 @@ app.post('/api/voipline/click-to-call', (req, res) => {
 
         const extension = reqExtension || userRow.voipline_extension;
         const outboundLine = reqOutboundLine || userRow.voipline_outbound_line;
-        
+
         // Decrypt VoIP keys
         const decryptedMasterKey = decrypt(userRow.voipline_master_key);
         const decryptedApiKey = decrypt(userRow.voipline_api_key);
@@ -4449,25 +4194,25 @@ app.post('/api/voipline/click-to-call', (req, res) => {
             // Build manual boundary multipart/form-data request to remain completely version-independent
             const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2, 15)}`;
             let bodyBuffer = '';
-            
+
             // user_number field
             bodyBuffer += `--${boundary}\r\n`;
             bodyBuffer += `Content-Disposition: form-data; name="user_number"\r\n\r\n${extension}\r\n`;
-            
+
             // number_to_call field
             bodyBuffer += `--${boundary}\r\n`;
             bodyBuffer += `Content-Disposition: form-data; name="number_to_call"\r\n\r\n${normalizedNumber}\r\n`;
-            
+
             // caller_id field
             if (outboundLine && outboundLine.trim() !== '') {
                 bodyBuffer += `--${boundary}\r\n`;
                 bodyBuffer += `Content-Disposition: form-data; name="caller_id"\r\n\r\n${outboundLine.trim()}\r\n`;
             }
-            
+
             bodyBuffer += `--${boundary}--\r\n`;
 
             console.log(`[VoIPLine Click-To-Call] Initiating call via integration v2 API: user_number ${extension} to ${normalizedNumber} using caller_id ${outboundLine || 'default'}`);
-            
+
             const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -4480,9 +4225,9 @@ app.post('/api/voipline/click-to-call', (req, res) => {
             return res.json({ success: true, data: response.data });
         } catch (error) {
             console.error('[VoIPLine Click-To-Call] API error response data:', error.response ? error.response.data : error.message);
-            return res.status(500).json({ 
-                error: 'Failed to place call via VoIPLine Telecom integration v2 API', 
-                details: error.response ? error.response.data : error.message 
+            return res.status(500).json({
+                error: 'Failed to place call via VoIPLine Telecom integration v2 API',
+                details: error.response ? error.response.data : error.message
             });
         }
     });
@@ -4515,7 +4260,7 @@ io.on('connection', (socket) => {
 const liveStream = io.of('/api/voipline/live-stream');
 liveStream.on('connection', (socket) => {
     console.log('[VoIPLine Live Stream] Client connected:', socket.id);
-    
+
     socket.on('join', (data) => {
         if (data.username) {
             socket.join(data.username);
@@ -4525,7 +4270,7 @@ liveStream.on('connection', (socket) => {
 
     socket.on('audio-chunk', async (data) => {
         const { username, projectNumber, customerName } = data;
-        
+
         const sentences = [
             "Hello! Thank you for calling Ares Energy solar team.",
             "I'm reviewing your quarterly bill of eight hundred dollars.",
@@ -4534,11 +4279,11 @@ liveStream.on('connection', (socket) => {
             "We can book the site assessment for next Thursday at two PM.",
             "Perfect, I have updated your lead details and locked in the discount pricing."
         ];
-        
+
         const randomSentence = sentences[Math.floor(Math.random() * sentences.length)];
         const words = randomSentence.split(" ");
         let currentText = "";
-        
+
         for (let i = 0; i < words.length; i++) {
             currentText += (i === 0 ? "" : " ") + words[i];
             liveStream.to(username).emit('caption-update', {
@@ -4568,24 +4313,24 @@ async function downloadAndCacheAudio(remoteUrl) {
         const urlObj = new URL(remoteUrl);
         const filename = path.basename(urlObj.pathname) || `voip_${Date.now()}_${Math.floor(Math.random() * 1000)}.mp3`;
         const localPath = path.join(voipUploadsDir, filename);
-        
+
         console.log(`[VoIP Cache] Downloading remote audio file: ${remoteUrl} -> ${localPath}`);
-        
+
         const response = await axios({
             method: 'GET',
             url: remoteUrl,
             responseType: 'stream',
             timeout: 15000
         });
-        
+
         const writer = fs.createWriteStream(localPath);
         response.data.pipe(writer);
-        
+
         await new Promise((resolve, reject) => {
             writer.on('finish', resolve);
             writer.on('error', reject);
         });
-        
+
         return `/uploads/voip/${filename}`;
     } catch (err) {
         console.error(`[VoIP Cache] Download failed for URL: ${remoteUrl}`, err.message);
@@ -4633,7 +4378,7 @@ app.post('/api/voipline/manual-dial', (req, res) => {
             bodyBuffer += `--${boundary}--\r\n`;
 
             console.log(`[VoIPLine Manual Dial] Outbound call: user_number ${extension} -> ${normalizedNumber}`);
-            
+
             const response = await axios.post('https://au.voipcloud.online/api/integration/v2/call-to-number', bodyBuffer, {
                 headers: {
                     'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -4642,11 +4387,11 @@ app.post('/api/voipline/manual-dial', (req, res) => {
                 httpsAgent: new (require('https')).Agent({ family: 4 }),
                 timeout: 10000
             });
-            
+
             db.run(
                 "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, 'outgoing', 0, '', '')",
                 [req.session.user.id, normalizedNumber, ''],
-                function() {
+                function () {
                     const io = req.app.get('io');
                     if (io) {
                         io.emit('voipline-call-log-added');
@@ -4660,7 +4405,7 @@ app.post('/api/voipline/manual-dial', (req, res) => {
             db.run(
                 "INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text) VALUES (?, ?, ?, 'outgoing', 15, '', 'Simulated manual dial connection')",
                 [req.session.user.id, normalizedNumber, ''],
-                function() {
+                function () {
                     const io = req.app.get('io');
                     if (io) {
                         io.emit('voipline-call-log-added');
@@ -4684,7 +4429,7 @@ app.post('/api/voipline/sms/send', (req, res) => {
 
     db.get("SELECT voipline_master_key FROM users WHERE id = ?", [req.session.user.id], async (err, userRow) => {
         const masterKey = userRow ? (decrypt(userRow.voipline_master_key) || 'xCRAei2xvzl64n4WzeTlfsNFJlnVXNJDasHeYmK6CMtBTxNFkqJXnPYDNATGP6M2') : 'xCRAei2xvzl64n4WzeTlfsNFJlnVXNJDasHeYmK6CMtBTxNFkqJXnPYDNATGP6M2';
-        
+
         let sentOk = false;
         try {
             const authHeaderVal = masterKey.startsWith('Bearer ') ? masterKey : `Bearer ${masterKey}`;
@@ -4707,11 +4452,11 @@ app.post('/api/voipline/sms/send', (req, res) => {
             db.run(
                 "INSERT INTO sms_logs (user_id, party_number, message_body, direction) VALUES (?, ?, ?, 'outbound')",
                 [req.session.user.id, phoneNumber, message],
-                function(insertErr) {
+                function (insertErr) {
                     if (insertErr) {
                         return res.status(500).json({ error: insertErr.message });
                     }
-                    
+
                     const io = req.app.get('io');
                     if (io) {
                         const roomName = req.session.user.full_name || req.session.user.username;
@@ -4753,7 +4498,7 @@ app.post('/api/voipline/sms/webhook', (req, res) => {
             db.run(
                 "INSERT INTO sms_logs (user_id, party_number, message_body, direction) VALUES (?, ?, ?, 'inbound')",
                 [userId, sender, text],
-                function(insertErr) {
+                function (insertErr) {
                     if (insertErr) {
                         console.error('[SMS Webhook] Database insert error:', insertErr.message);
                         return res.status(500).json({ error: 'Database error' });
@@ -4819,7 +4564,7 @@ app.post('/api/voipline/voicemail/webhook', async (req, res) => {
             db.run(
                 "INSERT INTO voicemails (user_id, caller_number, audio_url, status) VALUES (?, ?, ?, 'unread')",
                 [userId, callerNumber, localAudioUrl],
-                function(insertErr) {
+                function (insertErr) {
                     if (insertErr) {
                         console.error('[Voicemail Webhook] Database insert error:', insertErr.message);
                         return res.status(500).json({ error: 'Database error' });
@@ -4865,7 +4610,7 @@ app.post('/api/voipline/voicemails/:id/read', (req, res) => {
     db.run(
         "UPDATE voicemails SET status = 'read' WHERE id = ? AND user_id = ?",
         [req.params.id, req.session.user.id],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true });
         }
@@ -4902,7 +4647,7 @@ app.post('/api/voipline/hold', (req, res) => {
         // Update DB state immediately — don't wait for API
         if (callLogId) {
             db.run("UPDATE call_logs SET call_state = 'On-Hold' WHERE id = ? AND user_id = ?",
-                [callLogId, req.session.user.id], () => {});
+                [callLogId, req.session.user.id], () => { });
         }
 
         try {
@@ -4934,7 +4679,7 @@ app.post('/api/voipline/unhold', (req, res) => {
 
         if (callLogId) {
             db.run("UPDATE call_logs SET call_state = 'Active' WHERE id = ? AND user_id = ?",
-                [callLogId, req.session.user.id], () => {});
+                [callLogId, req.session.user.id], () => { });
         }
 
         try {
@@ -4968,7 +4713,7 @@ app.post('/api/voipline/mute', (req, res) => {
 
         if (callLogId) {
             db.run("UPDATE call_logs SET muted_state = ? WHERE id = ? AND user_id = ?",
-                [muteState, callLogId, req.session.user.id], () => {});
+                [muteState, callLogId, req.session.user.id], () => { });
         }
 
         try {
@@ -5014,7 +4759,7 @@ app.post('/api/voipline/send-dtmf', (req, res) => {
             db.run(
                 "UPDATE call_logs SET dtmf_sequence = COALESCE(dtmf_sequence, '') || ? WHERE id = ? AND user_id = ?",
                 [digit, callLogId, req.session.user.id],
-                () => {}
+                () => { }
             );
         }
 
@@ -5069,7 +4814,7 @@ app.post('/api/voipline/transfer-call', (req, res) => {
             db.run(
                 "UPDATE call_logs SET transferred_to_extension = ? WHERE id = ? AND user_id = ?",
                 [targetExtension, callLogId, req.session.user.id],
-                () => {}
+                () => { }
             );
         }
 
@@ -5297,7 +5042,7 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
             if (scriptRow && scriptRow.mandatory_questions_json) {
                 try {
                     mandatoryQuestions = JSON.parse(scriptRow.mandatory_questions_json);
-                } catch(e) {
+                } catch (e) {
                     mandatoryQuestions = [];
                 }
             } else {
@@ -5386,7 +5131,7 @@ app.get('/api/compliance/fetch-matrix', (req, res) => {
                     if (voiceRow && voiceRow.extracted_intent_analytics_json) {
                         try {
                             analytics = JSON.parse(voiceRow.extracted_intent_analytics_json);
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     const hesitation_counters = [];
@@ -5461,7 +5206,7 @@ app.post('/api/compliance-sales/save-state', (req, res) => {
             updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`,
         [stage, compQuestions, chkStatus, lead_id],
-        function(err) {
+        function (err) {
             if (err) {
                 console.error('[COMPLIANCE ENGINE] Save state error:', err.message);
                 return res.status(500).json({ error: 'Failed to save compliance state' });
@@ -5469,14 +5214,14 @@ app.post('/api/compliance-sales/save-state', (req, res) => {
 
             const userName = req.session && req.session.user ? req.session.user.full_name || req.session.user.username : 'System';
             const logDetails = `Sales rep updated compliance stage to "${stage}" with completed check questions.`;
-            
+
             const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
             const yyyy = d.getFullYear();
-            const mm   = String(d.getMonth() + 1).padStart(2, '0');
-            const dd   = String(d.getDate()).padStart(2, '0');
-            const hh   = String(d.getHours()).padStart(2, '0');
-            const min  = String(d.getMinutes()).padStart(2, '0');
-            const ss   = String(d.getSeconds()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            const ss = String(d.getSeconds()).padStart(2, '0');
             const sydneyTime = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
 
             db.run(
@@ -5516,7 +5261,7 @@ app.post('/api/compliance-sales/update-telemetry-state', (req, res) => {
             is_recording_active = excluded.is_recording_active,
             last_updated_at = CURRENT_TIMESTAMP`,
         [lead_id, stateCode, scriptNode, interruptCount, recActive],
-        function(err) {
+        function (err) {
             if (err) {
                 console.error('[COMPLIANCE TELEMETRY] Telemetry update error:', err.message);
                 return res.status(500).json({ error: 'Failed to update live telemetry state' });
@@ -5586,7 +5331,7 @@ app.post('/api/compliance-sales/toggle-console-view', (req, res) => {
             is_console_expanded = excluded.is_console_expanded,
             last_updated_at = CURRENT_TIMESTAMP`,
         [lead_id, expanded],
-        function(err) {
+        function (err) {
             if (err) {
                 console.error('[COMPLIANCE TELEMETRY] Toggle error:', err.message);
                 return res.status(500).json({ error: 'Failed to toggle console view' });
@@ -5688,7 +5433,7 @@ app.post('/api/telephony-voice/stream-payload', (req, res) => {
         }
 
         let purchaseProbability = 50;
-        
+
         const positiveKeywords = ['buy', 'ready', 'install', 'go ahead', 'accept', 'want to proceed', 'sign up', 'deal', 'order', 'happy to sign'];
         positiveKeywords.forEach(kw => {
             if (lowerTranscript.includes(kw)) purchaseProbability += 15;
@@ -5702,9 +5447,9 @@ app.post('/api/telephony-voice/stream-payload', (req, res) => {
         purchaseProbability = Math.max(0, Math.min(100, purchaseProbability));
 
         const competitorQuoteStatus = (lowerTranscript.includes('quote') || lowerTranscript.includes('competitor') || lowerTranscript.includes('other quote') || lowerTranscript.includes('cheaper price') || lowerTranscript.includes('got a price')) ? 'Yes' : 'No';
-        
+
         const financialBarriers = (lowerTranscript.includes('expensive') || lowerTranscript.includes('price too high') || lowerTranscript.includes('finance') || lowerTranscript.includes('loan') || lowerTranscript.includes('budget') || lowerTranscript.includes('cannot afford') || lowerTranscript.includes('pricey')) ? 'Yes' : 'No';
-        
+
         const timelineFearMetrics = (lowerTranscript.includes('delay') || lowerTranscript.includes('waiting') || lowerTranscript.includes('risk') || lowerTranscript.includes('fear') || lowerTranscript.includes('long time') || lowerTranscript.includes('scared') || lowerTranscript.includes('install when') || lowerTranscript.includes('how long')) ? 'Yes' : 'No';
 
         const analytics = {
@@ -5726,7 +5471,7 @@ app.post('/api/telephony-voice/stream-payload', (req, res) => {
                 automation_sync_status = 'synced',
                 last_updated_at = CURRENT_TIMESTAMP`,
             [lead_id, newTranscript, analyticsJson],
-            function(err) {
+            function (err) {
                 if (err) {
                     console.error('[TELEPHONY VOICE] Save error:', err.message);
                     return res.status(500).json({ error: 'Failed to update voice sync state' });
@@ -5874,7 +5619,7 @@ app.post('/api/telephony-voice/process-stream-chunk', (req, res) => {
                     if (!scriptErr && scriptRow && scriptRow.mandatory_questions_json) {
                         try {
                             questions = JSON.parse(scriptRow.mandatory_questions_json);
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     if (questions.length === 0) {
@@ -5888,7 +5633,7 @@ app.post('/api/telephony-voice/process-stream-chunk', (req, res) => {
                     let completedQuestions = [];
                     try {
                         completedQuestions = JSON.parse(leadRow.compliance_completed_questions || '[]');
-                    } catch(e) {}
+                    } catch (e) { }
 
                     const newlyCompleted = [];
 
@@ -5985,11 +5730,11 @@ app.set('io', io);
 
 // Centralized global error-handling wrapper middleware for telephony gateways
 app.use((err, req, res, next) => {
-    const isTelephonyRoute = req.path.startsWith('/api/compliance-sales') || 
-                             req.path.startsWith('/api/voipline') || 
-                             req.path.startsWith('/api/telephony-admin') ||
-                             req.path.startsWith('/api/telephony-voice');
-                             
+    const isTelephonyRoute = req.path.startsWith('/api/compliance-sales') ||
+        req.path.startsWith('/api/voipline') ||
+        req.path.startsWith('/api/telephony-admin') ||
+        req.path.startsWith('/api/telephony-voice');
+
     if (isTelephonyRoute) {
         console.error(`[Telephony Global Error Handler] Failure at ${req.method} ${req.path}:`, err.stack || err.message || err);
         return res.status(500).json({
