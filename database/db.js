@@ -1857,4 +1857,55 @@ db.serialize(() => {
 
 });
 
+// Telephone number normalizer helper: extracts the last 9 digits of a numeric string
+db.normalizePhoneToSuffix = function(num) {
+    if (!num) return '';
+    const clean = String(num).replace(/\D/g, '');
+    return clean.length >= 9 ? clean.slice(-9) : clean;
+};
+
+// Substring lookup helper for VoIP user extension matching
+db.lookupUserByVoiplineExtension = function(callerOrDialed, callback) {
+    const suffix = db.normalizePhoneToSuffix(callerOrDialed);
+    if (!suffix) {
+        return callback(null, null);
+    }
+    db.all(
+        "SELECT id, username, full_name, voipline_extension, voipline_secret_token FROM users WHERE voipline_extension IS NOT NULL AND voipline_extension != ''",
+        [],
+        (err, users) => {
+            if (err) return callback(err, null);
+            
+            // Match extension suffix (comparing last 9 digits)
+            const matchedUser = (users || []).find(u => {
+                const ext = String(u.voipline_extension).replace(/\D/g, '').trim();
+                const extSuffix = ext.length >= 9 ? ext.slice(-9) : ext;
+                return extSuffix === suffix || suffix.endsWith(extSuffix) || extSuffix.endsWith(suffix) || ext === callerOrDialed;
+            });
+            
+            callback(null, matchedUser);
+        }
+    );
+};
+
+// Substring lookup helper for Lead phone number matching
+db.lookupLeadByPhoneNumber = function(phoneNumber, callback) {
+    const suffix = db.normalizePhoneToSuffix(phoneNumber);
+    if (!suffix) {
+        return callback(null, null);
+    }
+    const searchPattern = `%${suffix}`;
+    db.get(
+        `SELECT id, first_name, last_name, project_number, state
+         FROM leads
+         WHERE is_deleted = 0 AND (
+             replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
+             replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
+             replace(replace(replace(replace(landline_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?
+         ) LIMIT 1`,
+        [searchPattern, searchPattern, searchPattern],
+        callback
+    );
+};
+
 module.exports = db;

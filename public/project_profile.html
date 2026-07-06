@@ -5338,25 +5338,44 @@ function initVoiceSocketListeners() {
             setInterval(checkVoipReadiness, 30000);
             
             window.voipSocket.on('voipline-incoming-call', (data) => {
-                if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
-                    const isActiveOwner = (
-                        projectData &&
-                        projectData.assign_to &&
-                        (
-                            String(projectData.assign_to).toLowerCase() === String(window.loggedInUsername || '').toLowerCase() ||
-                            String(projectData.assign_to).toLowerCase() === String(window.loggedInUser || '').toLowerCase()
-                        )
-                    );
-                    
-                    if (!isActiveOwner) {
-                        console.log('[COMPLIANCE OVERLAY] Skipping auto-expansion: Logged-in user is not the active lead owner.', projectData?.assign_to);
-                        return;
-                    }
+                let isMatch = false;
+                if (data.forceConnected === true) {
+                    isMatch = true;
+                } else if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
+                    isMatch = true;
+                } else if (projectData) {
+                    const cleanCaller = String(data.callerNumber || '').replace(/\D/g, '');
+                    const suffixCaller = cleanCaller.length >= 9 ? cleanCaller.slice(-9) : cleanCaller;
 
-                    console.log('[COMPLIANCE OVERLAY] Inbound call event matched current lead. Instantly auto-expanding console.', data);
+                    const cleanP1 = String(projectData.phone_number || '').replace(/\D/g, '');
+                    const cleanP2 = String(projectData.phone_number_2 || '').replace(/\D/g, '');
+                    const cleanLand = String(projectData.landline_number || '').replace(/\D/g, '');
+
+                    if (suffixCaller && (
+                        (cleanP1 && cleanP1.endsWith(suffixCaller)) ||
+                        (cleanP2 && cleanP2.endsWith(suffixCaller)) ||
+                        (cleanLand && cleanLand.endsWith(suffixCaller))
+                    )) {
+                        isMatch = true;
+                    }
+                }
+
+                if (isMatch) {
+                    // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"
+                    const recBadge = document.getElementById('telemetry_rec_badge');
+                    const recOverlayBadge = document.getElementById('overlay_rec_badge');
+                    [recBadge, recOverlayBadge].forEach(badge => {
+                        if (badge) {
+                            badge.innerText = '🟢 CONNECTED (LIVE)';
+                            badge.style.background = '#10b981';
+                        }
+                    });
+
+                    console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
                     
                     isConsoleExpanded = 1;
                     applyConsoleToggleUI();
+                    loadComplianceGuidance();
                     
                     fetch('/api/compliance-sales/toggle-console-view', {
                         method: 'POST',
