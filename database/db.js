@@ -1572,6 +1572,20 @@ db.serialize(() => {
         )
     `);
 
+    // 3.7 compliance_console_sessions table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS compliance_console_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lead_id INTEGER UNIQUE,
+            current_stage TEXT,
+            auto_parsed_keywords_json TEXT,
+            purchase_probability INTEGER DEFAULT 50,
+            step_validation_flags TEXT,
+            last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists

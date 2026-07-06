@@ -5171,6 +5171,243 @@ app.post('/api/telephony-voice/stream-payload', (req, res) => {
     });
 });
 
+app.post('/api/telephony-voice/process-stream-chunk', (req, res) => {
+    const { lead_id, text_fragment } = req.body;
+
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required.' });
+    }
+
+    const fragment = text_fragment || '';
+
+    db.get('SELECT state, type_of_lead, compliance_stage, compliance_completed_questions FROM leads WHERE id = ?', [lead_id], (err, leadRow) => {
+        if (err) {
+            console.error('[TELEPHONY VOICE CHUNK] Lead query error:', err.message);
+            return res.status(500).json({ error: 'Failed to query lead information' });
+        }
+
+        if (!leadRow) {
+            return res.status(404).json({ error: 'Lead not found' });
+        }
+
+        const stateCode = (leadRow.state || 'NSW').trim().toUpperCase();
+        let systemType = (leadRow.type_of_lead || 'PV').trim();
+        if (systemType === 'PV+Battery') systemType = 'Combined';
+        const activeStage = leadRow.compliance_stage || 'Greeting';
+
+        db.get('SELECT live_captions_transcript FROM telephony_live_voice_sync WHERE lead_id = ?', [lead_id], (err, voiceSyncRow) => {
+            if (err) {
+                console.error('[TELEPHONY VOICE CHUNK] Voice sync query error:', err.message);
+                return res.status(500).json({ error: 'Failed to query voice sync' });
+            }
+
+            let existingTranscript = voiceSyncRow ? voiceSyncRow.live_captions_transcript || '' : '';
+            let newTranscript = (existingTranscript ? existingTranscript + ' ' : '') + fragment;
+            const lowerTranscript = newTranscript.toLowerCase();
+
+            const extractedFields = {};
+
+            // Roof Type
+            if (lowerTranscript.includes('tin roof') || lowerTranscript.includes('roof is tin')) {
+                extractedFields.tb_roof_type = 'Tin';
+            } else if (lowerTranscript.includes('tile roof') || lowerTranscript.includes('roof is tile')) {
+                extractedFields.tb_roof_type = 'Tile';
+            } else if (lowerTranscript.includes('clay roof') || lowerTranscript.includes('roof is clay')) {
+                extractedFields.tb_roof_type = 'Clay';
+            } else if (lowerTranscript.includes('concrete roof') || lowerTranscript.includes('roof is concrete')) {
+                extractedFields.tb_roof_type = 'Concrete';
+            } else if (lowerTranscript.includes('terracotta') || lowerTranscript.includes('terracotta roof')) {
+                extractedFields.tb_roof_type = 'Terracotta';
+            } else if (lowerTranscript.includes('kliplok') || lowerTranscript.includes('kliplok roof')) {
+                extractedFields.tb_roof_type = 'Kliplok';
+            }
+
+            // House Storey
+            if (lowerTranscript.includes('single storey') || lowerTranscript.includes('one storey') || lowerTranscript.includes('single-storey')) {
+                extractedFields.tb_house_storey = 'Single';
+            } else if (lowerTranscript.includes('double storey') || lowerTranscript.includes('two storey') || lowerTranscript.includes('double-storey')) {
+                extractedFields.tb_house_storey = 'Double';
+            } else if (lowerTranscript.includes('multi storey') || lowerTranscript.includes('three storey') || lowerTranscript.includes('multi-storey')) {
+                extractedFields.tb_house_storey = 'Multi';
+            }
+
+            // Phase
+            if (lowerTranscript.includes('single phase') || lowerTranscript.includes('one phase') || lowerTranscript.includes('single-phase')) {
+                extractedFields.tb_phase = '1';
+            } else if (lowerTranscript.includes('three phase') || lowerTranscript.includes('3 phase') || lowerTranscript.includes('three-phase')) {
+                extractedFields.tb_phase = '3';
+            } else if (lowerTranscript.includes('two phase') || lowerTranscript.includes('2 phase') || lowerTranscript.includes('two-phase')) {
+                extractedFields.tb_phase = '2';
+            }
+
+            // Export Limit
+            if (lowerTranscript.includes('zero export') || lowerTranscript.includes('0kw export') || lowerTranscript.includes('no export')) {
+                extractedFields.tb_export_limit = '0 kW';
+            } else if (lowerTranscript.includes('1.5kw export') || lowerTranscript.includes('1.5 kw export') || lowerTranscript.includes('1.5kw')) {
+                extractedFields.tb_export_limit = '1.5 kW';
+            } else if (lowerTranscript.includes('3kw export') || lowerTranscript.includes('3 kw export') || lowerTranscript.includes('3kw')) {
+                extractedFields.tb_export_limit = '3 kW';
+            } else if (lowerTranscript.includes('5kw export') || lowerTranscript.includes('5 kw export') || lowerTranscript.includes('5kw')) {
+                extractedFields.tb_export_limit = '5 kW';
+            }
+
+            // Battery Location
+            if (lowerTranscript.includes('battery inside') || lowerTranscript.includes('location inside') || lowerTranscript.includes('mount it inside')) {
+                extractedFields.tc_battery_location = 'Inside';
+            } else if (lowerTranscript.includes('battery outside') || lowerTranscript.includes('location outside') || lowerTranscript.includes('mount it outside')) {
+                extractedFields.tc_battery_location = 'Outside';
+            }
+
+            // Site Visit
+            if (lowerTranscript.includes('visit yes') || lowerTranscript.includes('site visit yes') || lowerTranscript.includes('need a visit') || lowerTranscript.includes('come out to site')) {
+                extractedFields.tc_site_visit = 'Yes';
+            } else if (lowerTranscript.includes('visit no') || lowerTranscript.includes('site visit no') || lowerTranscript.includes('no visit needed') || lowerTranscript.includes('dont need a visit')) {
+                extractedFields.tc_site_visit = 'No';
+            }
+
+            // Daily Usage
+            const usageMatch = lowerTranscript.match(/(?:usage is|using|daily usage of|usage of|average usage|around|approx)\s*(\d+(?:\.\d+)?)\s*(?:kwh|kilowatt)/);
+            if (usageMatch) {
+                extractedFields.tb_daily_usage = parseFloat(usageMatch[1]);
+            }
+
+            let purchaseProbability = 50;
+            const positiveKeywords = ['buy', 'ready', 'install', 'go ahead', 'accept', 'want to proceed', 'sign up', 'deal', 'order', 'happy to sign'];
+            positiveKeywords.forEach(kw => {
+                if (lowerTranscript.includes(kw)) purchaseProbability += 15;
+            });
+            const negativeKeywords = ['expensive', 'wait', 'quote collector', 'too high', 'think about it', 'cancel', 'not now', 'delay'];
+            negativeKeywords.forEach(kw => {
+                if (lowerTranscript.includes(kw)) purchaseProbability -= 10;
+            });
+            purchaseProbability = Math.max(0, Math.min(100, purchaseProbability));
+
+            const competitorQuoteStatus = (lowerTranscript.includes('quote') || lowerTranscript.includes('competitor') || lowerTranscript.includes('other quote') || lowerTranscript.includes('cheaper price') || lowerTranscript.includes('got a price')) ? 'Yes' : 'No';
+            const financialBarriers = (lowerTranscript.includes('expensive') || lowerTranscript.includes('price too high') || lowerTranscript.includes('finance') || lowerTranscript.includes('loan') || lowerTranscript.includes('budget') || lowerTranscript.includes('cannot afford') || lowerTranscript.includes('pricey')) ? 'Yes' : 'No';
+            const timelineFearMetrics = (lowerTranscript.includes('delay') || lowerTranscript.includes('waiting') || lowerTranscript.includes('risk') || lowerTranscript.includes('fear') || lowerTranscript.includes('long time') || lowerTranscript.includes('scared') || lowerTranscript.includes('install when') || lowerTranscript.includes('how long')) ? 'Yes' : 'No';
+
+            const analytics = {
+                purchase_probability: purchaseProbability,
+                competitor_quote_status: competitorQuoteStatus,
+                financial_barriers: financialBarriers,
+                timeline_fear_metrics: timelineFearMetrics
+            };
+
+            db.get(
+                "SELECT mandatory_questions_json FROM sales_compliance_scripts WHERE state_code = ? AND system_type = ? AND current_stage = ?",
+                [stateCode, systemType, activeStage],
+                (scriptErr, scriptRow) => {
+                    let questions = [];
+                    if (!scriptErr && scriptRow && scriptRow.mandatory_questions_json) {
+                        try {
+                            questions = JSON.parse(scriptRow.mandatory_questions_json);
+                        } catch(e) {}
+                    }
+
+                    if (questions.length === 0) {
+                        questions = [
+                            { id: 'fb_1', text: 'Verify state specific requirements' },
+                            { id: 'fb_2', text: 'initial questions' },
+                            { id: 'fb_3', text: 'complies with all Australian Consumer Law' }
+                        ];
+                    }
+
+                    let completedQuestions = [];
+                    try {
+                        completedQuestions = JSON.parse(leadRow.compliance_completed_questions || '[]');
+                    } catch(e) {}
+
+                    const newlyCompleted = [];
+
+                    questions.forEach(q => {
+                        if (completedQuestions.includes(q.id)) return;
+
+                        let matched = false;
+                        const qTextLower = q.text.toLowerCase();
+
+                        if (qTextLower.includes('state specific') || qTextLower.includes('verify state')) {
+                            if (lowerTranscript.includes('verify state') || lowerTranscript.includes('state specific') || lowerTranscript.includes('combined') || lowerTranscript.includes('western australia') || lowerTranscript.includes('nsw') || lowerTranscript.includes('victoria') || lowerTranscript.includes('queensland') || lowerTranscript.includes('tasmania') || lowerTranscript.includes('south australia') || lowerTranscript.includes('wa')) {
+                                matched = true;
+                            }
+                        } else if (qTextLower.includes('initial questions') || qTextLower.includes('customer if they have')) {
+                            if (lowerTranscript.includes('initial questions') || lowerTranscript.includes('any questions') || lowerTranscript.includes('how can i help') || lowerTranscript.includes('have questions')) {
+                                matched = true;
+                            }
+                        } else if (qTextLower.includes('consumer law') || qTextLower.includes('complies') || qTextLower.includes('guidelines') || qTextLower.includes('cooling-off')) {
+                            if (lowerTranscript.includes('consumer law') || lowerTranscript.includes('complies') || lowerTranscript.includes('guidelines') || lowerTranscript.includes('cooling-off') || lowerTranscript.includes('averion global') || lowerTranscript.includes('provisions')) {
+                                matched = true;
+                            }
+                        } else {
+                            const keywords = qTextLower.split(' ').filter(w => w.length > 4);
+                            if (keywords.length > 0) {
+                                const matches = keywords.filter(kw => lowerTranscript.includes(kw));
+                                if (matches.length / keywords.length >= 0.5) {
+                                    matched = true;
+                                }
+                            }
+                        }
+
+                        if (matched) {
+                            completedQuestions.push(q.id);
+                            newlyCompleted.push(q.id);
+                        }
+                    });
+
+                    db.run(
+                        'UPDATE leads SET compliance_completed_questions = ? WHERE id = ?',
+                        [JSON.stringify(completedQuestions), lead_id],
+                        (updateErr) => {
+                            if (updateErr) {
+                                console.error('[TELEPHONY VOICE CHUNK] Update lead error:', updateErr.message);
+                            }
+
+                            db.run(
+                                `INSERT INTO compliance_console_sessions (
+                                    lead_id, current_stage, auto_parsed_keywords_json, purchase_probability, step_validation_flags, last_updated_at
+                                ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                                ON CONFLICT(lead_id) DO UPDATE SET
+                                    current_stage = excluded.current_stage,
+                                    auto_parsed_keywords_json = excluded.auto_parsed_keywords_json,
+                                    purchase_probability = excluded.purchase_probability,
+                                    step_validation_flags = excluded.step_validation_flags,
+                                    last_updated_at = CURRENT_TIMESTAMP`,
+                                [lead_id, activeStage, JSON.stringify(extractedFields), purchaseProbability, JSON.stringify(completedQuestions)]
+                            );
+
+                            db.run(
+                                `INSERT INTO telephony_live_voice_sync (
+                                    lead_id, live_captions_transcript, extracted_intent_analytics_json, automation_sync_status, last_updated_at
+                                ) VALUES (?, ?, ?, 'synced', CURRENT_TIMESTAMP)
+                                ON CONFLICT(lead_id) DO UPDATE SET
+                                    live_captions_transcript = excluded.live_captions_transcript,
+                                    extracted_intent_analytics_json = excluded.extracted_intent_analytics_json,
+                                    automation_sync_status = 'synced',
+                                    last_updated_at = CURRENT_TIMESTAMP`,
+                                [lead_id, newTranscript, JSON.stringify(analytics)],
+                                (syncErr) => {
+                                    if (syncErr) {
+                                        console.error('[TELEPHONY VOICE CHUNK] Sync error:', syncErr.message);
+                                    }
+
+                                    res.json({
+                                        success: true,
+                                        lead_id,
+                                        live_captions_transcript: newTranscript,
+                                        extracted_fields: extractedFields,
+                                        intent_analytics: analytics,
+                                        completed_questions: completedQuestions,
+                                        newly_completed: newlyCompleted
+                                    });
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        });
+    });
+});
+
 app.set('io', io);
 
 // Start VoIPLine background poller

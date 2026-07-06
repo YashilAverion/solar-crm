@@ -4619,13 +4619,13 @@ function renderComplianceConsole() {
                     badgeBg = '#fef2f2';
                 }
 
-                const checkedAttr = isCompleted ? 'checked' : '';
+                const checkedClass = isCompleted ? 'checked' : '';
                 const textStyle = isCompleted ? 'text-decoration: line-through; color: var(--text-muted); font-weight: 400;' : 'font-weight: 600; color: var(--text-dark);';
 
                 const block = document.createElement('div');
                 block.style.cssText = 'display: flex; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; background: #ffffff; align-items: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.01);';
                 block.innerHTML = `
-                    <input type="checkbox" id="${checkboxPrefix}_${q.id}" ${checkedAttr} onchange="toggleSpeechCheckbox('${q.id}')" style="width: 14px; height: 14px; margin-top: 1px; cursor: pointer; accent-color: var(--accent);">
+                    <div class="compliance-checkbox-indicator ${checkedClass}" id="${checkboxPrefix}_${q.id}"></div>
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
                         <div style="display: flex; align-items: center; gap: 4px;">
                             <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 4px; border-radius: 3px; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeColor}30; letter-spacing:0.2px;">${q.badge}</span>
@@ -5164,6 +5164,20 @@ function applyConsoleToggleUI() {
             }
         }
     }
+
+    adjustSimulationConsoleVisibility();
+}
+
+function adjustSimulationConsoleVisibility() {
+    const isMgr = window.loggedInRole === 'Admin' || window.loggedInRole === 'Manager' || (window.loggedInRole && window.loggedInRole.includes('Manager'));
+    const simSuite = document.getElementById('speech_simulation_container');
+    if (simSuite) {
+        if (isMgr) {
+            simSuite.style.display = 'flex';
+        } else {
+            simSuite.style.display = 'none';
+        }
+    }
 }
 
 // ── TELEPHONY VOICE Sync & Simulation Cockpit ────────────────────────
@@ -5171,7 +5185,7 @@ async function sendVoiceTelemetryStream(textFragment) {
     if (!currentProjectId) return;
 
     try {
-        const res = await fetch('/api/telephony-voice/stream-payload', {
+        const res = await fetch('/api/telephony-voice/process-stream-chunk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -5192,6 +5206,29 @@ async function sendVoiceTelemetryStream(textFragment) {
 
                 updateIntentAnalyticsUI(data.intent_analytics);
                 applyFormFillingAutomation(data.extracted_fields);
+
+                if (data.completed_questions) {
+                    completedComplianceQuestions = data.completed_questions;
+                    completedComplianceQuestions.forEach(qid => {
+                        const indicators = [
+                            document.getElementById(`chk_speech_${qid}`),
+                            document.getElementById(`overlay_chk_speech_${qid}`)
+                        ];
+                        
+                        indicators.forEach(ind => {
+                            if (ind && !ind.classList.contains('checked')) {
+                                ind.classList.add('checked');
+                                const siblingText = ind.nextElementSibling?.querySelector('div:last-child');
+                                if (siblingText) {
+                                    siblingText.style.textDecoration = 'line-through';
+                                    siblingText.style.color = 'var(--text-muted)';
+                                    siblingText.style.fontWeight = '400';
+                                    siblingText.style.transition = 'all 0.4s ease';
+                                }
+                            }
+                        });
+                    });
+                }
             }
         }
     } catch(err) {
@@ -5379,6 +5416,34 @@ function triggerSimulatedSpeechPreset(presetKey) {
     70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
+
+.compliance-checkbox-indicator {
+    pointer-events: none;
+    user-select: none;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: background-color 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
+    background-color: #fff;
+    color: transparent;
+    font-size: 10px;
+    font-weight: 800;
+}
+.compliance-checkbox-indicator.checked {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #fff;
+    transform: scale(1.1);
+}
+.compliance-checkbox-indicator.checked::after {
+    content: "✓";
+}
 </style>
 
 <!-- Floating Telephony & Compliance Overlay -->
@@ -5404,7 +5469,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
     <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
         
         <!-- Speech Simulation Test Suite (Ares Cockpit) -->
-        <div style="background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+        <div id="speech_simulation_container" style="background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
             <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
                 <span>Speech Auto-Fill Simulation</span>
                 <span style="font-size: 8px; background: var(--accent); color: #fff; padding: 1px 4px; border-radius: 3px;">TEST SUITE</span>
