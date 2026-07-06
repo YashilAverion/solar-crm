@@ -3818,14 +3818,14 @@ function processTranscriptAndAutoFill(leadId, transcriptText, stateCode, callbac
 // ── VOIPLINE TELECOM INTEGRATION ───────────────────────────
 
 const voipWebhookHandler = (req, res) => {
-    const rawCaller = req.body.caller_id || req.query.caller_id || req.body.unique_call_id || req.query.callerid || '';
+    const caller = req.body.caller_id || req.query.caller_id || req.body.unique_call_id || req.query.callerid || '';
     const targetDest = req.body.dest_number || req.body.user_number || req.query.dest_number || '';
     const uniqueCallId = req.query.unique_call_id || req.body.unique_call_id || `${Date.now()}-${Math.random()}`;
 
     // Upstream proxy bypass check for x-pbx-token
     const pbxToken = req.headers['x-pbx-token'];
     if (!pbxToken) {
-        console.log("[VOIPLINE] Ingress Catch - Bypassing Header Lock");
+        console.log(" [VOIPLINE] Ingress Catch - Bypassing Header Lock");
     }
 
     // Log raw incoming data securely inside SQLite
@@ -3840,7 +3840,7 @@ const voipWebhookHandler = (req, res) => {
         return str.length >= 9 ? str.slice(-9) : str;
     };
 
-    const callerSuffix = cleanPhone(rawCaller);
+    const callerSuffix = cleanPhone(caller);
 
     // Return instant 200 OK block to satisfy VoipLine licensing latency benchmarks (< 500ms)
     res.json({ success: true, message: 'Ingress verified asynchronously.', unique_call_id: uniqueCallId });
@@ -3863,7 +3863,7 @@ const voipWebhookHandler = (req, res) => {
 
                 const io = req.app.get('io');
                 const forcePayload = {
-                    callerNumber: rawCaller,
+                    callerNumber: caller,
                     customerName,
                     projectNumber,
                     leadId,

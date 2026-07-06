@@ -1888,8 +1888,17 @@ db.serialize(() => {
 // Telephone number normalizer helper: extracts the last 9 digits of a numeric string
 db.normalizePhoneToSuffix = function(num) {
     if (!num) return '';
-    // Strip out all non-numeric characters, whitespaces, and international symbols
-    const clean = String(num).replace(/[\s\+\-\(\)]/g, '').replace(/\D/g, '');
+    // Strip all whitespaces, dashes, and international prefixes ('+61', '0')
+    let str = String(num).trim();
+    if (str.startsWith('+61')) {
+        str = str.slice(3);
+    } else if (str.startsWith('61')) {
+        str = str.slice(2);
+    }
+    if (str.startsWith('0')) {
+        str = str.slice(1);
+    }
+    const clean = str.replace(/[\s\+\-\(\)]/g, '').replace(/\D/g, '');
     return clean.length >= 9 ? clean.slice(-9) : clean;
 };
 
