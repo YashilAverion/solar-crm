@@ -1656,6 +1656,16 @@ db.serialize(() => {
         `);
     });
 
+    // 3.14 telephony_raw_ingress_logs table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS telephony_raw_ingress_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            payload TEXT,
+            headers TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE telephony_admin_audit_logs ADD COLUMN network_exception_flags TEXT", (err) => {
         // Safe to ignore if column already exists
