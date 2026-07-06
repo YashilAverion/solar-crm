@@ -709,7 +709,7 @@ function toggleNav(event, element) {
                             <div class="combo-quick-buttons" style="display: flex; gap: 8px; align-items: center;">
                                 <span style="font-size: 11px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 5px;">
                                     <span id="telephony_glowing_dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981; animation: pulse-glowing-dot 1.5s infinite;"></span>
-                                    <span>LIVE CALL SYNC</span>
+                                    <span id="telephony_sync_label">LIVE CALL SYNC</span>
                                 </span>
                                 <button type="button" class="btn-micro" id="btn_toggle_telephony_console" onclick="toggleTelephonyConsoleView()" style="background: var(--primary); color: #fff; border: 1px solid var(--primary); padding: 4px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 26px;">
                                     <span>Compliance Console</span>
@@ -5275,6 +5275,56 @@ function adjustSimulationConsoleVisibility() {
     }
 }
 
+async function checkVoipReadiness() {
+    try {
+        const res = await fetch('/api/voipline/readiness-check');
+        if (res.ok) {
+            const data = await res.json();
+            const dot = document.getElementById('telephony_glowing_dot');
+            const label = document.getElementById('telephony_sync_label');
+            if (data.readiness_status === 'READY') {
+                if (dot) {
+                    dot.style.backgroundColor = '#10b981';
+                    dot.style.boxShadow = '0 0 8px #10b981';
+                    dot.style.animation = 'pulse-glowing-dot 1.5s infinite';
+                }
+                if (label) {
+                    label.innerText = 'Connected (Online)';
+                    label.style.color = '#10b981';
+                }
+            } else {
+                if (dot) {
+                    dot.style.backgroundColor = '#ef4444';
+                    dot.style.boxShadow = 'none';
+                    dot.style.animation = 'none';
+                }
+                if (label) {
+                    label.innerText = 'Offline (Config Error)';
+                    label.style.color = '#ef4444';
+                }
+            }
+        } else {
+            setVoipOffline();
+        }
+    } catch(e) {
+        setVoipOffline();
+    }
+}
+
+function setVoipOffline() {
+    const dot = document.getElementById('telephony_glowing_dot');
+    const label = document.getElementById('telephony_sync_label');
+    if (dot) {
+        dot.style.backgroundColor = '#64748b';
+        dot.style.boxShadow = 'none';
+        dot.style.animation = 'none';
+    }
+    if (label) {
+        label.innerText = 'Disconnected';
+        label.style.color = '#64748b';
+    }
+}
+
 function initVoiceSocketListeners() {
     let checkCount = 0;
     const checkInterval = setInterval(() => {
@@ -5282,6 +5332,10 @@ function initVoiceSocketListeners() {
         if (window.voipSocket) {
             clearInterval(checkInterval);
             console.log('[COMPLIANCE OVERLAY] Successfully hooked to real-time VoIP broadcast socket.');
+            
+            // Run readiness check on load and every 30 seconds
+            checkVoipReadiness();
+            setInterval(checkVoipReadiness, 30000);
             
             window.voipSocket.on('voipline-incoming-call', (data) => {
                 if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {

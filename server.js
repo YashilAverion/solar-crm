@@ -2835,6 +2835,46 @@ function logFileOperation(userId, actionType, fileName, fileSize, callback) {
     });
 }
 
+// ── VOIP LIVE TELEMETRY READINESS CHECK ──
+app.get('/api/voipline/readiness-check', (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.session.user.id;
+    db.get("SELECT id, username, voipline_extension, outbound_line_id, webhook_secret_token, is_voip_enabled FROM users WHERE id = ?", [userId], (err, userRow) => {
+        if (err || !userRow) {
+            return res.status(404).json({ error: 'User settings not found.' });
+        }
+
+        const hasExtension = !!userRow.voipline_extension;
+        const isVoipEnabled = !!userRow.is_voip_enabled;
+        const readiness = (hasExtension && isVoipEnabled) ? 'READY' : 'MISCONFIGURED';
+
+        db.run(`
+            INSERT INTO voip_production_readiness (user_id, is_system_active, last_heartbeat_status, successful_sync_count, last_checked_at)
+            VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) DO UPDATE SET
+                is_system_active = excluded.is_system_active,
+                last_heartbeat_status = ?,
+                successful_sync_count = successful_sync_count + 1,
+                last_checked_at = CURRENT_TIMESTAMP
+        `, [userId, isVoipEnabled ? 1 : 0, readiness, readiness], function(upsertErr) {
+            if (upsertErr) {
+                console.error('[Readiness Check] Upsert error:', upsertErr.message);
+            }
+
+            res.json({
+                success: true,
+                is_voip_enabled: isVoipEnabled,
+                voipline_extension: userRow.voipline_extension || null,
+                outbound_line_id: userRow.outbound_line_id || null,
+                readiness_status: readiness,
+                last_checked_at: new Date().toISOString()
+            });
+        });
+    });
+});
+
 // ── TELEPHONY ADMIN SANDBOX & AUDIT ENDPOINTS ──
 app.get('/api/telephony-admin/active-leads', requireManager, (req, res) => {
     db.all("SELECT id, project_number, first_name, last_name FROM leads WHERE is_deleted = 0 ORDER BY id DESC LIMIT 100", [], (err, rows) => {

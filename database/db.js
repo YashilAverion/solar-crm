@@ -1628,6 +1628,19 @@ db.serialize(() => {
         )
     `);
 
+    // 3.12 voip_production_readiness table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS voip_production_readiness (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
+            is_system_active INTEGER DEFAULT 1,
+            last_heartbeat_status TEXT DEFAULT 'READY',
+            successful_sync_count INTEGER DEFAULT 0,
+            last_checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
         // Safe to ignore if column already exists
