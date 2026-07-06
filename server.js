@@ -3620,7 +3620,7 @@ app.post('/api/voipline/webhook', (req, res) => {
                         return;
                     }
 
-                    const incomingToken = req.headers['x-pbx-token'];
+                    const incomingToken = req.headers['x-pbx-token'] || req.query.token || req.body.webhook_token || req.body.secret_token || req.body.token;
                     const configuredToken = decrypt(matchedUser.voipline_secret_token);
 
                     if (!configuredToken || incomingToken !== configuredToken) {
@@ -4031,9 +4031,12 @@ io.engine.use(sessionMiddleware);
 io.on('connection', (socket) => {
     const req = socket.request;
     if (req.session && req.session.user) {
-        // User joins a room named after their username to receive targeted notifications
-        const roomName = req.session.user.full_name || req.session.user.username;
-        socket.join(roomName);
+        if (req.session.user.username) {
+            socket.join(req.session.user.username);
+        }
+        if (req.session.user.full_name) {
+            socket.join(req.session.user.full_name);
+        }
     }
 });
 

@@ -4306,6 +4306,7 @@ function toggleNav(event, element) {
         if (res.status === 401) { window.location.href = "/login"; return; }
         const user = await res.json();
         
+        window.loggedInUsername = user.username;
         window.loggedInUser = user.full_name || user.username || 'System';
         window.loggedInRole = user.role || 'Standard';
         
@@ -5284,6 +5285,20 @@ function initVoiceSocketListeners() {
             
             window.voipSocket.on('voipline-incoming-call', (data) => {
                 if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
+                    const isActiveOwner = (
+                        projectData &&
+                        projectData.assign_to &&
+                        (
+                            String(projectData.assign_to).toLowerCase() === String(window.loggedInUsername || '').toLowerCase() ||
+                            String(projectData.assign_to).toLowerCase() === String(window.loggedInUser || '').toLowerCase()
+                        )
+                    );
+                    
+                    if (!isActiveOwner) {
+                        console.log('[COMPLIANCE OVERLAY] Skipping auto-expansion: Logged-in user is not the active lead owner.', projectData?.assign_to);
+                        return;
+                    }
+
                     console.log('[COMPLIANCE OVERLAY] Inbound call event matched current lead. Instantly auto-expanding console.', data);
                     
                     isConsoleExpanded = 1;
@@ -5427,6 +5442,20 @@ function updateIntentAnalyticsUI(analytics) {
 
 function applyFormFillingAutomation(fields) {
     if (!fields || Object.keys(fields).length === 0) return;
+
+    const isActiveOwner = (
+        projectData &&
+        projectData.assign_to &&
+        (
+            String(projectData.assign_to).toLowerCase() === String(window.loggedInUsername || '').toLowerCase() ||
+            String(projectData.assign_to).toLowerCase() === String(window.loggedInUser || '').toLowerCase()
+        )
+    );
+
+    if (!isActiveOwner) {
+        console.log('[COMPLIANCE OVERLAY] Skipping form-filling automation: Logged-in user is not the active lead owner.', projectData?.assign_to);
+        return;
+    }
 
     let formChanged = false;
 
