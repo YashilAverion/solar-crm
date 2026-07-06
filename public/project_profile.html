@@ -5327,6 +5327,71 @@ function setVoipOffline() {
 
 function initVoiceSocketListeners() {
     let checkCount = 0;
+    
+    const handleIncomingCallLogic = (data) => {
+        let isMatch = false;
+        if (data.forceConnected === true) {
+            isMatch = true;
+        } else if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
+            isMatch = true;
+        } else if (projectData) {
+            const cleanCaller = String(data.callerNumber || '').replace(/\D/g, '');
+            const suffixCaller = cleanCaller.length >= 9 ? cleanCaller.slice(-9) : cleanCaller;
+
+            const cleanP1 = String(projectData.phone_number || '').replace(/\D/g, '');
+            const cleanP2 = String(projectData.phone_number_2 || '').replace(/\D/g, '');
+            const cleanLand = String(projectData.landline_number || '').replace(/\D/g, '');
+
+            if (suffixCaller && (
+                (cleanP1 && cleanP1.endsWith(suffixCaller)) ||
+                (cleanP2 && cleanP2.endsWith(suffixCaller)) ||
+                (cleanLand && cleanLand.endsWith(suffixCaller))
+            )) {
+                isMatch = true;
+            }
+        }
+
+        if (isMatch) {
+            // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"
+            const recBadge = document.getElementById('telemetry_rec_badge');
+            const recOverlayBadge = document.getElementById('overlay_rec_badge');
+            const label = document.getElementById('telephony_sync_label');
+            const dot = document.getElementById('telephony_glowing_dot');
+
+            [recBadge, recOverlayBadge].forEach(badge => {
+                if (badge) {
+                    badge.innerText = '🟢 CONNECTED (LIVE)';
+                    badge.style.background = '#10b981';
+                }
+            });
+
+            if (label) {
+                label.innerText = '🟢 CONNECTED (LIVE)';
+                label.style.color = '#10b981';
+            }
+
+            if (dot) {
+                dot.style.backgroundColor = '#10b981';
+                dot.style.boxShadow = '0 0 8px #10b981';
+            }
+
+            console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
+            
+            isConsoleExpanded = 1;
+            applyConsoleToggleUI();
+            loadComplianceGuidance();
+            
+            fetch('/api/compliance-sales/toggle-console-view', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lead_id: currentProjectId,
+                    is_console_expanded: 1
+                })
+            }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
+        }
+    };
+
     const checkInterval = setInterval(() => {
         checkCount++;
         if (window.voipSocket) {
@@ -5338,54 +5403,7 @@ function initVoiceSocketListeners() {
             setInterval(checkVoipReadiness, 30000);
             
             window.voipSocket.on('voipline-incoming-call', (data) => {
-                let isMatch = false;
-                if (data.forceConnected === true) {
-                    isMatch = true;
-                } else if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
-                    isMatch = true;
-                } else if (projectData) {
-                    const cleanCaller = String(data.callerNumber || '').replace(/\D/g, '');
-                    const suffixCaller = cleanCaller.length >= 9 ? cleanCaller.slice(-9) : cleanCaller;
-
-                    const cleanP1 = String(projectData.phone_number || '').replace(/\D/g, '');
-                    const cleanP2 = String(projectData.phone_number_2 || '').replace(/\D/g, '');
-                    const cleanLand = String(projectData.landline_number || '').replace(/\D/g, '');
-
-                    if (suffixCaller && (
-                        (cleanP1 && cleanP1.endsWith(suffixCaller)) ||
-                        (cleanP2 && cleanP2.endsWith(suffixCaller)) ||
-                        (cleanLand && cleanLand.endsWith(suffixCaller))
-                    )) {
-                        isMatch = true;
-                    }
-                }
-
-                if (isMatch) {
-                    // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"
-                    const recBadge = document.getElementById('telemetry_rec_badge');
-                    const recOverlayBadge = document.getElementById('overlay_rec_badge');
-                    [recBadge, recOverlayBadge].forEach(badge => {
-                        if (badge) {
-                            badge.innerText = '🟢 CONNECTED (LIVE)';
-                            badge.style.background = '#10b981';
-                        }
-                    });
-
-                    console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
-                    
-                    isConsoleExpanded = 1;
-                    applyConsoleToggleUI();
-                    loadComplianceGuidance();
-                    
-                    fetch('/api/compliance-sales/toggle-console-view', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            lead_id: currentProjectId,
-                            is_console_expanded: 1
-                        })
-                    }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
-                }
+                handleIncomingCallLogic(data);
             });
 
             window.voipSocket.on('voipline-transcript-parsed', (data) => {
@@ -5397,7 +5415,11 @@ function initVoiceSocketListeners() {
                 sseSource.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        handleIncomingParsedTranscript(data);
+                        if (data.event === 'voipline-incoming-call' || data.forceConnected) {
+                            handleIncomingCallLogic(data);
+                        } else {
+                            handleIncomingParsedTranscript(data);
+                        }
                     } catch (e) {
                         console.error('[SSE] Error parsing transcript event payload:', e);
                     }

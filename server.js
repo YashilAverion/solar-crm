@@ -3842,20 +3842,26 @@ class VoIPPayloadSanitizer {
     }
 }
 
-app.post('/api/voipline/webhook', (req, res) => {
+app.all('/api/voipline/webhook', (req, res) => {
     const startTime = process.hrtime();
 
-    const rawCallerId = req.body.caller_id || req.body.callerid || req.body.caller || req.body.cli || req.body.from || '';
-    const rawDestNumber = req.body.dest_number || req.body.dialed_number || req.body.dialedNumber || req.body.destination || req.body.to || '';
-    const rawUserNumber = req.body.user_number || req.body.extension || req.body.agent || '';
+    const rawCallerId = req.query.caller_id || req.query.callerid || req.query.caller || req.query.cli || req.query.from ||
+                        req.body.caller_id || req.body.callerid || req.body.caller || req.body.cli || req.body.from || '';
+    const rawDestNumber = req.query.dest_number || req.query.dialed_number || req.query.dialedNumber || req.query.destination || req.query.to ||
+                          req.body.dest_number || req.body.dialed_number || req.body.dialedNumber || req.body.destination || req.body.to || '';
+    const rawUserNumber = req.query.user_number || req.query.extension || req.query.agent ||
+                          req.body.user_number || req.body.extension || req.body.agent || '';
 
     const callerId = VoIPPayloadSanitizer.sanitizePhone(rawCallerId);
     const dialedNumber = VoIPPayloadSanitizer.sanitizePhone(rawDestNumber);
     const userNumber = VoIPPayloadSanitizer.sanitizeExtension(rawUserNumber);
 
-    const timeOfCall = req.body.time_of_call || req.body.timeOfCall || req.body.timestamp || new Date().toISOString();
-    const eventType = req.body.event || req.body.type || 'incoming_call';
-    const uniqueCallId = req.body.unique_call_id || req.body.call_id || req.body.callid || `${Date.now()}-${Math.random()}`;
+    const timeOfCall = req.query.time_of_call || req.query.timeOfCall || req.query.timestamp ||
+                       req.body.time_of_call || req.body.timeOfCall || req.body.timestamp || new Date().toISOString();
+    const eventType = req.query.event || req.query.type ||
+                      req.body.event || req.body.type || 'incoming_call';
+    const uniqueCallId = req.query.unique_call_id || req.query.call_id || req.query.callid ||
+                         req.body.unique_call_id || req.body.call_id || req.body.callid || `${Date.now()}-${Math.random()}`;
 
     // Catch and log unlinked webhooks originating from empty PBX component blocks
     if (!callerId || !dialedNumber) {
@@ -3875,23 +3881,32 @@ app.post('/api/voipline/webhook', (req, res) => {
         const normalizedIp = clientIp.replace(/^::ffff:/, '').trim();
 
         // If the user profile context matches the incoming SIP extension data ('1001'),
-        // immediately force transmission of active state flags down the real-time event sockets
+        // immediately force transmission of active state flags down the real-time event sockets/SSE
         if (callerId === '1001' || dialedNumber === '1001' || userNumber === '1001') {
             db.get("SELECT username, full_name FROM users WHERE voipline_extension = '1001'", [], (err, uRow) => {
                 if (!err && uRow) {
                     const io = req.app.get('io');
+                    const forcePayload = {
+                        callerNumber: callerId || '1001',
+                        customerName: 'Live Session (1001)',
+                        projectNumber: null,
+                        leadId: null,
+                        timeOfCall: new Date().toISOString(),
+                        uniqueCallId: uniqueCallId,
+                        forceConnected: true
+                    };
+                    console.log(`[VoIPLine Webhook] SIP extension 1001 detected. Forcing active state flags trigger to user room: [${uRow.username}]`);
                     if (io) {
-                        const forcePayload = {
-                            callerNumber: callerId || '1001',
-                            customerName: 'Live Session (1001)',
-                            projectNumber: null,
-                            leadId: null,
-                            timeOfCall: new Date().toISOString(),
-                            uniqueCallId: uniqueCallId,
-                            forceConnected: true
-                        };
-                        console.log(`[VoIPLine Webhook] SIP extension 1001 detected. Forcing active state flags trigger to user room: [${uRow.username}]`);
                         io.to(uRow.username).emit('voipline-incoming-call', forcePayload);
+                    }
+                    if (sseClients[uRow.username]) {
+                        const sseData = JSON.stringify({
+                            event: 'voipline-incoming-call',
+                            ...forcePayload
+                        });
+                        sseClients[uRow.username].forEach(client => {
+                            client.write(`data: ${sseData}\n\n`);
+                        });
                     }
                 }
             });
@@ -3900,7 +3915,7 @@ app.post('/api/voipline/webhook', (req, res) => {
         // Asynchronously log the telemetry processing job
         db.run(
             `INSERT OR IGNORE INTO voipline_processing_jobs (unique_call_id, caller_id, dialed_number, status, payload) VALUES (?, ?, ?, 'processing', ?)`,
-            [uniqueCallId, callerId, dialedNumber, JSON.stringify(req.body)],
+            [uniqueCallId, callerId, dialedNumber, JSON.stringify({ ...req.body, ...req.query })],
             function(err) {
                 if (err) {
                     console.error('[VoIPLine Webhook] Job insertion error:', err.message);
@@ -3954,7 +3969,7 @@ app.post('/api/voipline/webhook', (req, res) => {
                 }
 
                 function proceedWithMatchedUser(user) {
-                    const incomingToken = req.headers['x-pbx-token'] || req.query.token || req.body.webhook_token || req.body.secret_token || req.body.token;
+                    const incomingToken = req.headers['x-pbx-token'] || req.query.token || req.query.webhook_token || req.query.secret_token || req.body.webhook_token || req.body.secret_token || req.body.token;
                     const configuredToken = decrypt(user.voipline_secret_token);
 
                     if (!configuredToken || incomingToken !== configuredToken) {
@@ -3980,12 +3995,18 @@ app.post('/api/voipline/webhook', (req, res) => {
                             leadId = leadRow.id;
                         }
 
+                        // Save lookup parameters dynamically inside voipline_stream_mappings table for analytics
+                        db.run(
+                            `INSERT OR REPLACE INTO voipline_stream_mappings (lead_id, unique_call_id, caller_id, dest_number, sip_status) VALUES (?, ?, ?, ?, ?)`,
+                            [leadId, uniqueCallId, callerId, dialedNumber, eventType === 'call_completed' ? 'COMPLETED' : 'ANSWERED']
+                        );
+
                         const io = req.app.get('io');
-                        const isCompletedEvent = eventType === 'recording_completed' || req.body.recording_url || eventType === 'call_completed';
+                        const isCompletedEvent = eventType === 'recording_completed' || req.body.recording_url || req.query.recording_url || eventType === 'call_completed';
 
                         if (isCompletedEvent) {
-                            const recordingUrl = req.body.recording_url || '';
-                            const duration = parseInt(req.body.duration || req.body.billsec || 0, 10);
+                            const recordingUrl = req.body.recording_url || req.query.recording_url || '';
+                            const duration = parseInt(req.body.duration || req.body.billsec || req.query.duration || req.query.billsec || 0, 10);
                             
                             setImmediate(async () => {
                                 const transcript = recordingUrl ? await transcribeAudio(recordingUrl) : '';
@@ -4051,6 +4072,21 @@ app.post('/api/voipline/webhook', (req, res) => {
                                 console.log(`[VoIPLine Webhook] Broadcasting event to rooms: [${room1}], [${room2}]`);
                                 if (room1) io.to(room1).emit('voipline-incoming-call', eventData);
                                 if (room2 && room2 !== room1) io.to(room2).emit('voipline-incoming-call', eventData);
+                            }
+
+                            if (sseClients[user.username]) {
+                                const sseData = JSON.stringify({
+                                    event: 'voipline-incoming-call',
+                                    callerNumber: customerNumber,
+                                    customerName,
+                                    projectNumber,
+                                    leadId,
+                                    timeOfCall: timeOfCall,
+                                    uniqueCallId: uniqueCallId
+                                });
+                                sseClients[user.username].forEach(client => {
+                                    client.write(`data: ${sseData}\n\n`);
+                                });
                             }
 
                             db.run("UPDATE voipline_processing_jobs SET status = 'processed' WHERE unique_call_id = ?", [uniqueCallId]);

@@ -1642,15 +1642,19 @@ db.serialize(() => {
     `);
 
     // 3.13 voipline_stream_mappings table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS voipline_stream_mappings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT UNIQUE,
-            stream_url TEXT,
-            is_active INTEGER DEFAULT 1,
-            last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+    db.run("DROP TABLE IF EXISTS voipline_stream_mappings", () => {
+        db.run(`
+            CREATE TABLE IF NOT EXISTS voipline_stream_mappings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lead_id INTEGER UNIQUE,
+                unique_call_id TEXT UNIQUE,
+                caller_id TEXT,
+                dest_number TEXT,
+                sip_status TEXT DEFAULT 'ANSWERED',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    });
 
     // 4. Migrate leads table columns (safe check and alter)
     db.run("ALTER TABLE leads ADD COLUMN compliance_stage TEXT DEFAULT 'Greeting'", (err) => {
