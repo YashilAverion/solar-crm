@@ -6113,387 +6113,147 @@ function triggerSimulatedSpeechPreset(presetKey) {
 }
 </style>
 
-<!-- Floating Telephony & Compliance Overlay -->
-<style>
-.step-bubble {
-    transition: all 0.2s ease-in-out;
-}
-.step-bubble:hover {
-    background: #f1f5f9;
-}
-.console-tab-btn {
-    transition: all 0.2s ease-in-out;
-    border-bottom: 2px solid transparent;
-}
-.console-tab-btn:hover {
-    color: var(--primary);
-}
-.console-tab-btn.active {
-    color: var(--primary) !important;
-    border-bottom: 2px solid var(--primary) !important;
-}
-.console-tab-content {
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    overflow-y: auto;
-}
-</style>
+<!-- Hidden Compliance Legacy Nodes for Script Parity -->
+<div style="display: none !important;">
+    <select id="overlay_stage_select" onchange="changeComplianceStage(this.value)">
+        <option value="Greeting">Greeting & Intro</option>
+        <option value="Pre-Qualification">Pre-Qual</option>
+        <option value="Engineering Proposal">Engineering</option>
+        <option value="Financials & Rebates">Rebates</option>
+        <option value="Agreement">Agreement</option>
+    </select>
+    <span id="overlay_rec_badge">ACTIVE</span>
+    <span id="webrtc_status_badge">IDLE</span>
+    <input type="text" id="webrtc_dial_input">
+    <button type="button" id="webrtc_call_btn"></button>
+    <button type="button" id="webrtc_hangup_btn"></button>
+    <button type="button" id="webrtc_mute_btn"></button>
+    <audio id="webrtc_remote_audio" autoplay></audio>
+    <input type="text" id="sim_speech_input">
+    <span id="intent_prob_val">50%</span>
+    <div id="intent_prob_bar"></div>
+    <div id="intent_indicator_competitor"><div id="intent_val_competitor"></div></div>
+    <div id="intent_indicator_finance"><div id="intent_val_finance"></div></div>
+    <div id="intent_indicator_timeline"><div id="intent_val_timeline"></div></div>
+    <div id="overlay_interruption_alert"><span id="overlay_interruption_msg"></span></div>
+    <strong id="overlay_state_badge">NSW</strong>
+    <strong id="overlay_system_badge">PV</strong>
+    <span id="overlay_interrupt_badge">0</span>
+    <div id="overlay_speech_container"></div>
+    <div id="overlay_metrics_strip"><div id="overlay_metrics_content"></div></div>
+    <div id="overlay_closing_advice_container"><div id="overlay_closing_advice_content"></div></div>
+    <div id="overlay_objection_tabs"></div>
+    <div id="overlay_qa_list"></div>
+    <input type="checkbox" id="overlay_bill_q1">
+    <input type="checkbox" id="overlay_bill_q2">
+    <input type="checkbox" id="overlay_bill_q3">
+    <input type="checkbox" id="overlay_bill_q4">
+    <span id="overlay_avg_bill_display"></span>
+    <input type="number" id="overlay_daily_usage">
+    <div id="overlay_docs_strip"><div id="overlay_docs_content"></div></div>
+    <div id="overlay_photos_strip">
+        <div id="overlay_photo_rafters"></div>
+        <div id="overlay_photo_meter"></div>
+        <div id="overlay_photo_board"></div>
+        <div id="overlay_photo_roof"></div>
+    </div>
+</div>
 
-<div id="telephony_compliance_overlay" style="position: fixed; top: 90px; right: 16px; width: 440px; height: calc(100vh - 110px); background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; box-shadow: -8px 0 24px rgba(0,0,0,0.1); z-index: 1005; display: flex; flex-direction: column; transform: translateX(460px); will-change: transform; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; padding: 12px; gap: 8px;">
-    <!-- Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; flex-shrink: 0; gap: 8px;">
-        <div style="display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1;">
-            <span style="font-weight: 700; color: var(--primary); font-size: 11.5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ares AI Sales Assistant</span>
-            <span id="overlay_rec_badge" style="background:#10b981; color:#fff; font-weight:800; padding:1.5px 3.5px; border-radius:3px; font-size:8px; text-transform:uppercase; flex-shrink: 0;">ACTIVE</span>
+<!-- Floating Google Chrome style Live Caption Window -->
+<div id="chrome_live_caption_window" style="position: fixed; bottom: 24px; right: 24px; width: 480px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,0.4); z-index: 9999; color: #f8fafc; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-family: system-ui, -apple-system, sans-serif; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;">
+    
+    <!-- Top Header Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 6px; flex-shrink: 0; user-select: none;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="recording-pulse-dot" style="width: 6px; height: 6px; background: #38bdf8; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #38bdf8;"></span>
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Live Caption</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-            <select id="overlay_stage_select" onchange="changeComplianceStage(this.value)" style="height: 22px; width: 110px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--border); background: #f8fafc; font-weight: 700; color: var(--primary); font-size: 10.5px; box-sizing: border-box; text-overflow: ellipsis; outline: none;">
-                <option value="Greeting">Greeting & Intro</option>
-                <option value="Pre-Qualification">Pre-Qual</option>
-                <option value="Engineering Proposal">Engineering</option>
-                <option value="Financials & Rebates">Rebates</option>
-                <option value="Agreement">Agreement</option>
-            </select>
-            <button type="button" onclick="toggleTelephonyConsoleView()" style="background: none; border: none; font-size: 14px; font-weight: bold; color: var(--text-muted); cursor: pointer; padding: 0 4px; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; box-sizing: border-box;">✕</button>
-        </div>
-    </div>
-
-    <!-- Stepper Pipeline Stepper -->
-    <div class="stepper-pipeline" style="display: flex; gap: 3px; justify-content: space-between; flex-shrink: 0;">
-        <div id="step_Greeting" class="step-bubble active" onclick="changeComplianceStage('Greeting')" style="flex: 1; text-align: center; font-size: 8.5px; padding: 3px 2px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; background: var(--primary); color: #fff;">Greet</div>
-        <div id="step_Pre-Qualification" class="step-bubble" onclick="changeComplianceStage('Pre-Qualification')" style="flex: 1; text-align: center; font-size: 8.5px; padding: 3px 2px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; background: #fff; color: var(--text-muted);">Qualify</div>
-        <div id="step_Engineering Proposal" class="step-bubble" onclick="changeComplianceStage('Engineering Proposal')" style="flex: 1; text-align: center; font-size: 8.5px; padding: 3px 2px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; background: #fff; color: var(--text-muted);">Proposal</div>
-        <div id="step_Financials & Rebates" class="step-bubble" onclick="changeComplianceStage('Financials & Rebates')" style="flex: 1; text-align: center; font-size: 8.5px; padding: 3px 2px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; background: #fff; color: var(--text-muted);">Rebates</div>
-        <div id="step_Agreement" class="step-bubble" onclick="changeComplianceStage('Agreement')" style="flex: 1; text-align: center; font-size: 8.5px; padding: 3px 2px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; background: #fff; color: var(--text-muted);">Close</div>
-    </div>
-
-    <!-- Main Navigation Tabs -->
-    <div class="console-tab-bar" style="display: flex; border-bottom: 2px solid #eef2f8; flex-shrink: 0; gap: 2px;">
-        <button type="button" id="tab_btn_teleprompter" class="console-tab-btn active" onclick="switchConsoleTab('teleprompter')" style="flex: 1; padding: 5px; font-size: 9.5px; font-weight: 800; border: none; border-bottom: 2px solid var(--primary); background: none; cursor: pointer; color: var(--primary); text-transform: uppercase;">📝 Teleprompter</button>
-        <button type="button" id="tab_btn_objections" class="console-tab-btn" onclick="switchConsoleTab('objections')" style="flex: 1; padding: 5px; font-size: 9.5px; font-weight: 800; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: var(--text-muted); text-transform: uppercase;">💡 AI Objections</button>
-        <button type="button" id="tab_btn_phone" class="console-tab-btn" onclick="switchConsoleTab('phone')" style="flex: 1; padding: 5px; font-size: 9.5px; font-weight: 800; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: var(--text-muted); text-transform: uppercase;">📞 Call & Test</button>
-    </div>
-
-    <!-- Scrollable content area -->
-    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
         
-        <!-- Tab 1: TELEPROMPTER -->
-        <div id="tab_content_teleprompter" class="console-tab-content" style="display: flex;">
-            <!-- Teleprompter Script Card -->
-            <div style="background: #f0f7ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
-                <div style="font-size: 9px; font-weight: 800; color: #1d4ed8; text-transform: uppercase; display: flex; justify-content: space-between;">
-                    <span>📝 Sales Agent Teleprompter Script</span>
-                    <span style="font-weight: normal; font-size: 8.5px; background: #dbeafe; padding: 1px 4px; border-radius: 3px; color: #1d4ed8; font-weight:700;">Ares Energy Guide</span>
-                </div>
-                <div id="overlay_script_teleprompter_text" style="font-size: 12px; font-weight: 700; line-height: 1.45; color: #1e3a8a; white-space: pre-wrap; font-family: inherit;">
-                    Good day! Thank you for speaking with Ares Energy today. This is Yashil.
-
-Am I speaking with the registered property owner of 7 Girona Street, Piara Waters WA 6112?
-                </div>
+        <!-- Action Buttons & Stage steppers -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <!-- Stage Selector Links -->
+            <div style="display: flex; gap: 6px; font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2px;">
+                <span id="simple_stage_Greeting" onclick="changeComplianceStage('Greeting')" style="cursor: pointer; color: #38bdf8; text-decoration: underline;">Greet</span>
+                <span style="color: rgba(255,255,255,0.2);">·</span>
+                <span id="simple_stage_Pre-Qualification" onclick="changeComplianceStage('Pre-Qualification')" style="cursor: pointer;">Qualify</span>
+                <span style="color: rgba(255,255,255,0.2);">·</span>
+                <span id="simple_stage_Engineering Proposal" onclick="changeComplianceStage('Engineering Proposal')" style="cursor: pointer;">Proposal</span>
+                <span style="color: rgba(255,255,255,0.2);">·</span>
+                <span id="simple_stage_Financials & Rebates" onclick="changeComplianceStage('Financials & Rebates')" style="cursor: pointer;">Rebates</span>
+                <span style="color: rgba(255,255,255,0.2);">·</span>
+                <span id="simple_stage_Agreement" onclick="changeComplianceStage('Agreement')" style="cursor: pointer;">Close</span>
             </div>
-
-            <!-- Speech Checklist questions container -->
-            <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 120px; overflow-y: auto;">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 3px; margin-bottom: 3px;">Guidance checklist questions</div>
-                <div id="overlay_speech_container" style="display: flex; flex-direction: column; gap: 5px;">
-                    <!-- Checkboxes -->
-                </div>
-            </div>
-
-            <!-- Active Stage Metrics -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; flex-shrink: 0;" id="overlay_metrics_strip">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px dashed var(--border); padding-bottom: 3px;">Active Stage Metrics</div>
-                <div style="display: flex; flex-direction: column; gap: 3px; font-size: 10.5px; color: var(--text-dark);" id="overlay_metrics_content">
-                    <!-- Metrics -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 2: AI OBJECTIONS -->
-        <div id="tab_content_objections" class="console-tab-content">
-            <!-- Active Objection Alert match -->
-            <div id="ai_active_objection_match" style="flex-shrink: 0; min-height: 50px;">
-                <div style="color: var(--text-muted); font-style: italic; font-size: 10.5px; padding: 10px; text-align: center; border: 1px dashed var(--border); border-radius: 6px; background: #f8fafc;">
-                    Awaiting customer objections... (e.g. Try simulating "too expensive" or "has shade")
-                </div>
-            </div>
-
-            <!-- Objection speed tab capsules -->
-            <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto;">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 3px; margin-bottom: 3px;">Objection Speed Handler</div>
-                <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 4px;" id="overlay_objection_tabs">
-                    <button type="button" class="tab-capsule active" style="padding: 2.5px 5px; font-size: 9.5px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">Roof</button>
-                    <button type="button" class="tab-capsule" style="padding: 2.5px 5px; font-size: 9.5px; border-radius: 4px;" onclick="switchObjectionCategory('PV Tech', this)">PV Tech</button>
-                    <button type="button" class="tab-capsule" style="padding: 2.5px 5px; font-size: 9.5px; border-radius: 4px;" onclick="switchObjectionCategory('Battery/VPP', this)">Battery</button>
-                    <button type="button" class="tab-capsule" style="padding: 2.5px 5px; font-size: 9.5px; border-radius: 4px;" onclick="switchObjectionCategory('Rebates', this)">Rebates</button>
-                    <button type="button" class="tab-capsule" style="padding: 2.5px 5px; font-size: 9.5px; border-radius: 4px;" onclick="switchObjectionCategory('Legal', this)">Legal</button>
-                </div>
-                <div id="overlay_qa_list" style="display: flex; flex-direction: column; gap: 5px;">
-                    <!-- Objection QAs -->
-                </div>
-            </div>
-
-            <!-- Real-time AI Closing Advice -->
-            <div id="overlay_closing_advice_container" style="display: none; background: #fffbeb; border: 1.5px solid var(--accent); border-radius: 6px; padding: 6px; flex-direction: column; gap: 4px; flex-shrink: 0; box-shadow: 0 0 6px rgba(232, 104, 30, 0.1);">
-                <div style="font-size: 9px; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid rgba(232, 104, 30, 0.15); padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>💡 Real-time AI Closing Advice</span>
-                    <span class="pulse-dot" style="width:5px; height:5px; background:var(--accent); border-radius:50%; display:inline-block; box-shadow: 0 0 4px var(--accent);"></span>
-                </div>
-                <div id="overlay_closing_advice_content" style="display: flex; flex-direction: column; gap: 4px;">
-                    <!-- Hesitation narratives -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 3: PHONE & SIMULATION -->
-        <div id="tab_content_phone" class="console-tab-content">
-            <!-- WebRTC SIP Webphone -->
-            <div id="webrtc_webphone_container" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 3px; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>WebRTC SIP Webphone</span>
-                    <span id="webrtc_status_badge" style="font-size: 7.5px; background: #64748b; color: #fff; padding: 1px 3px; border-radius: 2px; text-transform: uppercase;">IDLE</span>
-                </div>
-                <div style="display: flex; gap: 4px; align-items: center;">
-                    <input type="text" id="webrtc_dial_input" placeholder="Enter number to call..." style="flex: 1; height: 22px; padding: 0 5px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px;">
-                    <button type="button" id="webrtc_call_btn" onclick="triggerWebRTCCall()" style="background: #10b981; color: #fff; border: none; padding: 0 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; height: 22px; display: flex; align-items: center; justify-content: center; gap: 3px;">
-                        <span>📞 Call</span>
-                    </button>
-                    <button type="button" id="webrtc_hangup_btn" onclick="triggerWebRTCHangup()" style="background: #ef4444; color: #fff; border: none; padding: 0 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; height: 22px; display: none; align-items: center; justify-content: center;">
-                        <span>🛑 Hangup</span>
-                    </button>
-                    <button type="button" id="webrtc_mute_btn" onclick="triggerWebRTCMute()" style="background: #64748b; color: #fff; border: none; padding: 0 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; height: 22px; display: none;">
-                        <span>🎤 Mute</span>
-                    </button>
-                </div>
-                <audio id="webrtc_remote_audio" autoplay></audio>
-            </div>
-
-            <!-- Speech Auto-Fill Simulation widget -->
-            <div id="speech_simulation_container" style="background: #fff; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 3px; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Speech Auto-Fill Simulation</span>
-                    <span style="font-size: 7.5px; background: var(--accent); color: #fff; padding: 1px 3px; border-radius: 2px;">TEST SUITE</span>
-                </div>
-                <div style="display: flex; gap: 4px;">
-                    <input type="text" id="sim_speech_input" placeholder="Type simulated customer speech..." style="flex:1; height: 22px; padding: 0 5px; border: 1px solid var(--border); border-radius: 4px; font-size:11px;">
-                    <button type="button" onclick="triggerSimulatedSpeechInput()" style="background: var(--primary); color: #fff; border: none; padding: 0 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Send</button>
-                </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px;">
-                    <button type="button" onclick="triggerSimulatedSpeechPreset('tin-3phase')" class="btn-micro" style="padding: 2px 4px; font-size: 9px; flex: 1;">Tin + 3Phase</button>
-                    <button type="button" onclick="triggerSimulatedSpeechPreset('double-storey')" class="btn-micro" style="padding: 2px 4px; font-size: 9px; flex: 1;">Double Storey</button>
-                    <button type="button" onclick="triggerSimulatedSpeechPreset('outside-battery')" class="btn-micro" style="padding: 2px 4px; font-size: 9px; flex: 1;">Outside Battery</button>
-                    <button type="button" onclick="triggerSimulatedSpeechPreset('quote-expensive')" class="btn-micro" style="padding: 2px 4px; font-size: 9px; flex: 1; color: #ef4444; border-color: #fca5a5;">Quote Fear</button>
-                    <button type="button" onclick="triggerSimulatedSpeechPreset('ready-buy')" class="btn-micro" style="padding: 2px 4px; font-size: 9px; flex: 1; color: #10b981; border-color: #b3e6cc;">Ready to Buy</button>
-                </div>
-            </div>
-
-            <!-- Quarter-Wise Bills Checklist -->
-            <div style="background: #eef2f8; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; flex-shrink: 0;" id="overlay_bills_strip">
-                <div style="font-size: 8.5px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px dashed var(--border); padding-bottom: 3px; display: flex; justify-content: space-between;">
-                    <span>Quarter-Wise Bills Checklist</span>
-                    <span style="font-size: 8.5px; color: var(--text-muted); font-weight: normal;" id="overlay_avg_bill_display">Avg: 0 kWh/day</span>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-bottom: 4px;">
-                    <label style="display: flex; flex-direction: column; align-items: center; font-size: 9px; background: #fff; border: 1px solid var(--border); padding: 2.5px; border-radius: 4px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="overlay_bill_q1" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 1.5px;">
-                        <span>Q1 Bill</span>
-                    </label>
-                    <label style="display: flex; flex-direction: column; align-items: center; font-size: 9px; background: #fff; border: 1px solid var(--border); padding: 2.5px; border-radius: 4px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="overlay_bill_q2" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 1.5px;">
-                        <span>Q2 Bill</span>
-                    </label>
-                    <label style="display: flex; flex-direction: column; align-items: center; font-size: 9px; background: #fff; border: 1px solid var(--border); padding: 2.5px; border-radius: 4px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="overlay_bill_q3" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 1.5px;">
-                        <span>Q3 Bill</span>
-                    </label>
-                    <label style="display: flex; flex-direction: column; align-items: center; font-size: 9px; background: #fff; border: 1px solid var(--border); padding: 2.5px; border-radius: 4px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="overlay_bill_q4" onchange="calculateAverageBillUsageOverlay()" style="margin-bottom: 1.5px;">
-                        <span>Q4 Bill</span>
-                    </label>
-                </div>
-                <div style="display: flex; gap: 5px; font-size: 10.5px; align-items: center;">
-                    <span>Daily Usage:</span>
-                    <input type="number" id="overlay_daily_usage" oninput="saveComplianceStateOverlay(false)" style="width: 55px; height: 18px; font-size: 10.5px; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px;" placeholder="kWh">
-                    <span>kWh/day</span>
-                </div>
-            </div>
-
-            <!-- Required Documentation Checklist -->
-            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 8px; flex-shrink: 0;" id="overlay_docs_strip">
-                <div style="font-size: 9px; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px dashed #fde68a; padding-bottom: 3px;">Required Documents</div>
-                <div style="display: flex; flex-direction: column; gap: 3px;" id="overlay_docs_content">
-                    <!-- Docs -->
-                </div>
-            </div>
-
-            <!-- Site Photo Logs -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; flex-shrink: 0;" id="overlay_photos_strip">
-                <div style="font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px dashed var(--border); padding-bottom: 3px;">Site Photo Logs</div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px;">
-                    <div id="overlay_photo_rafters" onclick="togglePhotoLoggedOverlay('rafters')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #fff; font-size: 9px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                        <span style="font-size:10px;">🏠</span>
-                        <span>Rafters</span>
-                    </div>
-                    <div id="overlay_photo_meter" onclick="togglePhotoLoggedOverlay('meter')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #fff; font-size: 9px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                        <span style="font-size:10px;">⚡</span>
-                        <span>Meter</span>
-                    </div>
-                    <div id="overlay_photo_board" onclick="togglePhotoLoggedOverlay('board')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #fff; font-size: 9px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                        <span style="font-size:10px;">🎛️</span>
-                        <span>Board</span>
-                    </div>
-                    <div id="overlay_photo_roof" onclick="togglePhotoLoggedOverlay('roof')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #fff; font-size: 9px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                        <span style="font-size:10px;">🛸</span>
-                        <span>Roof</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Live Guidance Notification Strip (PERSISTENT - ALWAYS VISIBLE) -->
-    <div id="telephony_interruption_banner" style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; transition: all 0.3s ease; flex-shrink: 0;">
-        <span id="telephony_banner_icon" style="font-size: 12px;">🎤</span>
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 1px;">
-            <span id="telephony_banner_status" style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #065f46; letter-spacing: 0.3px;">Customer Listening</span>
-            <span id="telephony_banner_message" style="font-size: 10.5px; font-weight: 700; color: #065f46;">Present your solution. You are in control.</span>
+            
+            <!-- Close Button -->
+            <button type="button" onclick="closeLiveCaptionWindow()" style="background: none; border: none; font-size: 14px; font-weight: bold; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 2px; transition: color 0.2s;" onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#94a3b8'">✕</button>
         </div>
     </div>
 
-    <!-- Live Captions Box (PERSISTENT - ALWAYS VISIBLE) -->
-    <div style="background: #0f172a; color: #38bdf8; border: 1px solid #1e293b; border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; max-height: 80px; overflow-y: auto; font-family: monospace; font-size: 10.5px; flex-shrink: 0; box-shadow: inset 0 1px 4px rgba(0,0,0,0.4);">
-        <div style="font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #1e293b; padding-bottom: 2px; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-            <span>Live Captions Stream</span>
-            <span class="pulse-dot" style="width: 4px; height: 4px; background: #38bdf8; border-radius: 50%;"></span>
-        </div>
-        <div id="live_audio_transcript_box" style="line-height: 1.35; color: #e2e8f0; font-style: italic; white-space: pre-wrap;">Awaiting voice connection...</div>
+    <!-- Live Customer Caption Text Area -->
+    <div id="caption_text_container" style="max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px;">
+        <div id="live_audio_transcript_box" style="font-size: 14px; line-height: 1.5; color: #f1f5f9; font-weight: 500; font-style: italic; white-space: pre-wrap;">Awaiting voice connection or customer speech...</div>
         <span id="overlay_live_captions_text" style="display:none;"></span>
     </div>
 
-    <!-- Live Intent Analytics (PERSISTENT - ALWAYS VISIBLE) -->
-    <div style="background: #ffffff; border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;">
-        <div style="display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 700;">
-            <span style="color: var(--primary);">Purchase Probability</span>
-            <span id="intent_prob_val">50%</span>
+    <!-- AI Prompt Bar / Sales Copilot Guidance (DYNAMICALLY UPDATED) -->
+    <div id="caption_prompt_bar" style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <span id="prompt_badge" style="font-size: 8px; font-weight: 800; background: #0284c7; color: #ffffff; padding: 1.5px 4.5px; border-radius: 2.5px; text-transform: uppercase; letter-spacing: 0.3px; transition: background 0.3s ease;">👉 SAY THIS</span>
         </div>
-        <div style="background: #e2e8f0; border-radius: 3px; height: 6px; overflow: hidden; width: 100%;">
-            <div id="intent_prob_bar" style="background: #10b981; width: 50%; height: 100%; transition: width 0.4s ease;"></div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 1px;">
-            <div id="intent_indicator_competitor" style="border: 1px solid var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #f8fafc;">
-                <div style="font-size: 7.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Competitors</div>
-                <div id="intent_val_competitor" style="font-size: 10px; font-weight: 700; color: var(--text-dark);">None</div>
-            </div>
-            <div id="intent_indicator_finance" style="border: 1px solid var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #f8fafc;">
-                <div style="font-size: 7.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Price Strain</div>
-                <div id="intent_val_finance" style="font-size: 10px; font-weight: 700; color: var(--text-dark);">None</div>
-            </div>
-            <div id="intent_indicator_timeline" style="border: 1px solid var(--border); border-radius: 4px; padding: 3px 2px; text-align: center; background: #f8fafc;">
-                <div style="font-size: 7.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Timeline Peak</div>
-                <div id="intent_val_timeline" style="font-size: 10px; font-weight: 700; color: var(--text-dark);">None</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alert / Interruption Warning container (kept for legacy support) -->
-    <div id="overlay_interruption_alert" style="display: none;">
-        <span id="overlay_interruption_msg"></span>
-    </div>
-
-    <!-- Live Telemetry State Stats bar -->
-    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; gap: 10px; flex-shrink: 0; font-size: 10.5px;">
-        <div style="display: flex; gap: 4px; align-items: center;">
-            <span style="color: var(--text-muted);">State:</span>
-            <strong id="overlay_state_badge">NSW</strong>
-            <span style="color: var(--text-muted); margin-left: 4px;">PV:</span>
-            <strong id="overlay_system_badge">PV</strong>
-        </div>
-        <div style="display: flex; align-items: center; gap: 4px;">
-            <span style="font-weight: 700; color: var(--text-muted);">Alerts:</span>
-            <span id="overlay_interrupt_badge" style="background:#ef4444; color:#fff; font-weight:800; padding:1px 3.5px; border-radius:3.5px; font-size:9px;">0</span>
-            <button type="button" onclick="incrementInterruptionCounter()" style="background:var(--primary); color:#fff; border:none; width:14px; height:14px; border-radius:3px; font-size:9px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
-        </div>
-    </div>
-
-    <!-- Save & Close -->
-    <div style="flex-shrink: 0; padding-top: 4px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-        <button type="button" class="btn-save" style="padding: 4px 10px; font-size: 10.5px; height: 22px; border-radius: 4px;" onclick="saveComplianceStateOverlay(true)">Save Overlay Progress</button>
+        <div id="prompt_text" style="font-size: 13px; font-weight: 700; line-height: 1.45; color: #38bdf8; transition: color 0.3s ease;">Good day! Thank you for speaking with Ares Energy today. This is Yashil. Am I speaking with the registered property owner of 7 Girona Street, Piara Waters?</div>
     </div>
 </div>
 
 <script>
-function switchConsoleTab(tabName) {
-    document.querySelectorAll('.console-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.color = 'var(--text-muted, #6b7a8d)';
-        btn.style.borderBottomColor = 'transparent';
-    });
-    document.querySelectorAll('.console-tab-content').forEach(content => {
-        content.style.display = 'none';
-    });
-    
-    const activeBtn = document.getElementById(`tab_btn_${tabName}`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.style.color = 'var(--primary, #1c3557)';
-        activeBtn.style.borderBottomColor = 'var(--primary, #1c3557)';
-    }
-    const activeContent = document.getElementById(`tab_content_${tabName}`);
-    if (activeContent) {
-        activeContent.style.display = 'flex';
+function closeLiveCaptionWindow() {
+    const win = document.getElementById('chrome_live_caption_window');
+    if (win) {
+        win.style.opacity = '0';
+        win.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+            win.style.display = 'none';
+        }, 200);
     }
 }
 
-// Interruption & speaking state management
+// Speaking State & Warnings
 let customerSpeechTimeout = null;
 
 function setCustomerSpeakingState(isSpeaking, text = '') {
-    const banner = document.getElementById('telephony_interruption_banner');
-    const icon = document.getElementById('telephony_banner_icon');
-    const status = document.getElementById('telephony_banner_status');
-    const message = document.getElementById('telephony_banner_message');
+    const badge = document.getElementById('prompt_badge');
+    const promptText = document.getElementById('prompt_text');
     
-    if (!banner) return;
+    if (!badge || !promptText) return;
     
     if (isSpeaking) {
-        banner.style.background = '#fef2f2';
-        banner.style.borderColor = '#ef4444';
-        if (icon) icon.innerText = '🛑';
-        if (status) {
-            status.innerText = 'CUSTOMER IS SPEAKING';
-            status.style.color = '#991b1b';
-        }
-        if (message) {
-            message.innerText = 'Stop speaking and listen to the customer\'s question.';
-            message.style.color = '#991b1b';
-        }
+        badge.innerText = '🛑 CUSTOMER IS SPEAKING';
+        badge.style.background = '#ef4444';
+        promptText.innerText = 'Listen patiently. Stop talking and let the customer finish speaking.';
+        promptText.style.color = '#fca5a5';
         
-        // Match objections dynamically
         if (text) {
             analyzeSpeechForObjections(text);
         }
         
-        // Debounce returning to neutral state
         clearTimeout(customerSpeechTimeout);
         customerSpeechTimeout = setTimeout(() => {
             setCustomerSpeakingState(false);
         }, 3000);
     } else {
-        banner.style.background = '#ecfdf5';
-        banner.style.borderColor = '#10b981';
-        if (icon) icon.innerText = '🎤';
-        if (status) {
-            status.innerText = 'CUSTOMER IS LISTENING';
-            status.style.color = '#065f46';
-        }
-        if (message) {
-            message.innerText = 'Present your solution. You are in control.';
-            message.style.color = '#065f46';
-        }
+        // Revert to default teleprompter stage script
+        const stage = currentComplianceStage || 'Greeting';
+        const scriptTexts = {
+            'Greeting': "Good day! Thank you for speaking with Ares Energy today. This is Yashil.\n\nAm I speaking with the registered property owner of 7 Girona Street, Piara Waters WA 6112?",
+            'Pre-Qualification': "Ares Energy is a Clean Energy Council approved retailer. To check if your property qualifies for high yield returns, may I confirm if your average quarterly electricity bill is above $300? Also, is your roof tin or tile, and is the house single or double storey?",
+            'Engineering Proposal': "Based on your roof structure, we've designed a premium tier-1 Jinko PV system (N-type technology with a 25-year performance warranty) and a CEC-approved Growatt inverter. Under AS/NZS 5033 wind guidelines, we maintain strict 200mm roof boundary offsets to ensure structural safety. Your average daily yield will be system size * average sun hours * 0.82 efficiency.",
+            'Financials & Rebates': "For your property, we have applied the upfront Federal STC rebate discount directly to the invoice, saving you thousands of dollars. We will submit the network distributor connection pre-approval on your behalf, which takes less than 24 hours. The pricing is fully transparent with no hidden costs.",
+            'Agreement': "Ares Energy complies 100% with the Australian Consumer Law. We provide a mandatory 10-business-day cooling-off period where you can cancel for a full refund of your deposit. I am preparing the agreement for your secure digital signature. Shall we get this locked in today?"
+        };
+        
+        badge.innerText = '👉 SAY THIS';
+        badge.style.background = '#0284c7';
+        promptText.innerText = scriptTexts[stage] || '';
+        promptText.style.color = '#38bdf8';
     }
 }
 
@@ -6503,76 +6263,49 @@ function analyzeSpeechForObjections(text) {
     const rules = [
         {
             category: 'House/Roof',
-            keywords: ['shade', 'tree', 'angle', 'pitch', 'slope', 'flat', 'orient', 'north', 'direction', 'facing'],
-            tabIndex: 0
+            keywords: ['shade', 'tree', 'angle', 'pitch', 'slope', 'flat', 'orient', 'north', 'direction', 'facing']
         },
         {
             category: 'PV Tech',
-            keywords: ['jinko', 'growatt', 'warranty', 'degrad', 'panel', 'inverter', 'quality'],
-            tabIndex: 1
+            keywords: ['jinko', 'growatt', 'warranty', 'degrad', 'panel', 'inverter', 'quality']
         },
         {
             category: 'Battery/VPP',
-            keywords: ['battery', 'safety', 'inside', 'outside', 'fire', 'fc sheet', 'combust', 'essential', 'backup'],
-            tabIndex: 2
+            keywords: ['battery', 'safety', 'inside', 'outside', 'fire', 'fc sheet', 'combust', 'essential', 'backup']
         },
         {
             category: 'Rebates',
-            keywords: ['rebate', 'subsidy', 'loan', 'victoria', 'pdrs', 'vpp', 'export', 'limit'],
-            tabIndex: 3
+            keywords: ['rebate', 'subsidy', 'loan', 'victoria', 'pdrs', 'vpp', 'export', 'limit']
         },
         {
             category: 'Legal',
-            keywords: ['expensive', 'price', 'cost', 'quote', 'cheaper', 'competitor', 'cancel', 'cooling', 'rights', 'legal'],
-            tabIndex: 4
+            keywords: ['expensive', 'price', 'cost', 'quote', 'cheaper', 'competitor', 'cancel', 'cooling', 'rights', 'legal']
         }
     ];
 
     for (const rule of rules) {
         if (rule.keywords.some(kw => cleanText.includes(kw))) {
-            console.log(`[AI OBJECTION DETECTED] Category: ${rule.category}`);
+            const badge = document.getElementById('prompt_badge');
+            const promptText = document.getElementById('prompt_text');
             
-            // Switch tabs to Objections tab and match subcategory
-            switchConsoleTab('objections');
-            
-            const tabButtons = document.querySelectorAll('#overlay_objection_tabs button');
-            if (tabButtons && tabButtons[rule.tabIndex]) {
-                tabButtons[rule.tabIndex].click();
-            }
-            
-            // Highlight the objection match dynamically in the objection view!
-            const matchBox = document.getElementById('ai_active_objection_match');
-            if (matchBox) {
-                let detectedObjection = "Customer Objection / Question";
+            if (badge && promptText) {
+                badge.innerText = '💡 AI COUNTER-ARGUMENT';
+                badge.style.background = '#ea580c';
+                
                 let counterResponse = "";
-                
                 if (rule.category === 'House/Roof') {
-                    detectedObjection = "Roof pitch, angle, or tree shading concerns.";
-                    counterResponse = "Under AS/NZS 5033 regulations, we utilize micro-inverters or DC optimizers to isolate shading. We maintain a strict 200mm wind offset boundary from all roof edges for structural safety.";
+                    counterResponse = "Under AS/NZS 5033, we use micro-inverters to isolate shade. We maintain a strict 200mm roof boundary offset for wind loading.";
                 } else if (rule.category === 'PV Tech') {
-                    detectedObjection = "Solar module degradation, warranties, and component quality.";
-                    counterResponse = "We supply premium Jinko N-type panels with a 25-year linear performance warranty (max 0.4% annual degradation). The Growatt inverter is CEC-approved with local Australian support.";
+                    counterResponse = "We supply premium Jinko N-type panels (25-year performance warranty, max 0.4% degradation) and Growatt inverter with local support.";
                 } else if (rule.category === 'Battery/VPP') {
-                    detectedObjection = "Battery backup location, fire safety, or VPP exports.";
-                    counterResponse = "Under AS/NZS 5139, batteries must be on an FC backing plate and cannot be under habitable rooms. We configure the backup circuit for essential appliances.";
+                    counterResponse = "Under AS/NZS 5139, the battery is mounted on an FC backing plate outside habitable rooms. Backup circuit is configured.";
                 } else if (rule.category === 'Rebates') {
-                    detectedObjection = "Rebate eligibility, subsidies, or dynamic export limits.";
-                    counterResponse = "The Federal STC rebate is applied upfront on your invoice. For SA, export limits dynamically scale from 1.5kW to 10kW based on grid demands.";
+                    counterResponse = "STC rebate is applied upfront. For SA, flexible export limits scale dynamically (1.5kW to 10kW) to protect grid.";
                 } else if (rule.category === 'Legal') {
-                    detectedObjection = "Competitor quotes, pricing strain, and cooling-off period.";
-                    counterResponse = "We comply fully with Australian Consumer Law, including a mandatory 10-business-day cooling-off period with 100% refundable deposits. Cheaper quotes compromise on structural rails and warranty.";
+                    counterResponse = "We provide a mandatory 10-business-day cooling-off period under Australian Consumer Law. 100% refundable deposit.";
                 }
-                
-                matchBox.innerHTML = `
-                    <div style="background: #fff7ed; border: 1.5px solid #ea580c; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.05); transition: all 0.3s ease;">
-                        <span style="font-size: 8px; font-weight: 800; background: #ffedd5; color: #ea580c; padding: 1px 4px; border-radius: 2px; align-self: flex-start; text-transform: uppercase; letter-spacing: 0.3px;">💡 Live Objection Detected</span>
-                        <div style="font-size: 11px; font-weight: 700; color: #7c2d12;">"${detectedObjection}"</div>
-                        <div style="border-top: 1px dashed #fed7aa; margin-top: 4px; padding-top: 4px; font-size: 12px; line-height: 1.45; font-weight: 700; color: #ea580c;">
-                            👉 Say this: "${counterResponse}"
-                        </div>
-                    </div>
-                `;
-                matchBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                promptText.innerText = counterResponse;
+                promptText.style.color = '#fb923c';
             }
             break;
         }
