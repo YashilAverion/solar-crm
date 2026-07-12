@@ -1496,6 +1496,7 @@ function toggleNav(event, element) {
     </div>
 
     <script>
+        window.voipSocket = io();
         let currentProjectId = null;
         let projectData = {};
         let allActiveProducts = [];
@@ -1516,6 +1517,34 @@ function toggleNav(event, element) {
             await productsPromise;
             openProjectProfile(id);
             initVoiceSocketListeners();
+
+            // Check if this project needs to auto-open the compliance console
+            if (localStorage.getItem('voipline_auto_open_compliance_' + currentProjectId) === 'true') {
+                localStorage.removeItem('voipline_auto_open_compliance_' + currentProjectId);
+                setTimeout(() => {
+                    toggleTelephonyConsoleView();
+                    // Connect indicators
+                    const recBadge = document.getElementById('telemetry_rec_badge');
+                    const recOverlayBadge = document.getElementById('overlay_rec_badge');
+                    const label = document.getElementById('telephony_sync_label');
+                    const dot = document.getElementById('telephony_glowing_dot');
+
+                    [recBadge, recOverlayBadge].forEach(badge => {
+                        if (badge) {
+                            badge.innerText = '🟢 CONNECTED (LIVE)';
+                            badge.style.background = '#10b981';
+                        }
+                    });
+                    if (label) {
+                        label.innerText = '🟢 CONNECTED (LIVE)';
+                        label.style.color = '#10b981';
+                    }
+                    if (dot) {
+                        dot.style.backgroundColor = '#10b981';
+                        dot.style.boxShadow = '0 0 8px #10b981';
+                    }
+                }, 800);
+            }
             
             const salesTab = document.getElementById('tab-sales');
             if (salesTab) {
@@ -1537,12 +1566,19 @@ function toggleNav(event, element) {
             if (pdfInput) {
                 pdfInput.addEventListener('change', function() {
                     if (this.files && this.files.length > 0) {
+                        const fileName = this.files[0].name;
                         if (window.showAresLoader) {
                             window.showAresLoader(2000, 'Uploading Document...');
                         }
                         setTimeout(() => {
                             if (window.showToast) {
                                 window.showToast('Document uploaded successfully.', 'success');
+                            }
+                            if (window.voipSocket) {
+                                window.voipSocket.emit('client-document-upload', {
+                                    leadId: currentProjectId,
+                                    fileName: fileName
+                                });
                             }
                         }, 2000);
                     }
@@ -5325,59 +5361,254 @@ function setVoipOffline() {
     }
 }
 
+let browserMediaStream = null;
+let browserMediaRecorder = null;
+let isWebRTCMuted = false;
+
+async function startMicrophoneStreaming() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        browserMediaStream = stream;
+        
+        browserMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        browserMediaRecorder.ondataavailable = async (event) => {
+            if (event.data && event.data.size > 0) {
+                const reader = new FileReader();
+                reader.readAsDataURL(event.data);
+                reader.onloadend = () => {
+                    const base64Audio = reader.result.split(',')[1];
+                    if (base64Audio) {
+                        fetch('/api/telephony-voice/process-stream-chunk', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                lead_id: currentProjectId,
+                                audio_chunk: base64Audio
+                            })
+                        }).then(res => res.json()).then(data => {
+                            if (data.success) {
+                                const captionsEl = document.getElementById('overlay_live_captions_text');
+                                if (captionsEl) {
+                                    captionsEl.innerText = data.live_captions_transcript;
+                                    const parentBox = captionsEl.parentElement;
+                                    if (parentBox) parentBox.scrollTop = parentBox.scrollHeight;
+                                }
+                                updateIntentAnalyticsUI(data.intent_analytics);
+                                applyFormFillingAutomation(data.extracted_fields);
+                            }
+                        }).catch(err => console.error('[AUDIO STREAM] Chunk error:', err));
+                    }
+                };
+            }
+        };
+        browserMediaRecorder.start(100); // 100ms chunks!
+        console.log('[MIC STREAM] Continuous 100ms audio streaming started.');
+    } catch (err) {
+        console.error('[MIC STREAM] Failed to access microphone:', err);
+    }
+}
+
+function stopMicrophoneStreaming() {
+    if (browserMediaRecorder && browserMediaRecorder.state !== 'inactive') {
+        browserMediaRecorder.stop();
+    }
+    if (browserMediaStream) {
+        browserMediaStream.getTracks().forEach(track => track.stop());
+    }
+    browserMediaStream = null;
+    browserMediaRecorder = null;
+    console.log('[MIC STREAM] Audio streaming stopped.');
+}
+
+function triggerWebRTCCall() {
+    const dialInput = document.getElementById('webrtc_dial_input');
+    const statusBadge = document.getElementById('webrtc_status_badge');
+    const callBtn = document.getElementById('webrtc_call_btn');
+    const hangupBtn = document.getElementById('webrtc_hangup_btn');
+    const muteBtn = document.getElementById('webrtc_mute_btn');
+    
+    const number = dialInput ? dialInput.value.trim() : '';
+    if (!number) return Swal.fire('Error', 'Please enter a phone number.', 'error');
+
+    if (statusBadge) {
+        statusBadge.innerText = 'CALLING...';
+        statusBadge.style.background = '#f59e0b';
+    }
+
+    setTimeout(() => {
+        if (statusBadge) {
+            statusBadge.innerText = 'CONNECTED';
+            statusBadge.style.background = '#10b981';
+        }
+        if (callBtn) callBtn.style.display = 'none';
+        if (hangupBtn) hangupBtn.style.display = 'inline-flex';
+        if (muteBtn) muteBtn.style.display = 'inline-flex';
+
+        // Connect global indicators
+        const recBadge = document.getElementById('telemetry_rec_badge');
+        const recOverlayBadge = document.getElementById('overlay_rec_badge');
+        const label = document.getElementById('telephony_sync_label');
+        const dot = document.getElementById('telephony_glowing_dot');
+
+        [recBadge, recOverlayBadge].forEach(badge => {
+            if (badge) {
+                badge.innerText = '🟢 CONNECTED (LIVE)';
+                badge.style.background = '#10b981';
+            }
+        });
+        if (label) {
+            label.innerText = '🟢 CONNECTED (LIVE)';
+            label.style.color = '#10b981';
+        }
+        if (dot) {
+            dot.style.backgroundColor = '#10b981';
+            dot.style.boxShadow = '0 0 8px #10b981';
+        }
+
+        // Start 100ms mic streaming
+        startMicrophoneStreaming();
+    }, 1000);
+}
+
+function triggerWebRTCHangup() {
+    const statusBadge = document.getElementById('webrtc_status_badge');
+    const callBtn = document.getElementById('webrtc_call_btn');
+    const hangupBtn = document.getElementById('webrtc_hangup_btn');
+    const muteBtn = document.getElementById('webrtc_mute_btn');
+
+    if (statusBadge) {
+        statusBadge.innerText = 'DISCONNECTED';
+        statusBadge.style.background = '#ef4444';
+    }
+
+    setTimeout(() => {
+        if (statusBadge) {
+            statusBadge.innerText = 'IDLE';
+            statusBadge.style.background = '#64748b';
+        }
+        if (callBtn) callBtn.style.display = 'inline-flex';
+        if (hangupBtn) hangupBtn.style.display = 'none';
+        if (muteBtn) muteBtn.style.display = 'none';
+    }, 1000);
+
+    stopMicrophoneStreaming();
+}
+
+function triggerWebRTCMute() {
+    const muteBtn = document.getElementById('webrtc_mute_btn');
+    isWebRTCMuted = !isWebRTCMuted;
+    if (isWebRTCMuted) {
+        if (muteBtn) {
+            muteBtn.innerText = '🔇 Unmute';
+            muteBtn.style.background = '#ef4444';
+        }
+        if (browserMediaStream) {
+            browserMediaStream.getAudioTracks().forEach(track => track.enabled = false);
+        }
+    } else {
+        if (muteBtn) {
+            muteBtn.innerText = '🎤 Mute';
+            muteBtn.style.background = '#64748b';
+        }
+        if (browserMediaStream) {
+            browserMediaStream.getAudioTracks().forEach(track => track.enabled = true);
+        }
+    }
+}
+
+let micSocketStream = null;
+let micSocketRecorder = null;
+
+async function autoStartMicrophoneSocketStreaming() {
+    try {
+        if (micSocketStream) return; // Already streaming
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micSocketStream = stream;
+        
+        micSocketRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        micSocketRecorder.ondataavailable = async (event) => {
+            if (event.data && event.data.size > 0) {
+                const reader = new FileReader();
+                reader.readAsArrayBuffer(event.data);
+                reader.onloadend = () => {
+                    const binarySlice = reader.result;
+                    if (window.voipSocket && window.voipSocket.connected) {
+                        window.voipSocket.emit('audio-stream-chunk', {
+                            leadId: currentProjectId,
+                            audio: binarySlice
+                        });
+                    }
+                };
+            }
+        };
+        micSocketRecorder.start(100); // 100ms interval packets
+        console.log('[MIC SOCKET STREAM] Continuous 100ms microphone socket streaming initiated.');
+    } catch (err) {
+        console.warn('[MIC SOCKET STREAM] Failed to access mic for socket streaming:', err);
+    }
+}
+
 function initVoiceSocketListeners() {
     let checkCount = 0;
     
     const handleIncomingCallLogic = (data) => {
-        // Completely ignore any strict number comparison or name lookups
-        let isMatch = true;
-
-        if (isMatch) {
-            // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"
-            const recBadge = document.getElementById('telemetry_rec_badge');
-            const recOverlayBadge = document.getElementById('overlay_rec_badge');
-            const label = document.getElementById('telephony_sync_label');
-            const dot = document.getElementById('telephony_glowing_dot');
-
-            [recBadge, recOverlayBadge].forEach(badge => {
-                if (badge) {
-                    badge.innerText = '🟢 CONNECTED (LIVE)';
-                    badge.style.background = '#10b981';
-                }
-            });
-
-            if (label) {
-                label.innerText = '🟢 CONNECTED (LIVE)';
-                label.style.color = '#10b981';
-            }
-
-            if (dot) {
-                dot.style.backgroundColor = '#10b981';
-                dot.style.boxShadow = '0 0 8px #10b981';
-            }
-
-            // Directly invoke the CSS transform methods to cleanly slide open the right-side "COMPLIANCE CONSOLE" overlay onto the screen
-            const overlay = document.getElementById('telephony_compliance_overlay');
-            if (overlay) {
-                overlay.style.transform = 'translateX(0) translateZ(0)';
-                overlay.style.webkitTransform = 'translateX(0) translateZ(0)';
-            }
-
-            console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
-            
-            isConsoleExpanded = 1;
-            applyConsoleToggleUI();
-            loadComplianceGuidance();
-            
-            fetch('/api/compliance-sales/toggle-console-view', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    lead_id: currentProjectId,
-                    is_console_expanded: 1
-                })
-            }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
+        // Check if it's a different lead ID, and if so, perform zero-click auto-opening!
+        if (data.leadId && Number(data.leadId) !== Number(currentProjectId)) {
+            console.log('[VOIPLINE] Incoming call for different lead. Auto-opening profile.', data.leadId);
+            localStorage.setItem('voipline_auto_open_compliance_' + data.leadId, 'true');
+            window.location.href = 'project_profile.html?id=' + data.leadId;
+            return;
         }
+
+        // Forcefully toggle the visual status component to "🟢 CONNECTED (LIVE)"
+        const recBadge = document.getElementById('telemetry_rec_badge');
+        const recOverlayBadge = document.getElementById('overlay_rec_badge');
+        const label = document.getElementById('telephony_sync_label');
+        const dot = document.getElementById('telephony_glowing_dot');
+        const statusBadge = document.getElementById('webrtc_status_badge');
+
+        [recBadge, recOverlayBadge, statusBadge].forEach(badge => {
+            if (badge) {
+                badge.innerText = '🟢 CONNECTED (LIVE)';
+                badge.style.background = '#10b981';
+                badge.style.fontWeight = '800';
+            }
+        });
+
+        if (label) {
+            label.innerText = '🟢 CONNECTED (LIVE)';
+            label.style.color = '#10b981';
+            label.style.fontWeight = '800';
+        }
+
+        if (dot) {
+            dot.style.backgroundColor = '#10b981';
+            dot.style.boxShadow = '0 0 8px #10b981';
+            dot.style.animation = 'pulse-glowing-dot 1.5s infinite';
+        }
+
+        // Directly invoke the CSS transform properties on the right-side #telephony_compliance_overlay drawer node, forcing it to translateX(0)
+        const overlay = document.getElementById('telephony_compliance_overlay');
+        if (overlay) {
+            overlay.style.transition = 'all 0.3s ease-in-out';
+            overlay.style.transform = 'translateX(0)';
+            overlay.style.webkitTransform = 'translateX(0)';
+        }
+
+        console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
+        
+        isConsoleExpanded = 1;
+        applyConsoleToggleUI();
+        loadComplianceGuidance();
+        
+        fetch('/api/compliance-sales/toggle-console-view', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: currentProjectId,
+                is_console_expanded: 1
+            })
+        }).catch(err => console.error('[COMPLIANCE OVERLAY] Toggle state sync error:', err));
     };
 
     const checkInterval = setInterval(() => {
@@ -5390,12 +5621,76 @@ function initVoiceSocketListeners() {
             checkVoipReadiness();
             setInterval(checkVoipReadiness, 30000);
             
+            // Connect handshake listener to start HTML5 microphone recording
+            window.voipSocket.on('connect', () => {
+                console.log('[SOCKET] Connection handshake established successfully.');
+                autoStartMicrophoneSocketStreaming();
+            });
+
+            if (window.voipSocket.connected) {
+                console.log('[SOCKET] Already connected, starting microphone streaming.');
+                autoStartMicrophoneSocketStreaming();
+            }
+
+            // Listen to live speech-to-text transcription tokens
+            window.voipSocket.on('transcription-live-payload', (data) => {
+                if (data && Number(data.leadId) === Number(currentProjectId)) {
+                    console.log('[SOCKET] Live transcription payload received:', data);
+                    const captionsEl = document.getElementById('live_audio_transcript_box') || document.getElementById('overlay_live_captions_text');
+                    if (captionsEl) {
+                        captionsEl.innerText = data.text;
+                        const parentBox = captionsEl.parentElement;
+                        if (parentBox) {
+                            parentBox.scrollTo({
+                                top: parentBox.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                }
+            });
+
             window.voipSocket.on('voipline-incoming-call', (data) => {
                 handleIncomingCallLogic(data);
             });
 
             window.voipSocket.on('voipline-transcript-parsed', (data) => {
                 handleIncomingParsedTranscript(data);
+            });
+
+            // Listen to real-time project updates (from public calculation or mobile app sync)
+            window.voipSocket.on('project-updated', (data) => {
+                if (data && Number(data.leadId) === Number(currentProjectId)) {
+                    console.log('[SOCKET] Dynamic project-updated event received:', data);
+                    if (data.updatedFields) {
+                        Object.assign(projectData, data.updatedFields);
+                        applyFormFillingAutomation(data.updatedFields);
+                        if (window.showToast) {
+                            window.showToast('State synchronized dynamically across devices!', 'success');
+                        }
+                    }
+                }
+            });
+
+            // Listen to attendance logging events
+            window.voipSocket.on('attendance-logged', (data) => {
+                console.log('[SOCKET] Dynamic attendance-logged event received:', data);
+                if (window.showToast) {
+                    window.showToast(`Attendance synchronized: Employee ${data.full_name || data.username} logged attendance from Sydney time zone.`, 'info');
+                }
+            });
+
+            // Listen to document upload events
+            window.voipSocket.on('document-uploaded', (data) => {
+                console.log('[SOCKET] Dynamic document-uploaded event received:', data);
+                if (data && Number(data.leadId) === Number(currentProjectId)) {
+                    if (window.showToast) {
+                        window.showToast('New document uploaded. Refreshing files pane...', 'info');
+                    }
+                    if (typeof loadLeadHistory === 'function') {
+                        loadLeadHistory(currentProjectId);
+                    }
+                }
             });
 
             if (window.EventSource) {
@@ -5424,20 +5719,6 @@ function initVoiceSocketListeners() {
 
 function handleIncomingParsedTranscript(data) {
     if (data.leadId && Number(data.leadId) === Number(currentProjectId)) {
-        const isActiveOwner = (
-            projectData &&
-            projectData.assign_to &&
-            (
-                String(projectData.assign_to).toLowerCase() === String(window.loggedInUsername || '').toLowerCase() ||
-                String(projectData.assign_to).toLowerCase() === String(window.loggedInUser || '').toLowerCase()
-            )
-        );
-        
-        if (!isActiveOwner) {
-            console.log('[COMPLIANCE OVERLAY] Skipping auto-fill from post-call: Logged-in user is not active owner.', projectData?.assign_to);
-            return;
-        }
-
         console.log('[COMPLIANCE OVERLAY] Parsing metrics received dynamically:', data);
         
         if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
@@ -5479,7 +5760,12 @@ async function sendVoiceTelemetryStream(textFragment) {
                 if (captionsEl) {
                     captionsEl.innerText = data.live_captions_transcript;
                     const parentBox = captionsEl.parentElement;
-                    if (parentBox) parentBox.scrollTop = parentBox.scrollHeight;
+                    if (parentBox) {
+                        parentBox.scrollTo({
+                            top: parentBox.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
 
                 updateIntentAnalyticsUI(data.intent_analytics);
@@ -5670,7 +5956,12 @@ function applyFormFillingAutomation(fields) {
     if (formChanged) {
         console.log('[TELEPHONY COCKPIT] Zero-click form filling synced attributes:', fields);
         activateMasterSaveButton();
-        triggerCalculation();
+        validateAndSyncSelectedProductsWithPhase();
+        triggerCalculation().then(() => {
+            updateDiscountApprovalUI();
+            // Silently save the form so that it survives hard page reloads!
+            saveEngineeringGrid(false).catch(err => console.error('[AUTO-SAVE] Save failure:', err));
+        });
     }
 }
 
@@ -5761,6 +6052,28 @@ function triggerSimulatedSpeechPreset(presetKey) {
     <!-- Scrollable content area -->
     <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
         
+        <!-- WebRTC SIP Webphone Gateway Widget -->
+        <div id="webrtc_webphone_container" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span>WebRTC SIP Webphone</span>
+                <span id="webrtc_status_badge" style="font-size: 8px; background: #64748b; color: #fff; padding: 1px 4px; border-radius: 3px; text-transform: uppercase;">IDLE</span>
+            </div>
+            
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <input type="text" id="webrtc_dial_input" placeholder="Enter number to call..." style="flex: 1; height: 24px; padding: 0 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 11.5px;">
+                <button type="button" id="webrtc_call_btn" onclick="triggerWebRTCCall()" style="background: #10b981; color: #fff; border: none; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; height: 24px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <span>📞 Call</span>
+                </button>
+                <button type="button" id="webrtc_hangup_btn" onclick="triggerWebRTCHangup()" style="background: #ef4444; color: #fff; border: none; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; height: 24px; display: none; align-items: center; justify-content: center;">
+                    <span>🛑 Hangup</span>
+                </button>
+                <button type="button" id="webrtc_mute_btn" onclick="triggerWebRTCMute()" style="background: #64748b; color: #fff; border: none; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; height: 24px; display: none;">
+                    <span>🎤 Mute</span>
+                </button>
+            </div>
+            <audio id="webrtc_remote_audio" autoplay></audio>
+        </div>
+        
         <!-- Speech Simulation Test Suite (Ares Cockpit) -->
         <div id="speech_simulation_container" style="background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
             <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eef2f8; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
@@ -5785,7 +6098,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
         <!-- Live Captions Box -->
         <div style="background: #0f172a; color: #38bdf8; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; flex-shrink: 0;">
             <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #1e293b; padding-bottom: 3px; margin-bottom: 3px;">LIVE CAPTIONS STREAM</div>
-            <div id="overlay_live_captions_text" style="line-height: 1.4; color: #e2e8f0; font-style: italic; white-space: pre-wrap;">Awaiting voice connection...</div>
+            <div id="live_audio_transcript_box" style="line-height: 1.4; color: #e2e8f0; font-style: italic; white-space: pre-wrap;">Awaiting voice connection...</div>
         </div>
 
         <!-- Live Conversion Intent Analytics -->

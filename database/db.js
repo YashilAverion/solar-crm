@@ -1883,23 +1883,48 @@ db.serialize(() => {
         }
     });
 
+    // 13. Specialized device registration and sync tables
+    db.run(`
+        CREATE TABLE IF NOT EXISTS omni_device_auth_registry (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id TEXT UNIQUE,
+            user_id INTEGER,
+            device_token TEXT,
+            platform TEXT,
+            auth_status TEXT DEFAULT 'authenticated',
+            last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS mobile_app_device_sync (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id TEXT,
+            user_id INTEGER,
+            attendance_status TEXT,
+            timezone TEXT DEFAULT 'Australia/Sydney',
+            latitude REAL,
+            longitude REAL,
+            sync_payload TEXT,
+            synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
 });
 
 // Telephone number normalizer helper: extracts the last 9 digits of a numeric string
 db.normalizePhoneToSuffix = function(num) {
     if (!num) return '';
-    // Strip all whitespaces, dashes, and international prefixes ('+61', '0')
-    let str = String(num).trim();
-    if (str.startsWith('+61')) {
-        str = str.slice(3);
-    } else if (str.startsWith('61')) {
+    // Strip all whitespaces, dashes, templates, and symbols
+    let str = String(num).replace(/[\s\+\-\(\)]/g, '').replace(/\D/g, '');
+    if (str.startsWith('61') && str.length >= 11) {
         str = str.slice(2);
     }
     if (str.startsWith('0')) {
         str = str.slice(1);
     }
-    const clean = str.replace(/[\s\+\-\(\)]/g, '').replace(/\D/g, '');
-    return clean.length >= 9 ? clean.slice(-9) : clean;
+    return str.length >= 9 ? str.slice(-9) : str;
 };
 
 // Substring lookup helper for VoIP user extension matching
@@ -1914,11 +1939,10 @@ db.lookupUserByVoiplineExtension = function(callerOrDialed, callback) {
         (err, users) => {
             if (err) return callback(err, null);
             
-            // Match extension suffix (comparing last 9 digits)
+            // Match extension suffix (comparing last 9 digits strictly)
             const matchedUser = (users || []).find(u => {
-                const ext = String(u.voipline_extension).replace(/\D/g, '').trim();
-                const extSuffix = ext.length >= 9 ? ext.slice(-9) : ext;
-                return extSuffix === suffix || suffix.endsWith(extSuffix) || extSuffix.endsWith(suffix) || ext === callerOrDialed;
+                const ext = db.normalizePhoneToSuffix(u.voipline_extension);
+                return ext === suffix;
             });
             
             callback(null, matchedUser);
@@ -1932,16 +1956,15 @@ db.lookupLeadByPhoneNumber = function(phoneNumber, callback) {
     if (!suffix) {
         return callback(null, null);
     }
-    const searchPattern = `%${suffix}`;
     db.get(
         `SELECT id, first_name, last_name, project_number, state
          FROM leads
          WHERE is_deleted = 0 AND (
-             replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
-             replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ? OR
-             replace(replace(replace(replace(landline_number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?
+             substr(replace(replace(replace(replace(replace(phone_number, ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), -9) = ? OR
+             substr(replace(replace(replace(replace(replace(phone_number_2, ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), -9) = ? OR
+             substr(replace(replace(replace(replace(replace(landline_number, ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), -9) = ?
          ) LIMIT 1`,
-        [searchPattern, searchPattern, searchPattern],
+        [suffix, suffix, suffix],
         callback
     );
 };
