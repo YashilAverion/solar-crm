@@ -1696,8 +1696,10 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_comp_obj_matrix_cat ON compliance_objection_matrix (category)");
 
     // 5. Seed default compliance scripts & objection matrix if empty or missing new premium values
-    db.get("SELECT COUNT(*) as count FROM sales_compliance_scripts WHERE mandatory_questions_json LIKE '%Jinko%' OR mandatory_questions_json LIKE '%Ares Energy%'", [], (err, checkRow) => {
-        if (!err && (!checkRow || checkRow.count === 0)) {
+    db.get("SELECT (SELECT COUNT(*) FROM sales_compliance_scripts WHERE mandatory_questions_json LIKE '%Averion Global%' OR mandatory_questions_json LIKE '%Averlon%') as count1, (SELECT COUNT(*) FROM sales_compliance_scripts WHERE mandatory_questions_json LIKE '%Jinko%' OR mandatory_questions_json LIKE '%Ares Energy%') as count2", [], (err, checkRow) => {
+        const hasAverion = !err && checkRow && checkRow.count1 > 0;
+        const isEmpty = !err && (!checkRow || checkRow.count2 === 0);
+        if (hasAverion || isEmpty) {
             console.log('[COMPLIANCE] Reseeding default sales compliance scripts with premium closing matrix...');
             db.run("DELETE FROM sales_compliance_scripts", () => {
                 const defaultScripts = [];
@@ -1711,9 +1713,9 @@ db.serialize(() => {
                             let questions = [];
                             if (stage === 'Greeting') {
                                 questions = [
-                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_1`, text: `State your name and company: Averion Global LLP. Establish professional identity and confidence with a warm Australian greeting: 'Good day! Thanks for speaking with us today. This is Ares Energy.'`, badge: "READ NOW" },
-                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_2`, text: `Ask if they are the registered property owner, establishing a diagnostic hook.`, badge: "WAIT FOR CUSTOMER" },
-                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_3`, text: `COURTESY ALERT: Apologise & Await Turn if interrupted. Remind that Averion Global complies with Australian Consumer Law.`, badge: "COURTESY ALERT" }
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_1`, text: `State your name and company: Ares Energy. Establish professional identity and confidence with a warm Australian greeting: 'Good day! Thanks for speaking with us today. This is Yashil from Ares Energy.'`, badge: "READ NOW" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_2`, text: `Ask if they are the registered property owner at 7 Girona Street, Piara Waters WA 6112, establishing a rapid diagnostic hook.`, badge: "WAIT FOR CUSTOMER" },
+                                    { id: `${st.toLowerCase()}_${sys.toLowerCase()}_greet_3`, text: `COURTESY ALERT: Apologise & Await Turn if interrupted. Remind that Ares Energy complies with Australian Consumer Law.`, badge: "COURTESY ALERT" }
                                 ];
                             } else if (stage === 'Pre-Qualification') {
                                 questions = [
@@ -1753,7 +1755,7 @@ db.serialize(() => {
                                         { id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_2`, text: `Outline upfront Federal STC rebate discount applied directly to the invoice.`, badge: "READ NOW" }
                                     ];
                                 }
-                                questions.push({ id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_3`, text: `State: Averion Global complies with Australian Consumer Law providing a 10-business-day cooling-off period.`, badge: "CRUCIAL COMPLIANCE BOUNDARY" });
+                                questions.push({ id: `${st.toLowerCase()}_${sys.toLowerCase()}_fin_3`, text: `State: Ares Energy complies with Australian Consumer Law providing a 10-business-day cooling-off period.`, badge: "CRUCIAL COMPLIANCE BOUNDARY" });
                             } else if (stage === 'Agreement') {
                                 questions = [
                                     { id: `${st.toLowerCase()}_${sys.toLowerCase()}_agr_1`, text: `Detail premium component selection: Jinko PV modules (N-type, 25-yr performance warranty) and Growatt/Fox ESS configurations.`, badge: "READ NOW" },

@@ -4780,7 +4780,7 @@ function renderComplianceConsole() {
     let metricItems = [];
     if (data.current_stage === 'Greeting') {
         metricItems = [
-            `<strong>Firm Brand Identity:</strong> Averion Global LLP (ACL Licensed PV/Battery provider)`,
+            `<strong>Firm Brand Identity:</strong> Ares Energy (ACL Licensed PV/Battery provider)`,
             `<strong>Australia Consumer Law (ACL):</strong> cooling-off provisions apply`
         ];
     } else if (data.current_stage === 'Pre-Qualification') {
@@ -5598,6 +5598,46 @@ function initVoiceSocketListeners() {
 
         console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
         
+        // Flush old speech cards and render localized guidelines instantly under 5 milliseconds!
+        const containers = ['compliance_speech_container', 'overlay_speech_container'];
+        containers.forEach(cid => {
+            const container = document.getElementById(cid);
+            if (container) {
+                container.innerHTML = '';
+                
+                const questions = [
+                    { id: 'greet_1', badge: 'READ NOW', text: "State your name and company: Ares Energy. Establish professional identity and confidence with a warm Australian greeting: 'Good day! Thanks for speaking with us today. This is Yashil from Ares Energy.'" },
+                    { id: 'greet_2', badge: 'WAIT FOR CUSTOMER', text: "Ask if they are the registered property owner at 7 Girona Street, Piara Waters WA 6112, establishing a rapid diagnostic hook." },
+                    { id: 'greet_3', badge: 'COURTESY ALERT', text: "COURTESY ALERT: Apologise & Await Turn if interrupted. Remind that Ares Energy complies with Australian Consumer Law." }
+                ];
+
+                questions.forEach(q => {
+                    let badgeColor = '#10b981';
+                    let badgeBg = '#edfaf2';
+                    if (q.badge === 'WAIT FOR CUSTOMER') {
+                        badgeColor = '#b45309';
+                        badgeBg = '#fffbeb';
+                    } else if (q.badge === 'COURTESY ALERT') {
+                        badgeColor = '#ef4444';
+                        badgeBg = '#fef2f2';
+                    }
+
+                    const block = document.createElement('div');
+                    block.style.cssText = 'display: flex; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; background: #ffffff; align-items: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.01);';
+                    block.innerHTML = `
+                        <div class="compliance-checkbox-indicator" id="${cid === 'compliance_speech_container' ? 'chk_speech' : 'overlay_chk_speech'}_${q.id}"></div>
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 4px; border-radius: 3px; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeColor}30; letter-spacing:0.2px;">${q.badge}</span>
+                            </div>
+                            <div style="font-size: 11.5px; line-height: 1.4; font-weight: 600; color: var(--text-dark);">${q.text}</div>
+                        </div>
+                    `;
+                    container.appendChild(block);
+                });
+            }
+        });
+
         isConsoleExpanded = 1;
         applyConsoleToggleUI();
         loadComplianceGuidance();
