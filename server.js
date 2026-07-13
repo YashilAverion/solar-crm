@@ -1807,7 +1807,7 @@ async function getPylonSession() {
     return pylonSessionCookie;
 }
 
-app.all('/pylon-editor/:path*', async (req, res) => {
+app.all('/pylon-editor/{*splat}', async (req, res) => {
     try {
         const sessionCookie = await getPylonSession();
         
