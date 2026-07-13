@@ -971,12 +971,85 @@ function toggleNav(event, element) {
             </div>
 
             <!-- Satellite Roof View Tab -->
-            <div class="content-card tab-content" id="tab-satellite" style="display: none; height: 100%; flex-direction: column;">
-                <div class="section-title">Satellite Roof View</div>
-                <div style="font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Use satellite view to inspect roof orientation, spacing, shading factors, and structures.</div>
-                <div id="satelliteMapContainer" style="flex: 1; width: 100%; min-height: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #eee; position: relative;">
-                    <div id="satelliteMap" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted);">
-                        Loading satellite imagery...
+            <div class="content-card tab-content" id="tab-satellite" style="display: none; height: 100%; flex-direction: column; gap: 12px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f8; padding-bottom: 10px; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">🛰️ Satellite Solar Design Engine</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; flex: 1; min-height: 520px;">
+                    <!-- Left: Google Map Overlay Container (70%) -->
+                    <div id="satelliteMapContainer" style="flex: 2.3; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #f8fafc; position: relative; height: 100%;">
+                        <div id="satelliteMap" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted);">
+                            Loading satellite imagery...
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar: Ares Solar Copilot Design Panel (30%) -->
+                    <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: 100%; overflow-y: auto;">
+                        <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 2px solid #eef2f8; padding-bottom: 6px;">
+                            Solar Copilot Controls
+                        </div>
+
+                        <!-- Status Indicator -->
+                        <div id="solar_status_box" style="background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted);">
+                            <span class="solar-status-dot" id="solar_status_dot" style="width: 8px; height: 8px; background: #94a3b8; border-radius: 50%; display: inline-block;"></span>
+                            <span id="solar_status_text">Awaiting roof coordinate lookup...</span>
+                        </div>
+
+                        <!-- AS/NZS 5033 Compliance (Wind Boundary Offset) -->
+                        <div class="field">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">AS/NZS 5033 Offset Boundary</label>
+                            <select id="solar_wind_offset" onchange="runComplianceLayoutEngine()" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none;">
+                                <option value="200" selected>200mm Offset (Fully Compliant)</option>
+                                <option value="100">100mm Offset (Restricted)</option>
+                                <option value="0">No Offset (Max Physical Capacity)</option>
+                            </select>
+                        </div>
+
+                        <!-- CEC 133% Inverter Capacity Rule Enforcer -->
+                        <div style="display: flex; flex-direction: column; gap: 4px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-dark); cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="solar_enforce_cec" checked onchange="runComplianceLayoutEngine()" style="width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent);">
+                                <span>Enforce CEC 133% Sizing Rule</span>
+                            </label>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;" id="solar_cec_calc_info">
+                                Loading specs...
+                            </div>
+                        </div>
+
+                        <!-- Active Design Performance Metrics -->
+                        <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--border); padding-top: 12px;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Proposal Design Metrics</div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div style="background: #eef2f8; padding: 8px; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase;">Panels Count</div>
+                                    <div style="font-size: 18px; font-weight: 800; color: var(--primary);" id="solar_panel_count">0</div>
+                                </div>
+                                <div style="background: #edfaf2; padding: 8px; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 10px; color: #1a6b3c; font-weight: 700; text-transform: uppercase;">Array Capacity</div>
+                                    <div style="font-size: 18px; font-weight: 800; color: #1a6b3c;" id="solar_array_kw">0.00 kW</div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+                                <span style="color: var(--text-muted); font-weight: 500;">Est. Annual Yield:</span>
+                                <span style="font-weight: 700; color: var(--text-dark);" id="solar_annual_yield">0 kWh/yr</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                <span style="color: var(--text-muted); font-weight: 500;">CO2 Carbon Offset:</span>
+                                <span style="font-weight: 700; color: var(--text-dark);" id="solar_co2_offset">0.0 tons/yr</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
+                            <button type="button" class="btn-save" id="btn_save_solar_layout" onclick="saveSolarLayoutToProposal()" style="width: 100%; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700;" disabled>
+                                📥 Save Design to Proposal
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2349,6 +2422,9 @@ function toggleNav(event, element) {
         }
 
         let satelliteMap = null;
+        let rawGoogleSolarData = null;
+        let activeSolarPolygons = [];
+
         function loadSatelliteMap() {
             if (!projectData) return;
             const addressStr = projectData.google_address || `${projectData.address || ''}, ${projectData.suburb || ''} ${projectData.state || ''} ${projectData.postcode || ''}`;
@@ -2370,7 +2446,7 @@ function toggleNav(event, element) {
                     mapDiv.innerHTML = ''; // Clear loading text
                     satelliteMap = new google.maps.Map(mapDiv, {
                         center: results[0].geometry.location,
-                        zoom: 19,
+                        zoom: 20, // Deep zoom for solar panels
                         mapTypeId: 'hybrid', // Hybrid gives satellite view + road labels
                         tilt: 0, // Tilt 0 prevents 45-degree angle 3D view for better vertical inspection
                         streetViewControl: false,
@@ -2382,10 +2458,252 @@ function toggleNav(event, element) {
                         map: satelliteMap,
                         title: (projectData.first_name || '') + ' ' + (projectData.last_name || '')
                     });
+
+                    // Fetch Solar Insights from backend proxy
+                    const statusText = document.getElementById('solar_status_text');
+                    const statusDot = document.getElementById('solar_status_dot');
+                    const saveBtn = document.getElementById('btn_save_solar_layout');
+
+                    if (statusText) statusText.innerText = "Analyzing roof geometry...";
+                    if (statusDot) statusDot.style.background = "#eab308"; // Yellow
+
+                    fetch(`/api/solar/building-insights?lat=${results[0].geometry.location.lat()}&lng=${results[0].geometry.location.lng()}`)
+                        .then(res => res.json())
+                        .then(json => {
+                            if (json.success && json.data) {
+                                rawGoogleSolarData = json.data;
+                                if (statusText) statusText.innerText = "Solar Roof Data Loaded";
+                                if (statusDot) statusDot.style.background = "#22c55e"; // Green
+                                if (saveBtn) saveBtn.removeAttribute('disabled');
+                                runComplianceLayoutEngine();
+                            } else {
+                                throw new Error(json.error || 'No solar data available for this address.');
+                            }
+                        })
+                        .catch(err => {
+                            console.warn('[SOLAR API] Fetch error:', err);
+                            if (statusText) statusText.innerText = "Roof Data Unavailable";
+                            if (statusDot) statusDot.style.background = "#ef4444"; // Red
+                        });
                 } else {
                     mapDiv.innerHTML = `<div style="padding:20px; text-align:center; color:red; font-weight:600;">Geocoding error: ${status}. Please verify the address format or API key billing status.</div>`;
                 }
             });
+        }
+
+        function runComplianceLayoutEngine() {
+            if (!rawGoogleSolarData || !rawGoogleSolarData.solarPanels) return;
+
+            const windOffset = parseInt(document.getElementById('solar_wind_offset').value) || 0;
+            const enforceCEC = document.getElementById('solar_enforce_cec').checked;
+
+            // Clear old overlays
+            activeSolarPolygons.forEach(p => p.setMap(null));
+            activeSolarPolygons = [];
+
+            // Get specs from Table A inputs
+            let inverterKw = 5.0;
+            let panelWatts = 475;
+            let panelRowElement = null;
+
+            const rows = document.querySelectorAll('#productRows .product-selection-row');
+            rows.forEach(row => {
+                const typeEl = row.querySelector('.cp-type');
+                if (typeEl) {
+                    const type = typeEl.value;
+                    if (type === 'Panel') {
+                        panelRowElement = row;
+                        const sizeVal = row.querySelector('.cp-size').value;
+                        const match = sizeVal.match(/(\d+)/);
+                        if (match) panelWatts = parseInt(match[1]);
+                    } else if (type === 'Inverter') {
+                        const kwVal = row.querySelector('.cp-kw').value || row.querySelector('.cp-size').value || '';
+                        const match = kwVal.match(/(\d+(?:\.\d+)?)/);
+                        if (match) inverterKw = parseFloat(match[1]);
+                    }
+                }
+            });
+
+            const maxCECAllowedKw = inverterKw * 1.33;
+            const maxPanelsAllowed = Math.floor((maxCECAllowedKw * 1000) / panelWatts);
+
+            const cecInfo = document.getElementById('solar_cec_calc_info');
+            if (cecInfo) {
+                cecInfo.innerHTML = `Inverter: <strong>${inverterKw} kW</strong> &bull; Panel: <strong>${panelWatts} W</strong><br>CEC Limit: <strong>${maxCECAllowedKw.toFixed(2)} kW</strong> (${maxPanelsAllowed} Panels max)`;
+            }
+
+            // Heuristic Wind Offset calculation based on segment centers
+            const segmentCenters = {};
+            if (rawGoogleSolarData.roofSegmentStats) {
+                rawGoogleSolarData.roofSegmentStats.forEach((seg, idx) => {
+                    if (seg.center) {
+                        segmentCenters[idx] = {
+                            lat: seg.center.latitude,
+                            lng: seg.center.longitude
+                        };
+                    }
+                });
+            }
+
+            let candidatePanels = [];
+            rawGoogleSolarData.solarPanels.forEach(panel => {
+                let keepPanel = true;
+
+                if (windOffset > 0 && panel.segmentIndex !== undefined && segmentCenters[panel.segmentIndex]) {
+                    const center = segmentCenters[panel.segmentIndex];
+                    const dist = Math.sqrt(Math.pow(panel.center.latitude - center.lat, 2) + Math.pow(panel.center.longitude - center.lng, 2));
+
+                    if (!segmentCenters[panel.segmentIndex].maxDist) {
+                        let maxD = 0;
+                        rawGoogleSolarData.solarPanels.forEach(p => {
+                            if (p.segmentIndex === panel.segmentIndex) {
+                                const d = Math.sqrt(Math.pow(p.center.latitude - center.lat, 2) + Math.pow(p.center.longitude - center.lng, 2));
+                                if (d > maxD) maxD = d;
+                            }
+                        });
+                        segmentCenters[panel.segmentIndex].maxDist = maxD;
+                    }
+
+                    const maxDist = segmentCenters[panel.segmentIndex].maxDist;
+                    if (maxDist > 0) {
+                        const relativeDist = dist / maxDist;
+                        const threshold = windOffset === 200 ? 0.82 : 0.91; // filter outer margin
+                        if (relativeDist > threshold) {
+                            keepPanel = false;
+                        }
+                    }
+                }
+
+                if (keepPanel) {
+                    candidatePanels.push(panel);
+                }
+            });
+
+            // Sort by annual flux descending (sunniest first)
+            candidatePanels.sort((a, b) => (b.yearlyEnergyDcKwh || 0) - (a.yearlyEnergyDcKwh || 0));
+
+            const finalPanels = enforceCEC ? candidatePanels.slice(0, maxPanelsAllowed) : candidatePanels;
+
+            // Draw panels on Map
+            finalPanels.forEach(panel => {
+                const lat = panel.center.latitude;
+                const lng = panel.center.longitude;
+                const latDegreeToMeters = 111111;
+                const lngDegreeToMeters = 111111 * Math.cos(lat * Math.PI / 180);
+
+                const isPortrait = panel.orientation === 'PORTRAIT';
+                const length = isPortrait ? 1.75 : 1.0;
+                const width = isPortrait ? 1.0 : 1.75;
+
+                const azimuthRad = ((panel.azimuth || 0) * Math.PI) / 180;
+                const cosA = Math.cos(azimuthRad);
+                const sinA = Math.sin(azimuthRad);
+
+                const halfL = length / 2;
+                const halfW = width / 2;
+
+                const corners = [
+                    { x: -halfW, y: -halfL },
+                    { x: halfW, y: -halfL },
+                    { x: halfW, y: halfL },
+                    { x: -halfW, y: halfL }
+                ];
+
+                const pathCoords = corners.map(c => {
+                    const rotX = c.x * cosA - c.y * sinA;
+                    const rotY = c.x * sinA + c.y * cosA;
+                    return {
+                        lat: lat + rotY / latDegreeToMeters,
+                        lng: lng + rotX / lngDegreeToMeters
+                    };
+                });
+
+                const flux = panel.yearlyEnergyDcKwh || 200;
+                let fillColor = "#fbbf24";
+                if (flux > 250) fillColor = "#f59e0b";
+                if (flux < 150) fillColor = "#f87171";
+
+                const polygon = new google.maps.Polygon({
+                    paths: pathCoords,
+                    strokeColor: "#1e293b",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 1,
+                    fillColor: fillColor,
+                    fillOpacity: 0.65,
+                    map: satelliteMap
+                });
+
+                activeSolarPolygons.push(polygon);
+            });
+
+            // Update Metrics Panel UI
+            const finalCount = finalPanels.length;
+            const totalKw = (finalCount * panelWatts) / 1000;
+
+            let sunHours = 3.9;
+            if (projectData && projectData.state) {
+                const st = projectData.state.trim().toUpperCase();
+                if (st === 'VIC' || st === 'TAS') sunHours = 3.6;
+                else if (st === 'QLD' || st === 'WA') sunHours = 4.2;
+                else if (st === 'SA') sunHours = 4.0;
+            }
+            const annualKwh = totalKw * sunHours * 0.82 * 365;
+            const co2Tons = (annualKwh * 0.54) / 1000;
+
+            document.getElementById('solar_panel_count').innerText = finalCount;
+            document.getElementById('solar_array_kw').innerText = `${totalKw.toFixed(2)} kW`;
+            document.getElementById('solar_annual_yield').innerText = `${Math.round(annualKwh).toLocaleString()} kWh/yr`;
+            document.getElementById('solar_co2_offset').innerText = `${co2Tons.toFixed(1)} tons/yr`;
+
+            window.calculatedSolarPanelCount = finalCount;
+        }
+
+        async function saveSolarLayoutToProposal() {
+            if (window.calculatedSolarPanelCount === undefined || window.calculatedSolarPanelCount <= 0) {
+                Swal.fire('Error', 'No compliant panel count calculated to save.', 'error');
+                return;
+            }
+
+            let panelRowElement = null;
+            const rows = document.querySelectorAll('#productRows .product-selection-row');
+            rows.forEach(row => {
+                const typeEl = row.querySelector('.cp-type');
+                if (typeEl && typeEl.value === 'Panel') {
+                    panelRowElement = row;
+                }
+            });
+
+            if (!panelRowElement) {
+                Swal.fire('Error', 'Please add a "Panel" row in Table A: Product Selection first.', 'error');
+                return;
+            }
+
+            const qtyInput = panelRowElement.querySelector('.cp-qty');
+            if (qtyInput) {
+                qtyInput.value = window.calculatedSolarPanelCount;
+                qtyInput.dispatchEvent(new Event('input'));
+                qtyInput.dispatchEvent(new Event('change'));
+
+                if (typeof activateSaveButtons === 'function') activateSaveButtons();
+                if (typeof checkDCPowerLimit === 'function') checkDCPowerLimit();
+                
+                // Recalculate financial fields
+                if (typeof triggerCalculation === 'function') {
+                    await triggerCalculation();
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Layout Synchronized',
+                    text: `Successfully saved ${window.calculatedSolarPanelCount} panels to your proposal and updated totals!`,
+                    timer: 3000,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Error', 'Could not locate panel quantity input field.', 'error');
+            }
         }
 
         function switchTab(tabId, btnElement) {

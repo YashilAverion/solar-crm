@@ -5780,6 +5780,26 @@ app.post('/api/telephony-voice/clear-sync', (req, res) => {
     });
 });
 
+app.get('/api/solar/building-insights', (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) {
+        return res.status(400).json({ error: 'Latitude and Longitude are required.' });
+    }
+
+    const apiKey = 'AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4';
+    const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${lat}&location.longitude=${lng}&requiredQuality=HIGH&key=${apiKey}`;
+
+    const axios = require('axios');
+    axios.get(url)
+        .then(response => {
+            res.json({ success: true, data: response.data });
+        })
+        .catch(error => {
+            console.error('[SOLAR API PROXY] Error fetching from Google:', error.response ? error.response.data : error.message);
+            res.status(500).json({ success: false, error: 'Solar API data is not available for this address or location.' });
+        });
+});
+
 app.post('/api/telephony-voice/process-stream-chunk', async (req, res) => {
     const data = { ...req.query, ...req.body };
     const { lead_id, text_fragment, audio_chunk } = data;
