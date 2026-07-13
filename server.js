@@ -1451,6 +1451,13 @@ db.run("ALTER TABLE leads ADD COLUMN discount_approval_status TEXT DEFAULT 'None
 db.run("ALTER TABLE leads ADD COLUMN discount_approved_by TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE leads ADD COLUMN recommended_selling_price REAL DEFAULT 0", () => { });
 
+// ── PYLON INTEGRATION COLUMNS ──
+db.run("ALTER TABLE leads ADD COLUMN pylon_project_id TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE leads ADD COLUMN pylon_panel_count INTEGER DEFAULT 0", () => { });
+db.run("ALTER TABLE leads ADD COLUMN pylon_system_size REAL DEFAULT 0", () => { });
+db.run("ALTER TABLE leads ADD COLUMN pylon_layout_image TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE leads ADD COLUMN pylon_sld_pdf TEXT DEFAULT NULL", () => { });
+
 // ── ENSURE MICROSOFT OUTLOOK COLUMNS IN USERS TABLE ─────────────
 db.run("ALTER TABLE users ADD COLUMN outlook_email TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN outlook_access_token TEXT DEFAULT NULL", () => { });
@@ -1711,6 +1718,141 @@ app.put('/api/projects/details/:id/notes', (req, res) => {
     db.run("UPDATE leads SET sales_input_notes = ? WHERE id = ?", [sales_input_notes, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
+    });
+});
+
+// ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
+app.post('/api/pylon/create-project/:id', (req, res) => {
+    const leadId = req.params.id;
+    db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+        if (lead.pylon_project_id) {
+            return res.json({
+                success: true,
+                pylon_project_id: lead.pylon_project_id,
+                url: `https://observer.getpylon.com/projects/${lead.pylon_project_id}`
+            });
+        }
+
+        const apiKey = process.env.PYLON_API_KEY;
+        if (apiKey && !apiKey.startsWith('mock_')) {
+            // Real API integration call
+            const fetch = require('node-fetch');
+            fetch('https://api.getpylon.com/v1/projects', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    name: `${lead.first_name || 'Client'} ${lead.last_name || ''}`.trim(),
+                    address: lead.address,
+                    email: lead.email_id_1 || '',
+                    phone: lead.phone_number || ''
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    db.run("UPDATE leads SET pylon_project_id = ? WHERE id = ?", [data.id, leadId], (dbErr) => {
+                        if (dbErr) return res.status(500).json({ error: dbErr.message });
+                        res.json({
+                            success: true,
+                            pylon_project_id: data.id,
+                            url: `https://observer.getpylon.com/projects/${data.id}`
+                        });
+                    });
+                } else {
+                    res.status(400).json({ error: 'Failed to create Pylon project via API', details: data });
+                }
+            })
+            .catch(apiErr => {
+                res.status(500).json({ error: apiErr.message });
+            });
+        } else {
+            // Mock Mode Fallback
+            const mockId = `pyl_mock_${leadId}_${Math.floor(1000 + Math.random() * 9000)}`;
+            db.run("UPDATE leads SET pylon_project_id = ? WHERE id = ?", [mockId, leadId], (dbErr) => {
+                if (dbErr) return res.status(500).json({ error: dbErr.message });
+                res.json({
+                    success: true,
+                    pylon_project_id: mockId,
+                    url: `https://observer.getpylon.com/projects/${mockId}`
+                });
+            });
+        }
+    });
+});
+
+app.post('/api/pylon/sync/:id', (req, res) => {
+    const leadId = req.params.id;
+    db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!lead) return res.status(404).json({ error: 'Lead not found' });
+        if (!lead.pylon_project_id) {
+            return res.status(400).json({ error: 'No Pylon project linked to this lead yet.' });
+        }
+
+        const apiKey = process.env.PYLON_API_KEY;
+        if (apiKey && !apiKey.startsWith('mock_')) {
+            // Real API integration sync call
+            const fetch = require('node-fetch');
+            fetch(`https://api.getpylon.com/v1/projects/${lead.pylon_project_id}`, {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                const count = parseInt(data.panel_count) || 0;
+                const size = parseFloat(data.system_size_kw) || 0;
+                const img = data.layout_image_url || null;
+                const sld = data.sld_pdf_url || null;
+
+                db.run(
+                    "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
+                    [count, size, img, sld, leadId],
+                    (dbErr) => {
+                        if (dbErr) return res.status(500).json({ error: dbErr.message });
+                        res.json({
+                            success: true,
+                            pylon_project_id: lead.pylon_project_id,
+                            pylon_panel_count: count,
+                            pylon_system_size: size,
+                            pylon_layout_image: img,
+                            pylon_sld_pdf: sld
+                        });
+                    }
+                );
+            })
+            .catch(apiErr => {
+                res.status(500).json({ error: apiErr.message });
+            });
+        } else {
+            // Mock Mode Fallback (Simulates a complete 24-panel design layout sync)
+            const mockCount = 24;
+            const mockSize = 10.2;
+            const mockImg = '/images/pylon_mock_layout.png';
+            const mockSld = '/pdf/pylon_mock_sld.pdf';
+
+            db.run(
+                "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
+                [mockCount, mockSize, mockImg, mockSld, leadId],
+                (dbErr) => {
+                    if (dbErr) return res.status(500).json({ error: dbErr.message });
+                    res.json({
+                        success: true,
+                        pylon_project_id: lead.pylon_project_id,
+                        pylon_panel_count: mockCount,
+                        pylon_system_size: mockSize,
+                        pylon_layout_image: mockImg,
+                        pylon_sld_pdf: mockSld
+                    });
+                }
+            );
+        }
     });
 });
 
