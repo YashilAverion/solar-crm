@@ -87,7 +87,12 @@ function getClientIp(req) {
 
 
 app.use(compression({ level: 6, threshold: 1024 })); // Compresses responses larger than 1KB
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        req.rawBody = buf.toString();
+    }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ── ENCRYPTION HELPERS FOR VOIP CREDENTIALS ─────────────────
@@ -2066,6 +2071,37 @@ app.post('/api/pylon/sync/:id', (req, res) => {
 });
 
 app.post('/api/pylon/webhook', (req, res) => {
+    // 1. Verify signature if PYLON_WEBHOOK_SECRET is set
+    const signatureHeader = req.headers['pylon-webhook-signature'];
+    const timestampHeader = req.headers['pylon-webhook-timestamp'];
+    const secret = process.env.PYLON_WEBHOOK_SECRET;
+
+    if (secret) {
+        if (!signatureHeader || !timestampHeader) {
+            console.warn('[Pylon Webhook] Unauthorized attempt: Missing signature or timestamp headers');
+            return res.status(401).send('Unauthorized: Missing signature or timestamp headers');
+        }
+
+        try {
+            const rawBody = req.rawBody || '';
+            const computedSignature = 'hs256=' + crypto
+                .createHmac('sha256', secret)
+                .update(`${timestampHeader}.${rawBody}`)
+                .digest('hex');
+
+            const sigBuffer = Buffer.from(signatureHeader);
+            const compBuffer = Buffer.from(computedSignature);
+            
+            if (sigBuffer.length !== compBuffer.length || !crypto.timingSafeEqual(sigBuffer, compBuffer)) {
+                console.warn('[Pylon Webhook] Unauthorized attempt: HMAC Signature mismatch');
+                return res.status(401).send('Unauthorized: Invalid HMAC signature');
+            }
+        } catch (err) {
+            console.error('[Pylon Webhook] Error during signature verification:', err);
+            return res.status(500).send('Error verifying signature');
+        }
+    }
+
     res.sendStatus(200); // Acknowledge right away
 
     const payload = req.body;
