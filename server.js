@@ -5670,6 +5670,66 @@ app.post('/api/telephony-voice/stream-payload', (req, res) => {
     });
 });
 
+app.get('/api/projects/:projectNumber/call-logs', (req, res) => {
+    const { projectNumber } = req.params;
+    const query = `
+        SELECT c.*, u.full_name as agent_name
+        FROM call_logs c
+        LEFT JOIN users u ON c.user_id = u.id
+        WHERE c.project_number = ?
+        ORDER BY c.timestamp DESC
+    `;
+    db.all(query, [projectNumber], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, logs: rows || [] });
+    });
+});
+
+app.post('/api/telephony-voice/end-call', (req, res) => {
+    const { lead_id, duration } = req.body;
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required' });
+    }
+
+    const userId = req.session && req.session.user ? req.session.user.id : null;
+    
+    db.get('SELECT live_captions_transcript FROM telephony_live_voice_sync WHERE lead_id = ?', [lead_id], (err, syncRow) => {
+        if (err || !syncRow || !syncRow.live_captions_transcript) {
+            return res.json({ success: false, message: 'No active transcript found to save' });
+        }
+
+        const transcript = syncRow.live_captions_transcript.trim();
+        if (!transcript) {
+            return res.json({ success: false, message: 'Transcript is empty' });
+        }
+
+        db.get('SELECT project_no, phone_number FROM leads WHERE id = ?', [lead_id], (err, leadRow) => {
+            if (err || !leadRow) {
+                return res.json({ success: false, message: 'Lead not found' });
+            }
+
+            const projectNumber = leadRow.project_no || '';
+            const callerNumber = leadRow.phone_number || '';
+
+            db.run(
+                `INSERT INTO call_logs (user_id, caller_number, project_number, direction, duration, recording_url, transcript_text, timestamp)
+                 VALUES (?, ?, ?, 'incoming', ?, '', ?, CURRENT_TIMESTAMP)`,
+                [userId, callerNumber, projectNumber, duration || 60, transcript],
+                function(insertErr) {
+                    if (insertErr) {
+                        console.error('[END CALL] Save call log error:', insertErr.message);
+                        return res.status(500).json({ error: 'Failed to save transcript' });
+                    }
+
+                    db.run('DELETE FROM telephony_live_voice_sync WHERE lead_id = ?', [lead_id], () => {});
+
+                    res.json({ success: true, message: 'Call log and transcript saved successfully' });
+                }
+            );
+        });
+    });
+});
+
 app.post('/api/telephony-voice/process-stream-chunk', async (req, res) => {
     const data = { ...req.query, ...req.body };
     const { lead_id, text_fragment, audio_chunk } = data;

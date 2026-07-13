@@ -690,7 +690,7 @@ function toggleNav(event, element) {
                     <button class="tab-capsule" onclick="switchTab('installation', this)">Installation Data</button>
                     <button class="tab-capsule" onclick="switchTab('documents', this)">Documents</button>
                     <button class="tab-capsule" onclick="switchTab('satellite', this)">Satellite Roof View</button>
-                    <button class="tab-capsule" onclick="switchTab('compliance', this)">Compliance Console</button>
+                    <button class="tab-capsule" onclick="switchTab('transcript', this)">Transcript</button>
                 </div>
                 <div class="status-badge-container">
                     <span class="status-badge sb-planned" id="projectStatusBadge">LOADING...</span>
@@ -981,175 +981,53 @@ function toggleNav(event, element) {
                 </div>
             </div>
 
-            <!-- Compliance & Objection Tab -->
-            <div class="content-card tab-content" id="tab-compliance" style="display: none; height: 100%; flex-direction: column; overflow: hidden; gap: 12px; min-height: 520px; padding: 12px; background: #f4f6f9; border-radius: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); flex-shrink: 0;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">Compliance & Objection Console</span>
-                        <select id="comp_stage_select" onchange="changeComplianceStage(this.value)" style="height: 28px; padding: 0 8px; border-radius: 5px; border: 1px solid var(--border); background: #f8fafc; font-weight: 700; color: var(--primary); outline: none; font-size: 12px;">
-                            <option value="Greeting">Greeting & Intro</option>
-                            <option value="Pre-Qualification">Pre-Qualification</option>
-                            <option value="Engineering Proposal">Engineering & Formulas</option>
-                            <option value="Financials & Rebates">Financials & Rebates</option>
-                            <option value="Agreement">ACL Verbal Agreement</option>
-                        </select>
+            <!-- Call Transcript Tab -->
+            <div class="content-card tab-content" id="tab-transcript" style="display: none; height: 100%; flex-direction: column; overflow: hidden; gap: 12px; min-height: 520px; padding: 16px; background: #ffffff; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f8; padding-bottom: 10px; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">📞 Call Transcripts Log</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                            <span style="font-weight: 600; color: var(--text-muted);">System Type:</span>
-                            <span id="comp_system_badge" class="status-badge" style="background: #eef2f8; color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">PV</span>
-                        </div>
-                        <div style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                            <span style="font-weight: 600; color: var(--text-muted);">State:</span>
-                            <span id="comp_state_badge" class="status-badge" style="background: #eef2f8; color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">NSW</span>
-                        </div>
-                        <button type="button" class="btn-save" style="padding: 6px 14px; font-size: 12px; height: 30px; border-radius: 5px;" onclick="saveComplianceState(true)">Save Stage Progress</button>
-                    </div>
+                    <button type="button" class="btn-micro" onclick="loadCallTranscripts()" style="padding: 5px 12px; display: flex; align-items: center; gap: 4px;">
+                        🔄 Refresh
+                    </button>
+                </div>
+                
+                <!-- Transcripts List Table Container -->
+                <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="call_transcripts_container">
+                    <!-- Loaded dynamically -->
                 </div>
 
-                <!-- Main Split-view Container -->
-                <div style="display: flex; gap: 12px; flex: 1; min-height: 0;">
-                    <!-- Left Panel: Live Speech Blueprint -->
-                    <div style="flex: 1.2; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                        
-                        <!-- Telemetry Interruption Alert Banner -->
-                        <div id="telemetry_interruption_alert" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 12px; color: #b45309; font-weight: 600; align-items: center; gap: 8px; flex-shrink: 0;">
-                            <span>⚠️</span>
-                            <span style="flex: 1;" id="telemetry_interruption_msg">COURTESY ALERT: Apologise & Await Turn if interrupted! Customer spoke out of turn.</span>
-                            <button type="button" onclick="resetInterruptionCounter()" style="background:#f59e0b; color:#fff; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">Dismiss</button>
-                        </div>
-
-                        <!-- VoIP Live Telemetry Control bar -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; gap: 10px; flex-shrink: 0;">
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
-                                <span style="font-weight: 700; color: var(--text-muted);">VoIP Rec:</span>
-                                <span id="telemetry_rec_badge" style="background:#10b981; color:#fff; font-weight:800; padding:2px 5px; border-radius:3px; font-size:9.5px; text-transform:uppercase;">ACTIVE</span>
-                                <button type="button" onclick="toggleTelemetryRecording()" style="background:none; border:none; color:var(--primary); text-decoration:underline; font-size:10px; cursor:pointer; padding:0;">Toggle</button>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
-                                <span style="font-weight: 700; color: var(--text-muted);">Interruptions:</span>
-                                <span id="telemetry_interrupt_badge" style="background:#ef4444; color:#fff; font-weight:800; padding:2px 5px; border-radius:3px; font-size:9.5px;">0</span>
-                                <button type="button" onclick="incrementInterruptionCounter()" style="background:var(--primary); color:#fff; border:none; width:16px; height:16px; border-radius:3px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; flex-shrink: 0;">
-                            <span>Live Speech Blueprint</span>
-                            <span style="font-size: 10px; color: var(--text-muted); text-transform: none; font-weight: 500;">Read out loud exactly as shown</span>
-                        </div>
-
-                        <!-- Chronological speech blocks area -->
-                        <div id="compliance_speech_container" style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; padding-right: 4px;">
-                            <!-- Populated dynamically -->
-                        </div>
-
-                        <!-- Engineering and Rebates Metrics Strip -->
-                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-top: 10px; flex-shrink: 0;" id="compliance_metrics_strip">
-                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
-                                Active Stage Reference Metrics
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 11.5px; line-height: 1.4; color: var(--text-dark);" id="compliance_metrics_content">
-                                <!-- Dynamic metrics payload -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Panel: Speed Objection Handler, Checklist & Site-Photos -->
-                    <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 0; overflow-y: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.02); gap: 10px;">
-                        <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f8; padding-bottom: 6px; flex-shrink: 0;">
-                            Objection Handler & Document Checklist
-                        </div>
-
-                        <!-- Real-time AI Closing Advice -->
-                        <div id="compliance_closing_advice_container" style="display: none; background: #fffbeb; border: 1.5px solid var(--accent); border-radius: 8px; padding: 10px; flex-direction: column; gap: 6px; flex-shrink: 0; box-shadow: 0 0 8px rgba(232, 104, 30, 0.15); margin-bottom: 8px;">
-                            <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid rgba(232, 104, 30, 0.2); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
-                                <span>💡 Real-time AI Closing Advice</span>
-                                <span class="pulse-dot" style="width:6px; height:6px; background:var(--accent); border-radius:50%; display:inline-block; box-shadow: 0 0 6px var(--accent);"></span>
-                            </div>
-                            <div id="compliance_closing_advice_content" style="display: flex; flex-direction: column; gap: 6px;">
-                                <!-- Dynamically populated hesitation narratives -->
-                            </div>
-                        </div>
-
-                        <!-- Objection Matrix Tabs -->
-                        <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 6px; flex-shrink: 0;" id="objection_category_tabs">
-                            <button type="button" class="tab-capsule active" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('House/Roof', this)">House/Roof</button>
-                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('PV Tech', this)">PV Tech</button>
-                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Battery/VPP', this)">Battery/VPP</button>
-                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Rebates', this)">Rebates</button>
-                            <button type="button" class="tab-capsule" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="switchObjectionCategory('Legal', this)">Legal</button>
-                        </div>
-
-                        <!-- Objection Q&A List -->
-                        <div id="objection_qa_list" style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
-                            <!-- Populated dynamically -->
-                        </div>
-
-                        <!-- Electricity Bills Quarter-Wise Checklist -->
-                        <div style="background: #eef2f8; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_bills_strip">
-                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; display: flex; justify-content: space-between;">
-                                <span>Quarter-Wise Bills Checklist</span>
-                                <span style="font-size: 10px; color: var(--text-muted); font-weight: normal;" id="avg_bill_calc_display">Avg: 0 kWh/day</span>
-                            </div>
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px;">
-                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
-                                    <input type="checkbox" id="bill_q1" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
-                                    <span>Q1 Bill</span>
-                                </label>
-                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
-                                    <input type="checkbox" id="bill_q2" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
-                                    <span>Q2 Bill</span>
-                                </label>
-                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
-                                    <input type="checkbox" id="bill_q3" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
-                                    <span>Q3 Bill</span>
-                                </label>
-                                <label style="display: flex; flex-direction: column; align-items: center; font-size: 10px; background: #fff; border: 1px solid var(--border); padding: 4px; border-radius: 4px; cursor: pointer; user-select: none;">
-                                    <input type="checkbox" id="bill_q4" onchange="calculateAverageBillUsage()" style="margin-bottom: 2px;">
-                                    <span>Q4 Bill</span>
-                                </label>
-                            </div>
-                            <div style="display: flex; gap: 8px; font-size: 11px; align-items: center;">
-                                <span>Daily Usage:</span>
-                                <input type="number" id="compliance_daily_usage" oninput="saveComplianceState(false)" style="width: 70px; height: 20px; font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px;" placeholder="kWh/day">
-                                <span>kWh/day</span>
-                            </div>
-                        </div>
-
-                        <!-- Required Documentation Checklist -->
-                        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_docs_strip">
-                            <div style="font-size: 10px; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #fde68a; padding-bottom: 4px;">
-                                Required Documents Checklist
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 6px;" id="compliance_docs_content">
-                                <!-- Dynamic document checklist -->
-                            </div>
-                        </div>
-
-                        <!-- Site Photo Placeholders -->
-                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; flex-shrink: 0;" id="compliance_photos_strip">
-                            <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
-                                Structural Site-Photo Placeholders
-                            </div>
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                                <div id="photo_placeholder_rafters" onclick="togglePhotoLogged('rafters')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
-                                    <span style="font-size:12px;">🏠</span>
-                                    <span>Rafters</span>
-                                </div>
-                                <div id="photo_placeholder_meter" onclick="togglePhotoLogged('meter')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
-                                    <span style="font-size:12px;">⚡</span>
-                                    <span>Meter Box</span>
-                                </div>
-                                <div id="photo_placeholder_board" onclick="togglePhotoLogged('board')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
-                                    <span style="font-size:12px;">🎛️</span>
-                                    <span>Switchboard</span>
-                                </div>
-                                <div id="photo_placeholder_roof" onclick="togglePhotoLogged('roof')" style="cursor: pointer; border: 1.5px dashed var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; background: #fff; font-size: 10px; color: var(--text-muted); font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.2s;">
-                                    <span style="font-size:12px;">🛸</span>
-                                    <span>Roof View</span>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Hidden Compliance Legacy Nodes for Script Parity -->
+                <div style="display: none !important;">
+                    <select id="comp_stage_select" onchange="changeComplianceStage(this.value)">
+                        <option value="Greeting">Greeting & Intro</option>
+                        <option value="Pre-Qualification">Pre-Qual</option>
+                        <option value="Engineering Proposal">Engineering</option>
+                        <option value="Financials & Rebates">Rebates</option>
+                        <option value="Agreement">Agreement</option>
+                    </select>
+                    <span id="comp_system_badge">PV</span>
+                    <span id="comp_state_badge">NSW</span>
+                    <div id="telemetry_interruption_alert"><span id="telemetry_interruption_msg"></span></div>
+                    <span id="telemetry_rec_badge">ACTIVE</span>
+                    <span id="telemetry_interrupt_badge">0</span>
+                    <div id="compliance_speech_container"></div>
+                    <div id="compliance_metrics_strip"><div id="compliance_metrics_content"></div></div>
+                    <div id="compliance_closing_advice_container"><div id="compliance_closing_advice_content"></div></div>
+                    <div id="objection_category_tabs"></div>
+                    <div id="objection_qa_list"></div>
+                    <input type="checkbox" id="bill_q1">
+                    <input type="checkbox" id="bill_q2">
+                    <input type="checkbox" id="bill_q3">
+                    <input type="checkbox" id="bill_q4">
+                    <span id="avg_bill_calc_display"></span>
+                    <input type="number" id="compliance_daily_usage">
+                    <div id="compliance_docs_strip"><div id="compliance_docs_content"></div></div>
+                    <div id="compliance_photos_strip">
+                        <div id="photo_placeholder_rafters"></div>
+                        <div id="photo_placeholder_meter"></div>
+                        <div id="photo_placeholder_board"></div>
+                        <div id="photo_placeholder_roof"></div>
                     </div>
                 </div>
             </div>
@@ -1523,7 +1401,12 @@ function toggleNav(event, element) {
             if (localStorage.getItem('voipline_auto_open_compliance_' + currentProjectId) === 'true') {
                 localStorage.removeItem('voipline_auto_open_compliance_' + currentProjectId);
                 setTimeout(() => {
-                    toggleTelephonyConsoleView();
+                    const captionWin = document.getElementById('chrome_live_caption_window');
+                    if (captionWin) {
+                        captionWin.style.display = 'flex';
+                        captionWin.style.opacity = '1';
+                        captionWin.style.transform = 'translateY(0)';
+                    }
                     // Connect indicators
                     const recBadge = document.getElementById('telemetry_rec_badge');
                     const recOverlayBadge = document.getElementById('overlay_rec_badge');
@@ -2528,6 +2411,8 @@ function toggleNav(event, element) {
                 setTimeout(loadSatelliteMap, 100);
             } else if (tabId === 'compliance') {
                 setTimeout(loadComplianceGuidance, 100);
+            } else if (tabId === 'transcript') {
+                setTimeout(loadCallTranscripts, 100);
             }
         }
 
@@ -4790,17 +4675,34 @@ function renderComplianceConsole() {
         }
     });
 
-    // Update Script Teleprompter text
-    const scriptTexts = {
-        'Greeting': "Good day! Thank you for speaking with Ares Energy today. This is Yashil.\n\nAm I speaking with the registered property owner of 7 Girona Street, Piara Waters WA 6112?",
-        'Pre-Qualification': "Ares Energy is a Clean Energy Council approved retailer. To check if your property qualifies for high yield returns, may I confirm if your average quarterly electricity bill is above $300? Also, is your roof tin or tile, and is the house single or double storey?",
-        'Engineering Proposal': "Based on your roof structure, we've designed a premium tier-1 Jinko PV system (N-type technology with a 25-year performance warranty) and a CEC-approved Growatt inverter. Under AS/NZS 5033 wind guidelines, we maintain strict 200mm roof boundary offsets to ensure structural safety. Your average daily yield will be system size * average sun hours * 0.82 efficiency.",
-        'Financials & Rebates': "For your property, we have applied the upfront Federal STC rebate discount directly to the invoice, saving you thousands of dollars. We will submit the network distributor connection pre-approval on your behalf, which takes less than 24 hours. The pricing is fully transparent with no hidden costs.",
-        'Agreement': "Ares Energy complies 100% with the Australian Consumer Law. We provide a mandatory 10-business-day cooling-off period where you can cancel for a full refund of your deposit. I am preparing the agreement for your secure digital signature. Shall we get this locked in today?"
+    window.salesCopilotScripts = {
+        'Greeting': "Good day! Thank you for speaking with Ares Energy today, this is Yashil! How is your day going? 😊\n\nI was looking at your address on Girona Street—Piara Waters is such a beautiful area, especially near the Pavilion! Perfect sunshine for solar. ☀️ Am I speaking with the registered owner?",
+        'Pre-Qualification': "WA summers get pretty warm, so aircons must be running flat out! Haha. 😅 To see if we can help you wipe out those Synergy bills, do you know roughly how much you're spending quarterly? Also, is the house single or double storey?",
+        'Engineering Proposal': "Looking at the satellite view, we've designed a clean system layout to catch all that gorgeous sun. We keep it super simple and handle all details. (Note: Only share AS/NZS wind offset rules or panel degradations if the customer asks!)",
+        'Financials & Rebates': "We apply the Federal STC rebate directly as a discount on your invoice. Also, we love local recommendations! If any of your neighbors on Girona Street sign up with us, we pay you a $200 referral bonus cash! 💵 A nice little bonus for you. 😉",
+        'Agreement': "Under Australian Law, you get a full 10-business-day cooling-off period with 100% refundable deposit. We do all the paperwork, connection approvals, and compliance logs ourselves so you can relax! Shall we get the ball rolling? 🚀"
     };
-    const teleprompterEl = document.getElementById('overlay_script_teleprompter_text');
-    if (teleprompterEl) {
-        teleprompterEl.innerText = scriptTexts[data.current_stage] || '';
+
+    // Update simple stage links highlight
+    const simpleStages = ['Greeting', 'Pre-Qualification', 'Engineering Proposal', 'Financials & Rebates', 'Agreement'];
+    simpleStages.forEach(stg => {
+        const el = document.getElementById(`simple_stage_${stg}`);
+        if (el) {
+            if (stg === data.current_stage) {
+                el.style.color = '#38bdf8';
+                el.style.textDecoration = 'underline';
+            } else {
+                el.style.color = '#64748b';
+                el.style.textDecoration = 'none';
+            }
+        }
+    });
+
+    const promptText = document.getElementById('prompt_text');
+    const promptBadge = document.getElementById('prompt_badge');
+    if (promptText && (!promptBadge || promptBadge.innerText === '👉 SAY THIS')) {
+        promptText.innerText = window.salesCopilotScripts[data.current_stage] || '';
+        promptText.style.color = '#38bdf8';
     }
 
     // Metrics reference update
@@ -5618,12 +5520,11 @@ function initVoiceSocketListeners() {
             dot.style.animation = 'pulse-glowing-dot 1.5s infinite';
         }
 
-        // Directly invoke the CSS transform properties on the right-side #telephony_compliance_overlay drawer node, forcing it to translateX(0)
-        const overlay = document.getElementById('telephony_compliance_overlay');
-        if (overlay) {
-            overlay.style.transition = 'all 0.3s ease-in-out';
-            overlay.style.transform = 'translateX(0)';
-            overlay.style.webkitTransform = 'translateX(0)';
+        const captionWin = document.getElementById('chrome_live_caption_window');
+        if (captionWin) {
+            captionWin.style.display = 'flex';
+            captionWin.style.opacity = '1';
+            captionWin.style.transform = 'translateY(0)';
         }
 
         console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
@@ -6115,6 +6016,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
 
 <!-- Hidden Compliance Legacy Nodes for Script Parity -->
 <div style="display: none !important;">
+    <div id="telephony_compliance_overlay"></div>
     <select id="overlay_stage_select" onchange="changeComplianceStage(this.value)">
         <option value="Greeting">Greeting & Intro</option>
         <option value="Pre-Qualification">Pre-Qual</option>
@@ -6160,7 +6062,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
 </div>
 
 <!-- Floating Google Chrome style Live Caption Window -->
-<div id="chrome_live_caption_window" style="position: fixed; bottom: 24px; right: 24px; width: 480px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,0.4); z-index: 9999; color: #f8fafc; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-family: system-ui, -apple-system, sans-serif; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;">
+<div id="chrome_live_caption_window" style="position: fixed; bottom: 24px; right: 24px; width: 480px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,0.4); z-index: 9999; color: #f8fafc; padding: 12px 16px; display: none; opacity: 0; transform: translateY(10px); flex-direction: column; gap: 8px; font-family: system-ui, -apple-system, sans-serif; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;">
     
     <!-- Top Header Bar -->
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 6px; flex-shrink: 0; user-select: none;">
@@ -6205,7 +6107,7 @@ function triggerSimulatedSpeechPreset(presetKey) {
 </div>
 
 <script>
-function closeLiveCaptionWindow() {
+async function closeLiveCaptionWindow() {
     const win = document.getElementById('chrome_live_caption_window');
     if (win) {
         win.style.opacity = '0';
@@ -6213,6 +6115,25 @@ function closeLiveCaptionWindow() {
         setTimeout(() => {
             win.style.display = 'none';
         }, 200);
+    }
+
+    if (currentProjectId) {
+        try {
+            await fetch('/api/telephony-voice/end-call', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lead_id: currentProjectId,
+                    duration: 65
+                })
+            });
+            const transcriptTab = document.getElementById('tab-transcript');
+            if (transcriptTab && transcriptTab.style.display !== 'none') {
+                loadCallTranscripts();
+            }
+        } catch (e) {
+            console.error('[TRANSCRIPT SAVE] Error calling end-call:', e);
+        }
     }
 }
 
@@ -6240,20 +6161,75 @@ function setCustomerSpeakingState(isSpeaking, text = '') {
             setCustomerSpeakingState(false);
         }, 3000);
     } else {
-        // Revert to default teleprompter stage script
         const stage = currentComplianceStage || 'Greeting';
-        const scriptTexts = {
-            'Greeting': "Good day! Thank you for speaking with Ares Energy today. This is Yashil.\n\nAm I speaking with the registered property owner of 7 Girona Street, Piara Waters WA 6112?",
-            'Pre-Qualification': "Ares Energy is a Clean Energy Council approved retailer. To check if your property qualifies for high yield returns, may I confirm if your average quarterly electricity bill is above $300? Also, is your roof tin or tile, and is the house single or double storey?",
-            'Engineering Proposal': "Based on your roof structure, we've designed a premium tier-1 Jinko PV system (N-type technology with a 25-year performance warranty) and a CEC-approved Growatt inverter. Under AS/NZS 5033 wind guidelines, we maintain strict 200mm roof boundary offsets to ensure structural safety. Your average daily yield will be system size * average sun hours * 0.82 efficiency.",
-            'Financials & Rebates': "For your property, we have applied the upfront Federal STC rebate discount directly to the invoice, saving you thousands of dollars. We will submit the network distributor connection pre-approval on your behalf, which takes less than 24 hours. The pricing is fully transparent with no hidden costs.",
-            'Agreement': "Ares Energy complies 100% with the Australian Consumer Law. We provide a mandatory 10-business-day cooling-off period where you can cancel for a full refund of your deposit. I am preparing the agreement for your secure digital signature. Shall we get this locked in today?"
+        const scripts = window.salesCopilotScripts || {
+            'Greeting': "Good day! Thank you for speaking with Ares Energy today, this is Yashil! How is your day going? 😊\n\nI was looking at your address on Girona Street—Piara Waters is such a beautiful area, especially near the Pavilion! Perfect sunshine for solar. ☀️ Am I speaking with the registered owner?",
+            'Pre-Qualification': "WA summers get pretty warm, so aircons must be running flat out! Haha. 😅 To see if we can help you wipe out those Synergy bills, do you know roughly how much you're spending quarterly? Also, is the house single or double storey?",
+            'Engineering Proposal': "Looking at the satellite view, we've designed a clean system layout to catch all that gorgeous sun. We keep it super simple and handle all details. (Note: Only share AS/NZS wind offset rules or panel degradations if the customer asks!)",
+            'Financials & Rebates': "We apply the Federal STC rebate directly as a discount on your invoice. Also, we love local recommendations! If any of your neighbors on Girona Street sign up with us, we pay you a $200 referral bonus cash! 💵 A nice little bonus for you. 😉",
+            'Agreement': "Under Australian Law, you get a full 10-business-day cooling-off period with 100% refundable deposit. We do all the paperwork, connection approvals, and compliance logs ourselves so you can relax! Shall we get the ball rolling? 🚀"
         };
         
         badge.innerText = '👉 SAY THIS';
         badge.style.background = '#0284c7';
-        promptText.innerText = scriptTexts[stage] || '';
+        promptText.innerText = scripts[stage] || '';
         promptText.style.color = '#38bdf8';
+    }
+}
+
+async function loadCallTranscripts() {
+    const container = document.getElementById('call_transcripts_container');
+    if (!container) return;
+    
+    if (!projectData || !projectData.project_no) {
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Loading project data...</div>';
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/projects/${projectData.project_no}/call-logs`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.logs && data.logs.length > 0) {
+                container.innerHTML = data.logs.map(log => {
+                    const formattedDate = new Date(log.timestamp).toLocaleString('en-AU', {
+                        timeZone: 'Australia/Perth',
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                    });
+                    
+                    const durationText = log.duration ? `${Math.floor(log.duration / 60)}m ${log.duration % 60}s` : '0s';
+                    const agentName = log.agent_name || 'System Operator';
+                    
+                    return `
+                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--primary);">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span>📅 ${formattedDate}</span>
+                                    <span>⏱️ Duration: ${durationText}</span>
+                                    <span>👤 Handled By: ${agentName}</span>
+                                </div>
+                                <span style="font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">Incoming</span>
+                            </div>
+                            <div style="font-size: 13px; line-height: 1.5; color: var(--text-dark); white-space: pre-wrap; font-style: italic; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.04);">
+                                ${log.transcript_text}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border: 1.5px dashed var(--border); border-radius: 8px; color: var(--text-muted); gap: 8px;">
+                        <span style="font-size: 32px;">📞</span>
+                        <div style="font-weight: 600;">No call transcripts logged yet</div>
+                        <div style="font-size: 11.5px; text-align: center;">When you complete a live call on this lead, the fully parsed dialog transcript will automatically save here.</div>
+                    </div>
+                `;
+            }
+        }
+    } catch(err) {
+        console.error('[TRANSCRIPTS] Error loading call logs:', err);
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:red;">Failed to load call transcripts.</div>';
     }
 }
 
