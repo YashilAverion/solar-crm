@@ -106,6 +106,11 @@
         .tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
         .tab-capsule:hover:not(.active) { background: #f1f5f9; color: var(--text-dark); }
         
+        .sub-tabs-header { display: flex; gap: 8px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .sub-tab-capsule { background: #f8fafc; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 15px; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .sub-tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 1px 3px rgba(28,53,87,0.15); }
+        .sub-tab-capsule:hover:not(.active) { background: #e2e8f0; color: var(--text-dark); }
+        
         .status-badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); letter-spacing: 0.5px; }
         .sb-planned { background: #eef2f8; color: #1c3557; border-color: #c5d3e8; }
         .sb-inprog { background: #fffbeb; color: #b45309; border-color: #fde68a; }
@@ -688,9 +693,15 @@ function toggleNav(event, element) {
             <div class="tabs-header">
                 <div class="tabs-capsules">
                     <button class="tab-capsule active" onclick="switchTab('sales', this)">Sales Input</button>
-                    <button class="tab-capsule" onclick="switchTab('installation', this)">Installation Data</button>
-                    <button class="tab-capsule" onclick="switchTab('documents', this)">Documents</button>
+                    <button class="tab-capsule" onclick="switchTab('documents', this)">System Documentation</button>
                     <button class="tab-capsule" onclick="switchTab('satellite', this)">Satellite Roof View</button>
+                    <button class="tab-capsule" onclick="switchTab('follow-up', this)">Follow up</button>
+                    <button class="tab-capsule" onclick="switchTab('notes', this)">Notes</button>
+                    <button class="tab-capsule" onclick="switchTab('installation', this)">Installation Data</button>
+                    <button class="tab-capsule" onclick="switchTab('payment', this)">Payment</button>
+                    <button class="tab-capsule" onclick="switchTab('maintenance', this)">Maintenance</button>
+                    <button class="tab-capsule" onclick="switchTab('feedback', this)">Feedback</button>
+                    <button class="tab-capsule" onclick="switchTab('pl', this)">P&L</button>
                     <button class="tab-capsule" onclick="switchTab('transcript', this)">Transcript</button>
                 </div>
                 <div class="status-badge-container">
@@ -954,19 +965,338 @@ function toggleNav(event, element) {
                 </form>
             </div>
 
-            <!-- Installation Data Tab -->
-            <div class="content-card tab-content" id="tab-installation" style="display: none;">
-                <div class="section-title">Installation Data</div>
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); height: 55vh;">
-                    <p>Installation Data coming soon...</p>
+            <!-- System Documentation Tab -->
+            <div class="content-card tab-content" id="tab-documents" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">📂 System Documentation</div>
+                <div class="dashboard-workspace" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- File Upload Panel -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--primary);">Upload New Document</h4>
+                        <div class="drag-drop-zone" onclick="document.getElementById('sysDocInput').click()" style="padding: 30px;">
+                            <span>Drag & Drop files here or click to browse</span>
+                            <input type="file" id="sysDocInput" style="display:none;">
+                        </div>
+                    </div>
+                    <!-- Document List Panel -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--primary);">Uploaded Files</h4>
+                        <ul class="doc-logs">
+                            <li><span>Quotation_V2.pdf</span><a href="#">Preview</a></li>
+                            <li><span>Engineering_Design.png</span><a href="#">Preview</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Documents Tab -->
-            <div class="content-card tab-content" id="tab-documents" style="display: none;">
-                <div class="section-title">Documents</div>
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); height: 55vh;">
-                    <p>Documents coming soon...</p>
+            <!-- Follow up Tab -->
+            <div class="content-card tab-content" id="tab-follow-up" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">📅 Project Follow up & Tasks</div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <!-- Log Follow-up Form -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--primary);">Schedule Follow-up</h4>
+                        <form style="display: flex; flex-direction: column; gap: 10px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">TASK TITLE</label>
+                            <input type="text" placeholder="e.g. Call client for NMI confirmation" style="height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 12px; background: #fff;">
+                            
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">DUE DATE</label>
+                            <input type="date" style="height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 12px; background: #fff;">
+                            
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">ASSIGNED REPRESENTATIVE</label>
+                            <select style="height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 12px; background:#fff;">
+                                <option>Sales Rep</option>
+                                <option>Admin Officer</option>
+                            </select>
+                            
+                            <button type="button" class="btn-save" style="height: 32px; font-size: 12px; margin-top: 5px;">Create Task</button>
+                        </form>
+                    </div>
+                    <!-- Follow-up Log/Checklist -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--primary);">Open Tasks Checklist</h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th style="padding: 8px; border-bottom: 2px solid var(--border); text-align: left;">Task</th>
+                                    <th style="padding: 8px; border-bottom: 2px solid var(--border); text-align: left;">Due Date</th>
+                                    <th style="padding: 8px; border-bottom: 2px solid var(--border); text-align: left;">Rep</th>
+                                    <th style="padding: 8px; border-bottom: 2px solid var(--border); text-align: center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">Welcome onboarding call</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">15 Jul 2026</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">Yashil Averion</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border); text-align: center;"><span style="background: #edfcf2; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">DONE</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">Submit grid request</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">20 Jul 2026</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">Admin Assistant</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid var(--border); text-align: center;"><span style="background: #fffbeb; color: #d97706; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PENDING</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Tab -->
+            <div class="content-card tab-content" id="tab-notes" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">📝 Project Notes & Interaction History</div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <!-- Add Note Panel -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--primary);">Add New Note</h4>
+                        <textarea placeholder="Write note details here..." style="width: 100%; height: 120px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; resize: none; background: #fff;"></textarea>
+                        <button type="button" class="btn-save" style="width: 100%; height: 32px; font-size: 12px; margin-top: 10px;">Save Note</button>
+                    </div>
+                    <!-- Note Logs -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+                        <h4 style="margin: 0 0 4px 0; font-size: 13px; color: var(--primary);">Notes Timeline</h4>
+                        <div style="border-left: 2px solid var(--border); padding-left: 12px; margin-left: 6px;">
+                            <div style="margin-bottom: 14px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">
+                                    <span>Yashil Averion (Admin)</span>
+                                    <span>14 Jul 2026, 01:10 am</span>
+                                </div>
+                                <p style="font-size: 12px; margin: 0; color: var(--text-dark); line-height: 1.4;">Spoke with customer. They confirmed that a single-phase meter is currently installed but are looking to upgrade to three-phase.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installation Data Tab -->
+            <div class="content-card tab-content" id="tab-installation" style="display: none; flex-direction: column; gap: 12px;">
+                <div class="section-title">🔧 Installation Data Management</div>
+                
+                <!-- Horizontal Sub-tab bar -->
+                <div class="sub-tabs-header">
+                    <button class="sub-tab-capsule active" onclick="switchSubTab('installation', 'meter', this)">Meter Application</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('installation', 'schedule', this)">Installation Schedule</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('installation', 'rebate', this)">Rebate Documentation</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('installation', 'material', this)">Material Purchase</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('installation', 'invoices', this)">Installation Invoices</button>
+                </div>
+                
+                <!-- Sub-tab content containers -->
+                <div class="sub-tab-contents" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; flex: 1;">
+                    <!-- Meter Application -->
+                    <div class="sub-tab-content installation-subtab" id="subtab-installation-meter" style="display: block;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Meter & Grid Application Status</h4>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div class="field"><label>Grid Application Status</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Submitted</option><option>Approved</option><option>Rejected</option></select></div>
+                            <div class="field"><label>NMI Number</label><input type="text" placeholder="Enter NMI" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; background: #fff;"></div>
+                            <div class="field"><label>Phase Count</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Single Phase</option><option>Three Phase</option></select></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Installation Schedule -->
+                    <div class="sub-tab-content installation-subtab" id="subtab-installation-schedule" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Installer Assignment & Scheduling</h4>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div class="field"><label>Scheduled Date</label><input type="date" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; background: #fff;"></div>
+                            <div class="field"><label>Lead Installer</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Installer John</option><option>Installer Dave</option></select></div>
+                            <div class="field"><label>Installation Status</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Pending</option><option>In Progress</option><option>Completed</option></select></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rebate Documentation -->
+                    <div class="sub-tab-content installation-subtab" id="subtab-installation-rebate" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">STC & Government Rebate Documentation</h4>
+                        <div class="drag-drop-zone" style="padding: 20px; margin-bottom: 12px;">
+                            <span>Drop rebate forms or STC assignment agreements here</span>
+                        </div>
+                        <ul class="doc-logs">
+                            <li><span>STC_Signed_Agreement.pdf</span><a href="#">Download</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Material Purchase -->
+                    <div class="sub-tab-content installation-subtab" id="subtab-installation-material" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Warehouse & Material Procurement Log</h4>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div class="field"><label>Panel Status</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>In Stock</option><option>Ordered</option></select></div>
+                            <div class="field"><label>Inverter Status</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>In Stock</option><option>Ordered</option></select></div>
+                            <div class="field"><label>Racking Procurement</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Acquired</option><option>Ordered</option></select></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Installation Invoices -->
+                    <div class="sub-tab-content installation-subtab" id="subtab-installation-invoices" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Procurement & Contractor Invoices</h4>
+                        <div class="drag-drop-zone" style="padding: 20px; margin-bottom: 12px;">
+                            <span>Upload installation contractor / supplier invoices</span>
+                        </div>
+                        <ul class="doc-logs">
+                            <li><span>Contractor_Invoice_101.pdf</span><a href="#">Preview</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Tab -->
+            <div class="content-card tab-content" id="tab-payment" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">💰 Payment & Milestone Tracking</div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <!-- Milestone 1 -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="margin: 0 0 6px 0; font-size: 13px; color: var(--primary);">Milestone 1: Deposit</h4>
+                            <span style="font-size: 18px; font-weight: 800; color: var(--text-dark);">$758.11</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #edfcf2; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">RECEIVED</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">13 Jul 2026</span>
+                        </div>
+                    </div>
+                    <!-- Milestone 2 -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="margin: 0 0 6px 0; font-size: 13px; color: var(--primary);">Milestone 2: Rebate STC Claim</h4>
+                            <span style="font-size: 18px; font-weight: 800; color: var(--text-dark);">$5,790.12</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #fffbeb; color: #d97706; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">CLAIM SUBMITTED</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">-</span>
+                        </div>
+                    </div>
+                    <!-- Milestone 3 -->
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="margin: 0 0 6px 0; font-size: 13px; color: var(--primary);">Milestone 3: Balance Installation</h4>
+                            <span style="font-size: 18px; font-weight: 800; color: var(--text-dark);">$1,500.00</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #f1f5f9; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PENDING INSTALL</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance Tab -->
+            <div class="content-card tab-content" id="tab-maintenance" style="display: none; flex-direction: column; gap: 12px;">
+                <div class="section-title">🔧 System Maintenance & Fault Logs</div>
+                
+                <!-- Horizontal Sub-tab bar -->
+                <div class="sub-tabs-header">
+                    <button class="sub-tab-capsule active" onclick="switchSubTab('maintenance', 'details', this)">Details</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('maintenance', 'fault', this)">Fault</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('maintenance', 'notes', this)">Maintenance Notes</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('maintenance', 'mtc', this)">MTC Documentation</button>
+                    <button class="sub-tab-capsule" onclick="switchSubTab('maintenance', 'invoices', this)">Invoices</button>
+                </div>
+                
+                <!-- Sub-tab content containers -->
+                <div class="sub-tab-contents" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; flex: 1;">
+                    <!-- Details -->
+                    <div class="sub-tab-content maintenance-subtab" id="subtab-maintenance-details" style="display: block;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Maintenance Agreement & System Details</h4>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div class="field"><label>Warranty Period</label><input type="text" value="5 Years Workmanship" readonly style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; background:#f8fafc;"></div>
+                            <div class="field"><label>Maintenance Status</label><select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;"><option>Active Warranty</option><option>Out of Warranty</option></select></div>
+                            <div class="field"><label>Last Service Date</label><input type="date" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; background: #fff;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fault -->
+                    <div class="sub-tab-content maintenance-subtab" id="subtab-maintenance-fault" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">System Fault Reports & Diagnostics</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; gap: 10px;">
+                                <select style="height: 32px; width: 150px; border: 1px solid var(--border); border-radius: 6px; background:#fff;"><option>Inverter Error</option><option>Panel Isolation</option><option>Battery Fault</option></select>
+                                <input type="text" placeholder="Describe fault code / symptoms" style="flex: 1; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; background: #fff;">
+                                <button type="button" class="btn-save" style="height: 32px; font-size: 12px; margin-top:0;">Log Fault</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Maintenance Notes -->
+                    <div class="sub-tab-content maintenance-subtab" id="subtab-maintenance-notes" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Technician Logs & Maintenance Notes</h4>
+                        <textarea placeholder="Write technician visit report..." style="width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; resize: none; margin-bottom: 10px; background: #fff;"></textarea>
+                        <button type="button" class="btn-save" style="height: 32px; font-size: 12px; margin-top:0;">Add Log Entry</button>
+                    </div>
+                    
+                    <!-- MTC Documentation -->
+                    <div class="sub-tab-content maintenance-subtab" id="subtab-maintenance-mtc" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Manufacturer Testing & Commissioning (MTC) Files</h4>
+                        <div class="drag-drop-zone" style="padding: 20px; margin-bottom: 12px;">
+                            <span>Upload MTC files, solar safety certificates, or compliance sheets</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Invoices -->
+                    <div class="sub-tab-content maintenance-subtab" id="subtab-maintenance-invoices" style="display: none;">
+                        <h4 style="margin:0 0 12px 0; font-size: 13px; color: var(--primary);">Service Call Invoices</h4>
+                        <div class="drag-drop-zone" style="padding: 20px; margin-bottom: 12px;">
+                            <span>Upload warranty service / repair call invoices</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Tab -->
+            <div class="content-card tab-content" id="tab-feedback" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">⭐ Customer Feedback & Survey</div>
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 500px;">
+                    <form style="display: flex; flex-direction: column; gap: 14px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Overall Customer Rating</label>
+                            <select style="height:32px; border:1px solid var(--border); border-radius:6px; background:#fff;">
+                                <option>⭐⭐⭐⭐⭐ (Excellent)</option>
+                                <option>⭐⭐⭐⭐ (Good)</option>
+                                <option>⭐⭐⭐ (Average)</option>
+                                <option>⭐⭐ (Fair)</option>
+                                <option>⭐ (Poor)</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Customer Testimonial / Feedback</label>
+                            <textarea placeholder="Write review comments..." style="height: 80px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; resize: none; background: #fff;"></textarea>
+                        </div>
+                        <button type="button" class="btn-save" style="height: 34px; font-size: 12px; margin-top: 5px;">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- P&L Tab -->
+            <div class="content-card tab-content" id="tab-pl" style="display: none; flex-direction: column; gap: 16px;">
+                <div class="section-title">📊 Profit & Loss Financial Sheet</div>
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8fafc; border-bottom: 2px solid var(--border);">
+                                <th style="padding: 10px; text-align: left; font-weight: 700;">Financial Item</th>
+                                <th style="padding: 10px; text-align: right; font-weight: 700;">Amount ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">Gross Sales Contract Price</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700; color: var(--text-dark);">$7,581.08</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">(+) STC Rebate / Incentive</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #16a34a; font-weight: 700;">+$5,790.12</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626;">(-) Equipment Procurement Cost (Modules/Inverter/Racking)</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #dc2626; font-weight: 700;">-$4,200.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626;">(-) Installation Contractor Labor Cost</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #dc2626; font-weight: 700;">-$1,800.00</td>
+                            </tr>
+                            <tr style="background: #f8fafc; font-size: 14px; border-top: 2px solid var(--border);">
+                                <td style="padding: 12px; font-weight: 800; color: var(--primary);">NET PROFIT MARGIN</td>
+                                <td style="padding: 12px; text-align: right; font-weight: 800; color: #16a34a;">+$7,371.20</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -3480,6 +3810,27 @@ function toggleNav(event, element) {
                 </html>
             `);
             fullSizeWindow.document.close();
+        }
+
+        function switchSubTab(mainTabId, subTabId, btnElement) {
+            // Remove active state from all sister subtab buttons
+            const subtabsHeader = btnElement.closest('.sub-tabs-header');
+            if (subtabsHeader) {
+                subtabsHeader.querySelectorAll('.sub-tab-capsule').forEach(btn => btn.classList.remove('active'));
+            }
+            btnElement.classList.add('active');
+
+            // Hide all sub-tab contents of this main tab
+            const mainTab = document.getElementById('tab-' + mainTabId);
+            if (mainTab) {
+                mainTab.querySelectorAll('.' + mainTabId + '-subtab').forEach(el => el.style.display = 'none');
+            }
+            
+            // Show target sub-tab content
+            const targetBlock = document.getElementById(`subtab-${mainTabId}-${subTabId}`);
+            if (targetBlock) {
+                targetBlock.style.display = 'block';
+            }
         }
 
         function switchTab(tabId, btnElement) {
