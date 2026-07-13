@@ -1142,10 +1142,6 @@ function toggleNav(event, element) {
                         <input type="number" id="payTotalAmount" placeholder="0.00" oninput="calculatePaymentBalance()" style="height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600; outline: none; background: #fff;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; width: 180px;">
-                        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Deposit Amount ($)</label>
-                        <input type="number" id="payDepositAmount" placeholder="0.00" oninput="calculatePaymentBalance()" style="height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600; outline: none; background: #fff;">
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 6px; width: 180px;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Balance Amount ($)</label>
                         <input type="number" id="payBalanceAmount" placeholder="0.00" readonly style="height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
                     </div>
@@ -3840,8 +3836,16 @@ function toggleNav(event, element) {
 
         function calculatePaymentBalance() {
             const total = parseFloat(document.getElementById('payTotalAmount').value) || 0;
-            const deposit = parseFloat(document.getElementById('payDepositAmount').value) || 0;
-            document.getElementById('payBalanceAmount').value = (total - deposit).toFixed(2);
+            let paidSum = 0;
+            const rows = document.querySelectorAll('#paymentLedgerBody tr');
+            rows.forEach(row => {
+                const amountCell = row.cells[1];
+                if (amountCell) {
+                    const text = amountCell.textContent.replace('$', '').trim();
+                    paidSum += parseFloat(text) || 0;
+                }
+            });
+            document.getElementById('payBalanceAmount').value = (total - paidSum).toFixed(2);
         }
 
         function openAddPaymentModal() {
@@ -3907,10 +3911,6 @@ function toggleNav(event, element) {
                         <td style="padding: 10px;">Admin Account</td>
                     `;
                     tbody.appendChild(row);
-                    
-                    const currentDeposit = parseFloat(document.getElementById('payDepositAmount').value) || 0;
-                    const newDeposit = currentDeposit + parseFloat(amount);
-                    document.getElementById('payDepositAmount').value = newDeposit.toFixed(2);
                     calculatePaymentBalance();
 
                     Swal.fire({
@@ -3951,9 +3951,7 @@ function toggleNav(event, element) {
                 setTimeout(loadCallTranscripts, 100);
             } else if (tabId === 'payment') {
                 const sellPrice = parseFloat(document.getElementById('td_selling_price')?.value) || 0;
-                const deposit = parseFloat(document.getElementById('td_deposit')?.value) || 0;
                 document.getElementById('payTotalAmount').value = sellPrice.toFixed(2);
-                document.getElementById('payDepositAmount').value = deposit.toFixed(2);
                 calculatePaymentBalance();
             }
         }
