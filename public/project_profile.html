@@ -990,38 +990,31 @@ function toggleNav(event, element) {
                                 Design the high-resolution roof layout directly in Pylon Solar. CRM will sync the panel counts, system size, and layout image to generate quotations and compliance documents.
                             </p>
                             <button type="button" onclick="createPylonProject()" id="btn_create_pylon" style="height: 38px; padding: 0 24px; background: #0070f3; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,112,243,0.25);">
-                                🚀 Create & Open Pylon Project
+                                🚀 Link Pylon Project
                             </button>
                         </div>
 
                         <!-- When project is linked -->
-                        <div id="pylon_linked_view" style="display: none; width: 100%; height: 100%; position: relative; flex-direction: column; justify-content: space-between;">
-                            <!-- Layout Image Display -->
-                            <div style="flex: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: #eaeaea; display: flex; align-items: center; justify-content: center; position: relative; min-height: 380px;">
-                                <img id="pylon_layout_image_display" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;">
-                                <div id="pylon_no_image_placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted);">
-                                    <span style="font-size: 32px;">📐</span>
-                                    <span style="font-size: 12px; font-weight: 600;">No layout image synced. Click "Sync Design" to pull Pylon design assets.</span>
+                        <div id="pylon_linked_view" style="display: none; width: 100%; height: 100%; min-height: 680px; flex-direction: column; justify-content: space-between; gap: 12px;">
+                            <!-- Header Sync Bar -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; background: #f8fafc; font-size: 12px; font-weight: 700;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="color: #22c55e;">●</span> Linked to Pylon Project: <span id="pylon_project_id_badge" style="color: var(--primary);">None</span>
                                 </div>
-
-                                <!-- Floating status badge -->
-                                <div style="position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.85); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(4px);">
-                                    <span style="color: #22c55e;">●</span> Linked to Pylon Project: <span id="pylon_project_id_badge" style="color: #38bdf8;">None</span>
-                                </div>
-
-                                <!-- Floating Controls (Right Top) -->
-                                <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px;">
-                                    <button type="button" onclick="openPylonEditor()" style="height: 32px; padding: 0 14px; background: #ffffff; color: var(--text-dark); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                        🚀 Open Pylon Editor
-                                    </button>
-                                    <button type="button" onclick="syncPylonDesign()" id="btn_sync_pylon" style="height: 32px; padding: 0 14px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(34,197,94,0.25);">
+                                <div>
+                                    <button type="button" onclick="syncPylonDesign()" id="btn_sync_pylon" style="height: 28px; padding: 0 16px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(34,197,94,0.15);">
                                         🔄 Sync Design Layout
                                     </button>
                                 </div>
                             </div>
 
+                            <!-- Embedded Live Pylon Editor IFrame -->
+                            <div style="flex: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #1e1e1e; min-height: 600px; position: relative;">
+                                <iframe id="pylon_editor_iframe" src="" style="width: 100%; height: 100%; min-height: 600px; border: none;" allow="geolocation; clipboard-write"></iframe>
+                            </div>
+
                             <!-- Bottom Status Summary Bar -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; margin-top: 12px; font-size: 12px; font-weight: 700; color: var(--text-dark);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; color: var(--text-dark);">
                                 <div>📅 Imagery Source: <span style="color: var(--primary);">Pylon Premium High-Res (Nearmap)</span></div>
                                 <div style="display: flex; gap: 16px;">
                                     <div id="pylon_sld_link_container" style="display: none;">📄 SLD Sheet: <a id="pylon_sld_pdf_link" href="#" target="_blank" style="color: #0070f3; text-decoration: underline;">View Generated PDF</a></div>
@@ -2660,16 +2653,15 @@ function toggleNav(event, element) {
                 document.getElementById('pylon_linked_view').style.display = 'flex';
                 document.getElementById('pylon_project_id_badge').innerText = pylonProjectId;
 
-                const imgDisplay = document.getElementById('pylon_layout_image_display');
-                const placeholder = document.getElementById('pylon_no_image_placeholder');
-
-                if (pylonLayoutImage) {
-                    imgDisplay.src = pylonLayoutImage;
-                    imgDisplay.style.display = 'block';
-                    placeholder.style.display = 'none';
-                } else {
-                    imgDisplay.style.display = 'none';
-                    placeholder.style.display = 'flex';
+                const iframe = document.getElementById('pylon_editor_iframe');
+                if (iframe) {
+                    const targetSrc = pylonProjectId.startsWith('pyl_mock_') 
+                        ? `/pylon_editor_mock.html?id=${currentProjectId}` 
+                        : `https://app.getpylon.com/projects/${pylonProjectId}`;
+                    
+                    if (!iframe.src || !iframe.src.includes(targetSrc)) {
+                        iframe.src = targetSrc;
+                    }
                 }
 
                 // Update Stats
@@ -2740,14 +2732,10 @@ function toggleNav(event, element) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Project Linked!',
-                        text: 'Pylon project has been created successfully. Opening designer...',
+                        text: 'Pylon project has been linked successfully. Loading designer...',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    
-                    setTimeout(() => {
-                        window.open(data.url, '_blank');
-                    }, 1000);
                 } else {
                     if (btn) btn.disabled = false;
                     Swal.fire('Error', data.error || 'Failed to link Pylon project.', 'error');
