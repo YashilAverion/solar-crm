@@ -4511,6 +4511,32 @@ async function loadComplianceGuidance() {
                 }
 
                 renderComplianceConsole();
+                
+                // Override with tailored greeting from database analysis
+                if (data.tailored_greeting) {
+                    if (window.salesCopilotScripts) {
+                        window.salesCopilotScripts.Greeting = data.tailored_greeting;
+                    }
+                    if (currentComplianceStage === 'Greeting') {
+                        const promptText = document.getElementById('prompt_text');
+                        if (promptText) {
+                            promptText.innerText = data.tailored_greeting;
+                        }
+                    }
+                }
+                
+                // Show previous context banner if present
+                const analysisBanner = document.getElementById('previous_call_analysis_banner');
+                const analysisText = document.getElementById('previous_call_analysis_text');
+                if (analysisBanner && analysisText) {
+                    if (data.previous_analysis) {
+                        analysisText.innerText = "Context: " + data.previous_analysis;
+                        analysisBanner.style.display = 'flex';
+                    } else {
+                        analysisBanner.style.display = 'none';
+                    }
+                }
+
                 applyConsoleToggleUI();
                 updateTelemetryUI(null);
                 startComplianceTelemetryLoop();
@@ -6107,6 +6133,12 @@ function triggerSimulatedSpeechPreset(presetKey) {
             <!-- Close Button -->
             <button type="button" onclick="closeLiveCaptionWindow()" style="background: none; border: none; font-size: 14px; font-weight: bold; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 2px; transition: color 0.2s;" onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#94a3b8'">✕</button>
         </div>
+    </div>
+
+    <!-- Previous Call Context Analysis Banner -->
+    <div id="previous_call_analysis_banner" style="display: none; background: rgba(56, 189, 248, 0.15); border: 1.5px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #38bdf8; margin-bottom: 4px; flex-shrink: 0; align-items: center; gap: 6px; font-family: system-ui, sans-serif;">
+        <span>💡</span>
+        <span style="flex: 1; font-weight: 600;" id="previous_call_analysis_text">Previous: --</span>
     </div>
 
     <!-- Live Customer Caption Text Area -->

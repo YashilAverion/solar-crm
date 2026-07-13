@@ -5116,7 +5116,7 @@ app.delete('/api/voip/phonebook/:id', (req, res) => {
 
 
 // ── COMPLIANCE & OBJECTION HANDLING APIs ───────────────────────────
-function sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow, voiceSyncRow) {
+function sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow, voiceSyncRow, previousAnalysis = null, tailoredGreeting = "") {
     let peakSunHours = 3.9;
     if (state_code === 'VIC' || state_code === 'TAS') peakSunHours = 3.6;
     else if (state_code === 'QLD' || state_code === 'WA') peakSunHours = 4.2;
@@ -5172,6 +5172,8 @@ function sendCompliancePayload(res, state_code, system_type, current_stage, mand
         state_code,
         system_type,
         current_stage,
+        previous_analysis: previousAnalysis,
+        tailored_greeting: tailoredGreeting,
         script: {
             stage: current_stage,
             mandatory_questions: mandatoryQuestions
@@ -5242,12 +5244,15 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
 
                 if (lead_id) {
                     db.get(
-                        "SELECT compliance_stage, compliance_completed_questions, compliance_checklist_status FROM leads WHERE id = ?",
+                        "SELECT project_no, compliance_stage, compliance_completed_questions, compliance_checklist_status FROM leads WHERE id = ?",
                         [lead_id],
                         (leadErr, leadRow) => {
                             if (leadErr) {
                                 console.error('[COMPLIANCE ENGINE] Lead fetch error:', leadErr.message);
                             }
+                            
+                            const projectNo = leadRow ? leadRow.project_no : '';
+
                             db.get(
                                 "SELECT * FROM sales_telemetry_live_state WHERE lead_id = ?",
                                 [lead_id],
@@ -5262,7 +5267,39 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
                                             if (voiceErr) {
                                                 console.error('[COMPLIANCE ENGINE] Voice sync fetch error:', voiceErr.message);
                                             }
-                                            sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow, voiceRow);
+                                            
+                                            if (projectNo) {
+                                                db.all(
+                                                    "SELECT transcript_text FROM call_logs WHERE project_number = ? AND transcript_text != '' ORDER BY id DESC LIMIT 3",
+                                                    [projectNo],
+                                                    (logErr, logRows) => {
+                                                        let previousTranscriptAnalysis = null;
+                                                        let tailoredGreeting = "";
+
+                                                        if (logRows && logRows.length > 0) {
+                                                            const combinedText = logRows.map(r => r.transcript_text).join(' ').toLowerCase();
+                                                            
+                                                            if (combinedText.includes('battery') || combinedText.includes('fox ess')) {
+                                                                previousTranscriptAnalysis = "Discussed battery storage options (Fox ESS) to save on daily bills.";
+                                                                tailoredGreeting = "Hi there! Welcome back to Ares Energy! Last time we spoke, we were talking about your Synergy bills and looking into a Fox ESS battery option for your double-storey house. How have things been going? Am I speaking with the registered owner?";
+                                                            } else if (combinedText.includes('price') || combinedText.includes('expensive') || combinedText.includes('quote') || combinedText.includes('dollars') || combinedText.includes('$')) {
+                                                                previousTranscriptAnalysis = "Discussed financial pricing, quotes, and panel rebates.";
+                                                                tailoredGreeting = "Hi there! Welcome back to Ares Energy! Last time we discussed the premium Jinko panels and rebates. I know we were looking at pricing, so I've worked out a special tailored proposal for you today. Am I speaking with the registered owner?";
+                                                            } else if (combinedText.includes('roof') || combinedText.includes('tin') || combinedText.includes('tile') || combinedText.includes('shade')) {
+                                                                previousTranscriptAnalysis = "Discussed roof type (tin/tile), shading, and orientation.";
+                                                                tailoredGreeting = "Hi there! Welcome back to Ares Energy! Last time we discussed your roof structure and shading near the Pavilion. We've optimized the layout now. Am I speaking with the registered owner?";
+                                                            } else {
+                                                                previousTranscriptAnalysis = "Had a general conversation regarding solar PV system sizing.";
+                                                                tailoredGreeting = "Hi there! Welcome back to Ares Energy! Glad to catch you again. Last time we had a great chat about your solar project. How are you doing today? Am I speaking with the registered owner?";
+                                                            }
+                                                        }
+                                                        
+                                                        sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow, voiceRow, previousTranscriptAnalysis, tailoredGreeting);
+                                                    }
+                                                );
+                                            } else {
+                                                sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, leadRow, telemetryRow, voiceRow, null, "");
+                                            }
                                         }
                                     );
                                 }
@@ -5270,7 +5307,7 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
                         }
                     );
                 } else {
-                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, null, null, null);
+                    sendCompliancePayload(res, state_code, system_type, current_stage, mandatoryQuestions, matrixRows, null, null, null, null, "");
                 }
             });
         }
