@@ -2655,7 +2655,7 @@ function toggleNav(event, element) {
 
                 const iframe = document.getElementById('pylon_editor_iframe');
                 if (iframe) {
-                    const targetSrc = `/pylon_editor_mock.html?id=${currentProjectId}`;
+                    const targetSrc = `/pylon-editor/projects/${pylonProjectId}`;
                     
                     if (!iframe.src || !iframe.src.includes(targetSrc)) {
                         iframe.src = targetSrc;

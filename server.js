@@ -1721,7 +1721,152 @@ app.put('/api/projects/details/:id/notes', (req, res) => {
     });
 });
 
-// ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
+// ── SECURE PYLON SESSION PROXY ───────────────────────────
+let pylonSessionCookie = process.env.PYLON_SESSION_COOKIE || null;
+let pylonSessionExpiry = null;
+
+async function getPylonSession() {
+    // If a static session cookie is explicitly set in .env, use it
+    if (process.env.PYLON_SESSION_COOKIE) {
+        return process.env.PYLON_SESSION_COOKIE;
+    }
+
+    const email = process.env.PYLON_EMAIL;
+    const password = process.env.PYLON_PASSWORD;
+    
+    if (!email || !password) {
+        throw new Error('Pylon credentials (PYLON_EMAIL/PYLON_PASSWORD) or master session (PYLON_SESSION_COOKIE) are not configured in CRM .env');
+    }
+    
+    if (pylonSessionCookie && pylonSessionExpiry && Date.now() < pylonSessionExpiry) {
+        return pylonSessionCookie;
+    }
+    
+    console.log('Logging in to Pylon to establish master session...');
+    const fetch = require('node-fetch');
+    
+    // 1. GET login page to get CSRF token and initial cookies
+    const loginPageRes = await fetch('https://app.getpylon.com/login', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+    });
+    
+    const loginHtml = await loginPageRes.text();
+    const tokenMatch = loginHtml.match(/name="_token"\s+value="([^"]+)"/);
+    if (!tokenMatch) {
+        throw new Error('Failed to parse CSRF token from Pylon login page');
+    }
+    const csrfToken = tokenMatch[1];
+    
+    // Extract cookies
+    const rawCookies = loginPageRes.headers.raw()['set-cookie'] || [];
+    const cookiesMap = {};
+    rawCookies.forEach(c => {
+        const parts = c.split(';')[0].split('=');
+        if (parts.length >= 2) {
+            cookiesMap[parts[0].trim()] = parts.slice(1).join('=').trim();
+        }
+    });
+    
+    const cookieHeader = Object.entries(cookiesMap).map(([k, v]) => `${k}=${v}`).join('; ');
+    
+    // 2. Submit credentials via POST
+    const params = new URLSearchParams();
+    params.append('_token', csrfToken);
+    params.append('email', email);
+    params.append('password', password);
+    
+    const loginPostRes = await fetch('https://app.getpylon.com/login', {
+        method: 'POST',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': cookieHeader
+        },
+        body: params,
+        redirect: 'manual'
+    });
+    
+    const postCookies = loginPostRes.headers.raw()['set-cookie'] || [];
+    postCookies.forEach(c => {
+        const parts = c.split(';')[0].split('=');
+        if (parts.length >= 2) {
+            cookiesMap[parts[0].trim()] = parts.slice(1).join('=').trim();
+        }
+    });
+    
+    const finalCookie = Object.entries(cookiesMap).map(([k, v]) => `${k}=${v}`).join('; ');
+    
+    if (!cookiesMap['observer_session']) {
+        throw new Error('Pylon login authentication failed (incorrect email or password)');
+    }
+    
+    pylonSessionCookie = finalCookie;
+    pylonSessionExpiry = Date.now() + 23 * 60 * 60 * 1000; // cache for 23h
+    return pylonSessionCookie;
+}
+
+app.all('/pylon-editor/*', async (req, res) => {
+    try {
+        const sessionCookie = await getPylonSession();
+        
+        const targetPath = req.url.replace('/pylon-editor', '');
+        const pylonUrl = `https://app.getpylon.com${targetPath}`;
+        
+        const fetch = require('node-fetch');
+        
+        const headers = { ...req.headers };
+        delete headers.host;
+        delete headers.referer;
+        
+        headers['cookie'] = sessionCookie;
+        
+        const fetchOptions = {
+            method: req.method,
+            headers: headers,
+            redirect: 'manual'
+        };
+        
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+            if (req.rawBody) {
+                fetchOptions.body = req.rawBody;
+            } else if (req.body) {
+                fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+            }
+        }
+        
+        const pylonRes = await fetch(pylonUrl, fetchOptions);
+        
+        res.status(pylonRes.status);
+        
+        pylonRes.headers.forEach((value, key) => {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === 'x-frame-options' || lowerKey === 'content-security-policy') {
+                return;
+            }
+            if (lowerKey === 'location') {
+                res.setHeader(key, value.replace('https://app.getpylon.com', '/pylon-editor'));
+                return;
+            }
+            res.setHeader(key, value);
+        });
+        
+        pylonRes.body.pipe(res);
+    } catch (err) {
+        console.error('Pylon proxy error:', err);
+        res.status(500).send(`
+            <div style="font-family: system-ui, sans-serif; padding: 40px; text-align: center; color: #ef4444; background: #fff3f2; border: 1px solid #fee2e2; border-radius: 8px; max-width: 500px; margin: 40px auto;">
+                <h2 style="margin-top:0;">⚠️ Pylon Editor Proxy Error</h2>
+                <p style="font-size: 14px; line-height: 1.5; color: #7f1d1d;">${err.message}</p>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 24px; border-top: 1px solid #fca5a5; padding-top: 16px;">
+                    Please add <b>PYLON_SESSION_COOKIE</b> or <b>PYLON_EMAIL</b> and <b>PYLON_PASSWORD</b> in your CRM .env file.
+                </p>
+            </div>
+        `);
+    }
+});
+
 // ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
 app.post('/api/pylon/create-project/:id', (req, res) => {
     const leadId = req.params.id;
