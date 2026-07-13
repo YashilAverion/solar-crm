@@ -113,34 +113,67 @@
         .sub-tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 1px 3px rgba(28,53,87,0.15); }
         .sub-tab-capsule:hover:not(.active) { background: #e2e8f0; color: var(--text-dark); }
         
-        /* Custom Flatpickr Purple Theme to match Image 2 */
+        /* Custom Flatpickr Premium Theme matching Image 2 */
         .flatpickr-calendar {
-            border-radius: 12px !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-            border: 1px solid #e2e8f0 !important;
-            font-family: inherit !important;
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+            border: 1px solid #cbd5e1 !important;
+            font-family: 'Inter', system-ui, sans-serif !important;
+            width: 310px !important;
+            padding: 10px !important;
         }
-        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, 
-        .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, 
-        .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, 
-        .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, 
-        .flatpickr-day.prevMonthDay.selected, .flatpickr-day.nextMonthDay.selected {
-            background: #6366f1 !important; /* Indigo/Purple select circle */
-            border-color: #6366f1 !important;
-            color: #fff !important;
-            border-radius: 50% !important;
+        .flatpickr-calendar:before, .flatpickr-calendar:after {
+            display: none !important; /* Hide ugly arrow pointer */
+        }
+        .flatpickr-months {
+            align-items: center !important;
+            margin-bottom: 8px !important;
         }
         .flatpickr-months .flatpickr-month {
+            height: 34px !important;
+        }
+        .flatpickr-current-month {
+            font-size: 15px !important;
+            font-weight: 700 !important;
             color: #1e293b !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            height: 100% !important;
+            padding: 0 !important;
         }
-        .flatpickr-current-month .numInputWrapper span.arrowUp:after {
-            border-bottom-color: #1e293b !important;
+        .flatpickr-monthDropdown-months {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            border: none !important;
+            background: transparent !important;
+            pointer-events: none !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            font-size: 15px !important;
+            padding: 0 !important;
+            width: auto !important;
         }
-        .flatpickr-current-month .numInputWrapper span.arrowDown:after {
-            border-top-color: #1e293b !important;
+        .flatpickr-current-month input.cur-year {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            pointer-events: none !important;
+            font-size: 15px !important;
+            width: auto !important;
+            padding: 0 !important;
+        }
+        .flatpickr-current-month .numInputWrapper {
+            width: auto !important;
+        }
+        .flatpickr-current-month .numInputWrapper span {
+            display: none !important;
         }
         .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
             color: #64748b !important;
+            padding: 8px !important;
+            top: 5px !important;
         }
         .flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover {
             color: #6366f1 !important;
@@ -148,6 +181,47 @@
         .flatpickr-weekday {
             color: #475569 !important;
             font-weight: 600 !important;
+            font-size: 12px !important;
+        }
+        .flatpickr-day {
+            color: #334155 !important;
+            font-weight: 500 !important;
+            border-radius: 50% !important;
+            margin: 2px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            max-width: 36px !important;
+            flex-basis: 36px !important;
+        }
+        .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+            color: #94a3b8 !important;
+        }
+        .flatpickr-day.today {
+            border-color: #e2e8f0 !important;
+            color: #6366f1 !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-day.today:hover {
+            background: #f1f5f9 !important;
+            color: #6366f1 !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover {
+            background: #6366f1 !important; /* Premium Purple */
+            border-color: #6366f1 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4) !important;
+        }
+        
+        .flatpickr-wrapper {
+            width: 100% !important;
+            position: relative !important;
+        }
+        .flatpickr-calendar {
+            z-index: 99999 !important;
+        }
+        .swal2-html-container, .swal2-popup {
+            overflow: visible !important;
         }
         
         .status-badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--border); background: var(--bg); color: var(--text-dark); letter-spacing: 0.5px; }
@@ -3931,7 +4005,11 @@ function toggleNav(event, element) {
                         dateFormat: "Y-m-d",
                         altInput: true,
                         altFormat: "M j, Y",
-                        defaultDate: new Date()
+                        defaultDate: new Date(),
+                        static: true,
+                        locale: {
+                            firstDayOfWeek: 1
+                        }
                     });
                 },
                 preConfirm: () => {
