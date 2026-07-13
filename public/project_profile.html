@@ -1002,7 +1002,7 @@ function toggleNav(event, element) {
                             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Aerial Imagery Source</label>
                             <select id="imagery_source_select" onchange="changeImagerySource(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%; cursor: pointer;">
                                 <option value="google">Standard Google Satellite</option>
-                                <option value="nearmap_latest" id="opt_nearmap_latest" style="display: none;">✈️ Nearmap Latest (High-Res)</option>
+                                <option value="gov_aerial" id="opt_gov_aerial">✈️ State Government Aerial (Free)</option>
                             </select>
                             <div id="imagery_date_display" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; display: none; align-items: center; gap: 4px;">
                                 📅 <span id="imagery_date_label">Captured:</span> <span id="imagery_date_val" style="font-weight: 600; color: var(--text-dark);">-</span>
@@ -2470,7 +2470,7 @@ function toggleNav(event, element) {
                         title: (projectData.first_name || '') + ' ' + (projectData.last_name || '')
                     });
 
-                    setupNearmapImagery(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                    setupStateGovernmentImagery(results[0].geometry.location.lat(), results[0].geometry.location.lng());
 
                     // Fetch Solar Insights from backend proxy
                     const statusText = document.getElementById('solar_status_text');
@@ -2504,60 +2504,23 @@ function toggleNav(event, element) {
             });
         }
 
-        let nearmapApiKey = '';
+        let projectStateCode = '';
 
-        function setupNearmapImagery(lat, lng) {
-            fetch('/api/nearmap/config')
-                .then(res => res.json())
-                .then(config => {
-                    if (config.success && config.apiKey) {
-                        nearmapApiKey = config.apiKey;
-                        document.getElementById('opt_nearmap_latest').style.display = 'block';
-                        
-                        // Fetch available surveys for this point
-                        fetch(`/api/nearmap/coverage?lat=${lat}&lon=${lng}`)
-                            .then(res => res.json())
-                            .then(covJson => {
-                                if (covJson.success && covJson.data && covJson.data.layers) {
-                                    const surveys = covJson.data.layers.mosaics || [];
-                                    // Sort surveys by capture date descending
-                                    surveys.sort((a, b) => new Date(b.captureDate) - new Date(a.captureDate));
-                                    
-                                    const select = document.getElementById('imagery_source_select');
-                                    
-                                    surveys.forEach(survey => {
-                                        const date = new Date(survey.captureDate);
-                                        const formattedDate = date.toLocaleDateString('en-AU', {
-                                            day: 'numeric',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        });
-                                        
-                                        // Detect season in Southern Hemisphere
-                                        const month = date.getMonth(); // 0-indexed
-                                        let season = '';
-                                        if (month >= 11 || month <= 1) season = 'Summer';
-                                        else if (month >= 2 && month <= 4) season = 'Autumn';
-                                        else if (month >= 5 && month <= 7) season = 'Winter';
-                                        else season = 'Spring';
-                                        
-                                        const optionText = `✈️ Nearmap ${formattedDate} (${season})`;
-                                        
-                                        const opt = document.createElement('option');
-                                        opt.value = `nearmap_survey_${survey.id}`;
-                                        opt.textContent = optionText;
-                                        // Store metadata in option data-attributes
-                                        opt.dataset.captureDate = formattedDate;
-                                        opt.dataset.season = season;
-                                        opt.dataset.surveyId = survey.id;
-                                        select.appendChild(opt);
-                                    });
-                                }
-                            })
-                            .catch(err => console.warn('[NEARMAP] Failed to load coverage surveys:', err));
-                    }
-                })
-                .catch(err => console.warn('[NEARMAP] Failed to load config:', err));
+        function setupStateGovernmentImagery(lat, lng) {
+            if (!projectData) return;
+            const state = (projectData.state || '').trim().toUpperCase();
+            projectStateCode = state;
+
+            const opt = document.getElementById('opt_gov_aerial');
+            if (opt) {
+                if (state === 'WA' || state === 'WESTERN AUSTRALIA') {
+                    opt.textContent = '✈️ WA Landgate Aerial (Free)';
+                } else if (state === 'NSW' || state === 'NEW SOUTH WALES') {
+                    opt.textContent = '✈️ NSW SixMaps Aerial (Free)';
+                } else {
+                    opt.textContent = `✈️ State Government Aerial (${state || 'Free'})`;
+                }
+            }
         }
 
         function changeImagerySource(value) {
@@ -2566,65 +2529,61 @@ function toggleNav(event, element) {
             // Hide capture date display by default
             document.getElementById('imagery_date_display').style.display = 'none';
 
-            // Clear any active Nearmap custom map type
-            if (satelliteMap.mapTypes.get('nearmap')) {
-                satelliteMap.mapTypes.set('nearmap', null);
+            // Clear any active custom map type
+            if (satelliteMap.mapTypes.get('gov_aerial_layer')) {
+                satelliteMap.mapTypes.set('gov_aerial_layer', null);
             }
-
-            const isMock = (nearmapApiKey === 'MOCK_KEY_FOR_TESTING');
 
             if (value === 'google') {
                 satelliteMap.setMapTypeId('hybrid');
-            } else if (value === 'nearmap_latest') {
-                if (!nearmapApiKey) return;
+            } else if (value === 'gov_aerial') {
+                let mapName = 'Government Aerial';
+                let dateStr = '2025/2026 Compilation (Latest)';
+                let getTileUrlFn = null;
 
-                const nearmapLatestType = new google.maps.ImageMapType({
-                    getTileUrl: function(coord, zoom) {
-                        if (isMock) {
-                            return `https://mt1.google.com/vt/lyrs=y&x=${coord.x}&y=${coord.y}&z=${zoom}`;
-                        }
-                        return `https://api.nearmap.com/tiles/v2/tiles/${zoom}/${coord.x}/${coord.y}.png?apikey=${nearmapApiKey}`;
-                    },
+                const state = projectStateCode;
+                if (state === 'WA' || state === 'WESTERN AUSTRALIA') {
+                    mapName = 'WA Landgate';
+                    getTileUrlFn = function(coord, zoom) {
+                        const TILE_SIZE = 256;
+                        const initialResolution = 2 * Math.PI * 6378137 / TILE_SIZE;
+                        const originShift = 2 * Math.PI * 6378137 / 2;
+                        const resolution = initialResolution / Math.pow(2, zoom);
+                        
+                        const minx = (coord.x * TILE_SIZE) * resolution - originShift;
+                        const miny = originShift - ((coord.y + 1) * TILE_SIZE) * resolution;
+                        const maxx = ((coord.x + 1) * TILE_SIZE) * resolution - originShift;
+                        const maxy = originShift - (coord.y * TILE_SIZE) * resolution;
+                        
+                        const bbox = `${minx},${miny},${maxx},${maxy}`;
+                        return `https://public-services.slip.wa.gov.au/public/rest/services/SLIP_Public_Services/Locate/MapServer/export?bbox=${bbox}&bboxSR=3857&imageSR=3857&size=256,256&format=png&transparent=true&f=image`;
+                    };
+                } else if (state === 'NSW' || state === 'NEW SOUTH WALES') {
+                    mapName = 'NSW SIX Maps';
+                    getTileUrlFn = function(coord, zoom) {
+                        return `https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/${zoom}/${coord.y}/${coord.x}`;
+                    };
+                } else {
+                    alert(`State government imagery is not configured for state: ${state || 'N/A'}. Falling back to standard Google Satellite.`);
+                    document.getElementById('imagery_source_select').value = 'google';
+                    satelliteMap.setMapTypeId('hybrid');
+                    return;
+                }
+
+                const govAerialType = new google.maps.ImageMapType({
+                    getTileUrl: getTileUrlFn,
                     tileSize: new google.maps.Size(256, 256),
-                    maxZoom: 21,
-                    name: 'Nearmap Latest'
+                    maxZoom: 20,
+                    name: mapName
                 });
 
-                satelliteMap.mapTypes.set('nearmap', nearmapLatestType);
-                satelliteMap.setMapTypeId('nearmap');
+                satelliteMap.mapTypes.set('gov_aerial_layer', govAerialType);
+                satelliteMap.setMapTypeId('gov_aerial_layer');
 
                 // Display info
                 document.getElementById('imagery_date_display').style.display = 'flex';
-                document.getElementById('imagery_date_label').innerText = isMock ? 'Nearmap Version (Demo Mode):' : 'Nearmap Version:';
-                document.getElementById('imagery_date_val').innerText = 'Latest Available';
-            } else if (value.startsWith('nearmap_survey_')) {
-                const select = document.getElementById('imagery_source_select');
-                const selectedOpt = Array.from(select.options).find(opt => opt.value === value);
-                if (!selectedOpt || !nearmapApiKey) return;
-
-                const surveyId = selectedOpt.dataset.surveyId;
-                const captureDate = selectedOpt.dataset.captureDate;
-                const season = selectedOpt.dataset.season;
-
-                const nearmapSurveyType = new google.maps.ImageMapType({
-                    getTileUrl: function(coord, zoom) {
-                        if (isMock) {
-                            return `https://mt1.google.com/vt/lyrs=y&x=${coord.x}&y=${coord.y}&z=${zoom}`;
-                        }
-                        return `https://api.nearmap.com/tiles/v3/surveys/${surveyId}/Vert/${zoom}/${coord.x}/${coord.y}.png?apikey=${nearmapApiKey}`;
-                    },
-                    tileSize: new google.maps.Size(256, 256),
-                    maxZoom: 21,
-                    name: `Nearmap ${captureDate}`
-                });
-
-                satelliteMap.mapTypes.set('nearmap', nearmapSurveyType);
-                satelliteMap.setMapTypeId('nearmap');
-
-                // Display info
-                document.getElementById('imagery_date_display').style.display = 'flex';
-                document.getElementById('imagery_date_label').innerText = isMock ? 'Captured (Demo Mode):' : 'Captured:';
-                document.getElementById('imagery_date_val').innerText = `${captureDate} (${season})`;
+                document.getElementById('imagery_date_label').innerText = 'Imagery Source:';
+                document.getElementById('imagery_date_val').innerText = `${mapName} (${dateStr})`;
             }
         }
 

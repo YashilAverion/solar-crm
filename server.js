@@ -5800,51 +5800,6 @@ app.get('/api/solar/building-insights', (req, res) => {
         });
 });
 
-app.get('/api/nearmap/config', (req, res) => {
-    res.json({
-        success: true,
-        configured: !!process.env.NEARMAP_API_KEY,
-        apiKey: process.env.NEARMAP_API_KEY || 'MOCK_KEY_FOR_TESTING'
-    });
-});
-
-app.get('/api/nearmap/coverage', (req, res) => {
-    const { lat, lon } = req.query;
-    if (!lat || !lon) {
-        return res.status(400).json({ error: 'Latitude and Longitude are required.' });
-    }
-
-    const apiKey = process.env.NEARMAP_API_KEY;
-    if (!apiKey) {
-        // Return mock surveys for UI demonstration in local dev environment
-        return res.json({
-            success: true,
-            mock: true,
-            data: {
-                layers: {
-                    mosaics: [
-                        { id: 'survey-mock-2025-autumn', captureDate: '2025-03-24' },
-                        { id: 'survey-mock-2024-spring', captureDate: '2024-11-12' },
-                        { id: 'survey-mock-2024-autumn', captureDate: '2024-04-18' },
-                        { id: 'survey-mock-2023-winter', captureDate: '2023-06-15' }
-                    ]
-                }
-            }
-        });
-    }
-
-    const url = `https://api.nearmap.com/coverage/v2/point/${lon},${lat}?apikey=${apiKey}`;
-    const axios = require('axios');
-    axios.get(url)
-        .then(response => {
-            res.json({ success: true, data: response.data });
-        })
-        .catch(error => {
-            console.error('[NEARMAP PROXY] Error fetching coverage:', error.response ? error.response.data : error.message);
-            res.status(500).json({ success: false, error: 'Failed to fetch Nearmap coverage data.' });
-        });
-});
-
 app.post('/api/telephony-voice/process-stream-chunk', async (req, res) => {
     const data = { ...req.query, ...req.body };
     const { lead_id, text_fragment, audio_chunk } = data;
