@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #1c3557;
@@ -979,50 +980,112 @@ function toggleNav(event, element) {
 
                 <div style="display: flex; gap: 16px; flex: 1; min-height: 520px;">
                     <!-- Left: Google Map Overlay Container (70%) -->
+                    <!-- Left: Google Map Overlay Container (70%) -->
                     <div id="satelliteMapContainer" style="flex: 2.3; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #f8fafc; position: relative; height: 100%;">
                         <div id="satelliteMap" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted);">
                             Loading satellite imagery...
                         </div>
 
-                        <!-- Floating Map Toolbar (Top Left) -->
-                        <div id="solar_map_toolbar" style="position: absolute; top: 12px; left: 12px; z-index: 10; display: flex; background: #ffffff; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 4px; gap: 4px;">
-                            <button type="button" id="tool_btn_select" onclick="selectSolarTool('select')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: var(--accent); color: white; transition: all 0.2s;">
-                                ✋ Edit / Move
+                        <!-- Top Horizontal Map Toolbar (Image 1 style) -->
+                        <div id="solar_map_top_toolbar" style="position: absolute; top: 12px; left: 12px; right: 12px; z-index: 10; display: flex; align-items: center; background: #ffffff; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 6px 12px; gap: 10px; font-size: 11px; font-weight: 700; color: var(--text-dark); flex-wrap: wrap;">
+                            <!-- Undo/Redo -->
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" onclick="triggerUndo()" id="btn_undo" title="Undo" style="background: transparent; border: none; cursor: pointer; font-size: 13px; opacity: 0.5; padding: 2px;">↩️</button>
+                                <button type="button" onclick="triggerRedo()" id="btn_redo" title="Redo" style="background: transparent; border: none; cursor: pointer; font-size: 13px; opacity: 0.5; padding: 2px;">↪️</button>
+                            </div>
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+
+                            <!-- Pitch -->
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span>Pitch:</span>
+                                <input type="number" id="solar_pitch_input" value="22.5" step="0.5" onchange="updateDefaultPitch(this.value)" style="width: 50px; height: 24px; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; text-align: center; font-weight: 700; font-size: 11px;">
+                                <span>°</span>
+                            </div>
+
+                            <!-- Azimuth -->
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span>Azimuth:</span>
+                                <input type="number" id="solar_azimuth_input" value="90" step="0.1" onchange="updateDefaultAzimuth(this.value)" style="width: 60px; height: 24px; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; text-align: center; font-weight: 700; font-size: 11px;">
+                                <span>°</span>
+                            </div>
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+
+                            <!-- Portrait/Landscape Toggle -->
+                            <div style="display: flex; gap: 4px;">
+                                <button type="button" id="top_tool_portrait" onclick="updateDefaultOrientation('PORTRAIT')" title="Portrait Mode" style="background: var(--accent); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-weight: 700; cursor: pointer; font-size: 11px;">P</button>
+                                <button type="button" id="top_tool_landscape" onclick="updateDefaultOrientation('LANDSCAPE')" title="Landscape Mode" style="background: transparent; color: var(--text-dark); border: 1px solid var(--border); border-radius: 4px; width: 24px; height: 24px; font-weight: 700; cursor: pointer; font-size: 11px;">L</button>
+                            </div>
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+
+                            <!-- Row/Col Gaps -->
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="color: var(--text-muted);">Gap:</span>
+                                <input type="number" id="solar_panel_gap_input" value="20" step="5" onchange="updatePanelGaps()" style="width: 44px; height: 24px; border: 1px solid var(--border); border-radius: 4px; text-align: center; font-size: 11px;">
+                                <span style="color: var(--text-muted);">Row:</span>
+                                <input type="number" id="solar_row_gap_input" value="20" step="5" onchange="updatePanelGaps()" style="width: 44px; height: 24px; border: 1px solid var(--border); border-radius: 4px; text-align: center; font-size: 11px;">
+                            </div>
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+
+                            <!-- Selection Summary -->
+                            <div id="selection_stats_text" style="color: var(--primary); font-weight: 700;">
+                                Selected: <span id="sel_count_val">0 panels (0.00kW)</span> | Model: <span id="sel_model_val" style="color: var(--accent);">LONGi 475W</span>
+                            </div>
+
+                            <!-- Total Panels (Aligned Right) -->
+                            <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--primary);">
+                                <span>Total:</span>
+                                <span id="total_panels_stat" style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">0 panels</span>
+                            </div>
+                        </div>
+
+                        <!-- Left Vertical Map Toolbar (Image 1 style) -->
+                        <div id="solar_map_left_toolbar" style="position: absolute; top: 50px; left: 12px; z-index: 10; display: flex; flex-direction: column; background: #ffffff; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 4px; gap: 4px;">
+                            <button type="button" class="left-tool-btn" id="tool_btn_select" onclick="selectSolarTool('select')" title="Select / Edit" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--accent); color: white; transition: all 0.2s;">
+                                ✋
                             </button>
-                            <button type="button" id="tool_btn_add" onclick="selectSolarTool('add')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: var(--text-dark); transition: all 0.2s;">
-                                ➕ Add Panel
+                            <button type="button" class="left-tool-btn" id="tool_btn_pan" onclick="selectSolarTool('pan')" title="Pan Map" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                🗺️
                             </button>
-                            <button type="button" id="tool_btn_delete" onclick="selectSolarTool('delete')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: var(--text-dark); transition: all 0.2s;">
-                                🗑️ Delete
+                            <button type="button" class="left-tool-btn" id="tool_btn_add" onclick="selectSolarTool('add')" title="Add Panel" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                ➕
                             </button>
-                            <div style="width: 1px; background: var(--border); margin: 4px 2px;"></div>
-                            <button type="button" onclick="clearAllSolarPanels()" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: #ef4444; transition: all 0.2s;">
-                                🧹 Clear All
+                            <button type="button" class="left-tool-btn" id="tool_btn_delete" onclick="selectSolarTool('delete')" title="Delete Panel" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                🗑️
                             </button>
+                            <button type="button" class="left-tool-btn" id="tool_btn_draw" onclick="selectSolarTool('draw')" title="Draw Array" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                🎛️
+                            </button>
+                            <button type="button" class="left-tool-btn" id="tool_btn_ruler" onclick="selectSolarTool('ruler')" title="Ruler / Measure" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                📐
+                            </button>
+                            <div style="height: 1px; background: var(--border); margin: 2px 4px;"></div>
+                            <button type="button" onclick="clearAllSolarPanels()" title="Clear All" style="width: 32px; height: 32px; font-size: 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: #ef4444; transition: all 0.2s;">
+                                🧹
+                            </button>
+                        </div>
+
+                        <!-- Bottom Map Date Bar -->
+                        <div id="solar_map_bottom_bar" style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; background: #ffffff; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 4px 16px; gap: 8px; font-size: 11px; font-weight: 700; white-space: nowrap;">
+                            <span style="color: var(--accent);">📅</span>
+                            <span id="bottom_map_date_val" style="color: var(--text-dark);">Standard Google Satellite</span>
                         </div>
                     </div>
 
                     <!-- Right Sidebar: Ares Solar Copilot Design Panel (30%) -->
                     <div style="flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: 100%; overflow-y: auto;">
-                        <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 2px solid #eef2f8; padding-bottom: 6px;">
-                            Solar Copilot Controls
-                        </div>
+                        <!-- Continue to System Configuration (Blue Button at top) -->
+                        <button type="button" onclick="openSLDModal()" style="width: 100%; height: 38px; background: #0070f3; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,112,243,0.25); display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;">
+                            🚀 Continue to System Configuration
+                        </button>
 
-                        <!-- Status Indicator -->
-                        <div id="solar_status_box" style="background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted);">
-                            <span class="solar-status-dot" id="solar_status_dot" style="width: 8px; height: 8px; background: #94a3b8; border-radius: 50%; display: inline-block;"></span>
-                            <span id="solar_status_text">Awaiting roof coordinate lookup...</span>
-                        </div>
-
-                        <!-- Imagery Source Selection -->
-                        <div class="field" style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Aerial Imagery Source</label>
-                            <select id="imagery_source_select" onchange="changeImagerySource(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%; cursor: pointer;">
-                                <option value="google">Standard Google Satellite</option>
-                                <option value="gov_aerial" id="opt_gov_aerial">✈️ State Government Aerial (Free)</option>
-                            </select>
-                            <div id="imagery_date_display" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; display: none; align-items: center; gap: 4px;">
-                                📅 <span id="imagery_date_label">Captured:</span> <span id="imagery_date_val" style="font-weight: 600; color: var(--text-dark);">-</span>
+                        <!-- Monthly Production Chart -->
+                        <div style="border-top: 1px solid var(--border); padding-top: 10px; flex-shrink: 0;">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                                <span>Monthly Production</span>
+                                <span style="color: var(--accent); cursor: pointer;" onclick="Swal.fire('Monthly Yield', 'Estimated production spread across seasons based on Australian yield factors.', 'info')">Details</span>
+                            </div>
+                            <div style="height: 120px; position: relative; width: 100%;">
+                                <canvas id="monthlyProductionChart"></canvas>
                             </div>
                         </div>
 
@@ -1030,12 +1093,73 @@ function toggleNav(event, element) {
                         <div class="field" style="display: flex; flex-direction: column; gap: 4px;">
                             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Default Panel Model</label>
                             <select id="active_panel_model_select" onchange="updateActivePanelModel(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%; cursor: pointer;">
-                                <option value="LONGi_475" data-watts="475" data-brand="LONGi Solar">LONGi Solar Hi-MO X10 Explorer (475W)</option>
+                                <option value="LONGi_475" data-watts="475" data-brand="LONGi Solar" selected>LONGi Solar Hi-MO X10 Explorer (475W)</option>
                                 <option value="Jinko_475" data-watts="475" data-brand="Jinko Solar">Jinko Solar Tiger Neo (475W)</option>
                                 <option value="JA_475" data-watts="475" data-brand="JA Solar">JA Solar DeepBlue 4.0 Pro (475W)</option>
                                 <option value="Trina_400" data-watts="400" data-brand="Trina Solar">Trina Solar Vertex S (400W)</option>
                                 <option value="Canadian_370" data-watts="370" data-brand="Canadian Solar">Canadian Solar HiKu (370W)</option>
                             </select>
+                        </div>
+
+                        <!-- Search and Panel Lists (Pylon Style) -->
+                        <div style="border-top: 1px solid var(--border); padding-top: 10px;">
+                            <div style="position: relative; margin-bottom: 10px;">
+                                <input type="text" id="panel_search_input" oninput="filterPanelCatalog(this.value)" placeholder="Search for panels..." style="width: 100%; height: 32px; border-radius: 6px; border: 1px solid var(--border); padding: 0 10px 0 28px; font-size: 12px; outline: none; box-sizing: border-box;">
+                                <span style="position: absolute; left: 8px; top: 8px; font-size: 12px; color: var(--text-muted);">🔍</span>
+                            </div>
+
+                            <!-- Panel List -->
+                            <div style="display: flex; flex-direction: column; gap: 8px;" id="panel_catalog_list">
+                                <!-- In this design -->
+                                <div id="section_in_design">
+                                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">In this design</div>
+                                    <div id="panels_in_design_container" style="display: flex; flex-direction: column; gap: 4px;">
+                                        <!-- Will render dynamically -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Favourite Panels -->
+                                <div>
+                                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; margin-top: 6px;">Favourite panels</div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <div onclick="selectPanelFromCatalog('JA_475')" class="catalog-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <div>
+                                                <strong style="color: var(--text-dark);">JA Solar DeepBlue 4.0 Pro</strong><br>
+                                                <span style="font-size: 9px; color: var(--text-muted);">JAM54D40-475/LR · 475W</span>
+                                            </div>
+                                            <span style="color: #fbbf24; font-size: 14px;">★</span>
+                                        </div>
+                                        <div onclick="selectPanelFromCatalog('Jinko_475')" class="catalog-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <div>
+                                                <strong style="color: var(--text-dark);">Jinko Solar Tiger Neo</strong><br>
+                                                <span style="font-size: 9px; color: var(--text-muted);">JKM475N-48HL4M-DV · 475W</span>
+                                            </div>
+                                            <span style="color: #fbbf24; font-size: 14px;">★</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Popular Panels -->
+                                <div>
+                                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; margin-top: 6px;">Popular panels</div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <div onclick="selectPanelFromCatalog('Canadian_370')" class="catalog-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <div>
+                                                <strong style="color: var(--text-dark);">Canadian Solar HiKu</strong><br>
+                                                <span style="font-size: 9px; color: var(--text-muted);">CS3L-370MS · 370W</span>
+                                            </div>
+                                            <span style="color: #94a3b8; font-size: 14px;">☆</span>
+                                        </div>
+                                        <div onclick="selectPanelFromCatalog('Trina_400')" class="catalog-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <div>
+                                                <strong style="color: var(--text-dark);">Trina Solar Vertex S</strong><br>
+                                                <span style="font-size: 9px; color: var(--text-muted);">TSM-400DE09.08 · 400W</span>
+                                            </div>
+                                            <span style="color: #94a3b8; font-size: 14px;">☆</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Selected Panel Settings (Pylon-Style Editor) -->
@@ -1051,7 +1175,7 @@ function toggleNav(event, element) {
                                     <span>Orientation Angle (Azimuth):</span>
                                     <span id="selected_panel_azimuth_val">90°</span>
                                 </div>
-                                <input type="range" id="selected_panel_azimuth_slider" min="0" max="360" value="90" oninput="rotateSelectedPanel(this.value)" style="width: 100%; accent-color: #d97706; cursor: pointer;">
+                                <input type="range" id="selected_panel_azimuth_slider" min="0" max="360" value="90" oninput="rotateSelectedPanel(this.value)" onchange="saveLayoutState()" style="width: 100%; accent-color: #d97706; cursor: pointer;">
                             </div>
 
                             <!-- Orientation (Portrait / Landscape Toggle) -->
@@ -1068,38 +1192,50 @@ function toggleNav(event, element) {
                             </div>
                         </div>
 
-                        <!-- AS/NZS 5033 Compliance (Wind Boundary Offset) -->
-                        <div class="field">
-                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">AS/NZS 5033 Offset Boundary</label>
-                            <select id="solar_wind_offset" onchange="runComplianceLayoutEngine()" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%;">
-                                <option value="200" selected>200mm Offset (Fully Compliant)</option>
-                                <option value="100">100mm Offset (Restricted)</option>
-                                <option value="0">No Offset (Max Physical Capacity)</option>
-                            </select>
-                        </div>
+                        <!-- Settings & Boundary -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
+                            <!-- Imagery Source Selection -->
+                            <div class="field" style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Aerial Imagery Source</label>
+                                <select id="imagery_source_select" onchange="changeImagerySource(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%; cursor: pointer;">
+                                    <option value="google">Standard Google Satellite</option>
+                                    <option value="gov_aerial" id="opt_gov_aerial">✈️ State Government Aerial (Free)</option>
+                                </select>
+                            </div>
 
-                        <!-- CEC 133% Inverter Capacity Rule Enforcer -->
-                        <div style="display: flex; flex-direction: column; gap: 4px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-dark); cursor: pointer; user-select: none;">
-                                <input type="checkbox" id="solar_enforce_cec" checked onchange="runComplianceLayoutEngine()" style="width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent);">
-                                <span>Enforce CEC 133% Sizing Rule</span>
-                            </label>
-                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;" id="solar_cec_calc_info">
-                                Loading specs...
+                            <!-- AS/NZS 5033 Compliance (Wind Boundary Offset) -->
+                            <div class="field">
+                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">AS/NZS 5033 Offset Boundary</label>
+                                <select id="solar_wind_offset" onchange="runComplianceLayoutEngine()" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%;">
+                                    <option value="200" selected>200mm Offset (Fully Compliant)</option>
+                                    <option value="100">100mm Offset (Restricted)</option>
+                                    <option value="0">No Offset (Max Physical Capacity)</option>
+                                </select>
+                            </div>
+
+                            <!-- CEC Capacity Rule Enforcer -->
+                            <div style="display: flex; flex-direction: column; gap: 4px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-dark); cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="solar_enforce_cec" checked onchange="runComplianceLayoutEngine()" style="width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent);">
+                                    <span>Enforce CEC 133% Sizing Rule</span>
+                                </label>
+                                <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;" id="solar_cec_calc_info">
+                                    Loading specs...
+                                </div>
                             </div>
                         </div>
 
                         <!-- Active Design Performance Metrics -->
                         <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--border); padding-top: 12px;">
-                            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Proposal Design Metrics</div>
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Proposal Design Metrics</div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                 <div style="background: #eef2f8; padding: 8px; border-radius: 6px; text-align: center;">
-                                    <div style="font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase;">Panels Count</div>
+                                    <div style="font-size: 9px; color: var(--primary); font-weight: 700; text-transform: uppercase;">Panels Count</div>
                                     <div style="font-size: 18px; font-weight: 800; color: var(--primary);" id="solar_panel_count">0</div>
                                 </div>
                                 <div style="background: #edfaf2; padding: 8px; border-radius: 6px; text-align: center;">
-                                    <div style="font-size: 10px; color: #1a6b3c; font-weight: 700; text-transform: uppercase;">Array Capacity</div>
+                                    <div style="font-size: 9px; color: #1a6b3c; font-weight: 700; text-transform: uppercase;">Array Capacity</div>
                                     <div style="font-size: 18px; font-weight: 800; color: #1a6b3c;" id="solar_array_kw">0.00 kW</div>
                                 </div>
                             </div>
@@ -1115,12 +1251,13 @@ function toggleNav(event, element) {
                         </div>
 
                         <!-- Action Buttons -->
-                        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
+                        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px; flex-shrink: 0;">
                             <button type="button" class="btn-save" id="btn_save_solar_layout" onclick="saveSolarLayoutToProposal()" style="width: 100%; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700;" disabled>
                                 📥 Save Design to Proposal
                             </button>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -1171,6 +1308,172 @@ function toggleNav(event, element) {
                         <div id="photo_placeholder_meter"></div>
                         <div id="photo_placeholder_board"></div>
                         <div id="photo_placeholder_roof"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Line Diagram (SLD) Generator Modal -->
+    <div id="sld_generator_modal" class="modal" style="display: none; padding: 10px;">
+        <div class="modal-content" style="max-width: 1540px; width: 98vw; height: 95vh; padding: 0; background: #f8fafc; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #ffffff; border-bottom: 1px solid var(--border); flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px; font-weight: 700; color: var(--primary);">⚡ SYSTEM CONFIGURATION & SINGLE LINE DIAGRAM (SLD)</span>
+                </div>
+                <button type="button" class="modal-close" onclick="closeSLDModal()" style="position: static; font-size: 18px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 50%; border: none; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+
+            <!-- Modal Body (3 Columns) -->
+            <div style="display: flex; flex: 1; min-height: 0; background: #f1f5f9;">
+                <!-- Column 1: Diagram Sheet Viewer (Left - 55%) -->
+                <div style="flex: 2.2; display: flex; flex-direction: column; background: #ffffff; border-right: 1px solid var(--border); min-height: 0; padding: 16px; gap: 12px;">
+                    <!-- Toolbar -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                        <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Single Line Diagram Schematic Sheet</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="openSLDFullSize()" style="height: 32px; padding: 0 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); background: #ffffff; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                🔍 Open Full Size
+                            </button>
+                            <button type="button" onclick="downloadSLDPDF()" style="height: 32px; padding: 0 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: none; background: var(--accent); color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                📥 Download PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Diagram Sheet Container -->
+                    <div id="sld_sheet_container" style="flex: 1; border: 2px solid #94a3b8; background: #ffffff; overflow: auto; display: flex; align-items: center; justify-content: center; position: relative; padding: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                        <!-- SVG Single Line Diagram Sheet -->
+                        <svg id="sld_svg" viewBox="0 0 1100 780" width="100%" height="100%" style="background: #ffffff; max-width: 1100px; max-height: 780px; font-family: monospace; border: 1px solid #cbd5e1; box-sizing: border-box;"></svg>
+                    </div>
+                </div>
+
+                <!-- Column 2: Settings Panel (Middle - 25%) -->
+                <div style="flex: 1; background: #ffffff; border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 2px solid #eef2f8; padding-bottom: 6px;">
+                        Diagram Settings
+                    </div>
+
+                    <!-- Switchboard Isolator Settings -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_rooftop_isolators" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Rooftop Isolators</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_ac_isolators" checked onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>AC isolators</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_subboard" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Sub-board</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_smart_gateway" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Smart Gateway</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_loads_on_subboard" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Loads on Sub-board</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_grid_protection" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Grid Protection Device</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer;">
+                            <input type="checkbox" id="sld_opt_export_limiter" onchange="updateSLD()" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                            <span>Smart Meter / Export Limiter</span>
+                        </label>
+                    </div>
+
+                    <!-- Meter Box Location -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Meter Box Location</span>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" id="sld_meter_loc_main" onclick="setSLDMeterLocation('Main')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); color: white; cursor: pointer;">Main Board</button>
+                            <button type="button" id="sld_meter_loc_sub" onclick="setSLDMeterLocation('Sub')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: white; color: var(--text-dark); cursor: pointer;">Sub Board</button>
+                        </div>
+                    </div>
+
+                    <!-- Power Phases Toggle -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Power Phases</span>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" id="sld_phase_btn_1" onclick="setSLDPhases(1)" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: white; color: var(--text-dark); cursor: pointer;">One</button>
+                            <button type="button" id="sld_phase_btn_2" onclick="setSLDPhases(2)" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: white; color: var(--text-dark); cursor: pointer;">Two</button>
+                            <button type="button" id="sld_phase_btn_3" onclick="setSLDPhases(3)" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); color: white; cursor: pointer;">Three</button>
+                        </div>
+                    </div>
+
+                    <!-- Text labels -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Inverter to MSB Label</label>
+                            <input type="text" id="sld_label_inv_to_msb" oninput="updateSLD()" value="4mm² Twin & Earth XLPE" style="height: 28px; border-radius: 4px; border: 1px solid var(--border); padding: 0 8px; font-size: 11px; outline: none; font-weight: 600;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">MSB to Meter Label</label>
+                            <input type="text" id="sld_label_msb_to_meter" oninput="updateSLD()" value="6mm² Cu XLPE" style="height: 28px; border-radius: 4px; border: 1px solid var(--border); padding: 0 8px; font-size: 11px; outline: none; font-weight: 600;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Meter to Grid Label</label>
+                            <input type="text" id="sld_label_meter_to_grid" oninput="updateSLD()" value="16mm² Cu Consumer Mains" style="height: 28px; border-radius: 4px; border: 1px solid var(--border); padding: 0 8px; font-size: 11px; outline: none; font-weight: 600;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Main Switch Label</label>
+                            <input type="text" id="sld_label_main_switch" oninput="updateSLD()" value="32A 3-Pole MCB" style="height: 28px; border-radius: 4px; border: 1px solid var(--border); padding: 0 8px; font-size: 11px; outline: none; font-weight: 600;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Boards & Inverters column (Right - 20%) -->
+                <div style="flex: 0.8; background: #f8fafc; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px;">
+                        Boards & Inverters
+                    </div>
+
+                    <!-- Main Switchboard Card -->
+                    <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <strong style="font-size: 12px; color: var(--text-dark);">Main Switchboard</strong>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); cursor: pointer; user-select: none;">
+                            <input type="checkbox" checked onchange="updateSLD()" style="width: 14px; height: 14px; accent-color: var(--accent);">
+                            <span>Parallel connection</span>
+                        </label>
+                    </div>
+
+                    <!-- Inverter Card -->
+                    <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                            <strong style="font-size: 11px; color: var(--text-dark); word-break: break-all;" id="sld_inverter_name">SolaX Power X3-FORTH-80K</strong>
+                            <span style="font-size: 10px; background: #eef2f8; padding: 2px 6px; border-radius: 4px; color: var(--primary); font-weight: 700;">INV1</span>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); cursor: pointer;">
+                            <input type="checkbox" onchange="updateSLD()" style="width: 14px; height: 14px; accent-color: var(--accent);">
+                            <span>Parallel connection</span>
+                        </label>
+                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                            <span style="font-size: 10px; color: var(--text-muted);">Phases:</span>
+                            <div style="display: flex; gap: 4px;">
+                                <span style="font-size: 9px; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: white;">A</span>
+                                <span style="font-size: 9px; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: white;" id="sld_inverter_phase_b">B</span>
+                                <span style="font-size: 9px; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: white;" id="sld_inverter_phase_c">C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Battery Card -->
+                    <div id="sld_battery_card" style="background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <strong style="font-size: 11px; color: var(--text-dark);" id="sld_battery_name">BATT1 - SolaX Power T-BAT HS36.8</strong>
+                        <div style="font-size: 10px; color: var(--text-muted); line-height: 1.3;">
+                            Capacity: <strong id="sld_battery_capacity" style="color: var(--text-dark);">36.8 kWh</strong><br>
+                            Voltage: <strong id="sld_battery_voltage" style="color: var(--text-dark);">23.2V</strong>
+                        </div>
+                    </div>
+
+                    <!-- Drag placeholder -->
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 6px; padding: 12px; text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+                        📥 Drop battery here
                     </div>
                 </div>
             </div>
@@ -2567,6 +2870,127 @@ function toggleNav(event, element) {
             });
         }
 
+        let monthlyChartInstance = null;
+
+        function renderMonthlyProductionChart(totalKw) {
+            const ctx = document.getElementById('monthlyProductionChart');
+            if (!ctx) return;
+
+            const baseFactors = [120, 108, 96, 72, 54, 46, 48, 62, 86, 106, 114, 120]; 
+            const dataValues = baseFactors.map(f => (f * (totalKw || 6.6) * 0.082).toFixed(0));
+
+            if (monthlyChartInstance) {
+                monthlyChartInstance.data.datasets[0].data = dataValues;
+                monthlyChartInstance.update();
+                return;
+            }
+
+            monthlyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+                    datasets: [{
+                        label: 'kWh',
+                        data: dataValues,
+                        backgroundColor: '#0070f3',
+                        borderWidth: 0,
+                        borderRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        y: { display: false },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 8 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterPanelCatalog(query) {
+            const q = query.toLowerCase().trim();
+            const items = document.querySelectorAll('.catalog-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(q)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function selectPanelFromCatalog(modelKey) {
+            const select = document.getElementById('active_panel_model_select');
+            if (select) {
+                select.value = modelKey;
+                updateActivePanelModel(modelKey);
+            }
+        }
+
+        function updateDefaultPitch(val) {
+            const pitch = parseFloat(val) || 0;
+            if (selectedPanel) {
+                selectedPanel.pitch = pitch;
+                updateDesignMetrics();
+                renderPlacedPanels();
+            }
+        }
+
+        function updateDefaultAzimuth(val) {
+            const azimuth = parseFloat(val) || 0;
+            activePanelAzimuth = azimuth;
+            if (selectedPanel) {
+                selectedPanel.azimuth = azimuth;
+                document.getElementById('selected_panel_azimuth_val').innerText = `${azimuth}°`;
+                document.getElementById('selected_panel_azimuth_slider').value = azimuth;
+                updateDesignMetrics();
+                renderPlacedPanels();
+            }
+        }
+
+        function updateDefaultOrientation(ori) {
+            activePanelOrientation = ori;
+            
+            const btnP = document.getElementById('top_tool_portrait');
+            const btnL = document.getElementById('top_tool_landscape');
+            
+            if (ori === 'PORTRAIT') {
+                btnP.style.background = 'var(--accent)';
+                btnP.style.color = 'white';
+                btnP.style.border = 'none';
+                btnL.style.background = 'transparent';
+                btnL.style.color = 'var(--text-dark)';
+                btnL.style.border = '1px solid var(--border)';
+            } else {
+                btnL.style.background = 'var(--accent)';
+                btnL.style.color = 'white';
+                btnL.style.border = 'none';
+                btnP.style.background = 'transparent';
+                btnP.style.color = 'var(--text-dark)';
+                btnP.style.border = '1px solid var(--border)';
+            }
+
+            if (selectedPanel) {
+                selectedPanel.orientation = ori;
+                updateDesignMetrics();
+                renderPlacedPanels();
+            }
+        }
+
+        function updatePanelGaps() {
+            renderPlacedPanels();
+        }
+
         var activeSolarTool = 'select';
         var activePanelBrand = 'LONGi Solar';
         var activePanelWatts = 475;
@@ -2579,10 +3003,13 @@ function toggleNav(event, element) {
             activeSolarTool = tool;
             
             const btnSelect = document.getElementById('tool_btn_select');
+            const btnPan = document.getElementById('tool_btn_pan');
             const btnAdd = document.getElementById('tool_btn_add');
             const btnDelete = document.getElementById('tool_btn_delete');
+            const btnDraw = document.getElementById('tool_btn_draw');
+            const btnRuler = document.getElementById('tool_btn_ruler');
             
-            [btnSelect, btnAdd, btnDelete].forEach(b => {
+            [btnSelect, btnPan, btnAdd, btnDelete, btnDraw, btnRuler].forEach(b => {
                 if (b) {
                     b.style.background = 'transparent';
                     b.style.color = 'var(--text-dark)';
@@ -2591,8 +3018,11 @@ function toggleNav(event, element) {
             
             let activeBtn = null;
             if (tool === 'select') activeBtn = btnSelect;
+            else if (tool === 'pan') activeBtn = btnPan;
             else if (tool === 'add') activeBtn = btnAdd;
             else if (tool === 'delete') activeBtn = btnDelete;
+            else if (tool === 'draw') activeBtn = btnDraw;
+            else if (tool === 'ruler') activeBtn = btnRuler;
             
             if (activeBtn) {
                 activeBtn.style.background = 'var(--accent)';
@@ -2619,8 +3049,78 @@ function toggleNav(event, element) {
             }
         }
 
+        var undoStack = [];
+        var redoStack = [];
+
+        function saveLayoutState() {
+            const snapshot = placedPanels.map(p => ({
+                id: p.id,
+                center: { lat: p.center.lat, lng: p.center.lng },
+                azimuth: p.azimuth,
+                orientation: p.orientation,
+                watts: p.watts,
+                brand: p.brand
+            }));
+            undoStack.push(snapshot);
+            if (undoStack.length > 50) undoStack.shift();
+            redoStack = []; // Clear redo stack on new action
+            updateUndoRedoButtons();
+        }
+
+        function triggerUndo() {
+            if (undoStack.length === 0) return;
+            const currentSnapshot = placedPanels.map(p => ({
+                id: p.id,
+                center: { lat: p.center.lat, lng: p.center.lng },
+                azimuth: p.azimuth,
+                orientation: p.orientation,
+                watts: p.watts,
+                brand: p.brand
+            }));
+            redoStack.push(currentSnapshot);
+            
+            placedPanels = undoStack.pop();
+            deselectPanel();
+            updateDesignMetrics();
+            renderPlacedPanels();
+            updateUndoRedoButtons();
+        }
+
+        function triggerRedo() {
+            if (redoStack.length === 0) return;
+            const currentSnapshot = placedPanels.map(p => ({
+                id: p.id,
+                center: { lat: p.center.lat, lng: p.center.lng },
+                azimuth: p.azimuth,
+                orientation: p.orientation,
+                watts: p.watts,
+                brand: p.brand
+            }));
+            undoStack.push(currentSnapshot);
+            
+            placedPanels = redoStack.pop();
+            deselectPanel();
+            updateDesignMetrics();
+            renderPlacedPanels();
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const btnUndo = document.getElementById('btn_undo');
+            const btnRedo = document.getElementById('btn_redo');
+            if (btnUndo) {
+                btnUndo.style.opacity = undoStack.length > 0 ? '1' : '0.5';
+                btnUndo.style.cursor = undoStack.length > 0 ? 'pointer' : 'default';
+            }
+            if (btnRedo) {
+                btnRedo.style.opacity = redoStack.length > 0 ? '1' : '0.5';
+                btnRedo.style.cursor = redoStack.length > 0 ? 'pointer' : 'default';
+            }
+        }
+
         function handleMapClick(latLng) {
             if (activeSolarTool === 'add') {
+                saveLayoutState();
                 const panelId = 'panel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 placedPanels.push({
                     id: panelId,
@@ -2653,6 +3153,7 @@ function toggleNav(event, element) {
                 confirmButtonText: 'Yes, clear all'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    saveLayoutState();
                     placedPanels = [];
                     selectedPanel = null;
                     document.getElementById('selected_panel_settings').style.display = 'none';
@@ -2718,6 +3219,7 @@ function toggleNav(event, element) {
                     if (e.stop) e.stop();
 
                     if (activeSolarTool === 'delete') {
+                        saveLayoutState();
                         placedPanels = placedPanels.filter(p => p.id !== panel.id);
                         if (selectedPanel && selectedPanel.id === panel.id) {
                             deselectPanel();
@@ -2753,6 +3255,10 @@ function toggleNav(event, element) {
                     }
                 });
 
+                polygon.addListener('dragstart', () => {
+                    saveLayoutState();
+                });
+
                 polygon.addListener('dragend', () => {
                     const path = polygon.getPath();
                     let sumLat = 0, sumLng = 0;
@@ -2778,6 +3284,7 @@ function toggleNav(event, element) {
 
         function toggleSelectedPanelOrientation(ori) {
             if (!selectedPanel) return;
+            saveLayoutState();
             selectedPanel.orientation = ori;
             renderPlacedPanels();
             updateDesignMetrics();
@@ -2805,6 +3312,54 @@ function toggleNav(event, element) {
             document.getElementById('solar_array_kw').innerText = `${totalKw.toFixed(2)} kW`;
             document.getElementById('solar_annual_yield').innerText = `${Math.round(annualKwh).toLocaleString()} kWh/yr`;
             document.getElementById('solar_co2_offset').innerText = `${co2Tons.toFixed(1)} tons/yr`;
+
+            // Top Bar stats updates
+            const totalStat = document.getElementById('total_panels_stat');
+            if (totalStat) totalStat.innerText = `${finalCount} panels`;
+
+            const selCountVal = document.getElementById('sel_count_val');
+            const selModelVal = document.getElementById('sel_model_val');
+            if (selectedPanel) {
+                if (selCountVal) selCountVal.innerText = `1 panel (${(selectedPanel.watts/1000).toFixed(3)}kW)`;
+                if (selModelVal) selModelVal.innerText = `${selectedPanel.brand} ${selectedPanel.watts}W`;
+            } else {
+                if (selCountVal) selCountVal.innerText = `0 panels (0.00kW)`;
+                if (selModelVal) selModelVal.innerText = `${activePanelBrand} ${activePanelWatts}W`;
+            }
+
+            // Populate "In this design" list in sidebar
+            const inDesignContainer = document.getElementById('panels_in_design_container');
+            if (inDesignContainer) {
+                const groups = {};
+                placedPanels.forEach(p => {
+                    const key = `${p.brand} ${p.watts}W`;
+                    groups[key] = (groups[key] || 0) + 1;
+                });
+                
+                inDesignContainer.innerHTML = '';
+                const keys = Object.keys(groups);
+                keys.forEach(key => {
+                    const count = groups[key];
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #edfaf2; border: 1px solid #1a6b3c; border-radius: 6px; font-size: 11px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.02);';
+                    div.className = 'catalog-item';
+                    div.innerHTML = `
+                        <div>
+                            <strong style="color: #1a6b3c;">${key}</strong><br>
+                            <span style="font-size: 9px; color: var(--text-muted);">Active Design Model</span>
+                        </div>
+                        <span style="font-weight: 800; color: #1a6b3c; background: #d1fae5; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${count} x</span>
+                    `;
+                    inDesignContainer.appendChild(div);
+                });
+                
+                if (keys.length === 0) {
+                    inDesignContainer.innerHTML = '<div style="font-size: 10px; color: var(--text-muted); font-style: italic;">No panels placed yet</div>';
+                }
+            }
+
+            // Render/Update the Monthly Production Chart
+            renderMonthlyProductionChart(totalKw);
 
             window.calculatedSolarPanelCount = finalCount;
             
@@ -3057,6 +3612,552 @@ function toggleNav(event, element) {
             } else {
                 Swal.fire('Error', 'Could not locate panel quantity input field.', 'error');
             }
+        }
+
+        // --- Single Line Diagram (SLD) Generator Controller ---
+        var sldPhases = 3;
+        var sldMeterLocation = 'Main';
+
+        function openSLDModal() {
+            document.getElementById('sld_generator_modal').style.display = 'flex';
+            
+            // Read Table A products to update cards
+            const specs = getTableAProducts();
+            
+            // Update Inverter card
+            const invNameEl = document.getElementById('sld_inverter_name');
+            if (invNameEl) invNameEl.innerText = specs.inverterModel;
+            
+            // Update Battery card
+            const battCard = document.getElementById('sld_battery_card');
+            const battNameEl = document.getElementById('sld_battery_name');
+            const battCapEl = document.getElementById('sld_battery_capacity');
+            
+            if (specs.batteryModel && specs.batteryModel.trim() !== "") {
+                if (battCard) battCard.style.display = 'flex';
+                if (battNameEl) battNameEl.innerText = specs.batteryModel;
+                if (battCapEl) battCapEl.innerText = specs.batteryCapacity || '10.0 kWh';
+            } else {
+                // If no battery, fallback to default SolaX card
+                if (battNameEl) battNameEl.innerText = "BATT1 - SolaX Power T-BAT HS36.8";
+                if (battCapEl) battCapEl.innerText = "36.8 kWh";
+            }
+
+            // Sync phase selectors
+            setSLDPhases(sldPhases);
+            setSLDMeterLocation(sldMeterLocation);
+            
+            updateSLD();
+        }
+
+        function closeSLDModal() {
+            document.getElementById('sld_generator_modal').style.display = 'none';
+        }
+
+        function setSLDPhases(n) {
+            sldPhases = n;
+            
+            // Toggle active classes on buttons
+            [1, 2, 3].forEach(p => {
+                const btn = document.getElementById('sld_phase_btn_' + p);
+                if (btn) {
+                    if (p === n) {
+                        btn.style.background = 'var(--accent)';
+                        btn.style.color = 'white';
+                        btn.style.border = '1px solid var(--accent)';
+                    } else {
+                        btn.style.background = 'white';
+                        btn.style.color = 'var(--text-dark)';
+                        btn.style.border = '1px solid var(--border)';
+                    }
+                }
+            });
+
+            // Update phase badges on Inverter card
+            const phaseB = document.getElementById('sld_inverter_phase_b');
+            const phaseC = document.getElementById('sld_inverter_phase_c');
+            if (phaseB) phaseB.style.display = n >= 2 ? 'flex' : 'none';
+            if (phaseC) phaseC.style.display = n >= 3 ? 'flex' : 'none';
+
+            updateSLD();
+        }
+
+        function setSLDMeterLocation(loc) {
+            sldMeterLocation = loc;
+            
+            const btnMain = document.getElementById('sld_meter_loc_main');
+            const btnSub = document.getElementById('sld_meter_loc_sub');
+            
+            if (loc === 'Main') {
+                if (btnMain) {
+                    btnMain.style.background = 'var(--accent)';
+                    btnMain.style.color = 'white';
+                    btnMain.style.border = '1px solid var(--accent)';
+                }
+                if (btnSub) {
+                    btnSub.style.background = 'white';
+                    btnSub.style.color = 'var(--text-dark)';
+                    btnSub.style.border = '1px solid var(--border)';
+                }
+            } else {
+                if (btnSub) {
+                    btnSub.style.background = 'var(--accent)';
+                    btnSub.style.color = 'white';
+                    btnSub.style.border = '1px solid var(--accent)';
+                }
+                if (btnMain) {
+                    btnMain.style.background = 'white';
+                    btnMain.style.color = 'var(--text-dark)';
+                    btnMain.style.border = '1px solid var(--border)';
+                }
+            }
+
+            updateSLD();
+        }
+
+        function getTableAProducts() {
+            let panelModel = "LONGi Solar LR7-54HVH-475M";
+            let panelQty = placedPanels.length || 24;
+            let panelWatts = activePanelWatts || 475;
+            let inverterModel = "SolaX Power X3-FORTH-80K";
+            let inverterPower = "8.0 kW";
+            let batteryModel = "";
+            let batteryCapacity = "36.8 kWh";
+
+            // Scrape Table A inputs
+            const rows = document.querySelectorAll('#productRows .product-selection-row');
+            let foundPanel = false;
+            let foundInverter = false;
+            let foundBattery = false;
+
+            rows.forEach(row => {
+                const typeEl = row.querySelector('.cp-type');
+                const modelEl = row.querySelector('.cp-model');
+                const qtyEl = row.querySelector('.cp-qty');
+                
+                if (typeEl && modelEl) {
+                    const type = typeEl.value;
+                    const model = modelEl.value;
+                    const qty = parseInt(qtyEl ? qtyEl.value : '0') || 1;
+                    
+                    if (type === 'Panel' && !foundPanel) {
+                        panelModel = model;
+                        panelQty = qty;
+                        foundPanel = true;
+                    } else if (type === 'Inverter' && !foundInverter) {
+                        inverterModel = model;
+                        inverterPower = model.includes('10') ? '10.0 kW' : (model.includes('8') ? '8.0 kW' : '8.0 kW');
+                        foundInverter = true;
+                    } else if (type === 'Battery' && !foundBattery) {
+                        batteryModel = model;
+                        batteryCapacity = model.includes('36') ? '36.8 kWh' : '17.3 kWh';
+                        foundBattery = true;
+                    }
+                }
+            });
+
+            return {
+                panelModel,
+                panelQty,
+                panelWatts,
+                inverterModel,
+                inverterPower,
+                batteryModel,
+                batteryCapacity
+            };
+        }
+
+        function updateSLD() {
+            const svg = document.getElementById('sld_svg');
+            if (!svg) return;
+
+            // Fetch current settings & inputs
+            const optRooftop = document.getElementById('sld_opt_rooftop_isolators').checked;
+            const optAcIsolator = document.getElementById('sld_opt_ac_isolators').checked;
+            const optSubboard = document.getElementById('sld_opt_subboard').checked;
+            const optGateway = document.getElementById('sld_opt_smart_gateway').checked;
+            const optLoadsSub = document.getElementById('sld_opt_loads_on_subboard').checked;
+            const optGridProt = document.getElementById('sld_opt_grid_protection').checked;
+            const optExportLim = document.getElementById('sld_opt_export_limiter').checked;
+
+            const labelInvToMsb = document.getElementById('sld_label_inv_to_msb').value;
+            const labelMsbToMeter = document.getElementById('sld_label_msb_to_meter').value;
+            const labelMeterToGrid = document.getElementById('sld_label_meter_to_grid').value;
+            const labelMainSwitch = document.getElementById('sld_label_main_switch').value;
+
+            const specs = getTableAProducts();
+            const totalKw = ((specs.panelWatts * specs.panelQty) / 1000).toFixed(2);
+
+            // Phase rendering helpers
+            function acLine(x1, y1, x2, y2) {
+                if (sldPhases === 1) {
+                    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#000000" stroke-width="1.8" />`;
+                } else if (sldPhases === 2) {
+                    if (y1 === y2) { // Horizontal
+                        return `
+                            <line x1="${x1}" y1="${y1 - 3}" x2="${x2}" y2="${y2 - 3}" stroke="#000000" stroke-width="1.2" />
+                            <line x1="${x1}" y1="${y1 + 3}" x2="${x2}" y2="${y2 + 3}" stroke="#000000" stroke-width="1.2" />
+                        `;
+                    } else { // Vertical
+                        return `
+                            <line x1="${x1 - 3}" y1="${y1}" x2="${x2 - 3}" y2="${y2}" stroke="#000000" stroke-width="1.2" />
+                            <line x1="${x1 + 3}" y1="${y1}" x2="${x2 + 3}" y2="${y2}" stroke="#000000" stroke-width="1.2" />
+                        `;
+                    }
+                } else { // 3-Phase
+                    if (y1 === y2) { // Horizontal
+                        return `
+                            <line x1="${x1}" y1="${y1 - 5}" x2="${x2}" y2="${y2 - 5}" stroke="#000000" stroke-width="1" />
+                            <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#000000" stroke-width="1" />
+                            <line x1="${x1}" y1="${y1 + 5}" x2="${x2}" y2="${y2 + 5}" stroke="#000000" stroke-width="1" />
+                        `;
+                    } else { // Vertical
+                        return `
+                            <line x1="${x1 - 5}" y1="${y1}" x2="${x2 - 5}" y2="${y2}" stroke="#000000" stroke-width="1" />
+                            <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#000000" stroke-width="1" />
+                            <line x1="${x1 + 5}" y1="${y1}" x2="${x2 + 5}" y2="${y2}" stroke="#000000" stroke-width="1" />
+                        `;
+                    }
+                }
+            }
+
+            function drawBreaker(x, y, label) {
+                return `
+                    <circle cx="${x}" cy="${y}" r="3.5" fill="#000000" />
+                    <circle cx="${x + 20}" cy="${y}" r="3.5" fill="#000000" />
+                    <line x1="${x}" y1="${y}" x2="${x + 18}" y2="${y - 8}" stroke="#000000" stroke-width="2" />
+                    <text x="${x + 10}" y="${y + 14}" font-size="7" font-weight="700" fill="#000000" text-anchor="middle">${label}</text>
+                `;
+            }
+
+            let sldContent = `
+                <!-- Outer Border and grid line details -->
+                <rect x="15" y="15" width="1070" height="750" fill="none" stroke="#475569" stroke-width="2" />
+                <rect x="20" y="20" width="1060" height="740" fill="none" stroke="#475569" stroke-width="1" />
+                
+                <!-- Diagram Frame Separator -->
+                <line x1="860" y1="20" x2="860" y2="760" stroke="#475569" stroke-width="1.5" />
+
+                <!-- ==================== ENGINEERING TITLE BLOCK (Right Column) ==================== -->
+                <text x="960" y="50" font-size="12" font-weight="800" fill="#1e293b" text-anchor="middle">ARES ENERGY & ELECTRICALS</text>
+                <line x1="860" y1="70" x2="1080" y2="70" stroke="#475569" stroke-width="1" />
+
+                <text x="875" y="90" font-size="8" font-weight="700" fill="#64748b">SITE / CUSTOMER:</text>
+                <text x="875" y="108" font-size="10" font-weight="800" fill="#0f172a">${projectData ? projectData.customer_name || 'Valued Client' : 'Valued Client'}</text>
+                <text x="875" y="125" font-size="8" font-weight="700" fill="#0f172a" width="190">${projectData ? projectData.address || '' : ''}</text>
+                <line x1="860" y1="150" x2="1080" y2="150" stroke="#475569" stroke-width="1" />
+
+                <text x="875" y="170" font-size="8" font-weight="700" fill="#64748b">DESIGNER / ENGINEER:</text>
+                <text x="875" y="190" font-size="9" font-weight="800" fill="#0f172a">VELU RAMASAMY</text>
+                <text x="875" y="205" font-size="8" font-weight="700" fill="#64748b">APPROVED BY:</text>
+                <text x="875" y="220" font-size="9" font-weight="800" fill="#0f172a">ARES ENGINEERING DEPT.</text>
+                <line x1="860" y1="240" x2="1080" y2="240" stroke="#475569" stroke-width="1" />
+
+                <text x="875" y="260" font-size="8" font-weight="700" fill="#64748b">DRAWING DETAILS:</text>
+                <text x="875" y="280" font-size="10" font-weight="800" fill="#ef6c00">SINGLE LINE DIAGRAM (SLD)</text>
+                <text x="875" y="295" font-size="8" font-weight="700" fill="#64748b">STATUS:</text>
+                <text x="875" y="310" font-size="9" font-weight="800" fill="#22c55e">SYSTEM GENERATED / COMPLIANT</text>
+                <line x1="860" y1="330" x2="1080" y2="330" stroke="#475569" stroke-width="1" />
+
+                <text x="875" y="350" font-size="8" font-weight="700" fill="#64748b">REFERENCE DETAILS:</text>
+                <text x="875" y="370" font-size="9" font-weight="800" fill="#0f172a">REF: #ARE-0000-${projectData ? projectData.id || '2093' : '2093'}</text>
+                <text x="875" y="385" font-size="8" font-weight="700" fill="#64748b">DATE:</text>
+                <text x="875" y="400" font-size="9" font-weight="800" fill="#0f172a">${new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</text>
+                <line x1="860" y1="420" x2="1080" y2="420" stroke="#475569" stroke-width="1" />
+
+                <!-- System parameter summaries in title block -->
+                <text x="875" y="445" font-size="8" font-weight="700" fill="#64748b">SYSTEM CAPACITY:</text>
+                <text x="875" y="465" font-size="11" font-weight="800" fill="#0284c7">${totalKw} kW DC Array</text>
+                <text x="875" y="480" font-size="10" font-weight="800" fill="#0f172a">Phases: ${sldPhases}-Phase</text>
+                <text x="875" y="495" font-size="8" font-weight="700" fill="#64748b">METER LOCATION: ${sldMeterLocation.toUpperCase()}</text>
+                <line x1="860" y1="520" x2="1080" y2="520" stroke="#475569" stroke-width="1" />
+                
+                <text x="875" y="545" font-size="8" font-weight="700" fill="#64748b">COMPLIANCE STANDARDS:</text>
+                <text x="875" y="565" font-size="8" font-weight="800" fill="#0f172a">· AS/NZS 5033:2021 (PV Arrays)</text>
+                <text x="875" y="580" font-size="8" font-weight="800" fill="#0f172a">· AS/NZS 4777.2:2020 (Inverters)</text>
+                <text x="875" y="595" font-size="8" font-weight="800" fill="#0f172a">· AS/NZS 3000:2018 (Wiring Rules)</text>
+
+                <!-- ==================== CIRCUIT RENDERING (Left/Middle Area) ==================== -->
+
+                <!-- 1. PV MODULE ARRAY SOURCE -->
+                <rect x="40" y="110" width="110" height="130" fill="#f8fafc" stroke="#000000" stroke-width="1.5" rx="4" />
+                <path d="M50,120 L75,120 L75,150 L50,150 Z M80,120 L105,120 L105,150 L80,150 Z M110,120 L135,120 L135,150 L110,150 Z" fill="none" stroke="#475569" stroke-width="1" />
+                <path d="M50,165 L75,165 L75,195 L50,195 Z M80,165 L80,195 M110,165 L110,195" fill="none" stroke="#475569" stroke-width="1" />
+                <text x="95" y="210" font-size="8" font-weight="800" text-anchor="middle" fill="#000000">PV ARRAY</text>
+                <text x="95" y="222" font-size="7" font-weight="700" text-anchor="middle" fill="#475569">${specs.panelQty}x ${specs.panelWatts}W Panels</text>
+                <text x="95" y="232" font-size="7" font-weight="700" text-anchor="middle" fill="#0284c7">${totalKw} kW total</text>
+
+                <!-- Line from Array to Rooftop DC Isolator -->
+                <line x1="150" y1="175" x2="200" y2="175" stroke="#000000" stroke-width="1.8" />
+                <text x="175" y="165" font-size="7" font-weight="700" text-anchor="middle">PV DC CABLES</text>
+
+                <!-- 2. ROOFTOP ISOLATOR (Optional) -->
+                `;
+
+            if (optRooftop) {
+                sldContent += `
+                    <rect x="200" y="145" width="50" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="3" />
+                    <text x="225" y="157" font-size="7" font-weight="800" text-anchor="middle">ROOFTOP</text>
+                    <text x="225" y="167" font-size="6" font-weight="700" text-anchor="middle" fill="#64748b">DC ISOLATOR</text>
+                    ${drawBreaker(215, 185, '')}
+                    <line x1="250" y1="175" x2="310" y2="175" stroke="#000000" stroke-width="1.8" />
+                `;
+            } else {
+                sldContent += `
+                    <line x1="200" y1="175" x2="310" y2="175" stroke="#000000" stroke-width="1.8" />
+                `;
+            }
+
+            sldContent += `
+                <!-- 3. INVERTER (INV1) -->
+                <rect x="310" y="110" width="130" height="150" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="4" />
+                <line x1="310" y1="220" x2="440" y2="110" stroke="#94a3b8" stroke-dasharray="3,3" />
+                <text x="330" y="140" font-size="12" font-weight="800" fill="#0f172a">INV1</text>
+                <text x="330" y="155" font-size="7" font-weight="800" fill="#64748b">SOLAR INVERTER</text>
+                <text x="330" y="170" font-size="7" font-weight="700" fill="#0f172a">${specs.inverterModel}</text>
+                <text x="330" y="182" font-size="7" font-weight="700" fill="#0284c7">Apparent: ${specs.inverterPower}</text>
+                
+                <!-- DC/AC Conversion Wave symbol -->
+                <path d="M390,220 C395,215 395,225 400,220 C405,215 405,225 410,220" fill="none" stroke="#475569" stroke-width="1.5" />
+                <text x="375" y="223" font-size="9" font-weight="800" fill="#475569">~</text>
+                <line x1="330" y1="210" x2="350" y2="210" stroke="#475569" stroke-width="1.5" />
+                <line x1="330" y1="213" x2="350" y2="213" stroke="#475569" stroke-dasharray="2,2" />
+
+                <!-- Battery Connection to Inverter -->
+                <line x1="375" y1="260" x2="375" y2="300" stroke="#000000" stroke-width="1.8" />
+                ${drawBreaker(365, 300, 'DC ISO')}
+                <line x1="375" y1="312" x2="375" y2="350" stroke="#000000" stroke-width="1.8" />
+
+                <!-- Battery Storage Unit -->
+                <rect x="310" y="350" width="130" height="90" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="4" />
+                <text x="375" y="370" font-size="9" font-weight="800" text-anchor="middle" fill="#0f172a">BATT1</text>
+                <text x="375" y="385" font-size="7" font-weight="700" text-anchor="middle" fill="#64748b">BATTERY STORAGE</text>
+                <text x="375" y="400" font-size="7" font-weight="700" text-anchor="middle" fill="#0f172a">${specs.batteryModel || 'SolaX T-BAT HS36.8'}</text>
+                <text x="375" y="415" font-size="8" font-weight="800" text-anchor="middle" fill="#22c55e">${specs.batteryCapacity || '36.8 kWh'}</text>
+
+                <!-- AC Output Wiring (Inverter to MSB or AC Isolator) -->
+                ${acLine(440, 185, 480, 185)}
+                <text x="460" y="175" font-size="6" font-weight="800" text-anchor="middle" fill="#0284c7">AC</text>
+            `;
+
+            let currentX = 480;
+
+            // 4. AC ISOLATOR (Optional)
+            if (optAcIsolator) {
+                sldContent += `
+                    <rect x="480" y="155" width="50" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="3" />
+                    <text x="505" y="167" font-size="7" font-weight="800" text-anchor="middle">AC ISOLATOR</text>
+                    ${drawBreaker(495, 195, '')}
+                    ${acLine(530, 185, 570, 185)}
+                `;
+                currentX = 570;
+            } else {
+                sldContent += `
+                    ${acLine(480, 185, 570, 185)}
+                `;
+                currentX = 570;
+            }
+
+            // 5. SUBBOARD / SMART GATEWAY
+            if (optSubboard || optGateway) {
+                const titleText = optSubboard ? 'SUB-BOARD' : 'SMART GATEWAY';
+                sldContent += `
+                    <rect x="${currentX}" y="110" width="110" height="150" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="4" />
+                    <text x="${currentX + 55}" y="130" font-size="9" font-weight="800" text-anchor="middle" fill="#0f172a">${titleText}</text>
+                    <text x="${currentX + 55}" y="145" font-size="6" font-weight="700" text-anchor="middle" fill="#64748b">ELECTRICAL INTERFACE</text>
+                    
+                    <!-- Subboard internal breakers -->
+                    ${drawBreaker(currentX + 20, 185, 'INV IN')}
+                    ${drawBreaker(currentX + 60, 185, 'LOADS')}
+                    
+                    ${acLine(currentX + 110, 185, currentX + 150, 185)}
+                `;
+                currentX += 150;
+            } else {
+                sldContent += `
+                    ${acLine(currentX, 185, currentX + 80, 185)}
+                `;
+                currentX += 80;
+            }
+
+            // Custom Text Wiring Label (Inverter to MSB)
+            sldContent += `
+                <text x="${(440 + currentX) / 2}" y="145" font-size="7" font-weight="700" fill="#0284c7" text-anchor="middle">${labelInvToMsb}</text>
+            `;
+
+            // 6. MAIN SWITCHBOARD (MSB)
+            sldContent += `
+                <rect x="${currentX}" y="110" width="150" height="280" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="4" />
+                <text x="${currentX + 75}" y="130" font-size="10" font-weight="800" text-anchor="middle" fill="#0f172a">MAIN SWITCHBOARD</text>
+                <text x="${currentX + 75}" y="142" font-size="6" font-weight="700" text-anchor="middle" fill="#64748b">MAIN SWITCH & BUSBARS</text>
+
+                <!-- Busbars L1, L2, L3 -->
+                <line x1="${currentX + 20}" y1="160" x2="${currentX + 130}" y2="160" stroke="#000000" stroke-width="2.5" />
+                <line x1="${currentX + 20}" y1="165" x2="${currentX + 130}" y2="165" stroke="#94a3b8" stroke-width="2.5" />
+                <line x1="${currentX + 20}" y1="170" x2="${currentX + 130}" y2="170" stroke="#ef4444" stroke-width="2.5" />
+
+                <!-- Main Switch Inverter Supply -->
+                ${drawBreaker(currentX + 30, 210, 'INV SUPPLY')}
+                
+                <!-- Main Switch Grid Supply -->
+                ${drawBreaker(currentX + 30, 270, 'MAIN SWITCH')}
+                <text x="${currentX + 90}" y="282" font-size="7" font-weight="700" fill="#e8681e">${labelMainSwitch}</text>
+            `;
+
+            // Optional Smart Meter inside MSB
+            if (optExportLim) {
+                sldContent += `
+                    <rect x="${currentX + 15}" y="315" width="120" height="50" fill="#f8fafc" stroke="#0284c7" stroke-width="1.2" rx="3" />
+                    <text x="${currentX + 75}" y="332" font-size="8" font-weight="800" text-anchor="middle" fill="#0284c7">SMART METER</text>
+                    <text x="${currentX + 75}" y="345" font-size="6" font-weight="700" text-anchor="middle" fill="#64748b">EXPORT LIMITER</text>
+                `;
+            }
+
+            // AC Output from MSB down to Meter Box
+            const msbCenterX = currentX + 75;
+            sldContent += `
+                ${acLine(msbCenterX, 390, msbCenterX, 450)}
+                <text x="${msbCenterX + 10}" y="420" font-size="7" font-weight="700" fill="#0284c7" text-anchor="start">${labelMsbToMeter}</text>
+
+                <!-- 7. METER BOX -->
+                <rect x="${msbCenterX - 65}" y="450" width="130" height="90" fill="#ffffff" stroke="#000000" stroke-width="1.5" rx="4" />
+                <text x="${msbCenterX}" y="470" font-size="9" font-weight="800" text-anchor="middle" fill="#0f172a">METER BOX</text>
+                <circle cx="${msbCenterX}" cy="505" r="22" fill="none" stroke="#000000" stroke-width="1.5" />
+                <text x="${msbCenterX}" y="510" font-size="14" font-weight="800" text-anchor="middle" fill="#0284c7">M</text>
+
+                <!-- Output from Meter Box down to Grid -->
+                ${acLine(msbCenterX, 540, msbCenterX, 600)}
+                <text x="${msbCenterX + 10}" y="575" font-size="7" font-weight="700" fill="#0284c7" text-anchor="start">${labelMeterToGrid}</text>
+
+                <!-- 8. GRID CONNECTION OVERHEAD / CONSUMER MAINS -->
+                <line x1="${msbCenterX - 30}" y1="600" x2="${msbCenterX + 30}" y2="600" stroke="#000000" stroke-width="3" />
+                <line x1="${msbCenterX - 20}" y1="605" x2="${msbCenterX + 20}" y2="605" stroke="#000000" stroke-width="2" />
+                <line x1="${msbCenterX - 10}" y1="610" x2="${msbCenterX + 10}" y2="610" stroke="#000000" stroke-width="1" />
+                <text x="${msbCenterX}" y="625" font-size="9" font-weight="800" text-anchor="middle" fill="#0f172a">UTILITY GRID SUPPLY</text>
+            `;
+
+            // ==================== SPECIFICATION TABLES (Bottom Area) ====================
+            sldContent += `
+                <!-- Bottom Divider -->
+                <line x1="20" y1="650" x2="860" y2="650" stroke="#475569" stroke-width="1.5" />
+
+                <!-- Left Table: PV Modules specs -->
+                <text x="30" y="668" font-size="9" font-weight="800" fill="#1e293b">PV MODULES TECHNICAL SPECIFICATIONS</text>
+                <rect x="30" y="675" width="390" height="65" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+                
+                <!-- Table Headers -->
+                <line x1="30" y1="695" x2="420" y2="695" stroke="#cbd5e1" stroke-width="1" />
+                <text x="45" y="688" font-size="7" font-weight="800" text-anchor="middle">REF</text>
+                <text x="75" y="688" font-size="7" font-weight="800" text-anchor="middle">QTY</text>
+                <text x="170" y="688" font-size="7" font-weight="800" text-anchor="middle">MAKE AND MODEL</text>
+                <text x="245" y="688" font-size="7" font-weight="800" text-anchor="middle">PMAX</text>
+                <text x="280" y="688" font-size="7" font-weight="800" text-anchor="middle">VOC</text>
+                <text x="315" y="688" font-size="7" font-weight="800" text-anchor="middle">ISC</text>
+                <text x="350" y="688" font-size="7" font-weight="800" text-anchor="middle">VMP</text>
+                <text x="390" y="688" font-size="7" font-weight="800" text-anchor="middle">IMP</text>
+                
+                <!-- Table Data Row -->
+                <text x="45" y="715" font-size="8" font-weight="700" text-anchor="middle">PV1</text>
+                <text x="75" y="715" font-size="8" font-weight="800" fill="#0284c7" text-anchor="middle">${specs.panelQty}</text>
+                <text x="170" y="715" font-size="7" font-weight="700" text-anchor="middle">${specs.panelModel.substr(0, 22)}</text>
+                <text x="245" y="715" font-size="8" font-weight="700" text-anchor="middle">${specs.panelWatts}W</text>
+                <text x="280" y="715" font-size="8" font-weight="700" text-anchor="middle">51.8V</text>
+                <text x="315" y="715" font-size="8" font-weight="700" text-anchor="middle">13.8A</text>
+                <text x="350" y="715" font-size="8" font-weight="700" text-anchor="middle">43.2V</text>
+                <text x="390" y="715" font-size="8" font-weight="700" text-anchor="middle">12.9A</text>
+
+                <!-- Right Table: Inverters specs -->
+                <text x="440" y="668" font-size="9" font-weight="800" fill="#1e293b">INVERTERS & SYSTEM POWER LIMITS</text>
+                <rect x="440" y="675" width="400" height="65" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+                
+                <!-- Table Headers -->
+                <line x1="440" y1="695" x2="840" y2="695" stroke="#cbd5e1" stroke-width="1" />
+                <text x="455" y="688" font-size="7" font-weight="800" text-anchor="middle">REF</text>
+                <text x="480" y="688" font-size="7" font-weight="800" text-anchor="middle">QTY</text>
+                <text x="590" y="688" font-size="7" font-weight="800" text-anchor="middle">MAKE AND MODEL</text>
+                <text x="690" y="688" font-size="7" font-weight="800" text-anchor="middle">RATED AC</text>
+                <text x="735" y="688" font-size="7" font-weight="800" text-anchor="middle">APPARENT</text>
+                <text x="770" y="688" font-size="7" font-weight="800" text-anchor="middle">MPPT</text>
+                <text x="810" y="688" font-size="7" font-weight="800" text-anchor="middle">MAX V</text>
+
+                <!-- Table Data Row -->
+                <text x="455" y="715" font-size="8" font-weight="700" text-anchor="middle">INV1</text>
+                <text x="480" y="715" font-size="8" font-weight="700" text-anchor="middle">1</text>
+                <text x="590" y="715" font-size="7" font-weight="700" text-anchor="middle">${specs.inverterModel.substr(0, 28)}</text>
+                <text x="690" y="715" font-size="8" font-weight="700" text-anchor="middle">${specs.inverterPower}</text>
+                <text x="735" y="715" font-size="8" font-weight="700" text-anchor="middle">${specs.inverterPower}VA</text>
+                <text x="770" y="715" font-size="8" font-weight="700" text-anchor="middle">2</text>
+                <text x="810" y="715" font-size="8" font-weight="700" text-anchor="middle">1000V</text>
+            `;
+
+            svg.innerHTML = sldContent;
+        }
+
+        function downloadSLDPDF() {
+            const svgEl = document.getElementById('sld_svg');
+            if (!svgEl) return;
+            
+            const clonedSvg = svgEl.cloneNode(true);
+            clonedSvg.setAttribute('width', '100%');
+            clonedSvg.setAttribute('height', '100%');
+            
+            const printWindow = window.open('', '_blank', 'width=1200,height=800');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Single Line Diagram - ${projectData ? projectData.address || '' : ''}</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #ffffff; }
+                        svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+                        @media print {
+                            @page { size: landscape; margin: 0; }
+                            body { margin: 0; padding: 0; width: 100%; height: 100%; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${clonedSvg.outerHTML}
+                    \${'<script>'}
+                        window.onload = function() {
+                            setTimeout(() => {
+                                window.print();
+                                window.close();
+                            }, 500);
+                        };
+                    \${'</' + 'script>'}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function openSLDFullSize() {
+            const svgEl = document.getElementById('sld_svg');
+            if (!svgEl) return;
+            
+            const clonedSvg = svgEl.cloneNode(true);
+            clonedSvg.setAttribute('width', '100%');
+            clonedSvg.setAttribute('height', '100%');
+            
+            const fullSizeWindow = window.open('', '_blank');
+            fullSizeWindow.document.write(`
+                <html>
+                <head>
+                    <title>Single Line Diagram - Full Size</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
+                        div.container { width: 95vw; height: 95vh; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 20px; display: flex; align-items: center; justify-content: center; }
+                        svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        ${clonedSvg.outerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            fullSizeWindow.document.close();
         }
 
         function switchTab(tabId, btnElement) {
