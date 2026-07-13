@@ -5244,14 +5244,14 @@ app.post('/api/compliance-sales/fetch-guidance', (req, res) => {
 
                 if (lead_id) {
                     db.get(
-                        "SELECT project_no, compliance_stage, compliance_completed_questions, compliance_checklist_status FROM leads WHERE id = ?",
+                        "SELECT project_number, compliance_stage, compliance_completed_questions, compliance_checklist_status FROM leads WHERE id = ?",
                         [lead_id],
                         (leadErr, leadRow) => {
                             if (leadErr) {
                                 console.error('[COMPLIANCE ENGINE] Lead fetch error:', leadErr.message);
                             }
                             
-                            const projectNo = leadRow ? leadRow.project_no : '';
+                            const projectNo = leadRow ? leadRow.project_number : '';
 
                             db.get(
                                 "SELECT * FROM sales_telemetry_live_state WHERE lead_id = ?",
@@ -5740,12 +5740,12 @@ app.post('/api/telephony-voice/end-call', (req, res) => {
             return res.json({ success: false, message: 'Transcript is empty' });
         }
 
-        db.get('SELECT project_no, phone_number FROM leads WHERE id = ?', [lead_id], (err, leadRow) => {
+        db.get('SELECT project_number, phone_number FROM leads WHERE id = ?', [lead_id], (err, leadRow) => {
             if (err || !leadRow) {
                 return res.json({ success: false, message: 'Lead not found' });
             }
 
-            const projectNumber = leadRow.project_no || '';
+            const projectNumber = leadRow.project_number || '';
             const callerNumber = leadRow.phone_number || '';
 
             db.run(

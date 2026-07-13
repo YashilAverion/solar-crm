@@ -6549,13 +6549,13 @@ async function loadCallTranscripts() {
     const container = document.getElementById('call_transcripts_container');
     if (!container) return;
     
-    if (!projectData || !projectData.project_no) {
+    if (!projectData || !projectData.project_number) {
         container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Loading project data...</div>';
         return;
     }
 
     try {
-        const res = await fetch(`/api/projects/${projectData.project_no}/call-logs`);
+        const res = await fetch(`/api/projects/${projectData.project_number}/call-logs`);
         if (res.ok) {
             const data = await res.json();
             if (data.success && data.logs && data.logs.length > 0) {
