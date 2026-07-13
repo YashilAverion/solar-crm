@@ -100,13 +100,13 @@
         
         .action-bar-lower { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
         
-        .tabs-header { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; margin-bottom: 20px; }
-        .tabs-capsules { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .tabs-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .tabs-capsules { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-start; align-items: center; }
         .tab-capsule { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(28,53,87,0.2); }
         .tab-capsule:hover:not(.active) { background: #f1f5f9; color: var(--text-dark); }
         
-        .sub-tabs-header { display: flex; gap: 8px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .sub-tabs-header { display: flex; gap: 8px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center; align-items: center; }
         .sub-tab-capsule { background: #f8fafc; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 15px; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .sub-tab-capsule.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 1px 3px rgba(28,53,87,0.15); }
         .sub-tab-capsule:hover:not(.active) { background: #e2e8f0; color: var(--text-dark); }
