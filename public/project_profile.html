@@ -2761,9 +2761,7 @@ function toggleNav(event, element) {
         }
 
         function openPylonEditor() {
-            if (pylonProjectId) {
-                window.open(`https://observer.getpylon.com/projects/${pylonProjectId}`, '_blank');
-            }
+            window.open(`/pylon_editor_mock.html?id=${currentProjectId}`, '_blank');
         }
 
         function syncPylonDesign() {

@@ -1730,11 +1730,10 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
         if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
         if (lead.pylon_project_id) {
-            const isMock = lead.pylon_project_id.startsWith('pyl_mock_');
             return res.json({
                 success: true,
                 pylon_project_id: lead.pylon_project_id,
-                url: isMock ? `/pylon_editor_mock.html?id=${leadId}` : `https://observer.getpylon.com/projects/${lead.pylon_project_id}`
+                url: `/pylon_editor_mock.html?id=${leadId}`
             });
         }
 
@@ -1763,7 +1762,7 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
                         res.json({
                             success: true,
                             pylon_project_id: data.id,
-                            url: `https://observer.getpylon.com/projects/${data.id}`
+                            url: `/pylon_editor_mock.html?id=${leadId}`
                         });
                     });
                 } else {
