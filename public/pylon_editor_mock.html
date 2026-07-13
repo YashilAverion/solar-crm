@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pylon Solar Design Editor - Mock Workspace</title>
+    <!-- Outfit Font & Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js and SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-medium: #1e293b;
+            --bg-light: #334155;
+            --accent-blue: #0284c7;
+            --accent-green: #22c55e;
+            --border-color: #475569;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            height: 60px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pylon-logo {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        .pylon-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+        }
+
+        .pylon-subtitle {
+            font-size: 11px;
+            color: #38bdf8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 5px;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .project-info {
+            text-align: center;
+        }
+
+        .project-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .project-address {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .actions-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-save {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+        }
+
+        .btn-save:hover {
+            background-color: #16a34a;
+            transform: translateY(-1px);
+        }
+
+        .btn-exit {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-exit:hover {
+            color: var(--text-light);
+            border-color: var(--text-muted);
+        }
+
+        /* Workspace Grid */
+        .workspace {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+
+        /* Left Toolbar */
+        .toolbar {
+            width: 64px;
+            background-color: var(--bg-dark);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .tool-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background-color: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+        }
+
+        .tool-btn.active {
+            background-color: var(--accent-blue);
+            color: white;
+            box-shadow: 0 0 8px rgba(2, 132, 199, 0.4);
+        }
+
+        .tool-divider {
+            width: 30px;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 5px 0;
+        }
+
+        /* Center Map Area */
+        .map-viewport {
+            flex: 1;
+            position: relative;
+            background-color: #111;
+        }
+
+        #pylonMockMap {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Center Guide Text */
+        .viewport-instructions {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 500;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 4;
+        }
+
+        /* Right Sidebar Panel */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-dark);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 5;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-light);
+        }
+
+        .stat-lbl {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Configuration Panel Controls */
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-select, .control-input {
+            flex: 1;
+            background-color: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .control-select:focus, .control-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-input {
+            flex: 1;
+            accent-color: var(--accent-blue);
+        }
+
+        .slider-val {
+            font-size: 12px;
+            font-weight: 700;
+            width: 36px;
+            text-align: right;
+        }
+
+        /* Product Selector Styles */
+        .catalog-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .catalog-item {
+            background-color: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .catalog-item:hover {
+            border-color: var(--accent-blue);
+            background-color: rgba(2, 132, 199, 0.05);
+        }
+
+        .catalog-item.active {
+            border-color: var(--accent-blue);
+            background-color: rgba(2, 132, 199, 0.15);
+        }
+
+        .catalog-item-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .catalog-item-specs {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .catalog-item-badge {
+            background-color: var(--bg-light);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: var(--text-muted);
+        }
+
+        .catalog-item.active .catalog-item-badge {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        /* Bottom Status Strip */
+        .status-strip {
+            height: 28px;
+            background-color: var(--bg-dark);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 10px;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .status-part {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Block -->
+    <header>
+        <div class="logo-section">
+            <div class="pylon-logo"></div>
+            <div class="pylon-title">PYLON</div>
+            <div class="pylon-subtitle">Simulator</div>
+        </div>
+        <div class="project-info">
+            <div class="project-name" id="project_name_label">Loading Project...</div>
+            <div class="project-address" id="project_address_label">Address loading...</div>
+        </div>
+        <div class="actions-section">
+            <button class="btn-save" onclick="saveMockDesign()">
+                💾 Save Design to CRM
+            </button>
+            <button class="btn-exit" onclick="exitEditor()">
+                ❌ Exit
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="workspace">
+        <!-- Toolbar Left -->
+        <div class="toolbar">
+            <button id="tool_pointer" class="tool-btn active" title="Select / Move" onclick="setTool('select')">
+                👆
+            </button>
+            <button id="tool_add" class="tool-btn" title="Add Panel" onclick="setTool('add')">
+                ➕
+            </button>
+            <button id="tool_delete" class="tool-btn" title="Delete Panel" onclick="setTool('delete')">
+                🗑️
+            </button>
+            <div class="tool-divider"></div>
+            <button id="tool_clear" class="tool-btn" title="Clear All Panels" onclick="clearAllPanels()">
+                🧹
+            </button>
+        </div>
+
+        <!-- Satellite View Viewport -->
+        <div class="map-viewport">
+            <div class="viewport-instructions" id="viewport_instructions">
+                💡 Select "Add Panel" and click on the roof to design your layout
+            </div>
+            <div id="pylonMockMap"></div>
+        </div>
+
+        <!-- Sidebar Right -->
+        <div class="sidebar">
+            <!-- Stats -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">PROPOSAL DESIGN METRICS</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-val" id="panel_count_stat">0</div>
+                        <div class="stat-lbl">Panels Count</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="system_size_stat">0.00 kW</div>
+                        <div class="stat-lbl">Array Capacity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="yield_stat">0 kWh/yr</div>
+                        <div class="stat-lbl">Est. Annual Yield</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="offset_stat">0.0 t/yr</div>
+                        <div class="stat-lbl">Carbon Offset</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameters -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Panel Configurations</div>
+                
+                <div class="control-group">
+                    <label class="control-label">Azimuth Rotation (Direction)</label>
+                    <div class="slider-container">
+                        <input id="azimuth_slider" type="range" min="0" max="359" value="90" class="slider-input" oninput="updateAzimuth(this.value)">
+                        <div class="slider-val" id="azimuth_val">90°</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Pitch Angle (Tilt)</label>
+                    <div class="slider-container">
+                        <input id="pitch_slider" type="range" min="0" max="45" value="22" class="slider-input" oninput="updatePitch(this.value)">
+                        <div class="slider-val" id="pitch_val">22°</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Panel Orientation</label>
+                    <div class="control-row">
+                        <select id="orientation_select" class="control-select" onchange="updateOrientation(this.value)">
+                            <option value="PORTRAIT">Portrait (Vertical)</option>
+                            <option value="LANDSCAPE">Landscape (Horizontal)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product catalog selection -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Connected CRM Equipment</div>
+                <div class="catalog-list">
+                    <div class="catalog-item active" onclick="selectCatalogItem('LONGi', 475, this)">
+                        <div>
+                            <div class="catalog-item-name">LONGi Solar Hi-MO X10 Explorer</div>
+                            <div class="catalog-item-specs">475W Panel (Monocrystalline)</div>
+                        </div>
+                        <div class="catalog-item-badge">475W</div>
+                    </div>
+                    <div class="catalog-item" onclick="selectCatalogItem('JA Solar', 470, this)">
+                        <div>
+                            <div class="catalog-item-name">JA Solar DeepBlue 4.0 Pro</div>
+                            <div class="catalog-item-specs">470W High Efficiency</div>
+                        </div>
+                        <div class="catalog-item-badge">470W</div>
+                    </div>
+                    <div class="catalog-item" onclick="selectCatalogItem('Canadian Solar', 370, this)">
+                        <div>
+                            <div class="catalog-item-name">Canadian Solar BiKu</div>
+                            <div class="catalog-item-specs">370W Bifacial PV</div>
+                        </div>
+                        <div class="catalog-item-badge">370W</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Graph -->
+            <div class="sidebar-section" style="flex: 1; min-height: 220px; border-bottom: none;">
+                <div class="sidebar-section-title">MONTHLY YIELD ESTIMATE (kWh)</div>
+                <div style="position: relative; width: 100%; height: 160px; margin-top: 10px;">
+                    <canvas id="yieldChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Strip -->
+    <div class="status-strip">
+        <div class="status-part">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div class="status-dot"></div>
+                <span>Connected to Pylon SSO Engine</span>
+            </div>
+            <span>|</span>
+            <span>Imagery: High-Res Nearmap Compilation</span>
+        </div>
+        <div>
+            <span>Press Esc to revert to selection tool</span>
+        </div>
+    </div>
+
+    <script>
+        // Parse lead query ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const leadId = urlParams.get('id');
+
+        let googleMap = null;
+        let placedMarkers = []; // holds visual panel markers
+        let currentTool = 'select'; // 'select', 'add', 'delete'
+        
+        let panelBrand = 'LONGi';
+        let panelWatts = 475;
+        let panelAzimuth = 90;
+        let panelPitch = 22;
+        let panelOrientation = 'PORTRAIT';
+
+        let projectData = null;
+
+        // Fetch details
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!leadId) {
+                Swal.fire('Error', 'Project ID is missing from URL query parameter.', 'error');
+                return;
+            }
+            fetchProjectDetails();
+        });
+
+        function fetchProjectDetails() {
+            fetch(`/api/projects/details/${leadId}`)
+                .then(res => res.json())
+                .then(json => {
+                    if (json.error) throw new Error(json.error);
+                    projectData = json;
+                    
+                    document.getElementById('project_name_label').innerText = `${json.first_name || ''} ${json.last_name || ''}`.trim() + ` (AR${json.id})`;
+                    document.getElementById('project_address_label').innerText = json.google_address || `${json.address || ''}, ${json.suburb || ''} ${json.state || ''}`;
+
+                    initMap(json);
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    Swal.fire('Error Loading Project', err.message, 'error');
+                });
+        }
+
+        // Initialize Google Hybrid Map
+        function initMap(lead) {
+            const address = lead.google_address || `${lead.address || ''}, ${lead.suburb || ''} ${lead.state || ''} ${lead.postcode || ''}`;
+            const geocoder = new google.maps.Geocoder();
+
+            geocoder.geocode({ address: address }, (results, status) => {
+                const mapDiv = document.getElementById('pylonMockMap');
+                if (status === 'OK' && results[0]) {
+                    googleMap = new google.maps.Map(mapDiv, {
+                        center: results[0].geometry.location,
+                        zoom: 20,
+                        mapTypeId: 'hybrid',
+                        tilt: 0,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false
+                    });
+
+                    // Add click listener for placing panels
+                    googleMap.addListener('click', (e) => {
+                        handleMapClick(e.latLng);
+                    });
+
+                    // Automatically load pre-saved panel markers if they exist
+                    const savedCount = parseInt(lead.pylon_panel_count) || 0;
+                    if (savedCount > 0) {
+                        loadSavedLayout(results[0].geometry.location, savedCount);
+                    }
+                } else {
+                    mapDiv.innerHTML = `<div style="padding:40px; text-align:center; color:red; font-weight:600;">Geocoding error: ${status}. Address couldn't be loaded on satellite viewport.</div>`;
+                }
+            });
+        }
+
+        // Simulates loading pre-saved panels around the house
+        function loadSavedLayout(center, count) {
+            for (let i = 0; i < count; i++) {
+                // slightly offset markers in a grid layout
+                const offsetLat = (Math.floor(i / 6) - 1.5) * 0.00003;
+                const offsetLng = ((i % 6) - 2.5) * 0.000045;
+                const pos = {
+                    lat: center.lat() + offsetLat,
+                    lng: center.lng() + offsetLng
+                };
+                createPanelMarker(pos);
+            }
+            updateMetrics();
+        }
+
+        // Tool Selection
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (tool === 'select') {
+                document.getElementById('tool_pointer').classList.add('active');
+                document.getElementById('viewport_instructions').innerText = '👆 Hover or drag panels to adjust placement';
+            } else if (tool === 'add') {
+                document.getElementById('tool_add').classList.add('active');
+                document.getElementById('viewport_instructions').innerText = '➕ Click anywhere on the roof layout to place a panel';
+            } else if (tool === 'delete') {
+                document.getElementById('tool_delete').classList.add('active');
+                document.getElementById('viewport_instructions').innerText = '🗑️ Click on placed panels to remove them';
+            }
+        }
+
+        // Handle Map Click
+        function handleMapClick(latLng) {
+            if (currentTool !== 'add') return;
+            createPanelMarker(latLng);
+            updateMetrics();
+        }
+
+        // Create Panel Visual Representation
+        function createPanelMarker(latLng) {
+            const isPortrait = panelOrientation === 'PORTRAIT';
+            
+            // Build custom SVG icon representing a premium yellow solar panel oriented by azimuth
+            const sizeX = isPortrait ? 18 : 32;
+            const sizeY = isPortrait ? 32 : 18;
+
+            const marker = new google.maps.Marker({
+                position: latLng,
+                map: googleMap,
+                draggable: currentTool === 'select',
+                icon: {
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                    scale: 0.1, // very small standard pointer fallback
+                    anchor: new google.maps.Point(0, 0)
+                }
+            });
+
+            // Set custom visual overlay rectangle representing the panel
+            const boundsOffsetLat = isPortrait ? 0.000008 : 0.0000045;
+            const boundsOffsetLng = isPortrait ? 0.0000045 : 0.000008;
+
+            const rect = new google.maps.Rectangle({
+                bounds: {
+                    north: marker.getPosition().lat() + boundsOffsetLat,
+                    south: marker.getPosition().lat() - boundsOffsetLat,
+                    east: marker.getPosition().lng() + boundsOffsetLng,
+                    west: marker.getPosition().lng() - boundsOffsetLng
+                },
+                strokeColor: '#0284c7',
+                strokeOpacity: 0.8,
+                strokeWeight: 1.5,
+                fillColor: '#f59e0b',
+                fillOpacity: 0.6,
+                map: googleMap,
+                draggable: currentTool === 'select'
+            });
+
+            // Sync rectangle dragging with marker
+            rect.addListener('dragend', () => {
+                const newBounds = rect.getBounds();
+                const centerLat = (newBounds.getNorthEast().lat() + newBounds.getSouthWest().lat()) / 2;
+                const centerLng = (newBounds.getNorthEast().lng() + newBounds.getSouthWest().lng()) / 2;
+                marker.setPosition({ lat: centerLat, lng: centerLng });
+            });
+
+            rect.addListener('click', () => {
+                if (currentTool === 'delete') {
+                    rect.setMap(null);
+                    marker.setMap(null);
+                    placedMarkers = placedMarkers.filter(m => m.rect !== rect);
+                    updateMetrics();
+                } else if (currentTool === 'select') {
+                    // Highlight selected panel
+                    rect.setOptions({ strokeColor: '#ef4444', strokeWeight: 2.5 });
+                    setTimeout(() => {
+                        rect.setOptions({ strokeColor: '#0284c7', strokeWeight: 1.5 });
+                    }, 1000);
+                }
+            });
+
+            placedMarkers.push({ marker, rect });
+        }
+
+        // Clear All Panels
+        function clearAllPanels() {
+            Swal.fire({
+                title: 'Clear entire design?',
+                text: 'This will remove all panels placed on this layout.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, clear all',
+                background: '#1e293b',
+                color: '#f8fafc'
+            }).then(res => {
+                if (res.isConfirmed) {
+                    placedMarkers.forEach(m => {
+                        m.marker.setMap(null);
+                        m.rect.setMap(null);
+                    });
+                    placedMarkers = [];
+                    updateMetrics();
+                }
+            });
+        }
+
+        // Rotation & Pitch sliders
+        function updateAzimuth(val) {
+            panelAzimuth = val;
+            document.getElementById('azimuth_val').innerText = val + '°';
+            // In a full implementation, this rotates the visual SVGs
+        }
+
+        // Pitch Angle (Tilt)
+        function updatePitch(val) {
+            panelPitch = val;
+            document.getElementById('pitch_val').innerText = val + '°';
+        }
+
+        function updateOrientation(val) {
+            panelOrientation = val;
+        }
+
+        function selectCatalogItem(brand, watts, element) {
+            document.querySelectorAll('.catalog-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            panelBrand = brand;
+            panelWatts = watts;
+            updateMetrics();
+        }
+
+        // Metrics Calculation & Chart updates
+        function updateMetrics() {
+            const count = placedMarkers.length;
+            const size = (count * panelWatts) / 1000;
+            
+            // Heuristic yield values
+            let yieldFactor = 3.9;
+            if (projectData && projectData.state) {
+                const st = projectData.state.trim().toUpperCase();
+                if (st === 'VIC' || st === 'TAS') yieldFactor = 3.6;
+                else if (st === 'QLD' || st === 'WA') yieldFactor = 4.2;
+            }
+            const annualYield = size * yieldFactor * 0.82 * 365;
+            const offset = (annualYield * 0.54) / 1000;
+
+            document.getElementById('panel_count_stat').innerText = count;
+            document.getElementById('system_size_stat').innerText = `${size.toFixed(2)} kW`;
+            document.getElementById('yield_stat').innerText = `${Math.round(annualYield).toLocaleString()} kWh/yr`;
+            document.getElementById('offset_stat').innerText = `${offset.toFixed(1)} t/yr`;
+
+            updateYieldChart(size);
+        }
+
+        // Render Monthly Production Chart
+        let yieldChartInstance = null;
+        function updateYieldChart(kw) {
+            const baseFactors = [120, 108, 96, 72, 54, 46, 48, 62, 86, 106, 114, 120];
+            const yieldValues = baseFactors.map(f => (f * (kw || 6.6) * 0.082).toFixed(0));
+
+            const ctx = document.getElementById('yieldChart');
+            if (!ctx) return;
+
+            if (yieldChartInstance) {
+                yieldChartInstance.data.datasets[0].data = yieldValues;
+                yieldChartInstance.update();
+                return;
+            }
+
+            yieldChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+                    datasets: [{
+                        label: 'Yield',
+                        data: yieldValues,
+                        backgroundColor: '#38bdf8',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { display: false },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Keyboard support
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                setTool('select');
+            }
+        });
+
+        // Save Design back to CRM
+        function saveMockDesign() {
+            const count = placedMarkers.length;
+            const size = (count * panelWatts) / 1000;
+
+            if (count === 0) {
+                Swal.fire({
+                    title: 'Empty Layout',
+                    text: 'Please place at least one solar panel on the roof before saving.',
+                    icon: 'warning',
+                    background: '#1e293b',
+                    color: '#f8fafc'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Saving mock design layout...',
+                text: 'Writing design metadata directly to CRM database.',
+                allowOutsideClick: false,
+                background: '#1e293b',
+                color: '#f8fafc',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Call CRM backend custom endpoint to save
+            fetch(`/api/pylon/mock-save/${leadId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    panel_count: count,
+                    system_size: size,
+                    layout_image: '/images/pylon_mock_layout.png',
+                    sld_pdf: '/pdf/pylon_mock_sld.pdf'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Design Saved!',
+                        html: `Layout of <strong>${count} panels (${size.toFixed(2)} kW)</strong> successfully synchronized.<br><br>Please close this tab and click <strong>Sync Design Layout</strong> in your CRM window.`,
+                        confirmButtonText: 'Great, Close Workspace',
+                        confirmButtonColor: '#0284c7',
+                        background: '#1e293b',
+                        color: '#f8fafc'
+                    }).then(() => {
+                        window.close();
+                    });
+                } else {
+                    throw new Error(data.error);
+                }
+            })
+            .catch(err => {
+                Swal.close();
+                Swal.fire('Save Error', err.message, 'error');
+            });
+        }
+
+        function exitEditor() {
+            window.close();
+        }
+    </script>
+</body>
+</html>

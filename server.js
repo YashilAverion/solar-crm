@@ -1722,6 +1722,7 @@ app.put('/api/projects/details/:id/notes', (req, res) => {
 });
 
 // ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
+// ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
 app.post('/api/pylon/create-project/:id', (req, res) => {
     const leadId = req.params.id;
     db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
@@ -1729,10 +1730,11 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
         if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
         if (lead.pylon_project_id) {
+            const isMock = lead.pylon_project_id.startsWith('pyl_mock_');
             return res.json({
                 success: true,
                 pylon_project_id: lead.pylon_project_id,
-                url: `https://observer.getpylon.com/projects/${lead.pylon_project_id}`
+                url: isMock ? `/pylon_editor_mock.html?id=${leadId}` : `https://observer.getpylon.com/projects/${lead.pylon_project_id}`
             });
         }
 
@@ -1779,7 +1781,7 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
                 res.json({
                     success: true,
                     pylon_project_id: mockId,
-                    url: `https://observer.getpylon.com/projects/${mockId}`
+                    url: `/pylon_editor_mock.html?id=${leadId}`
                 });
             });
         }
@@ -1831,11 +1833,11 @@ app.post('/api/pylon/sync/:id', (req, res) => {
                 res.status(500).json({ error: apiErr.message });
             });
         } else {
-            // Mock Mode Fallback (Simulates a complete 24-panel design layout sync)
-            const mockCount = 24;
-            const mockSize = 10.2;
-            const mockImg = '/images/pylon_mock_layout.png';
-            const mockSld = '/pdf/pylon_mock_sld.pdf';
+            // Mock Mode Fallback (reads actual stats customized in pylon_editor_mock.html if saved, else default mock)
+            const mockCount = lead.pylon_panel_count || 24;
+            const mockSize = lead.pylon_system_size || 10.2;
+            const mockImg = lead.pylon_layout_image || '/images/pylon_mock_layout.png';
+            const mockSld = lead.pylon_sld_pdf || '/pdf/pylon_mock_sld.pdf';
 
             db.run(
                 "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
@@ -1854,6 +1856,19 @@ app.post('/api/pylon/sync/:id', (req, res) => {
             );
         }
     });
+});
+
+app.post('/api/pylon/mock-save/:id', (req, res) => {
+    const leadId = req.params.id;
+    const { panel_count, system_size, layout_image, sld_pdf } = req.body;
+    db.run(
+        "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
+        [panel_count, system_size, layout_image || '/images/pylon_mock_layout.png', sld_pdf || '/pdf/pylon_mock_sld.pdf', leadId],
+        (dbErr) => {
+            if (dbErr) return res.status(500).json({ error: dbErr.message });
+            res.json({ success: true });
+        }
+    );
 });
 
 // ── QUICK EDIT ROUTE FORWARDING ────────────────────────────
