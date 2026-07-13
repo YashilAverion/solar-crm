@@ -852,9 +852,10 @@ app.post('/api/configurations', (req, res) => {
         return res.status(400).json({ error: 'config_key is required.' });
     }
 
-    // global_office_ip is system-wide, so it should be saved with user_id = null
+    // global_office_ip and Pylon configurations are system-wide, so they should be saved with user_id = null
+    const globalKeys = ['global_office_ip', 'pylon_email', 'pylon_password', 'pylon_api_key'];
     let targetUserId = req.session.user.id;
-    if (config_key === 'global_office_ip') {
+    if (globalKeys.includes(config_key)) {
         if (req.session.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Unauthorized to modify system configuration.' });
         }
@@ -1726,21 +1727,35 @@ app.put('/api/projects/details/:id/notes', (req, res) => {
     });
 });
 
+// Helper to get system config with fallback to environment variables
+function getSystemConfig(key, fallback) {
+    return new Promise((resolve) => {
+        db.get("SELECT config_value FROM configurations WHERE user_id IS NULL AND config_key = ?", [key], (err, row) => {
+            if (!err && row) {
+                resolve(row.config_value);
+            } else {
+                resolve(fallback);
+            }
+        });
+    });
+}
+
 // ── SECURE PYLON SESSION PROXY ───────────────────────────
 let pylonSessionCookie = process.env.PYLON_SESSION_COOKIE || null;
 let pylonSessionExpiry = null;
 
 async function getPylonSession() {
-    // If a static session cookie is explicitly set in .env, use it
-    if (process.env.PYLON_SESSION_COOKIE) {
-        return process.env.PYLON_SESSION_COOKIE;
+    const email = await getSystemConfig('pylon_email', process.env.PYLON_EMAIL);
+    const password = await getSystemConfig('pylon_password', process.env.PYLON_PASSWORD);
+    
+    // If a static session cookie is explicitly set in configurations or .env, use it
+    const staticCookie = await getSystemConfig('pylon_session_cookie', process.env.PYLON_SESSION_COOKIE);
+    if (staticCookie) {
+        return staticCookie;
     }
 
-    const email = process.env.PYLON_EMAIL;
-    const password = process.env.PYLON_PASSWORD;
-    
     if (!email || !password) {
-        throw new Error('Pylon credentials (PYLON_EMAIL/PYLON_PASSWORD) or master session (PYLON_SESSION_COOKIE) are not configured in CRM .env');
+        throw new Error('Pylon credentials (pylon_email/pylon_password) are not configured in CRM Settings or .env');
     }
     
     if (pylonSessionCookie && pylonSessionExpiry && Date.now() < pylonSessionExpiry) {
@@ -1873,9 +1888,9 @@ app.all('/pylon-editor/{*splat}', async (req, res) => {
 });
 
 // ── PYLON SOLAR DESIGN API ROUTES ───────────────────────────
-app.post('/api/pylon/create-project/:id', (req, res) => {
+app.post('/api/pylon/create-project/:id', async (req, res) => {
     const leadId = req.params.id;
-    db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
+    db.get("SELECT * FROM leads WHERE id = ?", [leadId], async (err, lead) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
@@ -1887,7 +1902,7 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
             });
         }
 
-        const apiKey = process.env.PYLON_API_KEY;
+        const apiKey = await getSystemConfig('pylon_api_key', process.env.PYLON_API_KEY);
         if (apiKey && !apiKey.startsWith('mock_')) {
             // Real API integration call
             const fetch = require('node-fetch');
@@ -1946,9 +1961,10 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
     });
 });
 
-function syncPylonProject(leadId, pylonProjectId, apiKey) {
+async function syncPylonProject(leadId, pylonProjectId, apiKey) {
+    const activeApiKey = apiKey || await getSystemConfig('pylon_api_key', process.env.PYLON_API_KEY);
     return new Promise((resolve, reject) => {
-        if (!apiKey || apiKey.startsWith('mock_')) {
+        if (!activeApiKey || activeApiKey.startsWith('mock_')) {
             // Mock sync (reads actual stats customized in pylon_editor_mock.html if saved, else default mock)
             db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
                 if (err) return reject(err);
@@ -1983,7 +1999,7 @@ function syncPylonProject(leadId, pylonProjectId, apiKey) {
         // 1. Fetch project details
         fetch(`https://api.getpylon.com/v1/solar_projects/${pylonProjectId}`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${activeApiKey}`,
                 'Accept': 'application/vnd.api+json'
             }
         })
@@ -1997,7 +2013,7 @@ function syncPylonProject(leadId, pylonProjectId, apiKey) {
             const url = `https://api.getpylon.com/v1/solar_designs?filter[project]=${pylonProjectId}&fields[solar_designs]=title,is_primary,summary,module_types,line_items,proposal_quote`;
             return fetch(url, {
                 headers: {
-                    'Authorization': `Bearer ${apiKey}`,
+                    'Authorization': `Bearer ${activeApiKey}`,
                     'Accept': 'application/vnd.api+json'
                 }
             })

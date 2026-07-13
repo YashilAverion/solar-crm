@@ -474,6 +474,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')">📞 VoIP Analytics & Recordings</button>
             <button class="tab-chip" id="tab-storage-backups" onclick="switchAdminSection('storage-backups')">💾 System Storage & Backups</button>
             <button class="tab-chip" id="tab-telephony-sandbox" onclick="switchAdminSection('telephony-sandbox')">🧪 Telephony Sandbox & Audits</button>
+            <button class="tab-chip" id="tab-pylon-config" onclick="switchAdminSection('pylon-config')">☀️ Pylon Solar Integration</button>
         </div>
  
         <div id="section-rate-limits" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
@@ -776,6 +777,42 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
 
+        <!-- Pylon Solar Integration Settings Tab Content -->
+        <div id="section-pylon-config" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 600px; margin: 10px 0;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0 0 16px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                    ☀️ Pylon Solar Integration Settings
+                </h3>
+                
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                    Configure the master credentials and API integration values for Pylon. This allows sales staff to use the real Pylon design editor inside the CRM completely login-free.
+                </p>
+
+                <form onsubmit="savePylonConfig(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label for="pylonEmailInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon Account Email</label>
+                        <input type="email" id="pylonEmailInput" placeholder="Enter Pylon Email" style="height: 38px; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; background: #fff;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label for="pylonPasswordInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon Account Password</label>
+                        <input type="password" id="pylonPasswordInput" placeholder="Enter Pylon Password" style="height: 38px; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; background: #fff;">
+                        <span style="font-size: 11px; color: var(--text-muted);">This is used once in the background by the server to fetch the session cookie.</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+                        <label for="pylonApiKeyInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon API Token (Bearer Key)</label>
+                        <input type="text" id="pylonApiKeyInput" placeholder="Enter Pylon API Token" style="height: 38px; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; background: #fff;">
+                        <span style="font-size: 11px; color: var(--text-muted);">Used for REST API requests (project creation & sync).</span>
+                    </div>
+
+                    <button type="submit" class="btn-save" style="margin-top: 10px; height: 38px; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; border: none; border-radius: 6px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                        Save Pylon Configuration
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <div id="section-users-list" style="display:flex; flex: 1; overflow: hidden; flex-direction: column;">
             <div class="table-wrap">
                 <table>
@@ -1061,12 +1098,14 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-voip-analytics').style.display = target === 'voip-analytics' ? 'flex' : 'none';
         document.getElementById('section-storage-backups').style.display = target === 'storage-backups' ? 'flex' : 'none';
         document.getElementById('section-telephony-sandbox').style.display = target === 'telephony-sandbox' ? 'flex' : 'none';
+        document.getElementById('section-pylon-config').style.display = target === 'pylon-config' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
         document.getElementById('tab-voip-analytics').classList.toggle('active-chip', target === 'voip-analytics');
         document.getElementById('tab-storage-backups').classList.toggle('active-chip', target === 'storage-backups');
         document.getElementById('tab-telephony-sandbox').classList.toggle('active-chip', target === 'telephony-sandbox');
+        document.getElementById('tab-pylon-config').classList.toggle('active-chip', target === 'pylon-config');
         
         if (target === 'rate-limits') {
             loadRateLimits();
@@ -1077,6 +1116,8 @@ document.addEventListener("DOMContentLoaded", function() {
             loadStorageStatsAndBackups();
         } else if (target === 'telephony-sandbox') {
             loadTelephonyAuditLogs();
+        } else if (target === 'pylon-config') {
+            loadPylonConfig();
         }
     }
 
@@ -1164,6 +1205,72 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         } catch(e) {
             console.error('Failed to load global office IP:', e);
+        }
+    }
+
+    async function loadPylonConfig() {
+        try {
+            const res = await fetch('/api/configurations');
+            if (res.ok) {
+                const data = await res.json();
+                if (data) {
+                    if (data.pylon_email !== undefined) {
+                        document.getElementById('pylonEmailInput').value = data.pylon_email;
+                    }
+                    if (data.pylon_password !== undefined) {
+                        document.getElementById('pylonPasswordInput').value = data.pylon_password;
+                    }
+                    if (data.pylon_api_key !== undefined) {
+                        document.getElementById('pylonApiKeyInput').value = data.pylon_api_key;
+                    }
+                }
+            }
+        } catch(e) {
+            console.error('Failed to load Pylon configuration:', e);
+        }
+    }
+
+    async function savePylonConfig(event) {
+        event.preventDefault();
+        const email = document.getElementById('pylonEmailInput').value.trim();
+        const password = document.getElementById('pylonPasswordInput').value.trim();
+        const apiKey = document.getElementById('pylonApiKeyInput').value.trim();
+
+        try {
+            // Save email
+            const emailRes = await fetch('/api/configurations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_key: 'pylon_email', config_value: email })
+            });
+
+            // Save password
+            const pwdRes = await fetch('/api/configurations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_key: 'pylon_password', config_value: password })
+            });
+
+            // Save api key
+            const apiRes = await fetch('/api/configurations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_key: 'pylon_api_key', config_value: apiKey })
+            });
+
+            if (emailRes.ok && pwdRes.ok && apiRes.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Settings Saved',
+                    text: 'Pylon Solar configurations saved successfully! Changes are active.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Error', 'Failed to save Pylon settings.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', e.message, 'error');
         }
     }
 
