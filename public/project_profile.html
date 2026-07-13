@@ -983,6 +983,23 @@ function toggleNav(event, element) {
                         <div id="satelliteMap" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted);">
                             Loading satellite imagery...
                         </div>
+
+                        <!-- Floating Map Toolbar (Top Left) -->
+                        <div id="solar_map_toolbar" style="position: absolute; top: 12px; left: 12px; z-index: 10; display: flex; background: #ffffff; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 4px; gap: 4px;">
+                            <button type="button" id="tool_btn_select" onclick="selectSolarTool('select')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: var(--accent); color: white; transition: all 0.2s;">
+                                ✋ Edit / Move
+                            </button>
+                            <button type="button" id="tool_btn_add" onclick="selectSolarTool('add')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                ➕ Add Panel
+                            </button>
+                            <button type="button" id="tool_btn_delete" onclick="selectSolarTool('delete')" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: var(--text-dark); transition: all 0.2s;">
+                                🗑️ Delete
+                            </button>
+                            <div style="width: 1px; background: var(--border); margin: 4px 2px;"></div>
+                            <button type="button" onclick="clearAllSolarPanels()" style="height: 32px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; background: transparent; color: #ef4444; transition: all 0.2s;">
+                                🧹 Clear All
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Right Sidebar: Ares Solar Copilot Design Panel (30%) -->
@@ -1009,10 +1026,52 @@ function toggleNav(event, element) {
                             </div>
                         </div>
 
+                        <!-- Panel Brand Selection (Active Spawner) -->
+                        <div class="field" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Default Panel Model</label>
+                            <select id="active_panel_model_select" onchange="updateActivePanelModel(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%; cursor: pointer;">
+                                <option value="LONGi_475" data-watts="475" data-brand="LONGi Solar">LONGi Solar Hi-MO X10 Explorer (475W)</option>
+                                <option value="Jinko_475" data-watts="475" data-brand="Jinko Solar">Jinko Solar Tiger Neo (475W)</option>
+                                <option value="JA_475" data-watts="475" data-brand="JA Solar">JA Solar DeepBlue 4.0 Pro (475W)</option>
+                                <option value="Trina_400" data-watts="400" data-brand="Trina Solar">Trina Solar Vertex S (400W)</option>
+                                <option value="Canadian_370" data-watts="370" data-brand="Canadian Solar">Canadian Solar HiKu (370W)</option>
+                            </select>
+                        </div>
+
+                        <!-- Selected Panel Settings (Pylon-Style Editor) -->
+                        <div id="selected_panel_settings" style="display: none; flex-direction: column; gap: 10px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 12px; transition: all 0.3s; margin-bottom: 4px;">
+                            <div style="font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; border-bottom: 1px solid #fde68a; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>🛠️ Edit Selected Panel</span>
+                                <button type="button" onclick="deselectPanel()" style="background: none; border: none; font-size: 10px; color: #b45309; cursor: pointer; text-decoration: underline;">Done</button>
+                            </div>
+                            
+                            <!-- Rotation (Azimuth Slider) -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #78350f;">
+                                    <span>Orientation Angle (Azimuth):</span>
+                                    <span id="selected_panel_azimuth_val">90°</span>
+                                </div>
+                                <input type="range" id="selected_panel_azimuth_slider" min="0" max="360" value="90" oninput="rotateSelectedPanel(this.value)" style="width: 100%; accent-color: #d97706; cursor: pointer;">
+                            </div>
+
+                            <!-- Orientation (Portrait / Landscape Toggle) -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #78350f;">Layout Mode:</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" id="orientation_btn_portrait" onclick="toggleSelectedPanelOrientation('PORTRAIT')" style="flex: 1; height: 28px; font-size: 12px; font-weight: 700; border-radius: 4px; border: 1px solid #d97706; background: #d97706; color: white; cursor: pointer; transition: all 0.2s;">
+                                        Portrait
+                                    </button>
+                                    <button type="button" id="orientation_btn_landscape" onclick="toggleSelectedPanelOrientation('LANDSCAPE')" style="flex: 1; height: 28px; font-size: 12px; font-weight: 700; border-radius: 4px; border: 1px solid #fde68a; background: white; color: #d97706; cursor: pointer; transition: all 0.2s;">
+                                        Landscape
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- AS/NZS 5033 Compliance (Wind Boundary Offset) -->
                         <div class="field">
                             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">AS/NZS 5033 Offset Boundary</label>
-                            <select id="solar_wind_offset" onchange="runComplianceLayoutEngine()" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none;">
+                            <select id="solar_wind_offset" onchange="runComplianceLayoutEngine()" style="height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #fff; font-size: 13px; padding: 0 8px; outline: none; width: 100%;">
                                 <option value="200" selected>200mm Offset (Fully Compliant)</option>
                                 <option value="100">100mm Offset (Restricted)</option>
                                 <option value="0">No Offset (Max Physical Capacity)</option>
@@ -2463,6 +2522,10 @@ function toggleNav(event, element) {
                         streetViewControl: false,
                         mapTypeControl: true
                     });
+
+                    satelliteMap.addListener('click', (e) => {
+                        handleMapClick(e.latLng);
+                    });
                     
                     new google.maps.Marker({
                         position: results[0].geometry.location,
@@ -2502,6 +2565,254 @@ function toggleNav(event, element) {
                     mapDiv.innerHTML = `<div style="padding:20px; text-align:center; color:red; font-weight:600;">Geocoding error: ${status}. Please verify the address format or API key billing status.</div>`;
                 }
             });
+        }
+
+        var activeSolarTool = 'select';
+        var activePanelBrand = 'LONGi Solar';
+        var activePanelWatts = 475;
+        var activePanelAzimuth = 90;
+        var activePanelOrientation = 'PORTRAIT';
+        var placedPanels = [];
+        var selectedPanel = null;
+
+        function selectSolarTool(tool) {
+            activeSolarTool = tool;
+            
+            const btnSelect = document.getElementById('tool_btn_select');
+            const btnAdd = document.getElementById('tool_btn_add');
+            const btnDelete = document.getElementById('tool_btn_delete');
+            
+            [btnSelect, btnAdd, btnDelete].forEach(b => {
+                if (b) {
+                    b.style.background = 'transparent';
+                    b.style.color = 'var(--text-dark)';
+                }
+            });
+            
+            let activeBtn = null;
+            if (tool === 'select') activeBtn = btnSelect;
+            else if (tool === 'add') activeBtn = btnAdd;
+            else if (tool === 'delete') activeBtn = btnDelete;
+            
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--accent)';
+                activeBtn.style.color = 'white';
+            }
+
+            if (tool !== 'select') {
+                deselectPanel();
+            }
+        }
+
+        function updateActivePanelModel(val) {
+            const select = document.getElementById('active_panel_model_select');
+            const opt = select.options[select.selectedIndex];
+            if (opt) {
+                activePanelWatts = parseInt(opt.dataset.watts);
+                activePanelBrand = opt.dataset.brand;
+            }
+            if (selectedPanel) {
+                selectedPanel.watts = activePanelWatts;
+                selectedPanel.brand = activePanelBrand;
+                updateDesignMetrics();
+                renderPlacedPanels();
+            }
+        }
+
+        function handleMapClick(latLng) {
+            if (activeSolarTool === 'add') {
+                const panelId = 'panel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                placedPanels.push({
+                    id: panelId,
+                    center: { lat: latLng.lat(), lng: latLng.lng() },
+                    azimuth: activePanelAzimuth,
+                    orientation: activePanelOrientation,
+                    watts: activePanelWatts,
+                    brand: activePanelBrand
+                });
+                updateDesignMetrics();
+                renderPlacedPanels();
+            } else if (activeSolarTool === 'select') {
+                deselectPanel();
+            }
+        }
+
+        function deselectPanel() {
+            selectedPanel = null;
+            document.getElementById('selected_panel_settings').style.display = 'none';
+            renderPlacedPanels();
+        }
+
+        function clearAllSolarPanels() {
+            Swal.fire({
+                title: 'Clear All Panels?',
+                text: 'This will remove all solar panels from the design.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, clear all'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    placedPanels = [];
+                    selectedPanel = null;
+                    document.getElementById('selected_panel_settings').style.display = 'none';
+                    updateDesignMetrics();
+                    renderPlacedPanels();
+                }
+            });
+        }
+
+        function renderPlacedPanels() {
+            if (!satelliteMap) return;
+
+            activeSolarPolygons.forEach(p => p.setMap(null));
+            activeSolarPolygons = [];
+
+            placedPanels.forEach(panel => {
+                const lat = panel.center.lat;
+                const lng = panel.center.lng;
+                const latDegreeToMeters = 111111;
+                const lngDegreeToMeters = 111111 * Math.cos(lat * Math.PI / 180);
+
+                const isPortrait = panel.orientation === 'PORTRAIT';
+                const length = isPortrait ? 1.75 : 1.0;
+                const width = isPortrait ? 1.0 : 1.75;
+
+                const azimuthRad = ((panel.azimuth || 0) * Math.PI) / 180;
+                const cosA = Math.cos(azimuthRad);
+                const sinA = Math.sin(azimuthRad);
+
+                const halfL = length / 2;
+                const halfW = width / 2;
+
+                const corners = [
+                    { x: -halfW, y: -halfL },
+                    { x: halfW, y: -halfL },
+                    { x: halfW, y: halfL },
+                    { x: -halfW, y: halfL }
+                ];
+
+                const pathCoords = corners.map(c => {
+                    const rotX = c.x * cosA - c.y * sinA;
+                    const rotY = c.x * sinA + c.y * cosA;
+                    return {
+                        lat: lat + rotY / latDegreeToMeters,
+                        lng: lng + rotX / lngDegreeToMeters
+                    };
+                });
+
+                const isSelected = selectedPanel && selectedPanel.id === panel.id;
+
+                const polygon = new google.maps.Polygon({
+                    paths: pathCoords,
+                    strokeColor: isSelected ? "#ef4444" : "#1e293b",
+                    strokeOpacity: 0.9,
+                    strokeWeight: isSelected ? 2.5 : 1.2,
+                    fillColor: isSelected ? "#f59e0b" : "#fbbf24",
+                    fillOpacity: isSelected ? 0.8 : 0.65,
+                    draggable: activeSolarTool === 'select',
+                    map: satelliteMap
+                });
+
+                polygon.addListener('click', (e) => {
+                    if (e.stop) e.stop();
+
+                    if (activeSolarTool === 'delete') {
+                        placedPanels = placedPanels.filter(p => p.id !== panel.id);
+                        if (selectedPanel && selectedPanel.id === panel.id) {
+                            deselectPanel();
+                        }
+                        updateDesignMetrics();
+                        renderPlacedPanels();
+                    } else if (activeSolarTool === 'select') {
+                        selectedPanel = panel;
+                        
+                        document.getElementById('selected_panel_settings').style.display = 'flex';
+                        document.getElementById('selected_panel_azimuth_val').innerText = `${panel.azimuth}°`;
+                        document.getElementById('selected_panel_azimuth_slider').value = panel.azimuth;
+                        
+                        const btnP = document.getElementById('orientation_btn_portrait');
+                        const btnL = document.getElementById('orientation_btn_landscape');
+                        if (panel.orientation === 'PORTRAIT') {
+                            btnP.style.background = '#d97706';
+                            btnP.style.color = 'white';
+                            btnP.style.border = '1px solid #d97706';
+                            btnL.style.background = 'white';
+                            btnL.style.color = '#d97706';
+                            btnL.style.border = '1px solid #fde68a';
+                        } else {
+                            btnL.style.background = '#d97706';
+                            btnL.style.color = 'white';
+                            btnL.style.border = '1px solid #d97706';
+                            btnP.style.background = 'white';
+                            btnP.style.color = '#d97706';
+                            btnP.style.border = '1px solid #fde68a';
+                        }
+                        
+                        renderPlacedPanels();
+                    }
+                });
+
+                polygon.addListener('dragend', () => {
+                    const path = polygon.getPath();
+                    let sumLat = 0, sumLng = 0;
+                    for (let i = 0; i < 4; i++) {
+                        sumLat += path.getAt(i).lat();
+                        sumLng += path.getAt(i).lng();
+                    }
+                    panel.center = { lat: sumLat / 4, lng: sumLng / 4 };
+                    updateDesignMetrics();
+                });
+
+                activeSolarPolygons.push(polygon);
+            });
+        }
+
+        function rotateSelectedPanel(deg) {
+            if (!selectedPanel) return;
+            selectedPanel.azimuth = parseInt(deg);
+            document.getElementById('selected_panel_azimuth_val').innerText = `${deg}°`;
+            renderPlacedPanels();
+            updateDesignMetrics();
+        }
+
+        function toggleSelectedPanelOrientation(ori) {
+            if (!selectedPanel) return;
+            selectedPanel.orientation = ori;
+            renderPlacedPanels();
+            updateDesignMetrics();
+        }
+
+        function updateDesignMetrics() {
+            const finalCount = placedPanels.length;
+            
+            let totalKw = 0;
+            placedPanels.forEach(p => {
+                totalKw += (p.watts || 475) / 1000;
+            });
+
+            let sunHours = 3.9;
+            if (projectData && projectData.state) {
+                const st = projectData.state.trim().toUpperCase();
+                if (st === 'VIC' || st === 'TAS') sunHours = 3.6;
+                else if (st === 'QLD' || st === 'WA') sunHours = 4.2;
+                else if (st === 'SA') sunHours = 4.0;
+            }
+            const annualKwh = totalKw * sunHours * 0.82 * 365;
+            const co2Tons = (annualKwh * 0.54) / 1000;
+
+            document.getElementById('solar_panel_count').innerText = finalCount;
+            document.getElementById('solar_array_kw').innerText = `${totalKw.toFixed(2)} kW`;
+            document.getElementById('solar_annual_yield').innerText = `${Math.round(annualKwh).toLocaleString()} kWh/yr`;
+            document.getElementById('solar_co2_offset').innerText = `${co2Tons.toFixed(1)} tons/yr`;
+
+            window.calculatedSolarPanelCount = finalCount;
+            
+            const saveBtn = document.getElementById('btn_save_solar_layout');
+            if (saveBtn) {
+                if (finalCount > 0) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', 'true');
+            }
         }
 
         let projectStateCode = '';
@@ -2680,78 +2991,24 @@ function toggleNav(event, element) {
 
             const finalPanels = enforceCEC ? candidatePanels.slice(0, maxPanelsAllowed) : candidatePanels;
 
-            // Draw panels on Map
-            finalPanels.forEach(panel => {
-                const lat = panel.center.latitude;
-                const lng = panel.center.longitude;
-                const latDegreeToMeters = 111111;
-                const lngDegreeToMeters = 111111 * Math.cos(lat * Math.PI / 180);
-
-                const isPortrait = panel.orientation === 'PORTRAIT';
-                const length = isPortrait ? 1.75 : 1.0;
-                const width = isPortrait ? 1.0 : 1.75;
-
-                const azimuthRad = ((panel.azimuth || 0) * Math.PI) / 180;
-                const cosA = Math.cos(azimuthRad);
-                const sinA = Math.sin(azimuthRad);
-
-                const halfL = length / 2;
-                const halfW = width / 2;
-
-                const corners = [
-                    { x: -halfW, y: -halfL },
-                    { x: halfW, y: -halfL },
-                    { x: halfW, y: halfL },
-                    { x: -halfW, y: halfL }
-                ];
-
-                const pathCoords = corners.map(c => {
-                    const rotX = c.x * cosA - c.y * sinA;
-                    const rotY = c.x * sinA + c.y * cosA;
-                    return {
-                        lat: lat + rotY / latDegreeToMeters,
-                        lng: lng + rotX / lngDegreeToMeters
-                    };
+            // If placedPanels is empty, import these automated compliance panels!
+            if (placedPanels.length === 0 && finalPanels && finalPanels.length > 0) {
+                finalPanels.forEach(p => {
+                    const panelId = 'panel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    placedPanels.push({
+                        id: panelId,
+                        center: { lat: p.center.latitude, lng: p.center.longitude },
+                        azimuth: Math.round(p.azimuth || 90),
+                        orientation: p.orientation || 'PORTRAIT',
+                        watts: panelWatts,
+                        brand: activePanelBrand
+                    });
                 });
-
-                const flux = panel.yearlyEnergyDcKwh || 200;
-                let fillColor = "#fbbf24";
-                if (flux > 250) fillColor = "#f59e0b";
-                if (flux < 150) fillColor = "#f87171";
-
-                const polygon = new google.maps.Polygon({
-                    paths: pathCoords,
-                    strokeColor: "#1e293b",
-                    strokeOpacity: 0.8,
-                    strokeWeight: 1,
-                    fillColor: fillColor,
-                    fillOpacity: 0.65,
-                    map: satelliteMap
-                });
-
-                activeSolarPolygons.push(polygon);
-            });
-
-            // Update Metrics Panel UI
-            const finalCount = finalPanels.length;
-            const totalKw = (finalCount * panelWatts) / 1000;
-
-            let sunHours = 3.9;
-            if (projectData && projectData.state) {
-                const st = projectData.state.trim().toUpperCase();
-                if (st === 'VIC' || st === 'TAS') sunHours = 3.6;
-                else if (st === 'QLD' || st === 'WA') sunHours = 4.2;
-                else if (st === 'SA') sunHours = 4.0;
             }
-            const annualKwh = totalKw * sunHours * 0.82 * 365;
-            const co2Tons = (annualKwh * 0.54) / 1000;
 
-            document.getElementById('solar_panel_count').innerText = finalCount;
-            document.getElementById('solar_array_kw').innerText = `${totalKw.toFixed(2)} kW`;
-            document.getElementById('solar_annual_yield').innerText = `${Math.round(annualKwh).toLocaleString()} kWh/yr`;
-            document.getElementById('solar_co2_offset').innerText = `${co2Tons.toFixed(1)} tons/yr`;
-
-            window.calculatedSolarPanelCount = finalCount;
+            // Draw panels on Map and update metrics
+            renderPlacedPanels();
+            updateDesignMetrics();
         }
 
         async function saveSolarLayoutToProposal() {
