@@ -2655,9 +2655,7 @@ function toggleNav(event, element) {
 
                 const iframe = document.getElementById('pylon_editor_iframe');
                 if (iframe) {
-                    const targetSrc = pylonProjectId.startsWith('pyl_mock_') 
-                        ? `/pylon_editor_mock.html?id=${currentProjectId}` 
-                        : `https://app.getpylon.com/projects/${pylonProjectId}`;
+                    const targetSrc = `/pylon_editor_mock.html?id=${currentProjectId}`;
                     
                     if (!iframe.src || !iframe.src.includes(targetSrc)) {
                         iframe.src = targetSrc;
