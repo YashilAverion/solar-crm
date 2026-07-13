@@ -2835,6 +2835,62 @@ function toggleNav(event, element) {
             });
         }
 
+        // Setup Socket.IO listener for real-time Pylon sync webhook updates
+        setTimeout(() => {
+            if (window.voipSocket) {
+                window.voipSocket.on('pylon_sync_complete', async (data) => {
+                    if (data && data.pylon_project_id === pylonProjectId) {
+                        console.log('[Pylon Webhook Sync] Auto-syncing updated data received:', data);
+                        projectData.pylon_panel_count = data.pylon_panel_count;
+                        projectData.pylon_system_size = data.pylon_system_size;
+                        projectData.pylon_layout_image = data.pylon_layout_image;
+                        projectData.pylon_sld_pdf = data.pylon_sld_pdf;
+                        
+                        loadPylonIntegration();
+                        
+                        // Automatically update panel row in Table A: Product Selection
+                        let panelRowElement = null;
+                        const rows = document.querySelectorAll('#productRows .product-selection-row');
+                        rows.forEach(row => {
+                            const typeEl = row.querySelector('.cp-type');
+                            if (typeEl && typeEl.value === 'Panel') {
+                                panelRowElement = row;
+                            }
+                        });
+
+                        if (panelRowElement) {
+                            const qtyInput = panelRowElement.querySelector('.cp-qty');
+                            if (qtyInput && parseInt(qtyInput.value) !== parseInt(data.pylon_panel_count)) {
+                                qtyInput.value = data.pylon_panel_count;
+                                qtyInput.dispatchEvent(new Event('input'));
+                                qtyInput.dispatchEvent(new Event('change'));
+
+                                if (typeof activateSaveButtons === 'function') activateSaveButtons();
+                                if (typeof checkDCPowerLimit === 'function') checkDCPowerLimit();
+                                
+                                if (typeof triggerCalculation === 'function') {
+                                    await triggerCalculation();
+                                }
+                            }
+                        }
+
+                        // Show a nice non-intrusive toast notification
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Design Updated!',
+                                text: 'Real-time design changes synchronized from Pylon.',
+                                timer: 3000,
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false
+                            });
+                        }
+                    }
+                });
+            }
+        }, 1000);
+
         let monthlyChartInstance = null;
 
         function renderMonthlyProductionChart(totalKw) {

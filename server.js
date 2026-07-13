@@ -1941,6 +1941,110 @@ app.post('/api/pylon/create-project/:id', (req, res) => {
     });
 });
 
+function syncPylonProject(leadId, pylonProjectId, apiKey) {
+    return new Promise((resolve, reject) => {
+        if (!apiKey || apiKey.startsWith('mock_')) {
+            // Mock sync (reads actual stats customized in pylon_editor_mock.html if saved, else default mock)
+            db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
+                if (err) return reject(err);
+                if (!lead) return reject(new Error('Lead not found'));
+                
+                const mockCount = lead.pylon_panel_count || 24;
+                const mockSize = lead.pylon_system_size || 10.2;
+                const mockImg = lead.pylon_layout_image || '/images/pylon_mock_layout.png';
+                const mockSld = lead.pylon_sld_pdf || '/pdf/pylon_mock_sld.pdf';
+
+                db.run(
+                    "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
+                    [mockCount, mockSize, mockImg, mockSld, leadId],
+                    (dbErr) => {
+                        if (dbErr) return reject(dbErr);
+                        resolve({
+                            pylon_project_id: pylonProjectId,
+                            pylon_panel_count: mockCount,
+                            pylon_system_size: mockSize,
+                            pylon_layout_image: mockImg,
+                            pylon_sld_pdf: mockSld
+                        });
+                    }
+                );
+            });
+            return;
+        }
+
+        // Real API sync call
+        const fetch = require('node-fetch');
+        
+        // 1. Fetch project details
+        fetch(`https://api.getpylon.com/v1/solar_projects/${pylonProjectId}`, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Accept': 'application/vnd.api+json'
+            }
+        })
+        .then(r => r.json())
+        .then(projectData => {
+            if (projectData.errors || !projectData.data) {
+                throw new Error(projectData.errors ? projectData.errors[0].detail : 'Project not found in Pylon');
+            }
+            
+            // 2. Fetch designs for this project
+            const url = `https://api.getpylon.com/v1/solar_designs?filter[project]=${pylonProjectId}&fields[solar_designs]=title,is_primary,summary,module_types,line_items,proposal_quote`;
+            return fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Accept': 'application/vnd.api+json'
+                }
+            })
+            .then(r => r.json())
+            .then(designsData => {
+                if (designsData.errors || !designsData.data || !Array.isArray(designsData.data)) {
+                    throw new Error('Failed to retrieve designs from Pylon');
+                }
+                
+                if (designsData.data.length === 0) {
+                    throw new Error('No designs found for this project in Pylon yet.');
+                }
+                
+                // Find primary design, or fall back to the first design
+                const primary = designsData.data.find(d => d.attributes && d.attributes.is_primary) || designsData.data[0];
+                const attr = primary.attributes || {};
+                const summary = attr.summary || {};
+                
+                // Sum panel quantities
+                let panelCount = 0;
+                if (Array.isArray(attr.module_types)) {
+                    attr.module_types.forEach(mod => {
+                        if (mod.quantity) {
+                            panelCount += parseInt(mod.quantity);
+                        }
+                    });
+                }
+                
+                const systemCapacity = parseFloat(summary.dc_output_kw) || 0;
+                const layoutImage = summary.latest_snapshot_url || null;
+                const sldPdf = summary.single_line_diagram_pdf_url || null;
+                
+                db.run(
+                    "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
+                    [panelCount, systemCapacity, layoutImage, sldPdf, leadId],
+                    (dbErr) => {
+                        if (dbErr) return reject(dbErr);
+                        resolve({
+                            pylon_project_id: pylonProjectId,
+                            pylon_panel_count: panelCount,
+                            pylon_system_size: systemCapacity,
+                            pylon_layout_image: layoutImage,
+                            pylon_sld_pdf: sldPdf
+                        });
+                    }
+                );
+            });
+        })
+        .catch(reject);
+    });
+}
+
 app.post('/api/pylon/sync/:id', (req, res) => {
     const leadId = req.params.id;
     db.get("SELECT * FROM leads WHERE id = ?", [leadId], (err, lead) => {
@@ -1951,103 +2055,52 @@ app.post('/api/pylon/sync/:id', (req, res) => {
         }
 
         const apiKey = process.env.PYLON_API_KEY;
-        if (apiKey && !apiKey.startsWith('mock_')) {
-            // Real API integration sync call
-            const fetch = require('node-fetch');
-            
-            // 1. Fetch project details
-            fetch(`https://api.getpylon.com/v1/solar_projects/${lead.pylon_project_id}`, {
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Accept': 'application/vnd.api+json'
-                }
-            })
-            .then(r => r.json())
-            .then(projectData => {
-                if (projectData.errors || !projectData.data) {
-                    throw new Error(projectData.errors ? projectData.errors[0].detail : 'Project not found in Pylon');
-                }
-                
-                // 2. Fetch designs for this project
-                const url = `https://api.getpylon.com/v1/solar_designs?filter[project]=${lead.pylon_project_id}&fields[solar_designs]=title,is_primary,summary,module_types,line_items,proposal_quote`;
-                return fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Accept': 'application/vnd.api+json'
-                    }
-                })
-                .then(r => r.json())
-                .then(designsData => {
-                    if (designsData.errors || !designsData.data || !Array.isArray(designsData.data)) {
-                        throw new Error('Failed to retrieve designs from Pylon');
-                    }
-                    
-                    if (designsData.data.length === 0) {
-                        throw new Error('No designs found for this project in Pylon yet.');
-                    }
-                    
-                    // Find primary design, or fall back to the first design
-                    const primary = designsData.data.find(d => d.attributes && d.attributes.is_primary) || designsData.data[0];
-                    const attr = primary.attributes || {};
-                    const summary = attr.summary || {};
-                    
-                    // Sum panel quantities
-                    let panelCount = 0;
-                    if (Array.isArray(attr.module_types)) {
-                        attr.module_types.forEach(mod => {
-                            if (mod.quantity) {
-                                panelCount += parseInt(mod.quantity);
-                            }
-                        });
-                    }
-                    
-                    const systemCapacity = parseFloat(summary.dc_output_kw) || 0;
-                    const layoutImage = summary.latest_snapshot_url || null;
-                    const sldPdf = summary.single_line_diagram_pdf_url || null;
-                    
-                    db.run(
-                        "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
-                        [panelCount, systemCapacity, layoutImage, sldPdf, leadId],
-                        (dbErr) => {
-                            if (dbErr) return res.status(500).json({ error: dbErr.message });
-                            res.json({
-                                success: true,
-                                pylon_project_id: lead.pylon_project_id,
-                                pylon_panel_count: panelCount,
-                                pylon_system_size: systemCapacity,
-                                pylon_layout_image: layoutImage,
-                                pylon_sld_pdf: sldPdf
-                            });
-                        }
-                    );
-                });
-            })
-            .catch(apiErr => {
-                res.status(500).json({ error: apiErr.message });
-            });
-        } else {
-            // Mock Mode Fallback (reads actual stats customized in pylon_editor_mock.html if saved, else default mock)
-            const mockCount = lead.pylon_panel_count || 24;
-            const mockSize = lead.pylon_system_size || 10.2;
-            const mockImg = lead.pylon_layout_image || '/images/pylon_mock_layout.png';
-            const mockSld = lead.pylon_sld_pdf || '/pdf/pylon_mock_sld.pdf';
+        syncPylonProject(leadId, lead.pylon_project_id, apiKey)
+        .then(result => {
+            res.json({ success: true, ...result });
+        })
+        .catch(syncErr => {
+            res.status(500).json({ error: syncErr.message });
+        });
+    });
+});
 
-            db.run(
-                "UPDATE leads SET pylon_panel_count = ?, pylon_system_size = ?, pylon_layout_image = ?, pylon_sld_pdf = ? WHERE id = ?",
-                [mockCount, mockSize, mockImg, mockSld, leadId],
-                (dbErr) => {
-                    if (dbErr) return res.status(500).json({ error: dbErr.message });
-                    res.json({
-                        success: true,
-                        pylon_project_id: lead.pylon_project_id,
-                        pylon_panel_count: mockCount,
-                        pylon_system_size: mockSize,
-                        pylon_layout_image: mockImg,
-                        pylon_sld_pdf: mockSld
-                    });
-                }
-            );
-        }
+app.post('/api/pylon/webhook', (req, res) => {
+    res.sendStatus(200); // Acknowledge right away
+
+    const payload = req.body;
+    if (!payload || !payload.data || !payload.data.attributes) return;
+
+    const eventName = payload.data.attributes.name;
+    if (eventName !== 'solar_designs.updated' && eventName !== 'solar_projects.updated') {
+        return; // Only sync on design/project changes
+    }
+
+    const rels = payload.data.relationships || {};
+    const projData = rels.solar_project ? rels.solar_project.data : null;
+    if (!projData || !projData.id) return;
+
+    const pylonProjectId = projData.id;
+    
+    db.get("SELECT id FROM leads WHERE pylon_project_id = ?", [pylonProjectId], (err, lead) => {
+        if (err || !lead) return;
+        
+        console.log(`[Pylon Webhook] Auto-syncing lead ${lead.id} on event: ${eventName}`);
+        const apiKey = process.env.PYLON_API_KEY;
+        syncPylonProject(lead.id, pylonProjectId, apiKey)
+        .then(result => {
+            console.log(`[Pylon Webhook] Successfully auto-synced lead ${lead.id}`);
+            // Emit Socket.IO event to active browser clients
+            if (typeof io !== 'undefined') {
+                io.emit('pylon_sync_complete', {
+                    leadId: lead.id,
+                    ...result
+                });
+            }
+        })
+        .catch(syncErr => {
+            console.error(`[Pylon Webhook] Auto-sync failed for lead ${lead.id}:`, syncErr.message);
+        });
     });
 });
 
