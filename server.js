@@ -5730,6 +5730,19 @@ app.post('/api/telephony-voice/end-call', (req, res) => {
     });
 });
 
+app.post('/api/telephony-voice/clear-sync', (req, res) => {
+    const { lead_id } = req.body;
+    if (!lead_id) {
+        return res.status(400).json({ error: 'lead_id is required' });
+    }
+    db.run('DELETE FROM telephony_live_voice_sync WHERE lead_id = ?', [lead_id], (err) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true });
+    });
+});
+
 app.post('/api/telephony-voice/process-stream-chunk', async (req, res) => {
     const data = { ...req.query, ...req.body };
     const { lead_id, text_fragment, audio_chunk } = data;

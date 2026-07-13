@@ -5527,6 +5527,24 @@ function initVoiceSocketListeners() {
             captionWin.style.transform = 'translateY(0)';
         }
 
+        // Clear live transcript box for the new call
+        const syncBox = document.getElementById('live_audio_transcript_box');
+        if (syncBox) {
+            syncBox.innerText = 'Awaiting customer speech...';
+        }
+
+        // Reset stage to Greeting to show the professional greeting prompt instantly
+        changeComplianceStage('Greeting');
+
+        // Delete any old database sync transcript for this lead so the session is clean
+        if (currentProjectId) {
+            fetch('/api/telephony-voice/clear-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lead_id: currentProjectId })
+            }).catch(err => console.error('[CLEAR SYNC] Error clearing sync table:', err));
+        }
+
         console.log('[COMPLIANCE OVERLAY] Telephone correlation matched. Instantly auto-expanding console.', data);
         
         // Flush old speech cards and render localized guidelines instantly under 5 milliseconds!
