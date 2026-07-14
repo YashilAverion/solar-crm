@@ -149,7 +149,7 @@
             color: #1e293b !important;
             border: none !important;
             background: transparent !important;
-            pointer-events: none !important;
+            pointer-events: auto !important;
             appearance: none !important;
             -webkit-appearance: none !important;
             font-size: 15px !important;
@@ -4093,7 +4093,7 @@ function toggleNav(event, element) {
                 modalFlatpickrInstance = flatpickr("#modalPayDate", {
                     dateFormat: "Y-m-d",
                     altInput: true,
-                    altFormat: "M j, Y",
+                    altFormat: "d-m-Y",
                     defaultDate: new Date(),
                     locale: {
                         firstDayOfWeek: 1
@@ -4146,7 +4146,7 @@ function toggleNav(event, element) {
                 modalFlatpickrInstance = flatpickr("#modalPayDate", {
                     dateFormat: "Y-m-d",
                     altInput: true,
-                    altFormat: "M j, Y",
+                    altFormat: "d-m-Y",
                     defaultDate: formattedDateString,
                     locale: { firstDayOfWeek: 1 },
                     onReady: function(selectedDates, dateStr, instance) {
