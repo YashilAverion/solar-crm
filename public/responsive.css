@@ -140,8 +140,9 @@
    ========================================================================== */
 @media (max-width: 1024px) {
     /* Show Hamburger button */
-    .hamburger-toggle {
-        display: inline-flex;
+    .hamburger-toggle,
+    .topbar.premium-header .hamburger-toggle {
+        display: inline-flex !important;
     }
 
     /* Transform fixed Sidebar into slide-out overlay drawer */
@@ -441,7 +442,7 @@ body.hide-stats .stats-row {
     border-radius: 12px !important;
     background: #f1f5f9 !important;
     border: none !important;
-    display: inline-flex !important;
+    display: none !important; /* Hide by default on desktop viewports */
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;

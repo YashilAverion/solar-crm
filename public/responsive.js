@@ -414,45 +414,6 @@ async function setupPremiumHeader() {
     const controls = document.createElement('div');
     controls.className = 'premium-controls';
 
-    // 1. Search button
-    const searchBtn = document.createElement('button');
-    searchBtn.className = 'premium-btn premium-search-btn';
-    searchBtn.setAttribute('title', 'Search');
-    searchBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-    `;
-    searchBtn.addEventListener('click', () => {
-        // Try focusing any page search input
-        const pageSearchInput = document.querySelector('#globalLeadSearch, #globalOmniSearchInput, .search-wrap input, input[type="text"][placeholder*="Search"]');
-        if (pageSearchInput) {
-            pageSearchInput.focus();
-            pageSearchInput.style.outline = '2px solid var(--ares-electric-blue)';
-            setTimeout(() => pageSearchInput.style.outline = '', 1500);
-        } else {
-            if (window.Swal) {
-                Swal.fire({
-                    title: 'Search',
-                    input: 'text',
-                    inputPlaceholder: 'Search CRM...',
-                    showCancelButton: true,
-                    confirmButtonColor: 'var(--ares-deep-slate)',
-                    cancelButtonColor: '#64748b'
-                }).then((result) => {
-                    if (result.value) {
-                        console.log('Searching for:', result.value);
-                    }
-                });
-            } else {
-                const query = prompt('Enter search query:');
-                if (query) console.log('Searching for:', query);
-            }
-        }
-    });
-    controls.appendChild(searchBtn);
-
     // 2. Notifications wrapper and dropdown
     const notifyWrapper = document.createElement('div');
     notifyWrapper.className = 'premium-dropdown-wrapper';
