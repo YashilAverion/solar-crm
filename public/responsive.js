@@ -487,7 +487,7 @@ async function setupPremiumHeader() {
             e.stopPropagation();
             localStorage.setItem('crm-notifications-cleared', 'true');
             const badge = notifyBtn.querySelector('.premium-badge');
-            if (badge) badge.style.display = 'none';
+            if (badge) badge.remove();
             notifyDropdown.querySelectorAll('.notify-item').forEach(item => item.classList.remove('unread'));
             notifyDropdown.querySelector('.dropdown-body').innerHTML = `
                 <div class="dropdown-empty">No new notifications</div>
