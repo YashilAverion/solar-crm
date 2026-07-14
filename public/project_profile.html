@@ -1272,6 +1272,7 @@ function toggleNav(event, element) {
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Paid Date</th>
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Paid Amount (Inc GST)</th>
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Payment Mode</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Payment Type</th>
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Upload Receipt</th>
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Uploaded By</th>
                                     <th style="padding: 10px; text-align: center; font-weight: 700; color: var(--text-dark);">Verified Date</th>
@@ -1284,6 +1285,7 @@ function toggleNav(event, element) {
                                     <td style="padding: 10px; color: var(--text-dark); text-align: center;">13 Jul 2026</td>
                                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$758.11</td>
                                     <td style="padding: 10px; text-align: center;">EFT / Bank Transfer</td>
+                                    <td style="padding: 10px; text-align: center; font-weight: 600; color: var(--primary);">Deposit</td>
                                     <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 Receipt.pdf</a></td>
                                     <td id="paymentInitialUser" style="padding: 10px; text-align: center;">Yashil Averion</td>
                                     <td style="padding: 10px; text-align: center;">13 Jul 2026</td>
@@ -2069,6 +2071,15 @@ function toggleNav(event, element) {
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Payment Type</label>
+                    <select id="modalPayType" style="width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 0 12px; font-size: 13px;">
+                        <option value="Deposit">Deposit</option>
+                        <option value="Part Payment">Part Payment</option>
+                        <option value="Final Payment">Final Payment</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Upload Receipt</label>
                     <input type="file" id="modalPayReceipt" style="font-size: 12px; padding: 4px 0;">
                 </div>
@@ -2591,6 +2602,7 @@ function toggleNav(event, element) {
                                 <td style="padding: 10px; color: var(--text-dark); text-align: center;">${p.date}</td>
                                 <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">${p.amount}</td>
                                 <td style="padding: 10px; text-align: center;">${p.mode}</td>
+                                <td style="padding: 10px; text-align: center; font-weight: 600; color: var(--primary);">${p.type || 'Deposit'}</td>
                                 <td style="padding: 10px; text-align: center;">
                                     ${p.receipt ? `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${p.receiptUrl || ''}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${p.receipt}</a>` : 'N/A'}
                                 </td>
@@ -2617,6 +2629,7 @@ function toggleNav(event, element) {
                             <td style="padding: 10px; color: var(--text-dark); text-align: center;">13 Jul 2026</td>
                             <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$758.11</td>
                             <td style="padding: 10px; text-align: center;">EFT / Bank Transfer</td>
+                            <td style="padding: 10px; text-align: center; font-weight: 600; color: var(--primary);">Deposit</td>
                             <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 Receipt.pdf</a></td>
                             <td style="padding: 10px; text-align: center;">Yashil Ares</td>
                             <td style="padding: 10px; text-align: center;">13 Jul 2026</td>
@@ -4149,6 +4162,7 @@ function toggleNav(event, element) {
             document.getElementById('editRowIndex').value = '';
             document.getElementById('modalPayAmount').value = '';
             document.getElementById('modalPayMode').value = 'EFT / Bank Transfer';
+            document.getElementById('modalPayType').value = 'Deposit';
             document.getElementById('modalPayReceipt').value = '';
             document.getElementById('paymentModalTitle').innerText = 'Add New Payment';
             
@@ -4190,6 +4204,7 @@ function toggleNav(event, element) {
             const dateText = cells[0].innerText;
             const amountText = cells[1].innerText.replace('$', '');
             const modeText = cells[2].innerText;
+            const typeText = cells[3].innerText;
             
             // Parse date text (e.g. "13 Jul 2026") into YYYY-MM-DD for flatpickr
             const parsedDate = new Date(dateText);
@@ -4202,6 +4217,7 @@ function toggleNav(event, element) {
             document.getElementById('editRowIndex').value = rowIndex;
             document.getElementById('modalPayAmount').value = amountText;
             document.getElementById('modalPayMode').value = modeText;
+            document.getElementById('modalPayType').value = typeText;
             document.getElementById('paymentModalTitle').innerText = 'Edit Payment Record';
             
             // Open modal
@@ -4387,7 +4403,7 @@ function toggleNav(event, element) {
         function triggerDownloadReceipt(el) {
             const row = el.closest('tr');
             const cells = row.getElementsByTagName('td');
-            const receiptLink = cells[3].querySelector('a');
+            const receiptLink = cells[4].querySelector('a');
             const fileName = receiptLink ? receiptLink.innerText.replace('📄', '').trim() : 'Receipt.pdf';
             
             const swalFn = window.originalSwalFire || Swal.fire;
@@ -4435,9 +4451,9 @@ function toggleNav(event, element) {
             const cells = row.getElementsByTagName('td');
             const dateText = cells[0].innerText;
             const amountText = cells[1].innerText;
-            const uploadedBy = cells[4].innerText;
-            const verifiedDate = cells[5].innerText;
-            const verifiedBy = cells[6].innerText;
+            const uploadedBy = cells[5].innerText;
+            const verifiedDate = cells[6].innerText;
+            const verifiedBy = cells[7].innerText;
 
             const swalFn = window.originalSwalFire || Swal.fire;
             swalFn.call(window.Swal || Swal, {
@@ -4491,6 +4507,7 @@ function toggleNav(event, element) {
             const date = document.getElementById('modalPayDate').value;
             const amount = document.getElementById('modalPayAmount').value;
             const mode = document.getElementById('modalPayMode').value;
+            const type = document.getElementById('modalPayType').value;
             const fileInput = document.getElementById('modalPayReceipt');
             let fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Receipt.pdf';
             
@@ -4551,11 +4568,12 @@ function toggleNav(event, element) {
                 cells[0].innerText = formattedDate;
                 cells[1].innerText = `$${parseFloat(amount).toFixed(2)}`;
                 cells[2].innerText = mode;
+                cells[3].innerText = type;
                 
                 if (fileInput.files.length > 0) {
-                    cells[3].innerHTML = `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${uploadedFileUrl}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a>`;
+                    cells[4].innerHTML = `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${uploadedFileUrl}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a>`;
                 } else {
-                    const existingLink = cells[3].querySelector('a');
+                    const existingLink = cells[4].querySelector('a');
                     if (existingLink) {
                         const oldUrl = existingLink.getAttribute('data-url') || '';
                         existingLink.innerHTML = `📄 ${fileName}`;
@@ -4578,6 +4596,7 @@ function toggleNav(event, element) {
                     <td style="padding: 10px; color: var(--text-dark); text-align: center;">${formattedDate}</td>
                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$${parseFloat(amount).toFixed(2)}</td>
                     <td style="padding: 10px; text-align: center;">${mode}</td>
+                    <td style="padding: 10px; text-align: center; font-weight: 600; color: var(--primary);">${type}</td>
                     <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${uploadedFileUrl}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a></td>
                     <td style="padding: 10px; text-align: center;">${window.loggedInUser || 'User'}</td>
                     <td style="padding: 10px; text-align: center;">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
@@ -4776,20 +4795,22 @@ function toggleNav(event, element) {
             if (tbody) {
                 tbody.querySelectorAll('tr').forEach(row => {
                     const cells = row.getElementsByTagName('td');
-                    if (cells.length >= 7) {
+                    if (cells.length >= 8) {
                         const dateText = cells[0].innerText.trim();
                         const amountText = cells[1].innerText.trim();
                         const modeText = cells[2].innerText.trim();
-                        const receiptLink = cells[3].querySelector('a');
+                        const typeText = cells[3].innerText.trim();
+                        const receiptLink = cells[4].querySelector('a');
                         const fileName = receiptLink ? receiptLink.innerText.replace('📄', '').trim() : '';
                         const receiptUrl = receiptLink ? receiptLink.getAttribute('data-url') || '' : '';
-                        const uploadedBy = cells[4].innerText.trim();
-                        const verifiedDate = cells[5].innerText.trim();
-                        const verifiedBy = cells[6].innerText.trim();
+                        const uploadedBy = cells[5].innerText.trim();
+                        const verifiedDate = cells[6].innerText.trim();
+                        const verifiedBy = cells[7].innerText.trim();
                         payments.push({
                             date: dateText,
                             amount: amountText,
                             mode: modeText,
+                            type: typeText,
                             receipt: fileName,
                             receiptUrl: receiptUrl,
                             uploadedBy: uploadedBy,
