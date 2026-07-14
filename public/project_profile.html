@@ -4181,7 +4181,8 @@ function toggleNav(event, element) {
             const verifiedDate = cells[5].innerText;
             const verifiedBy = cells[6].innerText;
 
-            Swal.fire({
+            const swalFn = window.originalSwalFire || Swal.fire;
+            swalFn({
                 title: 'Activity & Audit Log',
                 width: '780px',
                 toast: false,
