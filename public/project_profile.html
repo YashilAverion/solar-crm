@@ -2592,7 +2592,7 @@ function toggleNav(event, element) {
                                 <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">${p.amount}</td>
                                 <td style="padding: 10px; text-align: center;">${p.mode}</td>
                                 <td style="padding: 10px; text-align: center;">
-                                    ${p.receipt ? `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${p.receipt}</a>` : 'N/A'}
+                                    ${p.receipt ? `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${p.receiptUrl || ''}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${p.receipt}</a>` : 'N/A'}
                                 </td>
                                 <td style="padding: 10px; text-align: center;">${p.uploadedBy}</td>
                                 <td style="padding: 10px; text-align: center;">${p.verifiedDate}</td>
@@ -4228,6 +4228,7 @@ function toggleNav(event, element) {
             let modeText = 'Bank Transfer';
             let customerName = 'Customer';
             let projectNo = 'N/A';
+            let receiptUrl = '';
 
             if (el && typeof el === 'object') {
                 const row = el.closest('tr');
@@ -4238,15 +4239,71 @@ function toggleNav(event, element) {
                     modeText = cells[2].innerText;
                 }
                 fileName = el.innerText.replace('📄', '').trim();
+                receiptUrl = el.getAttribute('data-url') || '';
                 customerName = document.getElementById('metadataContent')?.innerText.split('|')[1]?.trim() || 'Test Ares';
                 projectNo = document.getElementById('metadataContent')?.innerText.split('|')[0]?.trim() || 'AR1013';
             } else if (typeof el === 'string') {
-                fileName = el;
+                if (el.startsWith('/') || el.startsWith('http')) {
+                    receiptUrl = el;
+                    fileName = el.split('/').pop().replace(/^\d+-/, '');
+                } else {
+                    fileName = el;
+                }
                 customerName = document.getElementById('metadataContent')?.innerText.split('|')[1]?.trim() || 'Test Ares';
                 projectNo = document.getElementById('metadataContent')?.innerText.split('|')[0]?.trim() || 'AR1013';
             }
 
             const swalFn = window.originalSwalFire || Swal.fire;
+
+            if (receiptUrl) {
+                const isPdf = fileName.toLowerCase().endsWith('.pdf');
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName.toLowerCase());
+
+                swalFn.call(window.Swal || Swal, {
+                    title: '',
+                    customClass: {
+                        popup: 'premium-swal-popup'
+                    },
+                    width: '800px',
+                    toast: false,
+                    position: 'center',
+                    html: `
+                        <div style="font-family: 'Inter', system-ui, sans-serif; text-align: left; max-width: 100%; padding: 10px;">
+                            <!-- Popup Header -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">Uploaded Document Preview</h4>
+                                    <span style="font-size: 12px; color: #64748b; font-family: monospace;">File: ${fileName}</span>
+                                </div>
+                                <a href="${receiptUrl}" download="${fileName}" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; background: #2563eb; color: #ffffff; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);" onmouseover="this.style.background='#1d4ed8';" onmouseout="this.style.background='#2563eb';" title="Download Receipt">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Download File
+                                </a>
+                            </div>
+                            
+                            <!-- File Render Area -->
+                            ${isPdf ? `
+                                <iframe src="${receiptUrl}" style="width:100%; height:500px; border:1px solid #cbd5e1; border-radius:8px; background:#fff;"></iframe>
+                            ` : isImage ? `
+                                <div style="text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                                    <img src="${receiptUrl}" style="max-width:100%; max-height:480px; object-fit:contain; border-radius:6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                </div>
+                            ` : `
+                                <div style="text-align: center; padding: 60px 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px; display:inline-block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <div style="font-weight:700; color:#334155; margin-bottom:8px; font-size: 15px;">No visual preview available for this document type</div>
+                                    <div style="font-size:12px; color:#64748b; margin-bottom:15px;">Please use the download button at the top right to download and view the document.</div>
+                                </div>
+                            `}
+                        </div>
+                    `,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#64748b',
+                    confirmButtonText: 'Close Preview'
+                });
+                return;
+            }
+
             swalFn.call(window.Swal || Swal, {
                 title: 'Payment Receipt Preview',
                 customClass: {
@@ -4424,7 +4481,7 @@ function toggleNav(event, element) {
             });
         }
 
-        function submitPaymentForm() {
+        async function submitPaymentForm() {
             const date = document.getElementById('modalPayDate').value;
             const amount = document.getElementById('modalPayAmount').value;
             const mode = document.getElementById('modalPayMode').value;
@@ -4443,6 +4500,37 @@ function toggleNav(event, element) {
                 return;
             }
 
+            let uploadedFileUrl = '';
+            if (fileInput.files.length > 0) {
+                Swal.fire({
+                    title: 'Uploading Receipt...',
+                    html: 'Uploading document to server...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                try {
+                    const formData = new FormData();
+                    formData.append('receipt', fileInput.files[0]);
+                    const uploadRes = await fetch('/leads/upload-payment-receipt', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (uploadRes.ok && uploadData.success) {
+                        uploadedFileUrl = uploadData.fileUrl;
+                        fileName = uploadData.fileName;
+                    } else {
+                        throw new Error(uploadData.error || 'Upload failed');
+                    }
+                } catch (uploadErr) {
+                    Swal.fire('Upload Error', 'Failed to upload receipt document: ' + uploadErr.message, 'error');
+                    return;
+                }
+            }
+
             const d = new Date(date);
             const formattedDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
             
@@ -4459,7 +4547,14 @@ function toggleNav(event, element) {
                 cells[2].innerText = mode;
                 
                 if (fileInput.files.length > 0) {
-                    cells[3].innerHTML = `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a>`;
+                    cells[3].innerHTML = `<a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${uploadedFileUrl}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a>`;
+                } else {
+                    const existingLink = cells[3].querySelector('a');
+                    if (existingLink) {
+                        const oldUrl = existingLink.getAttribute('data-url') || '';
+                        existingLink.innerHTML = `📄 ${fileName}`;
+                        existingLink.setAttribute('data-url', oldUrl);
+                    }
                 }
                 
                 Swal.fire({
@@ -4477,14 +4572,14 @@ function toggleNav(event, element) {
                     <td style="padding: 10px; color: var(--text-dark); text-align: center;">${formattedDate}</td>
                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$${parseFloat(amount).toFixed(2)}</td>
                     <td style="padding: 10px; text-align: center;">${mode}</td>
-                    <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a></td>
+                    <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" data-url="${uploadedFileUrl}" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a></td>
                     <td style="padding: 10px; text-align: center;">${window.loggedInUser || 'User'}</td>
                     <td style="padding: 10px; text-align: center;">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td style="padding: 10px; text-align: center;">${window.loggedInUser || 'User'}</td>
                     <td style="padding: 10px; text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: var(--primary);" title="Edit" onclick="editPaymentRow(this)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: #dc2626;" title="Delete" onclick="this.closest('tr').remove(); calculatePaymentBalance();"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: #dc2626;" title="Delete" onclick="this.closest('tr').remove(); calculatePaymentBalance(); saveEngineeringGrid();"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: var(--accent);" title="Activity Log" onclick="showActivityLogAlert(this)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: #16a34a;" title="Download Receipt" onclick="triggerDownloadReceipt(this)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="cursor: pointer; color: #ea580c;" title="Send Email Receipt" onclick="triggerSendEmailReceipt(this)"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -4668,6 +4763,7 @@ function toggleNav(event, element) {
                         const modeText = cells[2].innerText.trim();
                         const receiptLink = cells[3].querySelector('a');
                         const fileName = receiptLink ? receiptLink.innerText.replace('📄', '').trim() : '';
+                        const receiptUrl = receiptLink ? receiptLink.getAttribute('data-url') || '' : '';
                         const uploadedBy = cells[4].innerText.trim();
                         const verifiedDate = cells[5].innerText.trim();
                         const verifiedBy = cells[6].innerText.trim();
@@ -4676,6 +4772,7 @@ function toggleNav(event, element) {
                             amount: amountText,
                             mode: modeText,
                             receipt: fileName,
+                            receiptUrl: receiptUrl,
                             uploadedBy: uploadedBy,
                             verifiedDate: verifiedDate,
                             verifiedBy: verifiedBy

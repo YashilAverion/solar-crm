@@ -2,6 +2,34 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const { requireAuth, requireManager, getSydneyISO, isoToDisplay } = require('../helpers');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const paymentUploadDir = './public/uploads/payments';
+if (!fs.existsSync(paymentUploadDir)) { fs.mkdirSync(paymentUploadDir, { recursive: true }); }
+
+const paymentStorage = multer.diskStorage({
+    destination: function (req, file, cb) { cb(null, paymentUploadDir); },
+    filename: function (req, file, cb) {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        cb(null, Date.now() + '-' + safeName);
+    }
+});
+const uploadPaymentDoc = multer({
+    storage: paymentStorage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// Endpoint: POST /leads/upload-payment-receipt
+router.post('/upload-payment-receipt', requireAuth, uploadPaymentDoc.single('receipt'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+    const fileUrl = `/uploads/payments/${req.file.filename}`;
+    res.json({ success: true, fileUrl: fileUrl, fileName: req.file.originalname });
+});
+
 
 function getSydneyTime() {
     return getSydneyISO();
