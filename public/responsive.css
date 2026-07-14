@@ -1519,29 +1519,37 @@ body.theme-dark .flatpickr-current-month {
     color: var(--primary) !important;
     font-weight: 600 !important;
     font-size: 12px !important;
-    padding: 2px 10px 2px 8px !important;
+    padding: 2px 24px 2px 8px !important; /* Extra padding right for arrow */
     border-radius: 8px !important;
     cursor: pointer !important;
     outline: none !important;
     height: 28px !important;
     min-width: 100px !important;
     width: 100px !important;
-    line-height: 1 !important;
+    line-height: 24px !important;
     transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 10px !important;
 }
 body.dark-mode .flatpickr-current-month .flatpickr-monthDropdown-months,
 body.theme-dark .flatpickr-current-month .flatpickr-monthDropdown-months {
-    background: #1e293b !important;
+    background-color: #1e293b !important;
     border-color: #475569 !important;
     color: #ffffff !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
 }
 .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
-    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
     border-color: #94a3b8 !important;
 }
 body.dark-mode .flatpickr-current-month .flatpickr-monthDropdown-months:hover,
 body.theme-dark .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
-    background: #334155 !important;
+    background-color: #334155 !important;
 }
 
 /* Year Input Box */
@@ -1697,7 +1705,7 @@ body.theme-dark .flatpickr-day.nextMonthDay {
     color: var(--primary) !important;
     font-weight: 600 !important;
     font-size: 12px !important;
-    padding: 2px 4px !important;
+    padding: 2px 18px 2px 4px !important; /* Extra padding right for arrow */
     border-radius: 8px !important;
     width: 65px !important;
     height: 28px !important;
@@ -1705,20 +1713,28 @@ body.theme-dark .flatpickr-day.nextMonthDay {
     outline: none !important;
     transition: all 0.2s ease !important;
     box-sizing: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 6px center !important;
+    background-size: 10px !important;
 }
 
 body.dark-mode .flatpickr-current-month .numInputWrapper select.cur-year-select,
 body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select {
-    background: #1e293b !important;
+    background-color: #1e293b !important;
     border-color: #475569 !important;
     color: #ffffff !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
 }
 
 .flatpickr-current-month .numInputWrapper select.cur-year-select:hover {
-    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
     border-color: #94a3b8 !important;
 }
 body.dark-mode .flatpickr-current-month .numInputWrapper select.cur-year-select:hover,
 body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select:hover {
-    background: #334155 !important;
+    background-color: #334155 !important;
 }
