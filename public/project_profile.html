@@ -4182,7 +4182,7 @@ function toggleNav(event, element) {
             const verifiedBy = cells[6].innerText;
 
             const swalFn = window.originalSwalFire || Swal.fire;
-            swalFn({
+            swalFn.call(window.Swal || Swal, {
                 title: 'Activity & Audit Log',
                 width: '780px',
                 toast: false,
