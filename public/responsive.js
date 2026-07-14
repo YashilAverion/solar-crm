@@ -323,6 +323,25 @@ async function setupPremiumHeader() {
     const topbar = document.querySelector('.topbar');
     if (!topbar) return;
 
+    // Purge any redundant old profile, notification, or gear elements injected by timezone clocks or legacy code
+    const elementsToPurge = [
+        '.tb-notif-bell-wrapper',
+        '#notificationBellBtn',
+        '.tb-user-profile-wrapper',
+        '#topbarProfileWrapper',
+        '.profile-select-wrap',
+        '.pref-gear-btn',
+        '#currentUserDisplay',
+        '#sidebarAvatar'
+    ];
+    elementsToPurge.forEach(selector => {
+        const found = document.querySelectorAll(selector);
+        found.forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+            el.remove();
+        });
+    });
+
     // Apply the premium header class
     topbar.classList.add('premium-header');
 
@@ -344,8 +363,12 @@ async function setupPremiumHeader() {
 
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
+        document.body.classList.add('theme-dark');
+        document.body.classList.remove('theme-ares-sunburst', 'theme-sunset-aurora', 'theme-nordic-mint', 'theme-oceanic-glass', 'theme-royal-amber', 'theme-neumorphic');
     } else {
         document.body.classList.remove('dark-mode');
+        document.body.classList.remove('theme-dark');
+        document.body.classList.add('theme-ares-sunburst');
     }
 
     // Try to get user details for profile avatar
@@ -520,8 +543,16 @@ async function setupPremiumHeader() {
 
     themeBtn.addEventListener('click', () => {
         const isDark = document.body.classList.toggle('dark-mode');
+        if (isDark) {
+            document.body.classList.add('theme-dark');
+            document.body.classList.remove('theme-ares-sunburst', 'theme-sunset-aurora', 'theme-nordic-mint', 'theme-oceanic-glass', 'theme-royal-amber', 'theme-neumorphic');
+        } else {
+            document.body.classList.remove('theme-dark');
+            document.body.classList.add('theme-ares-sunburst');
+        }
         const nextTheme = isDark ? 'dark' : 'light';
         localStorage.setItem('crm-theme', nextTheme);
+        localStorage.setItem('crm_selected_theme', isDark ? 'theme-dark' : 'theme-ares-sunburst');
         updateThemeIcons(nextTheme);
 
         // Push theme state update to backend database Configurations store
