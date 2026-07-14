@@ -1913,7 +1913,7 @@ function toggleNav(event, element) {
 
     <!-- Calculation Details Bifurcation Modal -->
     <div id="bifurcationModal" class="modal">
-        <div class="modal-content" style="max-width: 800px; padding: 20px 24px;">
+        <div class="modal-content" style="max-width: 1200px; width: 95%; padding: 20px 24px;">
             <button type="button" class="modal-close" onclick="closeBifurcationModal()">X</button>
             <div class="modal-title" style="font-size: 15px; font-weight: 700; color: var(--primary); border-bottom: 2px solid #eef2f8; padding-bottom: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);">
@@ -1925,69 +1925,83 @@ function toggleNav(event, element) {
             </div>
             
             <div id="bifurcationContent" style="display: flex; flex-direction: column; gap: 18px;">
-                <!-- Section: Product Pricing -->
-                <div class="bifurcation-section">
-                    <div class="bifurcation-section-title">Product Pricing (Inc. GST)</div>
-                    <table class="bifurcation-table">
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Name / Stock Code</th>
-                                <th style="text-align: center;">Qty</th>
-                                <th style="text-align: right;">Unit Price</th>
-                                <th style="text-align: right;">Total Price</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bif_products_body">
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Main Grid Layout -->
+                <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 20px; align-items: start;">
+                    
+                    <!-- Left Column -->
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Section: Product Pricing -->
+                        <div class="bifurcation-section">
+                            <div class="bifurcation-section-title">Product Pricing (Inc. GST)</div>
+                            <table class="bifurcation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Name / Stock Code</th>
+                                        <th style="text-align: center;">Qty</th>
+                                        <th style="text-align: right;">Unit Price</th>
+                                        <th style="text-align: right;">Total Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bif_products_body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-                <!-- Section: Installation Charges -->
-                <div class="bifurcation-section">
-                    <div class="bifurcation-section-title">Installation & Travel Charges</div>
-                    <table class="bifurcation-table">
-                        <thead>
-                            <tr>
-                                <th>Charge Item</th>
-                                <th>Calculation Formula</th>
-                                <th style="text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bif_installations_body">
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Center Column -->
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Section: Installation Charges -->
+                        <div class="bifurcation-section">
+                            <div class="bifurcation-section-title">Installation & Travel Charges</div>
+                            <table class="bifurcation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Charge Item</th>
+                                        <th>Formula</th>
+                                        <th style="text-align: right;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bif_installations_body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-                <!-- Section: Rebates -->
-                <div class="bifurcation-section">
-                    <div class="bifurcation-section-title">Government Rebates (STC)</div>
-                    <table class="bifurcation-table">
-                        <thead>
-                            <tr>
-                                <th>Rebate Type</th>
-                                <th>Calculation Formula</th>
-                                <th style="text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bif_rebates_body">
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Right Column -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Section: Rebates -->
+                        <div class="bifurcation-section">
+                            <div class="bifurcation-section-title">Government Rebates (STC)</div>
+                            <table class="bifurcation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rebate Type</th>
+                                        <th>Formula</th>
+                                        <th style="text-align: right;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bif_rebates_body">
+                                </tbody>
+                            </table>
+                        </div>
 
-                <!-- Section: Margin -->
-                <div class="bifurcation-section">
-                    <div class="bifurcation-section-title">Gross Margin Metrics</div>
-                    <table class="bifurcation-table">
-                        <thead>
-                            <tr>
-                                <th>Margin Type</th>
-                                <th style="text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bif_margins_body">
-                        </tbody>
-                    </table>
+                        <!-- Section: Margin -->
+                        <div class="bifurcation-section">
+                            <div class="bifurcation-section-title">Gross Margin Metrics</div>
+                            <table class="bifurcation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Margin Type</th>
+                                        <th style="text-align: right;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bif_margins_body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Section: Selling Price Summary Formula -->
@@ -1995,23 +2009,23 @@ function toggleNav(event, element) {
                     <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
                         <div style="font-weight: 700; font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">Selling Price Formula Verification</div>
                         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px;">
-                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                <div style="background: #eef2f8; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; min-width: 110px;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%;">
+                                <div style="background: #eef2f8; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; min-width: 110px; flex: 1;">
                                     <span style="font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Grand Total (Out)</span>
                                     <strong style="color: var(--primary); font-size: 13px;" id="bif_formula_grand_total">$0.00</strong>
                                 </div>
                                 <strong>-</strong>
-                                <div style="background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px solid #fecaca; text-align: center; min-width: 110px;">
+                                <div style="background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px solid #fecaca; text-align: center; min-width: 110px; flex: 1;">
                                     <span style="font-size: 9px; color: #ef4444; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">STC Rebates (In)</span>
                                     <strong style="color: #ef4444; font-size: 13px;" id="bif_formula_rebates">$0.00</strong>
                                 </div>
                                 <strong>+</strong>
-                                <div style="background: #fffbeb; padding: 6px 10px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; min-width: 110px;">
+                                <div style="background: #fffbeb; padding: 6px 10px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; min-width: 110px; flex: 1;">
                                     <span style="font-size: 9px; color: #b45309; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Company Margin</span>
                                     <strong style="color: #b45309; font-size: 13px;" id="bif_formula_margin">$0.00</strong>
                                 </div>
                                 <strong>=</strong>
-                                <div style="background: #edfaf2; padding: 6px 10px; border-radius: 6px; border: 1px solid #b3e6cc; text-align: center; min-width: 120px; margin-left: auto;">
+                                <div style="background: #edfaf2; padding: 6px 10px; border-radius: 6px; border: 1px solid #b3e6cc; text-align: center; min-width: 120px; flex: 1.2;">
                                     <span style="font-size: 9px; color: #1a6b3c; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">Selling Price</span>
                                     <strong style="color: #1a6b3c; font-size: 15px;" id="bif_formula_selling_price">$0.00</strong>
                                 </div>
