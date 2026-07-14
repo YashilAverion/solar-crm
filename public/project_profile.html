@@ -4222,7 +4222,8 @@ function toggleNav(event, element) {
         }
 
         function showReceiptAlert(fileName) {
-            Swal.fire({
+            const swalFn = window.originalSwalFire || Swal.fire;
+            swalFn.call(window.Swal || Swal, {
                 title: 'Payment Receipt',
                 html: `File Name: <strong>${fileName}</strong><br><br><span style="font-size:12px; color:var(--text-muted);">VoIP & Persisted Document Storage Integration Active.</span>`,
                 icon: 'info',
