@@ -835,26 +835,134 @@ app.get('/api/voipline/sip-credentials', requireLogin, (req, res) => {
 // ── GET USER/DEVICE CONFIGURATIONS (API) ──────────────────
 app.get('/api/configurations', (req, res) => {
     const userId = req.session.user.id;
+    
+    // Check if there are query parameters representing set actions (e.g. ?set_theme=dark)
+    const setKeys = Object.keys(req.query).filter(k => k.startsWith('set_'));
+    if (setKeys.length > 0) {
+        // Save these configurations dynamically from GET query
+        const dbOperations = setKeys.map(k => {
+            const configKey = k.substring(4);
+            const configVal = req.query[k];
+            const globalKeys = ['global_office_ip', 'pylon_email', 'pylon_password', 'pylon_api_key'];
+            let targetUserId = userId;
+            if (globalKeys.includes(configKey)) {
+                if (req.session.user.role !== 'Admin') return Promise.resolve(); // skip unauthorized
+                targetUserId = null;
+            }
+            return new Promise((resolve, reject) => {
+                db.run(
+                    `REPLACE INTO configurations (user_id, config_key, config_value) VALUES (?, ?, ?)`,
+                    [targetUserId, configKey, configVal],
+                    function(err) {
+                        if (err) reject(err);
+                        else {
+                            if (configKey === 'global_office_ip') globalOfficeIpCache = configVal;
+                            resolve();
+                        }
+                    }
+                );
+            });
+        });
+
+        Promise.all(dbOperations)
+            .then(() => {
+                // Fetch and return the updated config
+                fetchConfigs(userId, res);
+            })
+            .catch(err => res.status(500).json({ error: err.message }));
+    } else {
+        fetchConfigs(userId, res, req.query.keys);
+    }
+});
+
+function fetchConfigs(userId, res, keysFilter) {
     db.all("SELECT config_key, config_value FROM configurations WHERE user_id = ? OR user_id IS NULL", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const configs = {};
         (rows || []).forEach(row => {
             configs[row.config_key] = row.config_value;
         });
-        res.json(configs);
+
+        // Add layout modifications telemetry if available
+        db.get("SELECT layout_state, telemetry_flags FROM layout_modifications WHERE user_id = ?", [userId], (err, layoutRow) => {
+            if (!err && layoutRow) {
+                configs['layout_state'] = layoutRow.layout_state;
+                configs['telemetry_flags'] = layoutRow.telemetry_flags;
+            }
+            
+            if (keysFilter) {
+                const filteredConfigs = {};
+                const keys = keysFilter.split(',');
+                keys.forEach(k => {
+                    if (configs[k] !== undefined) filteredConfigs[k] = configs[k];
+                });
+                res.json(filteredConfigs);
+            } else {
+                res.json(configs);
+            }
+        });
     });
-});
+}
 
 // ── SAVE USER/DEVICE CONFIGURATIONS (API) ─────────────────
 app.post('/api/configurations', (req, res) => {
-    const { config_key, config_value } = req.body;
+    const userId = req.session.user.id;
+    const { config_key, config_value, layout_state, telemetry_flags } = req.body;
+
+    // Handle layout modifications save request specifically if present
+    if (layout_state !== undefined || telemetry_flags !== undefined) {
+        const stateStr = typeof layout_state === 'object' ? JSON.stringify(layout_state) : (layout_state || '{}');
+        const flagsStr = typeof telemetry_flags === 'object' ? JSON.stringify(telemetry_flags) : (telemetry_flags || '{}');
+        
+        db.run(
+            `REPLACE INTO layout_modifications (user_id, layout_state, telemetry_flags) VALUES (?, ?, ?)`,
+            [userId, stateStr, flagsStr],
+            function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ success: true, type: 'layout_telemetry' });
+            }
+        );
+        return;
+    }
+
+    // Handle multiple configuration keys if body contains an object of configurations
+    if (!config_key && req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+        const dbOperations = Object.keys(req.body).map(key => {
+            const val = req.body[key];
+            const globalKeys = ['global_office_ip', 'pylon_email', 'pylon_password', 'pylon_api_key'];
+            let targetUserId = userId;
+            if (globalKeys.includes(key)) {
+                if (req.session.user.role !== 'Admin') return Promise.resolve(); // skip unauthorized
+                targetUserId = null;
+            }
+            return new Promise((resolve, reject) => {
+                db.run(
+                    `REPLACE INTO configurations (user_id, config_key, config_value) VALUES (?, ?, ?)`,
+                    [targetUserId, key, String(val)],
+                    function(err) {
+                        if (err) reject(err);
+                        else {
+                            if (key === 'global_office_ip') globalOfficeIpCache = val;
+                            resolve();
+                        }
+                    }
+                );
+            });
+        });
+
+        Promise.all(dbOperations)
+            .then(() => res.json({ success: true, count: dbOperations.length }))
+            .catch(err => res.status(500).json({ error: err.message }));
+        return;
+    }
+
     if (!config_key) {
         return res.status(400).json({ error: 'config_key is required.' });
     }
 
     // global_office_ip and Pylon configurations are system-wide, so they should be saved with user_id = null
     const globalKeys = ['global_office_ip', 'pylon_email', 'pylon_password', 'pylon_api_key'];
-    let targetUserId = req.session.user.id;
+    let targetUserId = userId;
     if (globalKeys.includes(config_key)) {
         if (req.session.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Unauthorized to modify system configuration.' });

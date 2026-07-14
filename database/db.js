@@ -1031,6 +1031,23 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_configurations_user_id ON configurations(user_id)", () => {});
     db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_configurations_global_unique ON configurations(config_key) WHERE user_id IS NULL", () => {});
 
+    // ── LAYOUT MODIFICATIONS TABLE (For persistent premium layout state) ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS layout_modifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            layout_state TEXT NOT NULL,
+            telemetry_flags TEXT DEFAULT '{}',
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id)
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating layout_modifications table:', err.message);
+        else console.log('[DB] layout_modifications table ready.');
+    });
+    db.run("CREATE INDEX IF NOT EXISTS idx_layout_modifications_user_id ON layout_modifications(user_id)", () => {});
+
     // ── USER PERMISSIONS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS user_permissions (

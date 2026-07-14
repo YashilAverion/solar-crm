@@ -20,6 +20,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Enforce Global Sidebar Permissions to prevent leaks
     enforceSidebarPermissions();
+
+    // 5. Initialize the Premium Header UI with dynamic widgets
+    setupPremiumHeader();
+
+    // 6. Setup sliding indicators for tab capsules dynamically
+    setupSlidingTabs();
+
+    // 7. Setup dynamic query tag pills under search and filter modules
+    setupSearchFilterPills();
 });
 
 function setupHamburgerMenu() {
@@ -304,5 +313,438 @@ async function enforceSidebarPermissions() {
         
     } catch (e) {
         console.error('Error enforcing sidebar permissions:', e);
+    }
+}
+
+/* ==========================================================================
+   PREMIUM FLOATING HEADER WIDGETS & THEMING LOGIC
+   ========================================================================== */
+async function setupPremiumHeader() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    // Apply the premium header class
+    topbar.classList.add('premium-header');
+
+    // Retrieve the current theme from configurations database, fallback to localStorage
+    let savedTheme = 'light';
+    try {
+        const configRes = await fetch('/api/configurations');
+        if (configRes.ok) {
+            const configs = await configRes.json();
+            if (configs['crm-theme']) {
+                savedTheme = configs['crm-theme'];
+            } else {
+                savedTheme = localStorage.getItem('crm-theme') || 'light';
+            }
+        }
+    } catch(err) {
+        savedTheme = localStorage.getItem('crm-theme') || 'light';
+    }
+
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+
+    // Try to get user details for profile avatar
+    let userDetails = { name: 'User', role: 'Staff', initials: 'U' };
+    try {
+        const response = await fetch('/api/me');
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.name) {
+                userDetails.name = data.name;
+                userDetails.role = data.role || 'Staff';
+                // Calculate initials
+                const parts = data.name.trim().split(/\s+/);
+                if (parts.length > 1) {
+                    userDetails.initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                } else if (parts.length === 1 && parts[0].length > 0) {
+                    userDetails.initials = parts[0].substring(0, 2).toUpperCase();
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[Premium Header] Could not fetch user details:', e);
+    }
+
+    // Create the controls container
+    const controls = document.createElement('div');
+    controls.className = 'premium-controls';
+
+    // 1. Search button
+    const searchBtn = document.createElement('button');
+    searchBtn.className = 'premium-btn premium-search-btn';
+    searchBtn.setAttribute('title', 'Search');
+    searchBtn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+    `;
+    searchBtn.addEventListener('click', () => {
+        // Try focusing any page search input
+        const pageSearchInput = document.querySelector('#globalLeadSearch, #globalOmniSearchInput, .search-wrap input, input[type="text"][placeholder*="Search"]');
+        if (pageSearchInput) {
+            pageSearchInput.focus();
+            pageSearchInput.style.outline = '2px solid var(--ares-electric-blue)';
+            setTimeout(() => pageSearchInput.style.outline = '', 1500);
+        } else {
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Search',
+                    input: 'text',
+                    inputPlaceholder: 'Search CRM...',
+                    showCancelButton: true,
+                    confirmButtonColor: 'var(--ares-deep-slate)',
+                    cancelButtonColor: '#64748b'
+                }).then((result) => {
+                    if (result.value) {
+                        console.log('Searching for:', result.value);
+                    }
+                });
+            } else {
+                const query = prompt('Enter search query:');
+                if (query) console.log('Searching for:', query);
+            }
+        }
+    });
+    controls.appendChild(searchBtn);
+
+    // 2. Notifications wrapper and dropdown
+    const notifyWrapper = document.createElement('div');
+    notifyWrapper.className = 'premium-dropdown-wrapper';
+
+    const notifyBtn = document.createElement('button');
+    notifyBtn.className = 'premium-btn premium-notify-btn';
+    notifyBtn.setAttribute('title', 'Notifications');
+    notifyBtn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span class="premium-badge">3</span>
+    `;
+
+    const notifyDropdown = document.createElement('div');
+    notifyDropdown.className = 'premium-dropdown notifications-dropdown';
+    notifyDropdown.innerHTML = `
+        <div class="dropdown-header">
+            <span>Recent Notifications</span>
+            <button class="mark-all-read">Clear All</button>
+        </div>
+        <div class="dropdown-body">
+            <div class="notify-item unread">
+                <div class="notify-icon success">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="notify-details">
+                    <p class="notify-text">New lead <strong>John Doe</strong> was assigned to you</p>
+                    <span class="notify-time">2 mins ago</span>
+                </div>
+            </div>
+            <div class="notify-item unread">
+                <div class="notify-icon warning">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div class="notify-details">
+                    <p class="notify-text">Project <strong>#1082</strong> approval is pending review</p>
+                    <span class="notify-time">15 mins ago</span>
+                </div>
+            </div>
+            <div class="notify-item">
+                <div class="notify-icon info">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div class="notify-details">
+                    <p class="notify-text">Payment of <strong>$4,500</strong> received for Ares Energy</p>
+                    <span class="notify-time">2 hours ago</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    notifyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns(notifyDropdown);
+        notifyDropdown.classList.toggle('active');
+    });
+
+    const markAllRead = notifyDropdown.querySelector('.mark-all-read');
+    markAllRead.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const badge = notifyBtn.querySelector('.premium-badge');
+        if (badge) badge.style.display = 'none';
+        notifyDropdown.querySelectorAll('.notify-item').forEach(item => item.classList.remove('unread'));
+        notifyDropdown.querySelector('.dropdown-body').innerHTML = `
+            <div class="dropdown-empty">No new notifications</div>
+        `;
+    });
+
+    notifyWrapper.appendChild(notifyBtn);
+    notifyWrapper.appendChild(notifyDropdown);
+    controls.appendChild(notifyWrapper);
+
+    // 3. Theme Toggle Button (Light/Dark Mode)
+    const themeBtn = document.createElement('button');
+    themeBtn.className = 'premium-btn premium-theme-btn';
+    themeBtn.setAttribute('title', 'Toggle Theme');
+
+    const updateThemeIcons = (theme) => {
+        if (theme === 'dark') {
+            themeBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            `;
+        } else {
+            themeBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            `;
+        }
+    };
+
+    updateThemeIcons(savedTheme);
+
+    themeBtn.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        const nextTheme = isDark ? 'dark' : 'light';
+        localStorage.setItem('crm-theme', nextTheme);
+        updateThemeIcons(nextTheme);
+
+        // Push theme state update to backend database Configurations store
+        fetch('/api/configurations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ config_key: 'crm-theme', config_value: nextTheme })
+        }).catch(err => console.warn('[Premium Header] Failed to sync theme state with DB:', err));
+        
+        if (window.Swal) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: `${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)} Mode Enabled`,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+    });
+    controls.appendChild(themeBtn);
+
+    // 4. User Profile Badge and dropdown
+    const profileWrapper = document.createElement('div');
+    profileWrapper.className = 'premium-dropdown-wrapper';
+
+    const profileAvatar = document.createElement('div');
+    profileAvatar.className = 'premium-profile-avatar';
+    profileAvatar.setAttribute('title', 'User Profile');
+    profileAvatar.innerHTML = `
+        <span class="avatar-initials">${userDetails.initials}</span>
+        <span class="avatar-status-dot"></span>
+    `;
+
+    const profileDropdown = document.createElement('div');
+    profileDropdown.className = 'premium-dropdown profile-dropdown';
+    profileDropdown.innerHTML = `
+        <div class="profile-dropdown-user">
+            <div class="dropdown-avatar">${userDetails.initials}</div>
+            <div class="dropdown-user-info">
+                <h5 class="user-name">${userDetails.name}</h5>
+                <span class="user-role">${userDetails.role}</span>
+            </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="/logout" class="dropdown-item logout-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+        </a>
+    `;
+
+    profileAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns(profileDropdown);
+        profileDropdown.classList.toggle('active');
+    });
+
+    profileWrapper.appendChild(profileAvatar);
+    profileWrapper.appendChild(profileDropdown);
+    controls.appendChild(profileWrapper);
+
+    // Remove any existing user avatar selects or redundant elements
+    const oldGearBtn = topbar.querySelector('.pref-gear-btn');
+    if (oldGearBtn) oldGearBtn.remove();
+    
+    const profileSelectWrap = topbar.querySelector('.profile-select-wrap');
+    if (profileSelectWrap) profileSelectWrap.remove();
+
+    // Append the premium controls to the topbar
+    topbar.appendChild(controls);
+
+    // Helper: Close all other active dropdowns
+    function closeAllDropdowns(exceptDropdown) {
+        document.querySelectorAll('.premium-dropdown').forEach(dropdown => {
+            if (dropdown !== exceptDropdown) {
+                dropdown.classList.remove('active');
+            }
+        });
+    }
+
+    // Document listener to close all dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.premium-dropdown-wrapper')) {
+            closeAllDropdowns(null);
+        }
+    });
+}
+
+/* ==========================================================================
+   TABS AUTOMATED SLIDING INDICATOR LOGIC
+   ========================================================================== */
+function setupSlidingTabs() {
+    const updateAllIndicators = () => {
+        document.querySelectorAll('.tabs-capsules, .sub-tabs-header, #objection_category_tabs, #overlay_objection_tabs').forEach(container => {
+            let indicator = container.querySelector('.tab-sliding-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'tab-sliding-indicator';
+                container.insertBefore(indicator, container.firstChild);
+                container.style.position = 'relative';
+            }
+            
+            const activeTab = container.querySelector('.tab-capsule.active, .sub-tab-capsule.active');
+            if (activeTab) {
+                indicator.style.display = 'block';
+                indicator.style.left = `${activeTab.offsetLeft}px`;
+                indicator.style.top = `${activeTab.offsetTop}px`;
+                indicator.style.width = `${activeTab.offsetWidth}px`;
+                indicator.style.height = `${activeTab.offsetHeight}px`;
+            } else {
+                indicator.style.display = 'none';
+            }
+        });
+    };
+
+    // Initial update
+    setTimeout(updateAllIndicators, 300);
+
+    // Global listener for click events to update indicators on tab switch
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.tab-capsule, .sub-tab-capsule')) {
+            setTimeout(updateAllIndicators, 80);
+        }
+    });
+
+    // Resize listener
+    window.addEventListener('resize', updateAllIndicators);
+}
+
+/* ==========================================================================
+   ADVANCED SEARCH & FILTER MODULES TAG PILLS LOGIC
+   ========================================================================== */
+function setupSearchFilterPills() {
+    const tableToolbar = document.querySelector('.table-toolbar');
+    if (!tableToolbar) return;
+
+    // Create a container for pills if it doesn't exist
+    let pillsContainer = tableToolbar.querySelector('.filter-pills-container');
+    if (!pillsContainer) {
+        pillsContainer = document.createElement('div');
+        pillsContainer.className = 'filter-pills-container';
+        tableToolbar.appendChild(pillsContainer);
+    }
+
+    const renderPills = () => {
+        pillsContainer.innerHTML = '';
+
+        // 1. Text search inputs
+        const searchInputs = document.querySelectorAll('#globalLeadSearch, #globalOmniSearchInput, .search-wrap input');
+        searchInputs.forEach(input => {
+            if (input.value.trim() !== '') {
+                createPill(`Search: "${input.value.trim()}"`, () => {
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('keyup', { bubbles: true }));
+                    renderPills();
+                });
+            }
+        });
+
+        // 2. Active filter chips
+        const activeChips = document.querySelectorAll('.filter-chip.fc-active, .filter-chip.active');
+        activeChips.forEach(chip => {
+            createPill(`Filter: ${chip.textContent.trim()}`, () => {
+                chip.click();
+                setTimeout(renderPills, 100);
+            });
+        });
+
+        // 3. Select inputs
+        const selects = tableToolbar.querySelectorAll('select');
+        selects.forEach(select => {
+            if (select.value && select.value !== 'all' && select.value !== '') {
+                const label = select.options[select.selectedIndex].text;
+                createPill(`${select.name || 'Filter'}: ${label}`, () => {
+                    select.value = select.options[0].value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    renderPills();
+                });
+            }
+        });
+    };
+
+    const createPill = (text, onRemove) => {
+        const pill = document.createElement('div');
+        pill.className = 'filter-pill';
+        pill.innerHTML = `
+            <span>${text}</span>
+            <span class="remove-pill-btn">&times;</span>
+        `;
+        pill.querySelector('.remove-pill-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            onRemove();
+        });
+        pillsContainer.appendChild(pill);
+    };
+
+    // Bind listeners
+    document.querySelectorAll('#globalLeadSearch, #globalOmniSearchInput, .search-wrap input').forEach(input => {
+        input.addEventListener('input', debounce(renderPills, 400));
+    });
+
+    tableToolbar.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', renderPills);
+    });
+
+    tableToolbar.addEventListener('click', (e) => {
+        if (e.target.closest('.filter-chip')) {
+            setTimeout(renderPills, 100);
+        }
+    });
+
+    setTimeout(renderPills, 500);
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     }
 }
