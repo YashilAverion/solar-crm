@@ -1412,3 +1412,13 @@ body.theme-dark #globalOmniDropdown .omni-result-item:hover {
 .sidebar .sub-menu .menu-item svg {
     margin-right: 8px !important;
 }
+
+/* ==========================================================================
+   GLOBAL DESIGNATION & ACCESS ROLE HIDING
+   ========================================================================== */
+#sidebarRole,
+.sb-urole,
+.user-role,
+.profile-dropdown-user .user-role {
+    display: none !important;
+}
