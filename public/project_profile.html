@@ -4528,12 +4528,135 @@ function toggleNav(event, element) {
             const sellingPrice = parseFloat(document.getElementById('td_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
             const balanceAmount = parseFloat(document.getElementById('payBalanceAmount').value) || 0;
             const totalPaid = sellingPrice - balanceAmount;
-            const customerName = projectData.customer_name || 'Customer';
-            const projectNo = projectData.project_no || 'AR1013';
-            const address = projectData.address || 'N/A';
-            const email = projectData.email || 'N/A';
-            const invoiceNo = `INV-${projectNo}-${new Date().getFullYear()}`;
+            const customerName = `${projectData.first_name || ''} ${projectData.last_name || ''}`.trim() || 'Customer';
+            const projectNo = projectData.project_number || 'AR1013';
+            const address = `${projectData.address || ''}, ${projectData.suburb || ''} ${projectData.state || ''} ${projectData.postcode || ''}`.trim().replace(/^,|,$/g, '') || 'N/A';
+            const phone = projectData.phone_number || 'N/A';
+            const email = projectData.email_id_1 || 'N/A';
+            const invoiceNo = projectNo;
             const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            // Extract products
+            const products = [];
+            if (window.lastCalculationDetails && window.lastCalculationDetails.details && window.lastCalculationDetails.details.productsBreakdown && window.lastCalculationDetails.details.productsBreakdown.length > 0) {
+                window.lastCalculationDetails.details.productsBreakdown.forEach(p => {
+                    products.push({
+                        qty: p.qty,
+                        type: p.type,
+                        name: p.name,
+                        code: p.code
+                    });
+                });
+            } else {
+                document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                    const type = row.querySelector('.cp-type')?.value || '';
+                    const name = row.querySelector('.cp-name')?.value || '';
+                    const code = row.querySelector('.cp-code')?.value || '';
+                    const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                    if (name && qty > 0) {
+                        products.push({ qty, type, name, code });
+                    }
+                });
+            }
+
+            if (products.length === 0) {
+                if (projectData.panel_brand) {
+                    products.push({ qty: projectData.panel_qty || 26, type: 'Solar Panels', name: `${projectData.panel_brand} ${projectData.panel_model || ''}`, code: '' });
+                }
+                if (projectData.inverter_brand) {
+                    products.push({ qty: projectData.inverter_qty || 1, type: 'Inverter', name: `${projectData.inverter_brand} ${projectData.inverter_model || ''}`, code: '' });
+                }
+                if (projectData.battery_brand) {
+                    products.push({ qty: projectData.battery_qty || 1, type: 'Battery Storage', name: `${projectData.battery_brand} ${projectData.battery_model || ''}`, code: '' });
+                }
+            }
+
+            if (products.length === 0) {
+                products.push({ qty: 1, type: 'Solar PV System', name: 'Premium Residential Solar Energy System Design, Supply & Installation', code: '' });
+            }
+
+            let descriptionRowsHtml = '';
+            products.forEach((p, idx) => {
+                const borderStyle = idx < products.length - 1 ? 'border-bottom: 1px solid #e2e8f0;' : '';
+                descriptionRowsHtml += `
+                    <div style="padding: 12px 16px; ${borderStyle} display: grid; grid-template-columns: 150px 1fr; font-size: 12px; align-items: center; font-family: 'Inter', sans-serif;">
+                        <div style="font-weight: 700; color: #1b365d; text-transform: capitalize;">${p.qty} x ${p.type}</div>
+                        <div style="color: #334155; font-weight: 600;">
+                            ${p.name} ${p.code ? `<span style="color: #64748b; font-weight: 500; font-size: 11px;">(${p.code})</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Get rebates breakdown
+            const rebatesList = (window.lastCalculationDetails && window.lastCalculationDetails.details && window.lastCalculationDetails.details.rebatesBreakdown) || [];
+            
+            const panelsRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('panel')) || { total: 0 };
+            const batteryRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('battery')) || { total: 0 };
+            const waBatteryRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('vpp') || r.name.toLowerCase().includes('wa')) || { total: 0 };
+
+            const panelsRebateVal = parseFloat(panelsRebateObj.total) || 0;
+            const batteryRebateVal = parseFloat(batteryRebateObj.total) || 0;
+            const waBatteryRebateVal = parseFloat(waBatteryRebateObj.total) || 0;
+
+            const totalRebatesVal = panelsRebateVal + batteryRebateVal + waBatteryRebateVal;
+            const basicSystemCostVal = sellingPrice + totalRebatesVal;
+
+            let pricingRowsHtml = `
+                <div style="display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #f1f5f9; color: #475569;">
+                    <span style="font-weight: 600;">Basic System Cost</span>
+                    <span style="font-weight: 700; color: #1e293b;">$${basicSystemCostVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+            `;
+            
+            pricingRowsHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
+                    <span style="font-weight: 500;">Less STC Panels Rebate</span>
+                    <span style="font-weight: 600;">-$${panelsRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+            `;
+
+            if (batteryRebateVal > 0) {
+                pricingRowsHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
+                        <span style="font-weight: 500;">Less STC Battery Rebate</span>
+                        <span style="font-weight: 600;">-$${batteryRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            }
+
+            if (waBatteryRebateVal > 0) {
+                pricingRowsHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
+                        <span style="font-weight: 500;">Less WA Battery Rebate</span>
+                        <span style="font-weight: 600;">-$${waBatteryRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            }
+
+            pricingRowsHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid #cbd5e1; background: #f8fafc; color: #1e293b; font-size: 13px;">
+                    <span style="font-weight: 700;">Selling Price Total (Inc. GST)</span>
+                    <span style="font-weight: 800; color: #1e293b;">$${sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+            `;
+
+            if (totalPaid > 0) {
+                pricingRowsHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
+                        <span style="font-weight: 500;">Less Payments Received</span>
+                        <span style="font-weight: 600;">-$${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            }
+
+            const displayBalance = Math.max(0, balanceAmount);
+            pricingRowsHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 12px 16px; background: #e8681e; color: #ffffff; font-size: 14px; border-radius: 0 0 6px 6px;">
+                    <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Balance Due (Inc. GST)</span>
+                    <span style="font-weight: 800; font-family: monospace;">$${displayBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+            `;
 
             const swalFn = window.originalSwalFire || Swal.fire;
             swalFn.call(window.Swal || Swal, {
@@ -4567,80 +4690,100 @@ function toggleNav(event, element) {
                         <button onclick="Swal.close()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #fff; background: #64748b; border: none; border-radius: 6px; cursor: pointer;">Close</button>
                     </div>
                     
-                    <div id="invoice-print-area" style="padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; text-align: left; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                        <!-- Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px;">
+                    <div id="invoice-print-area" style="padding: 30px; border: 1px solid #cbd5e1; border-radius: 12px; background: #ffffff; text-align: left; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
+                        
+                        <!-- Top Banner Frame matching Image 1 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #1b365d; margin: -30px -30px 24px -30px; padding: 24px 30px; border-bottom: 6px solid #e8681e; position: relative;">
+                            <!-- Slanted accent element from Image 1 -->
+                            <div style="position: absolute; right: 220px; top: 0; bottom: 0; width: 40px; background: #e8681e; transform: skewX(-25deg); opacity: 0.85;"></div>
+                            <div style="position: absolute; right: 270px; top: 0; bottom: 0; width: 12px; background: #e8681e; transform: skewX(-25deg); opacity: 0.40;"></div>
+                            
                             <div>
-                                <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1c3557; letter-spacing: 0.5px;">ARES ENERGY</h2>
-                                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">ABN: 48 612 739 214</div>
-                                <div style="font-size: 11px; color: #64748b;">7 Girona Street, Piara Waters WA 6112</div>
+                                <img src="/ares_energy_logo.png" style="height: 48px; display: block;" alt="Ares Energy Logo">
+                                <span style="font-size: 10px; color: #cbd5e1; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; display: block;">Solar Energy Solutions</span>
                             </div>
-                            <div style="text-align: right;">
-                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: var(--accent);">TAX INVOICE</h3>
-                                <div style="font-size: 12px; font-weight: 600; color: #475569; margin-top: 4px;">Invoice No: ${invoiceNo}</div>
-                                <div style="font-size: 11px; color: #64748b;">Date: ${dateStr}</div>
+                            
+                            <div style="text-align: right; z-index: 2;">
+                                <h2 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">TAX INVOICE</h2>
+                                <div style="font-size: 12px; font-weight: 700; color: #ffbc0d; margin-top: 4px;">Invoice Number: ${invoiceNo}</div>
+                                <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Date: ${dateStr}</div>
                             </div>
                         </div>
 
-                        <!-- Customer Info -->
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; font-size: 12px;">
+                        <!-- Invoice To / From Billing Columns -->
+                        <div style="display: flex; justify-content: space-between; gap: 24px; margin-bottom: 24px; font-size: 12px;">
+                            <div style="flex: 1; border-top: 4px solid #e8681e; background: #f8fafc; padding: 16px; border-radius: 4px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);">
+                                <span style="background: #e8681e; color: #fff; padding: 4px 10px; font-weight: 700; border-radius: 4px; font-size: 11px; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; margin-bottom: 12px;">Invoice To :</span>
+                                <div style="font-weight: 800; color: #1e293b; font-size: 14px; margin-bottom: 4px;">${customerName}</div>
+                                <div style="color: #475569; margin-bottom: 4px; line-height: 1.5;">${address}</div>
+                                <div style="color: #475569; margin-bottom: 2px;">Phone: <strong>${phone}</strong></div>
+                                <div style="color: #475569;">Email ID: <strong>${email}</strong></div>
+                            </div>
+                            <div style="flex: 1; border-top: 4px solid #1b365d; background: #f8fafc; padding: 16px; border-radius: 4px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);">
+                                <span style="background: #1b365d; color: #fff; padding: 4px 10px; font-weight: 700; border-radius: 4px; font-size: 11px; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; margin-bottom: 12px;">Invoice From :</span>
+                                <div style="font-weight: 800; color: #1e293b; font-size: 14px; margin-bottom: 4px;">Ares Energy Pty Ltd</div>
+                                <div style="color: #475569; margin-bottom: 4px; line-height: 1.5;">Address:- 276 Kargotich Rd, Oakford WA 6121</div>
+                                <div style="color: #475569; margin-bottom: 2px;">ABN: <strong>78 631 734 506</strong></div>
+                                <div style="color: #475569; margin-bottom: 2px;">E: <strong>info@aresenergy.com.au</strong></div>
+                                <div style="color: #475569;">Tollfree: <strong>1300 717 583</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Description Box (Image 2 style) -->
+                        <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="background: #e8681e; color: #ffffff; padding: 12px 16px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
+                                COMPREHENSIVE SOLAR SOLUTIONS - TAILORED DESIGN, QUALITY SUPPLY, EXPERT INSTALLATION
+                            </div>
+                            <div style="background: #ffffff; display: flex; flex-direction: column;">
+                                ${descriptionRowsHtml}
+                            </div>
+                        </div>
+
+                        <!-- Pricing Table & Total -->
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 28px;">
+                            <div style="width: 320px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px;">
+                                ${pricingRowsHtml}
+                            </div>
+                        </div>
+
+                        <!-- Bottom Section: Payment Method, Contact Info -->
+                        <div style="display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid #cbd5e1; padding-top: 20px; margin-bottom: 20px; font-size: 12px;">
+                            <div style="flex: 1.2;">
+                                <span style="background: #e8681e; color: #fff; padding: 2px 6px; font-weight: 700; border-radius: 3px; font-size: 10px; text-transform: uppercase; display: inline-block; margin-bottom: 8px;">Payment Method :</span>
+                                <div style="color: #475569; line-height: 1.6;">
+                                    <div>Bank: <strong>Commonwealth Bank of Australia (CBA)</strong></div>
+                                    <div>Account Name: <strong>Ares Energy Pty Ltd</strong></div>
+                                    <div>BSB: <strong>066-162</strong> | Account No: <strong>1083 4921</strong></div>
+                                </div>
+                            </div>
+                            <div style="flex: 0.8; text-align: left;">
+                                <span style="background: #1b365d; color: #fff; padding: 2px 6px; font-weight: 700; border-radius: 3px; font-size: 10px; text-transform: uppercase; display: inline-block; margin-bottom: 8px;">Contact Info :</span>
+                                <div style="color: #475569; line-height: 1.6;">
+                                    <div>Phone: <strong>1300 717 583</strong></div>
+                                    <div>Email: <strong>info@aresenergy.com.au</strong></div>
+                                    <div>Web: <strong>www.aresenergy.com.au</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slogan & Signature -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px;">
                             <div>
-                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Billed To:</span>
-                                <div style="font-weight: 700; color: #1e293b; font-size: 14px; margin-top: 4px;">${customerName}</div>
-                                <div style="color: #475569; margin-top: 2px;">${address}</div>
-                                <div style="color: #475569;">Email: ${email}</div>
+                                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1b365d; font-style: italic;">Thanks for your business</h4>
                             </div>
-                            <div style="text-align: right;">
-                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Project Details:</span>
-                                <div style="color: #475569; margin-top: 4px;">Project No: <strong>${projectNo}</strong></div>
-                                <div style="color: #475569;">Status: <span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PLANNED</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Items Table -->
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px;">
-                            <thead>
-                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #1e293b; font-weight: 700; text-align: left;">
-                                    <th style="padding: 10px 12px;">Description</th>
-                                    <th style="padding: 10px 12px; text-align: right; width: 120px;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="border-bottom: 1px solid #f1f5f9;">
-                                    <td style="padding: 12px;">
-                                        <div style="font-weight: 700; color: #1e293b;">Solar PV Installation Contract</div>
-                                        <div style="color: #64748b; font-size: 11px; margin-top: 2px;">Premium Residential Solar Energy System Design, Supply & Installation</div>
-                                    </td>
-                                    <td style="padding: 12px; text-align: right; font-weight: 600;">$${sellingPrice.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <!-- Calculations -->
-                        <div style="display: flex; justify-content: flex-end; margin-bottom: 24px; font-size: 12px;">
-                            <div style="width: 250px; line-height: 1.8;">
-                                <div style="display: flex; justify-content: space-between; color: #475569;">
-                                    <span>Total Contract Value:</span>
-                                    <span style="font-weight: 600;">$${sellingPrice.toFixed(2)}</span>
+                            <div style="text-align: right; width: 180px;">
+                                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Authorized Signature</div>
+                                <div style="border-bottom: 1.5px solid #cbd5e1; height: 35px; width: 100%; margin-bottom: 4px; display: flex; align-items: center; justify-content: flex-end;">
+                                    <span style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 20px; color: #1b365d; padding-right: 10px;">Ares Energy</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; color: #16a34a; font-weight: 600;">
-                                    <span>Total Paid to Date:</span>
-                                    <span>-$${totalPaid.toFixed(2)}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; border-top: 2px solid #e2e8f0; padding-top: 6px; font-weight: 800; font-size: 14px; color: #1e293b; margin-top: 4px;">
-                                    <span>Outstanding Balance:</span>
-                                    <span>$${balanceAmount.toFixed(2)}</span>
-                                </div>
+                                <div style="font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">ARES ENERGY SIGNATURE</div>
                             </div>
                         </div>
 
-                        <!-- Footer / Bank Details -->
-                        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; font-size: 11px; color: #64748b; line-height: 1.6;">
-                            <div style="font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">Payment / Bank Details:</div>
-                            <div>Bank: <strong>Commonwealth Bank of Australia (CBA)</strong></div>
-                            <div>Account Name: <strong>Ares Energy Pty Ltd</strong></div>
-                            <div>BSB: <strong>066-162</strong> | Account No: <strong>1083 4921</strong></div>
-                            <div style="margin-top: 12px; text-align: center; font-style: italic; color: #94a3b8; font-size: 10px;">Thank you for your business!</div>
+                        <!-- Bottom Frame Accent matching Image 1 -->
+                        <div style="height: 16px; background: #1b365d; margin: 30px -30px -30px -30px; border-top: 4px solid #e8681e; position: relative;">
+                            <!-- Slanted accent on bottom right -->
+                            <div style="position: absolute; right: 40px; top: 0; bottom: 0; width: 25px; background: #e8681e; transform: skewX(-25deg); opacity: 0.85;"></div>
                         </div>
                     </div>
                 `,
