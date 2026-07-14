@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let currentUser = { role: '', full_name: '' };
     let currentDetailLeadId = null;
     let activeAdvFilters = {};
-    let currentTab = 'in';
+    let currentTab = localStorage.getItem('activeDuplicateLeadsTab') || 'in';
     let selectedLeadIds = new Set();
 
     const gsi = document.getElementById('globalSearch');
@@ -622,6 +622,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function switchTab(tab) {
         currentTab = tab;
+        localStorage.setItem('activeDuplicateLeadsTab', tab);
         document.getElementById('tabIn').classList.toggle('active', tab === 'in');
         document.getElementById('tabOut').classList.toggle('active', tab === 'out');
         currentPage = 1;
@@ -976,7 +977,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         currentUser.full_name = window.loggedInUser;
         currentUser.role = window.loggedInRole;
-        loadDuplicateLeads(currentTab);
+        switchTab(currentTab);
         
         const nameEl   = document.getElementById("sidebarName");
         const roleEl   = document.getElementById("sidebarRole");

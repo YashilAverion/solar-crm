@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let allLeadsData = [], currentPage = 1, rowsPerPage = 30;
     let currentSortCol = '', isSortAsc = true, searchTerm = '';
     let currentUser = { role: '', full_name: '' };
-    let currentTab = 'in';
+    let currentTab = localStorage.getItem('activeDeleteLeadsTab') || 'in';
     let activeAdvFilters = {};
     let selectedLeadIds = new Set();
 
@@ -577,6 +577,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function switchTab(tab) {
         currentTab = tab;
+        localStorage.setItem('activeDeleteLeadsTab', tab);
         document.getElementById('tabIn').classList.toggle('active', tab === 'in');
         document.getElementById('tabOut').classList.toggle('active', tab === 'out');
         currentPage = 1;
@@ -905,7 +906,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         currentUser.full_name = window.loggedInUser;
         currentUser.role = window.loggedInRole;
-        loadDeleteLeads(currentTab);
+        switchTab(currentTab);
         
         const nameEl   = document.getElementById("sidebarName");
         const roleEl   = document.getElementById("sidebarRole");

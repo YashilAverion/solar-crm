@@ -2638,6 +2638,12 @@ function toggleNav(event, element) {
                 // Initialize compliance console guidance and live telemetry state
                 loadComplianceGuidance();
 
+                // Restore active tab from localStorage
+                const savedTab = localStorage.getItem('activeProjectProfileTab') || 'sales';
+                window.isInitialTabRestore = true;
+                switchTab(savedTab);
+                window.isInitialTabRestore = false;
+
             } catch (err) {
                 Swal.fire('Error', 'Failed to load project details.', 'error');
                 document.getElementById('metadataContent').innerText = 'Error: Failed to load data';
@@ -4609,17 +4615,30 @@ function toggleNav(event, element) {
             // Auto-save mechanism when leaving the Sales Input tab
             const salesTab = document.getElementById('tab-sales');
             const btnSave = document.getElementById('btnSaveEngineering');
-            if (salesTab && salesTab.style.display !== 'none' && tabId !== 'sales') {
+            if (salesTab && salesTab.style.display !== 'none' && tabId !== 'sales' && !window.isInitialTabRestore) {
                 if (btnSave && !btnSave.classList.contains('btn-idle')) {
                     saveEngineeringGrid();
                 }
             }
 
             document.querySelectorAll('.tab-capsule').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
+            
+            let activeBtn = btnElement;
+            if (!activeBtn) {
+                activeBtn = Array.from(document.querySelectorAll('.tab-capsule')).find(btn => btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId));
+            }
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
 
             document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-            document.getElementById('tab-' + tabId).style.display = 'flex';
+            const targetContent = document.getElementById('tab-' + tabId);
+            if (targetContent) {
+                targetContent.style.display = 'flex';
+            }
+
+            // Save tab state to localStorage so it is remembered on refresh
+            localStorage.setItem('activeProjectProfileTab', tabId);
 
             if (tabId === 'satellite') {
                 setTimeout(loadPylonIntegration, 100);

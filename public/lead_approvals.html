@@ -403,7 +403,7 @@ function toggleNav(event, element) {
 <script>
     let deletionsData = [];
     let discountsData = [];
-    let currentTab = 'deletions';
+    let currentTab = localStorage.getItem('activeLeadApprovalsTab') || 'deletions';
     let currentPage = 1, rowsPerPage = 30;
     let selectedLeadIds = new Set();
 
@@ -444,7 +444,7 @@ function toggleNav(event, element) {
             
             selectedLeadIds.clear(); 
             updateBulkBar(); 
-            renderTable();
+            switchTab(currentTab);
         } catch(e) {
             console.error("Error loading approvals:", e);
         }
@@ -452,6 +452,7 @@ function toggleNav(event, element) {
 
     function switchTab(tab) {
         currentTab = tab;
+        localStorage.setItem('activeLeadApprovalsTab', tab);
         document.getElementById('tab-deletions').classList.toggle('active-tab', tab === 'deletions');
         document.getElementById('tab-discounts').classList.toggle('active-tab', tab === 'discounts');
         selectedLeadIds.clear();
