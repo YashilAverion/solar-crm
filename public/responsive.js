@@ -323,6 +323,23 @@ async function setupPremiumHeader() {
     const topbar = document.querySelector('.topbar');
     if (!topbar) return;
 
+    // If timezone helper wrapped the topbar in tier2, undo it to restore single row layout
+    const tier2 = topbar.querySelector('.topbar-tier2');
+    if (tier2) {
+        // Restore original appendChild and insertBefore
+        topbar.appendChild = HTMLElement.prototype.appendChild;
+        topbar.insertBefore = HTMLElement.prototype.insertBefore;
+        
+        // Move all children of tier2 back to topbar
+        const children = Array.from(tier2.childNodes);
+        children.forEach(child => {
+            topbar.appendChild(child);
+        });
+        
+        // Remove tier2
+        tier2.remove();
+    }
+
     // Purge any redundant old profile, notification, or gear elements injected by timezone clocks or legacy code
     const elementsToPurge = [
         '.tb-notif-bell-wrapper',

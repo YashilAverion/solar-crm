@@ -422,6 +422,7 @@ body.hide-stats .stats-row {
     box-shadow: 0 10px 25px -5px rgba(20, 40, 71, 0.05), 0 8px 10px -6px rgba(20, 40, 71, 0.05) !important;
     padding: 0 18px !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     position: relative !important;
@@ -1342,4 +1343,22 @@ body.dark-mode #globalOmniDropdown .omni-result-item:hover,
 body.theme-dark #globalOmniDropdown .omni-result-item:hover {
     background-color: #0f172a !important;
     color: var(--ares-electric-blue) !important;
+}
+
+/* ==========================================================================
+   SIDEBAR NESTED SUB-MENU INDENTATION OVERRIDES
+   ========================================================================== */
+.sidebar .sub-menu .menu-item {
+    padding-left: 28px !important;
+}
+.sidebar .sub-menu .sub-menu .menu-item {
+    padding-left: 42px !important;
+}
+.sidebar .sub-menu .sub-menu .sub-menu .menu-item {
+    padding-left: 56px !important;
+}
+
+/* Ensure hamburger icon and other elements don't get pushed/distorted inside sub-menus */
+.sidebar .sub-menu .menu-item svg {
+    margin-right: 8px !important;
 }
