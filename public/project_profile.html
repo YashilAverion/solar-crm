@@ -1258,8 +1258,24 @@ function toggleNav(event, element) {
                         <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Balance Amount ($)</label>
                         <input type="number" id="payBalanceAmount" placeholder="0.00" readonly style="height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
                     </div>
-                    <div style="flex: 1; display: flex; justify-content: flex-end;">
-                        <button type="button" class="btn-save" onclick="openAddPaymentModal()" style="height: 36px; font-size: 12px; margin-top: 0; padding: 0 20px;">Add Payment</button>
+                    <div style="flex: 1; display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+                        <!-- Get Invoice Button -->
+                        <button type="button" onclick="triggerGetInvoice()" style="height: 36px; font-size: 12px; font-weight: 600; padding: 0 16px; border: 1.5px solid #0f172a; border-radius: 6px; background: transparent; color: #0f172a; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='transparent';">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Get Invoice
+                        </button>
+                        
+                        <!-- Get Statement Button -->
+                        <button type="button" onclick="triggerGetStatement()" style="height: 36px; font-size: 12px; font-weight: 600; padding: 0 16px; border: 1.5px solid var(--accent); border-radius: 6px; background: transparent; color: var(--accent); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(232, 104, 30, 0.05)';" onmouseout="this.style.background='transparent';">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            Get Statement
+                        </button>
+
+                        <!-- Add Payment Button -->
+                        <button type="button" class="btn-save" onclick="openAddPaymentModal()" style="height: 36px; font-size: 12px; margin-top: 0; padding: 0 20px; display: inline-flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Payment
+                        </button>
                     </div>
                 </div>
 
@@ -4500,6 +4516,269 @@ function toggleNav(event, element) {
                 icon: 'success',
                 confirmButtonColor: 'var(--primary)',
                 confirmButtonText: 'Close Audit Log'
+            });
+        }
+
+        function triggerGetInvoice() {
+            if (!projectData) {
+                Swal.fire('Error', 'Project data not loaded yet.', 'error');
+                return;
+            }
+
+            const sellingPrice = parseFloat(document.getElementById('td_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
+            const balanceAmount = parseFloat(document.getElementById('payBalanceAmount').value) || 0;
+            const totalPaid = sellingPrice - balanceAmount;
+            const customerName = projectData.customer_name || 'Customer';
+            const projectNo = projectData.project_no || 'AR1013';
+            const address = projectData.address || 'N/A';
+            const email = projectData.email || 'N/A';
+            const invoiceNo = `INV-${projectNo}-${new Date().getFullYear()}`;
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const swalFn = window.originalSwalFire || Swal.fire;
+            swalFn.call(window.Swal || Swal, {
+                title: 'Customer Invoice Document',
+                customClass: {
+                    popup: 'premium-swal-popup'
+                },
+                width: '750px',
+                html: `
+                    <style>
+                        @media print {
+                            body * {
+                                visibility: hidden !important;
+                            }
+                            #invoice-print-area, #invoice-print-area * {
+                                visibility: visible !important;
+                            }
+                            #invoice-print-area {
+                                position: absolute !important;
+                                left: 0 !important;
+                                top: 0 !important;
+                                width: 100% !important;
+                            }
+                        }
+                    </style>
+                    <div style="text-align: right; margin-bottom: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button onclick="window.print()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #fff; background: var(--primary); border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Print / PDF
+                        </button>
+                        <button onclick="Swal.close()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #fff; background: #64748b; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+                    </div>
+                    
+                    <div id="invoice-print-area" style="padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; text-align: left; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1c3557; letter-spacing: 0.5px;">ARES ENERGY</h2>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">ABN: 48 612 739 214</div>
+                                <div style="font-size: 11px; color: #64748b;">7 Girona Street, Piara Waters WA 6112</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: var(--accent);">TAX INVOICE</h3>
+                                <div style="font-size: 12px; font-weight: 600; color: #475569; margin-top: 4px;">Invoice No: ${invoiceNo}</div>
+                                <div style="font-size: 11px; color: #64748b;">Date: ${dateStr}</div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Info -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; font-size: 12px;">
+                            <div>
+                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Billed To:</span>
+                                <div style="font-weight: 700; color: #1e293b; font-size: 14px; margin-top: 4px;">${customerName}</div>
+                                <div style="color: #475569; margin-top: 2px;">${address}</div>
+                                <div style="color: #475569;">Email: ${email}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Project Details:</span>
+                                <div style="color: #475569; margin-top: 4px;">Project No: <strong>${projectNo}</strong></div>
+                                <div style="color: #475569;">Status: <span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PLANNED</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #1e293b; font-weight: 700; text-align: left;">
+                                    <th style="padding: 10px 12px;">Description</th>
+                                    <th style="padding: 10px 12px; text-align: right; width: 120px;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;">
+                                        <div style="font-weight: 700; color: #1e293b;">Solar PV Installation Contract</div>
+                                        <div style="color: #64748b; font-size: 11px; margin-top: 2px;">Premium Residential Solar Energy System Design, Supply & Installation</div>
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; font-weight: 600;">$${sellingPrice.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Calculations -->
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 24px; font-size: 12px;">
+                            <div style="width: 250px; line-height: 1.8;">
+                                <div style="display: flex; justify-content: space-between; color: #475569;">
+                                    <span>Total Contract Value:</span>
+                                    <span style="font-weight: 600;">$${sellingPrice.toFixed(2)}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; color: #16a34a; font-weight: 600;">
+                                    <span>Total Paid to Date:</span>
+                                    <span>-$${totalPaid.toFixed(2)}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-top: 2px solid #e2e8f0; padding-top: 6px; font-weight: 800; font-size: 14px; color: #1e293b; margin-top: 4px;">
+                                    <span>Outstanding Balance:</span>
+                                    <span>$${balanceAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer / Bank Details -->
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; font-size: 11px; color: #64748b; line-height: 1.6;">
+                            <div style="font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">Payment / Bank Details:</div>
+                            <div>Bank: <strong>Commonwealth Bank of Australia (CBA)</strong></div>
+                            <div>Account Name: <strong>Ares Energy Pty Ltd</strong></div>
+                            <div>BSB: <strong>066-162</strong> | Account No: <strong>1083 4921</strong></div>
+                            <div style="margin-top: 12px; text-align: center; font-style: italic; color: #94a3b8; font-size: 10px;">Thank you for your business!</div>
+                        </div>
+                    </div>
+                `,
+                showConfirmButton: false,
+                focusConfirm: false
+            });
+        }
+
+        function triggerGetStatement() {
+            if (!projectData) {
+                Swal.fire('Error', 'Project data not loaded yet.', 'error');
+                return;
+            }
+
+            const sellingPrice = parseFloat(document.getElementById('td_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
+            const balanceAmount = parseFloat(document.getElementById('payBalanceAmount').value) || 0;
+            const totalPaid = sellingPrice - balanceAmount;
+            const customerName = projectData.customer_name || 'Customer';
+            const projectNo = projectData.project_no || 'AR1013';
+            const address = projectData.address || 'N/A';
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            // Gather payments from ledger table directly
+            const ledgerRows = [];
+            document.querySelectorAll('#paymentLedgerBody tr').forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length >= 8) {
+                    ledgerRows.push({
+                        date: cells[0].innerText.trim(),
+                        amount: cells[1].innerText.trim(),
+                        mode: cells[2].innerText.trim(),
+                        type: cells[3].innerText.trim()
+                    });
+                }
+            });
+
+            let tableHtml = '';
+            if (ledgerRows.length === 0) {
+                tableHtml = `<tr><td colspan="4" style="padding: 12px; text-align: center; color: #64748b;">No payments logged yet.</td></tr>`;
+            } else {
+                ledgerRows.forEach(item => {
+                    tableHtml += `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 10px 12px;">${item.date}</td>
+                            <td style="padding: 10px 12px;">${item.type}</td>
+                            <td style="padding: 10px 12px;">${item.mode}</td>
+                            <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #16a34a;">${item.amount}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const swalFn = window.originalSwalFire || Swal.fire;
+            swalFn.call(window.Swal || Swal, {
+                title: 'Statement of Account',
+                customClass: {
+                    popup: 'premium-swal-popup'
+                },
+                width: '750px',
+                html: `
+                    <style>
+                        @media print {
+                            body * {
+                                visibility: hidden !important;
+                            }
+                            #statement-print-area, #statement-print-area * {
+                                visibility: visible !important;
+                            }
+                            #statement-print-area {
+                                position: absolute !important;
+                                left: 0 !important;
+                                top: 0 !important;
+                                width: 100% !important;
+                            }
+                        }
+                    </style>
+                    <div style="text-align: right; margin-bottom: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button onclick="window.print()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Print / PDF
+                        </button>
+                        <button onclick="Swal.close()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #fff; background: #64748b; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+                    </div>
+                    
+                    <div id="statement-print-area" style="padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; text-align: left; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1c3557; letter-spacing: 0.5px;">ARES ENERGY</h2>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">7 Girona Street, Piara Waters WA 6112</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">STATEMENT OF ACCOUNT</h3>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Statement Date: ${dateStr}</div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Info -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; font-size: 12px;">
+                            <div>
+                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Statement For:</span>
+                                <div style="font-weight: 700; color: #1e293b; font-size: 14px; margin-top: 4px;">${customerName}</div>
+                                <div style="color: #475569; margin-top: 2px;">${address}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">Account Summary:</span>
+                                <div style="color: #475569; margin-top: 4px;">Project No: <strong>${projectNo}</strong></div>
+                                <div style="color: #475569;">Total Contract Value: <strong>$${sellingPrice.toFixed(2)}</strong></div>
+                                <div style="color: #16a34a;">Total Paid to Date: <strong>$${totalPaid.toFixed(2)}</strong></div>
+                                <div style="color: #ea580c; font-weight: 700;">Outstanding Balance: <strong>$${balanceAmount.toFixed(2)}</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Ledger Transactions Table -->
+                        <h4 style="margin: 0 0 12px 0; font-size: 12px; color: #1e293b; font-weight: 700; text-transform: uppercase;">Transaction History</h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #1e293b; font-weight: 700; text-align: left;">
+                                    <th style="padding: 10px 12px;">Date</th>
+                                    <th style="padding: 10px 12px;">Type</th>
+                                    <th style="padding: 10px 12px;">Mode</th>
+                                    <th style="padding: 10px 12px; text-align: right; width: 120px;">Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableHtml}
+                            </tbody>
+                        </table>
+
+                        <!-- Statement Summary Section -->
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; font-size: 11px; color: #64748b; line-height: 1.6; text-align: center;">
+                            <div style="font-weight: 600; color: #475569;">Ares Energy Customer Service | WA Office</div>
+                            <div>Email: support@aresenergy.com.au | Phone: 1300 00 ARES</div>
+                        </div>
+                    </div>
+                `,
+                showConfirmButton: false,
+                focusConfirm: false
             });
         }
 
