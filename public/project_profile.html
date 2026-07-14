@@ -1138,7 +1138,7 @@ function toggleNav(event, element) {
                                 <tr>
                                     <td style="padding: 8px; border-bottom: 1px solid var(--border);">Welcome onboarding call</td>
                                     <td style="padding: 8px; border-bottom: 1px solid var(--border);">15 Jul 2026</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid var(--border);">Yashil Averion</td>
+                                    <td id="onboardingCompletedBy" style="padding: 8px; border-bottom: 1px solid var(--border);">Yashil Averion</td>
                                     <td style="padding: 8px; border-bottom: 1px solid var(--border); text-align: center;"><span style="background: #edfcf2; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">DONE</span></td>
                                 </tr>
                                 <tr>
@@ -1168,11 +1168,12 @@ function toggleNav(event, element) {
                         <div style="border-left: 2px solid var(--border); padding-left: 12px; margin-left: 6px;">
                             <div style="margin-bottom: 14px;">
                                 <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">
-                                    <span>Yashil Averion (Admin)</span>
+                                    <span id="noteAuthorName">Yashil Averion (Admin)</span>
                                     <span>14 Jul 2026, 01:10 am</span>
                                 </div>
                                 <p style="font-size: 12px; margin: 0; color: var(--text-dark); line-height: 1.4;">Spoke with customer. They confirmed that a single-phase meter is currently installed but are looking to upgrade to three-phase.</p>
                             </div>
+                        </div>         </div>
                         </div>
                     </div>
                 </div>
@@ -1285,7 +1286,7 @@ function toggleNav(event, element) {
                                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$758.11</td>
                                     <td style="padding: 10px; text-align: center;">Bank Transfer</td>
                                     <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert('Receipt.pdf');" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 Receipt.pdf</a></td>
-                                    <td style="padding: 10px; text-align: center;">Yashil Averion</td>
+                                    <td id="paymentInitialUser" style="padding: 10px; text-align: center;">Yashil Averion</td>
                                     <td style="padding: 10px; text-align: center;">13 Jul 2026</td>
                                     <td style="padding: 10px; text-align: center;">Admin Account</td>
                                     <td style="padding: 10px; text-align: center;">
@@ -4183,7 +4184,7 @@ function toggleNav(event, element) {
                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$${parseFloat(amount).toFixed(2)}</td>
                     <td style="padding: 10px; text-align: center;">${mode}</td>
                     <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert('${fileName}');" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 ${fileName}</a></td>
-                    <td style="padding: 10px; text-align: center;">Yashil Averion</td>
+                    <td style="padding: 10px; text-align: center;">\${window.loggedInUser || 'User'}</td>
                     <td style="padding: 10px; text-align: center;">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td style="padding: 10px; text-align: center;">Admin Account</td>
                     <td style="padding: 10px; text-align: center;">
@@ -6064,6 +6065,16 @@ function toggleNav(event, element) {
         if (nameEl)   nameEl.innerText  = window.loggedInUser;
         if (roleEl)   roleEl.innerText  = isMgr ? "Admin Access" : window.loggedInRole;
         if (avatarEl) avatarEl.innerText = window.loggedInUser.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+
+        // Update hardcoded username fields dynamically with logged in user details
+        const onboardingEl = document.getElementById("onboardingCompletedBy");
+        if (onboardingEl) onboardingEl.innerText = window.loggedInUser;
+
+        const noteAuthorEl = document.getElementById("noteAuthorName");
+        if (noteAuthorEl) noteAuthorEl.innerText = `${window.loggedInUser} (${window.loggedInRole})`;
+
+        const paymentInitEl = document.getElementById("paymentInitialUser");
+        if (paymentInitEl) paymentInitEl.innerText = window.loggedInUser;
 
         const upEl = document.getElementById("userProfile");
         if (upEl) upEl.value = window.loggedInRole;
