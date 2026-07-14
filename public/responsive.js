@@ -394,11 +394,12 @@ async function setupPremiumHeader() {
         const response = await fetch('/api/me');
         if (response.ok) {
             const data = await response.json();
-            if (data && data.name) {
-                userDetails.name = data.name;
+            const displayName = data.full_name || data.username;
+            if (data && displayName) {
+                userDetails.name = displayName;
                 userDetails.role = data.role || 'Staff';
                 // Calculate initials
-                const parts = data.name.trim().split(/\s+/);
+                const parts = displayName.trim().split(/\s+/);
                 if (parts.length > 1) {
                     userDetails.initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
                 } else if (parts.length === 1 && parts[0].length > 0) {
