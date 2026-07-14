@@ -4183,36 +4183,47 @@ function toggleNav(event, element) {
 
             const swalFn = window.originalSwalFire || Swal.fire;
             swalFn.call(window.Swal || Swal, {
-                title: 'Activity & Audit Log',
-                width: '780px',
+                title: 'Payment Activity & Audit Log',
+                customClass: {
+                    popup: 'premium-swal-popup'
+                },
                 toast: false,
                 position: 'center',
                 html: `
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; text-align: left;">
-                        <!-- Column 1: Record Creation -->
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Record Creation</h5>
-                            <div style="font-size: 12px; line-height: 1.5; color: #475569;">
-                                <div style="margin-bottom: 6px;"><strong>Created:</strong><br>${dateText}</div>
-                                <div><strong>By User:</strong><br>${uploadedBy}</div>
-                            </div>
-                        </div>
-                        <!-- Column 2: Verification Audit -->
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Verification Audit</h5>
-                            <div style="font-size: 12px; line-height: 1.5; color: #475569;">
-                                <div style="margin-bottom: 6px;"><strong>Verified:</strong><br>${verifiedDate}</div>
-                                <div><strong>By Auditor:</strong><br>${verifiedBy}</div>
-                            </div>
-                        </div>
-                        <!-- Column 3: Security & Sync -->
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Security & Sync</h5>
-                            <div style="font-size: 11px; line-height: 1.4; color: #475569; word-break: break-all;">
-                                <div style="margin-bottom: 6px;"><strong>Sync Hash:</strong><br><span style="font-family: monospace; font-size:10px;">sha256_e3b0c44298fc1c14...</span></div>
-                                <div><strong>Status:</strong><br><span style="color:#16a34a; font-weight:700;">● Synchronized</span></div>
-                            </div>
-                        </div>
+                    <div style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; font-family: 'Inter', system-ui, sans-serif;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: var(--primary); font-weight: 700;">
+                                    <th style="padding: 12px 16px;">Timestamp</th>
+                                    <th style="padding: 12px 16px;">Operator</th>
+                                    <th style="padding: 12px 16px;">Activity / Event</th>
+                                    <th style="padding: 12px 16px;">Status Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px 16px; color: #475569; font-weight: 500;">${dateText}</td>
+                                    <td style="padding: 12px 16px; font-weight: 600; color: var(--text-dark);">${uploadedBy}</td>
+                                    <td style="padding: 12px 16px;"><span style="background: #eff6ff; color: #1d4ed8; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">📥 Record Created</span></td>
+                                    <td style="padding: 12px 16px; color: #64748b;">Payment of <strong>${amountText}</strong> logged successfully</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px 16px; color: #475569; font-weight: 500;">${dateText}</td>
+                                    <td style="padding: 12px 16px; font-weight: 600; color: var(--text-dark);">${uploadedBy}</td>
+                                    <td style="padding: 12px 16px;"><span style="background: #fdf2f8; color: #be185d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">📄 Receipt Linked</span></td>
+                                    <td style="padding: 12px 16px; color: #64748b;">Receipt document attached to payment record</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 16px; color: #475569; font-weight: 500;">${verifiedDate}</td>
+                                    <td style="padding: 12px 16px; font-weight: 600; color: var(--text-dark);">${verifiedBy}</td>
+                                    <td style="padding: 12px 16px;"><span style="background: #ecfdf5; color: #047857; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">✅ Verification Audit</span></td>
+                                    <td style="padding: 12px 16px; color: #047857; font-weight: 700;">● Checked and Verified (Synchronized)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 14px; font-size: 10px; color: #94a3b8; text-align: right; font-family: monospace;">
+                        Ledger Hash: sha256_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
                     </div>
                 `,
                 icon: 'success',

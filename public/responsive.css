@@ -1738,3 +1738,11 @@ body.dark-mode .flatpickr-current-month .numInputWrapper select.cur-year-select:
 body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select:hover {
     background-color: #334155 !important;
 }
+
+/* Premium Widescreen Swal Popup Override */
+.swal2-popup.premium-swal-popup {
+    width: 800px !important;
+    max-width: 95% !important;
+    padding: 24px !important;
+    border-radius: 16px !important;
+}
