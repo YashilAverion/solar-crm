@@ -578,17 +578,19 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
 
 .premium-dropdown {
     position: absolute !important;
-    top: 50px !important;
+    top: 52px !important;
     right: 0 !important;
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-radius: 16px !important;
     width: 290px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
     opacity: 0 !important;
     visibility: hidden !important;
-    transform: translateY(10px) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform: translateY(12px) !important;
+    transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.3s !important;
     z-index: 9999 !important;
     overflow: hidden !important;
 }
@@ -597,6 +599,13 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateY(0) !important;
+}
+
+body.dark-mode .premium-dropdown,
+body.theme-dark .premium-dropdown {
+    background: rgba(30, 41, 59, 0.85) !important;
+    border-color: rgba(51, 65, 85, 0.8) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
 }
 
 /* Notifications Dropdown Specifics */
@@ -708,27 +717,43 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
 
 /* Profile Dropdown Specifics */
 .profile-dropdown {
-    width: 220px !important;
+    width: 240px !important;
 }
 
 .profile-dropdown-user {
-    padding: 14px !important;
+    padding: 16px 20px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 12px !important;
+    background: rgba(248, 250, 252, 0.5) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+}
+
+body.dark-mode .profile-dropdown-user,
+body.theme-dark .profile-dropdown-user {
+    background: rgba(15, 23, 42, 0.2) !important;
+    border-bottom-color: rgba(51, 65, 85, 0.5) !important;
 }
 
 .profile-dropdown .dropdown-avatar {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 8px !important;
-    background: var(--ares-deep-slate) !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--ares-electric-blue), var(--ares-solar-orange)) !important;
     color: #ffffff !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-weight: 700 !important;
-    font-size: 13px !important;
+    font-size: 15px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2) !important;
+}
+
+body.dark-mode .profile-dropdown .dropdown-avatar,
+body.theme-dark .profile-dropdown .dropdown-avatar {
+    border-color: #334155 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .dropdown-user-info {
@@ -738,7 +763,7 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
 }
 
 .dropdown-user-info .user-name {
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: var(--text-dark) !important;
     margin: 0 0 2px 0 !important;
@@ -748,32 +773,49 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
 }
 
 .dropdown-user-info .user-role {
-    font-size: 11px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
     color: var(--text-muted) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
     display: block !important;
 }
 
 .dropdown-divider {
     height: 1px !important;
-    background: var(--border) !important;
-    margin: 4px 0 !important;
+    background: rgba(226, 232, 240, 0.5) !important;
+    margin: 0 !important;
+}
+
+body.dark-mode .dropdown-divider,
+body.theme-dark .dropdown-divider {
+    background: rgba(51, 65, 85, 0.5) !important;
 }
 
 .dropdown-item {
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
+    margin: 8px 12px !important;
     padding: 10px 14px !important;
+    border-radius: 10px !important;
     color: var(--text-dark) !important;
     text-decoration: none !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    transition: background 0.2s, color 0.2s !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
 }
 
 .dropdown-item:hover {
-    background: var(--bg) !important;
+    background: rgba(241, 245, 249, 0.8) !important;
+    color: var(--ares-electric-blue) !important;
+}
+
+body.dark-mode .dropdown-item:hover,
+body.theme-dark .dropdown-item:hover {
+    background: rgba(15, 23, 42, 0.4) !important;
+    color: var(--ares-electric-blue) !important;
 }
 
 .dropdown-item.logout-link {
@@ -781,7 +823,14 @@ body.dark-mode .premium-btn.premium-theme-btn svg {
 }
 
 .dropdown-item.logout-link:hover {
-    background: #fef2f2 !important;
+    background: rgba(239, 68, 68, 0.06) !important;
+    color: #ef4444 !important;
+}
+
+body.dark-mode .dropdown-item.logout-link:hover,
+body.theme-dark .dropdown-item.logout-link:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
 }
 
 /* ==========================================================================
