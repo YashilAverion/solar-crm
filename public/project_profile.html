@@ -4183,16 +4183,40 @@ function toggleNav(event, element) {
 
             Swal.fire({
                 title: 'Activity & Audit Log',
+                width: '780px',
+                toast: false,
+                position: 'center',
                 html: `
-                    <div style="text-align: left; font-size: 13px; display:flex; flex-direction:column; gap:8px;">
-                        <div><strong>Record Created:</strong> ${dateText} by ${uploadedBy}</div>
-                        <div><strong>Verification Audit:</strong> Checked & verified on ${verifiedDate} by ${verifiedBy}</div>
-                        <div><strong>Persisted Hash:</strong> sha256_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</div>
-                        <div><strong>System Status:</strong> Signed and synchronized with SQLite master ledger.</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; text-align: left;">
+                        <!-- Column 1: Record Creation -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Record Creation</h5>
+                            <div style="font-size: 12px; line-height: 1.5; color: #475569;">
+                                <div style="margin-bottom: 6px;"><strong>Created:</strong><br>${dateText}</div>
+                                <div><strong>By User:</strong><br>${uploadedBy}</div>
+                            </div>
+                        </div>
+                        <!-- Column 2: Verification Audit -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Verification Audit</h5>
+                            <div style="font-size: 12px; line-height: 1.5; color: #475569;">
+                                <div style="margin-bottom: 6px;"><strong>Verified:</strong><br>${verifiedDate}</div>
+                                <div><strong>By Auditor:</strong><br>${verifiedBy}</div>
+                            </div>
+                        </div>
+                        <!-- Column 3: Security & Sync -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h5 style="margin: 0 0 10px 0; color: var(--primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Security & Sync</h5>
+                            <div style="font-size: 11px; line-height: 1.4; color: #475569; word-break: break-all;">
+                                <div style="margin-bottom: 6px;"><strong>Sync Hash:</strong><br><span style="font-family: monospace; font-size:10px;">sha256_e3b0c44298fc1c14...</span></div>
+                                <div><strong>Status:</strong><br><span style="color:#16a34a; font-weight:700;">● Synchronized</span></div>
+                            </div>
+                        </div>
                     </div>
                 `,
                 icon: 'success',
-                confirmButtonColor: 'var(--primary)'
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'Close Audit Log'
             });
         }
 
