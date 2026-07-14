@@ -1283,7 +1283,7 @@ function toggleNav(event, element) {
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                     <td style="padding: 10px; color: var(--text-dark); text-align: center;">13 Jul 2026</td>
                                     <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$758.11</td>
-                                    <td style="padding: 10px; text-align: center;">Bank Transfer</td>
+                                    <td style="padding: 10px; text-align: center;">EFT / Bank Transfer</td>
                                     <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 Receipt.pdf</a></td>
                                     <td id="paymentInitialUser" style="padding: 10px; text-align: center;">Yashil Averion</td>
                                     <td style="padding: 10px; text-align: center;">13 Jul 2026</td>
@@ -2061,10 +2061,10 @@ function toggleNav(event, element) {
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Payment Mode</label>
                     <select id="modalPayMode" style="width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 0 12px; font-size: 13px;">
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Credit Card">Credit Card</option>
+                        <option value="EFT / Bank Transfer">EFT / Bank Transfer</option>
+                        <option value="Stripe">Stripe</option>
+                        <option value="Finance">Finance</option>
                         <option value="Cash">Cash</option>
-                        <option value="Cheque">Cheque</option>
                     </select>
                 </div>
                 
@@ -2616,7 +2616,7 @@ function toggleNav(event, element) {
                         row.innerHTML = `
                             <td style="padding: 10px; color: var(--text-dark); text-align: center;">13 Jul 2026</td>
                             <td style="padding: 10px; text-align: center; font-weight: 700; color: #16a34a;">$758.11</td>
-                            <td style="padding: 10px; text-align: center;">Bank Transfer</td>
+                            <td style="padding: 10px; text-align: center;">EFT / Bank Transfer</td>
                             <td style="padding: 10px; text-align: center;"><a href="#" onclick="event.preventDefault(); showReceiptAlert(this);" style="color: var(--accent); font-weight:600; text-decoration:none;">📄 Receipt.pdf</a></td>
                             <td style="padding: 10px; text-align: center;">Yashil Ares</td>
                             <td style="padding: 10px; text-align: center;">13 Jul 2026</td>
@@ -4148,7 +4148,7 @@ function toggleNav(event, element) {
         function openAddPaymentModal() {
             document.getElementById('editRowIndex').value = '';
             document.getElementById('modalPayAmount').value = '';
-            document.getElementById('modalPayMode').value = 'Bank Transfer';
+            document.getElementById('modalPayMode').value = 'EFT / Bank Transfer';
             document.getElementById('modalPayReceipt').value = '';
             document.getElementById('paymentModalTitle').innerText = 'Add New Payment';
             
@@ -4231,7 +4231,7 @@ function toggleNav(event, element) {
             let fileName = 'Receipt.pdf';
             let dateText = 'N/A';
             let amountText = '$0.00';
-            let modeText = 'Bank Transfer';
+            let modeText = 'EFT / Bank Transfer';
             let customerName = 'Customer';
             let projectNo = 'N/A';
             let receiptUrl = '';
