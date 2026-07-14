@@ -4027,6 +4027,59 @@ function toggleNav(event, element) {
 
         let modalFlatpickrInstance = null;
 
+        function replaceYearInputWithDropdown(instance) {
+            const calendarContainer = instance.calendarContainer;
+            if (!calendarContainer) return;
+            const yearInputWrapper = calendarContainer.querySelector('.numInputWrapper');
+            if (!yearInputWrapper) return;
+            
+            // Check if we already replaced it
+            if (yearInputWrapper.querySelector('select.cur-year-select')) {
+                // Just update the select value to match current year
+                const yearSelect = yearInputWrapper.querySelector('select.cur-year-select');
+                if (yearSelect) yearSelect.value = instance.currentYear;
+                return;
+            }
+            
+            const yearInput = yearInputWrapper.querySelector('input.cur-year');
+            if (!yearInput) return;
+            
+            // Hide the input
+            yearInput.style.setProperty('display', 'none', 'important');
+            
+            // Create select dropdown
+            const yearSelect = document.createElement('select');
+            yearSelect.className = 'cur-year-select';
+            
+            // Build options (e.g. from 2020 to 2035)
+            const currentYear = new Date().getFullYear();
+            const startYear = 2020;
+            const endYear = 2035;
+            for (let y = startYear; y <= endYear; y++) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.text = y;
+                if (y === instance.currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+            
+            // Listen to changes
+            yearSelect.addEventListener('change', (e) => {
+                const selectedYear = parseInt(e.target.value);
+                instance.changeYear(selectedYear);
+            });
+            
+            // Append select to wrapper
+            yearInputWrapper.appendChild(yearSelect);
+            
+            // Keep select value updated when year changes via arrows
+            instance.config.onYearChange.push((selectedDates, dateStr, inst) => {
+                yearSelect.value = inst.currentYear;
+            });
+        }
+
         function openAddPaymentModal() {
             document.getElementById('editRowIndex').value = '';
             document.getElementById('modalPayAmount').value = '';
@@ -4044,10 +4097,17 @@ function toggleNav(event, element) {
                     defaultDate: new Date(),
                     locale: {
                         firstDayOfWeek: 1
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        replaceYearInputWithDropdown(instance);
+                    },
+                    onOpen: function(selectedDates, dateStr, instance) {
+                        replaceYearInputWithDropdown(instance);
                     }
                 });
             } else {
                 modalFlatpickrInstance.setDate(new Date());
+                replaceYearInputWithDropdown(modalFlatpickrInstance);
             }
         }
 
@@ -4088,10 +4148,17 @@ function toggleNav(event, element) {
                     altInput: true,
                     altFormat: "M j, Y",
                     defaultDate: formattedDateString,
-                    locale: { firstDayOfWeek: 1 }
+                    locale: { firstDayOfWeek: 1 },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        replaceYearInputWithDropdown(instance);
+                    },
+                    onOpen: function(selectedDates, dateStr, instance) {
+                        replaceYearInputWithDropdown(instance);
+                    }
                 });
             } else {
                 modalFlatpickrInstance.setDate(formattedDateString);
+                replaceYearInputWithDropdown(modalFlatpickrInstance);
             }
         }
 

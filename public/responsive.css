@@ -1689,3 +1689,36 @@ body.theme-dark .flatpickr-day.prevMonthDay,
 body.theme-dark .flatpickr-day.nextMonthDay {
     color: #64748b !important;
 }
+
+/* Custom Year Select Box styling */
+.flatpickr-current-month .numInputWrapper select.cur-year-select {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: var(--primary) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+    border-radius: 8px !important;
+    width: 65px !important;
+    height: 28px !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+
+body.dark-mode .flatpickr-current-month .numInputWrapper select.cur-year-select,
+body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+.flatpickr-current-month .numInputWrapper select.cur-year-select:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+}
+body.dark-mode .flatpickr-current-month .numInputWrapper select.cur-year-select:hover,
+body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select:hover {
+    background: #334155 !important;
+}
