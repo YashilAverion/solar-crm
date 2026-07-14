@@ -415,6 +415,9 @@ async function setupPremiumHeader() {
     const controls = document.createElement('div');
     controls.className = 'premium-controls';
 
+    // Check if notifications were previously cleared in this browser session
+    const isCleared = localStorage.getItem('crm-notifications-cleared') === 'true';
+
     // 2. Notifications wrapper and dropdown
     const notifyWrapper = document.createElement('div');
     notifyWrapper.className = 'premium-dropdown-wrapper';
@@ -427,7 +430,7 @@ async function setupPremiumHeader() {
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
-        <span class="premium-badge">3</span>
+        ${isCleared ? '' : '<span class="premium-badge">3</span>'}
     `;
 
     const notifyDropdown = document.createElement('div');
@@ -435,36 +438,40 @@ async function setupPremiumHeader() {
     notifyDropdown.innerHTML = `
         <div class="dropdown-header">
             <span>Recent Notifications</span>
-            <button class="mark-all-read">Clear All</button>
+            <button class="mark-all-read" ${isCleared ? 'style="display: none;"' : ''}>Clear All</button>
         </div>
         <div class="dropdown-body">
-            <div class="notify-item unread">
-                <div class="notify-icon success">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            ${isCleared ? `
+                <div class="dropdown-empty">No new notifications</div>
+            ` : `
+                <div class="notify-item unread">
+                    <div class="notify-icon success">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div class="notify-details">
+                        <p class="notify-text">New lead <strong>John Doe</strong> was assigned to you</p>
+                        <span class="notify-time">2 mins ago</span>
+                    </div>
                 </div>
-                <div class="notify-details">
-                    <p class="notify-text">New lead <strong>John Doe</strong> was assigned to you</p>
-                    <span class="notify-time">2 mins ago</span>
+                <div class="notify-item unread">
+                    <div class="notify-icon warning">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <div class="notify-details">
+                        <p class="notify-text">Project <strong>#1082</strong> approval is pending review</p>
+                        <span class="notify-time">15 mins ago</span>
+                    </div>
                 </div>
-            </div>
-            <div class="notify-item unread">
-                <div class="notify-icon warning">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <div class="notify-item">
+                    <div class="notify-icon info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <div class="notify-details">
+                        <p class="notify-text">Payment of <strong>$4,500</strong> received for Ares Energy</p>
+                        <span class="notify-time">2 hours ago</span>
+                    </div>
                 </div>
-                <div class="notify-details">
-                    <p class="notify-text">Project <strong>#1082</strong> approval is pending review</p>
-                    <span class="notify-time">15 mins ago</span>
-                </div>
-            </div>
-            <div class="notify-item">
-                <div class="notify-icon info">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                </div>
-                <div class="notify-details">
-                    <p class="notify-text">Payment of <strong>$4,500</strong> received for Ares Energy</p>
-                    <span class="notify-time">2 hours ago</span>
-                </div>
-            </div>
+            `}
         </div>
     `;
 
@@ -475,15 +482,19 @@ async function setupPremiumHeader() {
     });
 
     const markAllRead = notifyDropdown.querySelector('.mark-all-read');
-    markAllRead.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const badge = notifyBtn.querySelector('.premium-badge');
-        if (badge) badge.style.display = 'none';
-        notifyDropdown.querySelectorAll('.notify-item').forEach(item => item.classList.remove('unread'));
-        notifyDropdown.querySelector('.dropdown-body').innerHTML = `
-            <div class="dropdown-empty">No new notifications</div>
-        `;
-    });
+    if (markAllRead) {
+        markAllRead.addEventListener('click', (e) => {
+            e.stopPropagation();
+            localStorage.setItem('crm-notifications-cleared', 'true');
+            const badge = notifyBtn.querySelector('.premium-badge');
+            if (badge) badge.style.display = 'none';
+            notifyDropdown.querySelectorAll('.notify-item').forEach(item => item.classList.remove('unread'));
+            notifyDropdown.querySelector('.dropdown-body').innerHTML = `
+                <div class="dropdown-empty">No new notifications</div>
+            `;
+            markAllRead.style.display = 'none';
+        });
+    }
 
     notifyWrapper.appendChild(notifyBtn);
     notifyWrapper.appendChild(notifyDropdown);
