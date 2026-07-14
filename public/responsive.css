@@ -1445,18 +1445,42 @@ body.theme-dark .flatpickr-calendar {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Header Months Navigation */
+/* Header Months Navigation Layout (Flexbox) */
 .flatpickr-months {
-    padding: 6px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    position: relative !important;
 }
+
+.flatpickr-months .flatpickr-month {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+    height: 30px !important;
+}
+
+/* Nav arrows style and static positioning to prevent overlap */
 .flatpickr-months .flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month {
-    padding: 10px !important;
+    position: static !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
     border-radius: 8px !important;
-    transition: all 0.2s ease !important;
+    cursor: pointer !important;
     color: var(--text-dark) !important;
     fill: currentColor !important;
+    transition: all 0.2s ease !important;
+    z-index: 5 !important;
+    padding: 0 !important;
 }
+
 .flatpickr-months .flatpickr-prev-month:hover,
 .flatpickr-months .flatpickr-next-month:hover {
     background: rgba(241, 245, 249, 0.8) !important;
@@ -1469,18 +1493,18 @@ body.theme-dark .flatpickr-months .flatpickr-next-month:hover {
     background: rgba(30, 41, 59, 0.8) !important;
 }
 
-/* Current Month / Year Dropdowns & Alignment */
+/* Centered Month / Year Dropdowns Container */
 .flatpickr-current-month {
+    position: static !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    position: relative !important;
-    width: 65% !important;
+    width: auto !important;
     height: 30px !important;
+    transform: none !important;
     top: 0 !important;
+    padding: 0 !important;
 }
 
 body.dark-mode .flatpickr-current-month,
@@ -1488,7 +1512,7 @@ body.theme-dark .flatpickr-current-month {
     color: #ffffff !important;
 }
 
-/* Month Dropdown Selector */
+/* Month Dropdown Selector Box */
 .flatpickr-current-month .flatpickr-monthDropdown-months {
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
