@@ -4603,7 +4603,7 @@ function toggleNav(event, element) {
 
             let pricingRowsHtml = `
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; background: #ffffff;">
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #475569;">Subtotal</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #475569;">SUBTOTAL</span>
                     <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 700; color: #1e293b;">$${subtotalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #cbd5e1; background: #ffffff;">
@@ -4619,7 +4619,7 @@ function toggleNav(event, element) {
             if (totalPaid > 0) {
                 pricingRowsHtml += `
                     <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #cbd5e1; background: #ffffff;">
-                        <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #16a34a;">Less Amount Paid</span>
+                        <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #16a34a;">LESS AMOUNT PAID</span>
                         <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 600; color: #16a34a;">-$${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
                 `;
