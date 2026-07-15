@@ -4579,11 +4579,11 @@ function toggleNav(event, element) {
             products.forEach((p, idx) => {
                 const borderStyle = idx < products.length - 1 ? 'border-bottom: 1px solid #e2e8f0;' : '';
                 descriptionRowsHtml += `
-                    <div style="padding: 12px 16px; ${borderStyle} display: grid; grid-template-columns: 150px 1fr; font-size: 12px; align-items: center; font-family: 'Inter', sans-serif;">
-                        <div style="font-weight: 700; color: #1b365d; text-transform: capitalize;">${p.qty} x ${p.type}</div>
-                        <div style="color: #334155; font-weight: 600;">
-                            ${p.name} ${p.code ? `<span style="color: #64748b; font-weight: 500; font-size: 11px;">(${p.code})</span>` : ''}
+                    <div style="padding: 12px 16px; ${borderStyle} display: grid; grid-template-columns: 1fr 100px; font-size: 12px; align-items: center; font-family: 'Inter', sans-serif;">
+                        <div style="color: #334155; font-weight: 500; text-align: left;">
+                            ${p.name} ${p.code ? `<span style="color: #64748b; font-size: 11px;">(${p.code})</span>` : ''}
                         </div>
+                        <div style="text-align: center; font-weight: 700; color: #1b365d;">${p.qty}</div>
                     </div>
                 `;
             });
@@ -4694,13 +4694,12 @@ function toggleNav(event, element) {
                         
                         <!-- Top Banner Frame matching Image 1 -->
                         <div style="display: flex; justify-content: space-between; align-items: center; background: #1b365d; margin: -30px -30px 24px -30px; padding: 24px 30px; border-bottom: 6px solid #e8681e; position: relative;">
-                            <!-- Slanted accent element from Image 1 -->
-                            <div style="position: absolute; right: 220px; top: 0; bottom: 0; width: 40px; background: #e8681e; transform: skewX(-25deg); opacity: 0.85;"></div>
-                            <div style="position: absolute; right: 270px; top: 0; bottom: 0; width: 12px; background: #e8681e; transform: skewX(-25deg); opacity: 0.40;"></div>
+                            <!-- Slanted accent element from Image 1 shifted left to prevent overwrite -->
+                            <div style="position: absolute; right: 350px; top: 0; bottom: 0; width: 40px; background: #e8681e; transform: skewX(-25deg); opacity: 0.85;"></div>
+                            <div style="position: absolute; right: 400px; top: 0; bottom: 0; width: 12px; background: #e8681e; transform: skewX(-25deg); opacity: 0.40;"></div>
                             
-                            <div>
-                                <img src="/ares_energy_logo.png" style="height: 48px; display: block;" alt="Ares Energy Logo">
-                                <span style="font-size: 10px; color: #cbd5e1; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; display: block;">Solar Energy Solutions</span>
+                            <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <img src="/ares_energy_logo.png" style="height: 38px; width: auto; object-fit: contain; display: block;" alt="Ares Energy Logo">
                             </div>
                             
                             <div style="text-align: right; z-index: 2;">
@@ -4711,28 +4710,29 @@ function toggleNav(event, element) {
                         </div>
 
                         <!-- Invoice To / From Billing Columns -->
-                        <div style="display: flex; justify-content: space-between; gap: 24px; margin-bottom: 24px; font-size: 12px;">
-                            <div style="flex: 1; border-top: 4px solid #e8681e; background: #f8fafc; padding: 16px; border-radius: 4px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);">
-                                <span style="background: #e8681e; color: #fff; padding: 4px 10px; font-weight: 700; border-radius: 4px; font-size: 11px; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; margin-bottom: 12px;">Invoice To :</span>
-                                <div style="font-weight: 800; color: #1e293b; font-size: 14px; margin-bottom: 4px;">${customerName}</div>
-                                <div style="color: #475569; margin-bottom: 4px; line-height: 1.5;">${address}</div>
-                                <div style="color: #475569; margin-bottom: 2px;">Phone: <strong>${phone}</strong></div>
-                                <div style="color: #475569;">Email ID: <strong>${email}</strong></div>
+                        <div style="display: flex; justify-content: space-between; gap: 24px; margin-bottom: 24px; font-size: 12px; font-family: 'Inter', sans-serif;">
+                            <div style="flex: 1; border-top: 3px solid #e8681e; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; background: #ffffff; padding: 16px; border-radius: 6px;">
+                                <div style="font-size: 11px; font-weight: 700; color: #e8681e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Invoice To</div>
+                                <div style="font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 8px;">${customerName}</div>
+                                <div style="color: #475569; margin-bottom: 6px; line-height: 1.5;">${address}</div>
+                                <div style="color: #475569; margin-bottom: 4px;">Phone: ${phone}</div>
+                                <div style="color: #475569;">Email ID: ${email}</div>
                             </div>
-                            <div style="flex: 1; border-top: 4px solid #1b365d; background: #f8fafc; padding: 16px; border-radius: 4px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);">
-                                <span style="background: #1b365d; color: #fff; padding: 4px 10px; font-weight: 700; border-radius: 4px; font-size: 11px; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; margin-bottom: 12px;">Invoice From :</span>
-                                <div style="font-weight: 800; color: #1e293b; font-size: 14px; margin-bottom: 4px;">Ares Energy Pty Ltd</div>
-                                <div style="color: #475569; margin-bottom: 4px; line-height: 1.5;">Address:- 276 Kargotich Rd, Oakford WA 6121</div>
-                                <div style="color: #475569; margin-bottom: 2px;">ABN: <strong>78 631 734 506</strong></div>
-                                <div style="color: #475569; margin-bottom: 2px;">E: <strong>info@aresenergy.com.au</strong></div>
-                                <div style="color: #475569;">Tollfree: <strong>1300 717 583</strong></div>
+                            <div style="flex: 1; border-top: 3px solid #1b365d; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; background: #ffffff; padding: 16px; border-radius: 6px;">
+                                <div style="font-size: 11px; font-weight: 700; color: #1b365d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Invoice From</div>
+                                <div style="font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 8px;">Ares Energy Pty Ltd</div>
+                                <div style="color: #475569; margin-bottom: 6px; line-height: 1.5;">Address: 276 Kargotich Rd, Oakford WA 6121</div>
+                                <div style="color: #475569; margin-bottom: 4px;">ABN: 78 631 734 506</div>
+                                <div style="color: #475569; margin-bottom: 4px;">Email: info@aresenergy.com.au</div>
+                                <div style="color: #475569;">Tollfree: 1300 717 583</div>
                             </div>
                         </div>
 
-                        <!-- Description Box (Image 2 style) -->
-                        <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <div style="background: #e8681e; color: #ffffff; padding: 12px 16px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
-                                COMPREHENSIVE SOLAR SOLUTIONS - TAILORED DESIGN, QUALITY SUPPLY, EXPERT INSTALLATION
+                        <!-- Description Box (Image 4 & 5 style) -->
+                        <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+                            <div style="background: #e8681e; color: #ffffff; padding: 12px 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #cbd5e1; display: grid; grid-template-columns: 1fr 100px;">
+                                <span>Description</span>
+                                <span style="text-align: center;">Qty</span>
                             </div>
                             <div style="background: #ffffff; display: flex; flex-direction: column;">
                                 ${descriptionRowsHtml}
