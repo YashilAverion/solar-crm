@@ -5065,6 +5065,11 @@ function toggleNav(event, element) {
             // Save tab state to localStorage so it is remembered on refresh
             localStorage.setItem('activeProjectProfileTab', tabId);
 
+            // Update sliding indicators programmatically
+            if (typeof window.updateSlidingIndicators === 'function') {
+                window.updateSlidingIndicators();
+            }
+
             if (tabId === 'satellite') {
                 setTimeout(loadPylonIntegration, 100);
             } else if (tabId === 'compliance') {

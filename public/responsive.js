@@ -662,6 +662,8 @@ function setupSlidingTabs() {
         });
     };
 
+    window.updateSlidingIndicators = updateAllIndicators;
+
     // Initial update
     setTimeout(updateAllIndicators, 300);
 
