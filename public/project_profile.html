@@ -4437,7 +4437,7 @@ function toggleNav(event, element) {
             const cells = row.getElementsByTagName('td');
             const amount = cells[1].innerText;
             const date = cells[0].innerText;
-            const customerEmail = "test2@gmail.com";
+            const customerEmail = projectData.email_id_1 || 'N/A';
             
             const swalFn = window.originalSwalFire || Swal.fire;
             swalFn.call(window.Swal || Swal, {
