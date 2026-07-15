@@ -4256,6 +4256,7 @@ function toggleNav(event, element) {
             let dateText = 'N/A';
             let amountText = '$0.00';
             let modeText = 'EFT / Bank Transfer';
+            let typeText = 'Deposit';
             let customerName = 'Customer';
             let projectNo = 'N/A';
             let receiptUrl = '';
@@ -4263,10 +4264,11 @@ function toggleNav(event, element) {
             if (el && typeof el === 'object') {
                 const row = el.closest('tr');
                 const cells = row ? row.getElementsByTagName('td') : null;
-                if (cells && cells.length >= 3) {
+                if (cells && cells.length >= 4) {
                     dateText = cells[0].innerText;
                     amountText = cells[1].innerText;
                     modeText = cells[2].innerText;
+                    typeText = cells[3].innerText;
                 }
                 
                 // Robust parsing: extract details from cells[4] link if available
@@ -4462,7 +4464,7 @@ function toggleNav(event, element) {
                                 <tbody>
                                     <tr style="background: #ffffff;">
                                         <td style="padding: 14px 16px; color: #1e293b; font-weight: 500; border-bottom: 1px solid #e2e8f0; line-height: 1.4;">
-                                            Solar System Installation Deposit / Milestone Payment
+                                            Solar System Installation - ${typeText}
                                             <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Payment Mode: ${modeText}</div>
                                         </td>
                                         <td style="padding: 14px 16px; text-align: center; color: #475569; border-bottom: 1px solid #e2e8f0; font-weight: 600;">1</td>
