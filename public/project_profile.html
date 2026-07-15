@@ -4603,32 +4603,32 @@ function toggleNav(event, element) {
 
             let pricingRowsHtml = `
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; background: #ffffff;">
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #475569;">SUBTOTAL</span>
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 700; color: #1e293b;">$${subtotalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: #475569;">SUBTOTAL</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: #1e293b;">$${subtotalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #cbd5e1; background: #ffffff;">
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #475569;">TOTAL GST 10%</span>
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 700; color: #1e293b;">$${gstVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: #475569;">TOTAL GST 10%</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: #1e293b;">$${gstVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #cbd5e1; background: #f8fafc;">
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 700; color: #1b365d;">TOTAL AUD</span>
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 800; color: #1b365d;">$${totalPriceIncGst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: #1b365d;">TOTAL AUD</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 800; color: #1b365d;">$${totalPriceIncGst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
             `;
 
             if (totalPaid > 0) {
                 pricingRowsHtml += `
                     <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #cbd5e1; background: #ffffff;">
-                        <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 500; color: #16a34a;">LESS AMOUNT PAID</span>
-                        <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 600; color: #16a34a;">-$${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: #16a34a;">LESS AMOUNT PAID</span>
+                        <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #16a34a;">-$${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
                 `;
             }
 
             pricingRowsHtml += `
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; background: #e8681e; border-radius: 0 0 6px 6px;">
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 700; color: #ffffff; text-transform: uppercase;">AMOUNT DUE AUD</span>
-                    <span style="font-family: 'Inter', system-ui, sans-serif !important; font-size: 13px !important; font-weight: 800; color: #ffffff;">$${displayBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: #ffffff; text-transform: uppercase;">AMOUNT DUE AUD</span>
+                    <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 800; color: #ffffff;">$${displayBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
             `;
 
