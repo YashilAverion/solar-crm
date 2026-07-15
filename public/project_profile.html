@@ -4595,72 +4595,39 @@ function toggleNav(event, element) {
                 `;
             });
 
-            // Get rebates breakdown
-            const rebatesList = (window.lastCalculationDetails && window.lastCalculationDetails.details && window.lastCalculationDetails.details.rebatesBreakdown) || [];
-            
-            const panelsRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('panel')) || { total: 0 };
-            const batteryRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('battery')) || { total: 0 };
-            const waBatteryRebateObj = rebatesList.find(r => r.name.toLowerCase().includes('vpp') || r.name.toLowerCase().includes('wa')) || { total: 0 };
-
-            const panelsRebateVal = parseFloat(panelsRebateObj.total) || 0;
-            const batteryRebateVal = parseFloat(batteryRebateObj.total) || 0;
-            const waBatteryRebateVal = parseFloat(waBatteryRebateObj.total) || 0;
-
-            const totalRebatesVal = panelsRebateVal + batteryRebateVal + waBatteryRebateVal;
-            const basicSystemCostVal = sellingPrice + totalRebatesVal;
+            // Get Subtotal, GST and Total
+            const totalPriceIncGst = sellingPrice;
+            const subtotalVal = totalPriceIncGst / 1.1;
+            const gstVal = totalPriceIncGst - subtotalVal;
+            const displayBalance = Math.max(0, balanceAmount);
 
             let pricingRowsHtml = `
                 <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #475569;">
-                    <span style="font-weight: 500;">System Cost Price Inc GST</span>
-                    <span style="font-weight: 700; color: #1e293b;">$${basicSystemCostVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style="font-weight: 500;">Subtotal</span>
+                    <span style="font-weight: 700; color: #1e293b;">$${subtotalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
-            `;
-            
-            pricingRowsHtml += `
-                <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
-                    <span style="font-weight: 500;">Less STC Panels Rebate</span>
-                    <span style="font-weight: 600;">-$${panelsRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1.5px solid #cbd5e1; color: #475569;">
+                    <span style="font-weight: 500;">TOTAL GST 10%</span>
+                    <span style="font-weight: 700; color: #1e293b;">$${gstVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
-            `;
-
-            if (batteryRebateVal > 0) {
-                pricingRowsHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
-                        <span style="font-weight: 500;">Less STC Battery Rebate</span>
-                        <span style="font-weight: 600;">-$${batteryRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                    </div>
-                `;
-            }
-
-            if (waBatteryRebateVal > 0) {
-                pricingRowsHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
-                        <span style="font-weight: 500;">Less WA Battery Rebate</span>
-                        <span style="font-weight: 600;">-$${waBatteryRebateVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                    </div>
-                `;
-            }
-
-            pricingRowsHtml += `
-                <div style="display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1.5px solid #e2e8f0; background: #f8fafc; color: #1e293b; font-size: 13px;">
-                    <span style="font-weight: 700;">Total Price Inc GST</span>
-                    <span style="font-weight: 800; color: #1b365d;">$${sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <div style="display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1.5px solid #cbd5e1; background: #f8fafc; color: #1b365d; font-size: 13px;">
+                    <span style="font-weight: 700;">TOTAL AUD</span>
+                    <span style="font-weight: 800; color: #1b365d;">$${totalPriceIncGst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
             `;
 
             if (totalPaid > 0) {
                 pricingRowsHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #16a34a;">
-                        <span style="font-weight: 500;">Less Payment Received (Inc GST)</span>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1.5px solid #cbd5e1; color: #16a34a;">
+                        <span style="font-weight: 500;">Less Amount Paid</span>
                         <span style="font-weight: 600;">-$${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
                 `;
             }
 
-            const displayBalance = Math.max(0, balanceAmount);
             pricingRowsHtml += `
                 <div style="display: flex; justify-content: space-between; padding: 14px 16px; background: #e8681e; color: #ffffff; font-size: 15px; border-radius: 0 0 6px 6px;">
-                    <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Balance Due (Inc GST)</span>
+                    <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">AMOUNT DUE AUD</span>
                     <span style="font-weight: 800; font-family: monospace; font-size: 16px;">$${displayBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
             `;
