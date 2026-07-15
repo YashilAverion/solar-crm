@@ -4581,7 +4581,9 @@ function toggleNav(event, element) {
             products.forEach((p, idx) => {
                 const bgStyle = idx % 2 === 0 ? 'background: #ffffff;' : 'background: #f8fafc;';
                 const borderStyle = idx < products.length - 1 ? 'border-bottom: 1px solid #e2e8f0;' : '';
-                const priceText = p.total > 0 ? `$${p.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Included';
+                const priceText = idx === 0 
+                    ? `$${sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                    : 'Included';
                 descriptionRowsHtml += `
                     <div style="padding: 14px 20px; ${bgStyle} ${borderStyle} display: grid; grid-template-columns: 1fr 80px 130px; font-size: 13px; align-items: center; font-family: 'Inter', sans-serif;">
                         <div style="color: #334155; font-weight: 500; text-align: left; line-height: 1.4;">
