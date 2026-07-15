@@ -4646,6 +4646,11 @@ function toggleNav(event, element) {
                                 size: A4 portrait;
                                 margin: 0 !important;
                             }
+                            body {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                background: #ffffff !important;
+                            }
                             body * {
                                 visibility: hidden !important;
                             }
@@ -4680,6 +4685,10 @@ function toggleNav(event, element) {
                             #invoice-print-area > div:first-child {
                                 margin: -20mm -20mm 15mm -20mm !important;
                                 padding: 10mm 20mm !important;
+                            }
+                            #invoice-print-area, #invoice-print-area * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
                             }
                         }
                     </style>
@@ -4836,6 +4845,11 @@ function toggleNav(event, element) {
                                 size: A4 portrait;
                                 margin: 0 !important;
                             }
+                            body {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                background: #ffffff !important;
+                            }
                             body * {
                                 visibility: hidden !important;
                             }
@@ -4866,6 +4880,10 @@ function toggleNav(event, element) {
                                 box-shadow: none !important;
                                 margin: 0 !important;
                                 background: #ffffff !important;
+                            }
+                            #statement-print-area, #statement-print-area * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
                             }
                         }
                     </style>
