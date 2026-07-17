@@ -44,7 +44,7 @@
             flex-direction: column;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             page-break-after: always;
-            padding: 20px 30px;
+            padding: 14px 24px;
         }
 
         @media print {
@@ -54,7 +54,7 @@
             body {
                 background: #fff;
                 margin: 0;
-                padding: 1.6cm;
+                padding: 0;
             }
             .page {
                 margin: 0;
@@ -66,27 +66,7 @@
             }
         }
 
-        /* Action bar for manual view */
-        .action-bar {
-            width: 210mm;
-            margin: 10px auto 0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-secondary {
-            background: var(--text-muted);
-        }
+
 
         /* Brand & Meta Info */
         .quote-header {
@@ -94,8 +74,8 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px dashed var(--border);
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }
         .brand-block {
             display: flex;
@@ -103,14 +83,14 @@
             gap: 20px;
         }
         .brand-logo {
-            height: 72px;
+            height: 90px;
             object-fit: contain;
         }
         .accreditation-logos {
             display: flex;
             align-items: center;
             gap: 12px;
-            height: 70px;
+            height: 80px;
         }
         .accreditation-logos img {
             height: 100%;
@@ -125,29 +105,36 @@
         }
         .brand-details {
             text-align: right;
-            font-size: 9.5px;
-            line-height: 1.35;
+            font-size: 11px;
+            line-height: 1.45;
             color: var(--text-muted);
+        }
+        .brand-details strong {
+            font-size: 14px;
+            color: var(--primary);
+            font-family: 'Outfit', sans-serif;
+            display: inline-block;
+            margin-bottom: 2px;
         }
 
         .meta-section {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
             gap: 20px;
-            font-size: 10.5px;
-            margin-bottom: 12px;
+            font-size: 11px;
+            margin-bottom: 10px;
         }
         .meta-block h4 {
-            font-size: 8.5px;
+            font-size: 9px;
             text-transform: uppercase;
             color: var(--text-muted);
             letter-spacing: 1px;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 2px;
+            padding-bottom: 3px;
         }
         .meta-block p {
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         /* Banner styling */
@@ -163,16 +150,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             border-radius: 3px;
             border-right: 12px solid var(--accent);
         }
 
-        /* Two column grid */
+        /* Single column layout on Page 1 (specs moved to Page 2) */
         .solutions-grid {
-            display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             flex: 1;
             min-height: 0;
             margin-bottom: 10px;
@@ -181,27 +168,28 @@
         .left-col {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
         .right-col {
             display: flex;
             flex-direction: column;
+            gap: 10px;
         }
 
         .products-col {
             border: 1px solid var(--border);
             border-radius: 4px;
-            padding: 10px;
+            padding: 10px 14px;
             background: var(--bg-light);
         }
         .products-title {
-            font-size: 9.5px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--teal);
             margin-bottom: 6px;
             border-bottom: 1.5px solid var(--teal);
-            padding-bottom: 2px;
+            padding-bottom: 3px;
         }
 
         .pricing-col {
@@ -213,8 +201,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 9.5px;
-            padding: 3.5px 6px;
+            font-size: 11px;
+            padding: 5px 8px;
             border-bottom: 1px solid var(--border);
         }
         .pricing-row:nth-child(odd) {
@@ -224,9 +212,9 @@
             background: var(--teal-light) !important;
             border: 1px solid var(--teal);
             font-weight: 700;
-            font-size: 10px;
+            font-size: 11.5px;
             color: var(--teal);
-            margin-top: 2px;
+            margin-top: 3px;
         }
         .pricing-row-rebate {
             color: #10b981;
@@ -236,49 +224,49 @@
         .balance-banner {
             background: var(--primary);
             color: #fff;
-            padding: 8px 12px;
+            padding: 7px 12px;
             font-family: 'Outfit', sans-serif;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-radius: 3px;
-            margin-top: 4px;
+            margin-top: 5px;
             border-right: 12px solid var(--accent);
         }
 
         /* Specs section styling (3 column horizontal boxes) */
         .specs-title {
-            font-size: 9.5px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--teal);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             border-bottom: 1.5px solid var(--teal);
-            padding-bottom: 2px;
+            padding-bottom: 3px;
         }
         .specs-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            gap: 8px;
             overflow: hidden;
         }
         .spec-card {
             border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 5px 6px;
+            border-radius: 6px;
+            padding: 7px 8px;
             background: var(--bg-light);
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: flex-start;
-            gap: 6px;
-            min-height: 40px;
+            gap: 8px;
+            min-height: 42px;
         }
         .spec-icon-box {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             background: var(--teal-light);
             border: 1px solid rgba(31,95,91,0.15);
             border-radius: 50%;
@@ -289,36 +277,36 @@
             flex-shrink: 0;
         }
         .spec-icon-box svg {
-            width: 11px;
-            height: 11px;
+            width: 13px;
+            height: 13px;
             stroke: var(--teal);
         }
         .spec-content {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            line-height: 1.15;
+            line-height: 1.2;
             min-width: 0;
         }
         .spec-label {
-            font-size: 6.5px;
+            font-size: 7.5px;
             text-transform: uppercase;
             color: var(--text-muted);
             font-weight: 600;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.3px;
         }
         .spec-value {
-            font-size: 8.5px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--text-dark);
             word-break: break-word;
         }
 
         .quote-note-text {
-            font-size: 7.5px;
+            font-size: 9px;
             color: var(--text-muted);
-            line-height: 1.3;
-            margin-top: 5px;
+            line-height: 1.4;
+            margin-top: 6px;
             display: flex;
             justify-content: space-between;
             gap: 15px;
@@ -355,58 +343,58 @@
         .payment-block {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 14px;
+            margin-bottom: 12px;
         }
         .payment-method {
             border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 8px;
-            font-size: 8px;
-            line-height: 1.35;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-size: 10px;
+            line-height: 1.5;
             background: var(--bg-light);
         }
         .payment-method h5 {
-            font-size: 8.5px;
+            font-size: 10.5px;
             font-weight: 700;
             color: var(--accent);
-            margin-bottom: 3px;
+            margin-bottom: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 5px;
         }
 
         /* Acceptance block */
         .acceptance-block {
             border-top: 2px dashed var(--border);
-            padding-top: 10px;
+            padding-top: 12px;
             text-align: center;
         }
         .acceptance-block p {
-            font-size: 8.5px;
+            font-size: 10px;
             font-weight: 600;
             color: var(--teal);
-            margin-bottom: 10px;
+            margin-bottom: 14px;
         }
         .sig-row {
             display: grid;
             grid-template-columns: 1fr 0.8fr 1fr 1fr 0.8fr;
-            gap: 12px;
-            margin-top: 3px;
+            gap: 14px;
+            margin-top: 5px;
             align-items: end;
         }
         .sig-col {
             text-align: center;
-            font-size: 8.5px;
+            font-size: 10px;
         }
         .sig-line {
             border-top: 1px solid var(--text-dark);
-            margin-top: 22px;
-            padding-top: 2px;
+            margin-top: 28px;
+            padding-top: 3px;
             color: var(--teal);
             font-weight: 600;
-            font-size: 7.5px;
+            font-size: 8.5px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
@@ -415,35 +403,146 @@
         .terms-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            font-size: 8px;
-            line-height: 1.35;
+            gap: 22px;
+            font-size: 9px;
+            line-height: 1.45;
             color: #334155;
         }
         .terms-columns h4 {
             color: var(--teal);
-            font-size: 9.5px;
-            margin-top: 8px;
-            margin-bottom: 3px;
+            font-size: 10.5px;
+            margin-top: 10px;
+            margin-bottom: 4px;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 2px;
+            padding-bottom: 3px;
             font-family: 'Outfit', sans-serif;
             text-transform: uppercase;
         }
-        .terms-columns p {
-            margin-bottom: 5px;
-            text-align: justify;
+
+        /* Responsive Mobile Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                background: #cbd5e1 !important;
+                padding: 10px 0 !important;
+            }
+            .page {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 auto 15px auto !important;
+                padding: 15px !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+                overflow: visible !important;
+            }
+            .solutions-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            .brand-block {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .quote-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 10px !important;
+            }
+            .brand-details {
+                text-align: center !important;
+                width: 100% !important;
+            }
+            .meta-section {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            .meta-block {
+                border-right: none !important;
+                padding-right: 0 !important;
+                border-bottom: 1px solid var(--border) !important;
+                padding-bottom: 8px !important;
+            }
+            .meta-block:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+            }
+            .payment-block {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            .payment-method {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+            #energyBalanceCard {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+            .sig-row {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            .sig-col {
+                text-align: left !important;
+            }
+            .sig-line {
+                margin-top: 10px !important;
+            }
+            .terms-columns {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            /* Scale up font-sizes slightly for mobile screen readability */
+            .spec-card {
+                min-height: 40px !important;
+                padding: 6px 10px !important;
+            }
+            .spec-value {
+                font-size: 10px !important;
+            }
+            .spec-label {
+                font-size: 7.5px !important;
+            }
+            .pricing-row {
+                font-size: 10.5px !important;
+                padding: 6px 8px !important;
+            }
+            .pricing-row-total {
+                font-size: 11px !important;
+            }
+            .balance-banner {
+                padding: 8px 12px !important;
+                font-size: 13.5px !important;
+            }
+            .balance-banner span {
+                font-size: 12px !important;
+            }
+            .blue-banner {
+                font-size: 13.5px !important;
+                padding: 8px 12px !important;
+            }
+            .products-title {
+                font-size: 10px !important;
+            }
+            .terms-columns h4 {
+                font-size: 11px !important;
+            }
+            .terms-columns p {
+                font-size: 9px !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="action-bar no-print">
-        <button class="btn" onclick="window.print()">🖨️ Print Proposal</button>
-        <button class="btn btn-secondary" onclick="window.close()">✕ Close</button>
-    </div>
 
-    <!-- ================= PAGE 1: COVER PAGE ================= -->
+
+    <!-- ================= PAGE 1: PROPOSAL OVERVIEW & PRICING ================= -->
     <div class="page" id="page-1">
         <!-- Brand Header -->
         <div class="quote-header">
@@ -468,14 +567,14 @@
         <div class="meta-section">
             <div class="meta-block">
                 <h4>Quotation To</h4>
-                <p style="font-size:12px; font-weight:700; color:var(--teal);" id="lblCustomerName">-</p>
+                <p style="font-size:13px; font-weight:700; color:var(--teal);" id="lblCustomerName">-</p>
                 <p><strong>A:</strong> <span id="lblCustomerAddress">-</span></p>
                 <p><strong>P:</strong> <span id="lblCustomerPhone">-</span></p>
                 <p><strong>E:</strong> <span id="lblCustomerEmail">-</span></p>
             </div>
             <div class="meta-block">
                 <h4>Proposal Info</h4>
-                <p><strong>Quote#:</strong> <span id="lblRefNo">-</span></p>
+                <p><strong>Quoted:</strong> <span id="lblRefNo">-</span></p>
                 <p><strong>Quote Date:</strong> <span id="lblDatePrepared">-</span></p>
                 <p><strong>Sales Advisor:</strong> <span id="lblAdvisorName">-</span></p>
                 <p><strong>Direct Line:</strong> <span id="lblAdvisorPhone">-</span></p>
@@ -486,20 +585,35 @@
         <!-- Quotation Title Banner -->
         <div class="blue-banner">
             <span>Quotation</span>
-            <span style="font-size:9.5px;" id="lblSystemSizeHeader">-</span>
+            <span style="font-size:11px;" id="lblSystemSizeHeader">-</span>
         </div>
 
-        <!-- Two Column solutions grid -->
-        <div class="solutions-grid">
-            <!-- Left Col: Products solutions & Pricing stacked -->
-            <div class="left-col">
-                <div class="products-col">
-                    <div class="products-title"><strong>Comprehensive Solar Solutions - Tailored Design, Quality Supply, Expert Installation</strong></div>
-                    <div class="products-list" id="productList">
-                        <!-- Products dynamically injected here -->
-                    </div>
+        <!-- Full-width: Products List -->
+        <div class="products-col" style="margin-bottom: 14px;">
+            <div class="products-title"><strong>Comprehensive Solar Solutions &bull; Tailored Design, Quality Supply, Expert Installation</strong></div>
+            <div class="products-list" id="productList">
+                <!-- Products dynamically injected here -->
+            </div>
+        </div>
+
+        <!-- Two-Column: BLANK LEFT, Pricing + Notes RIGHT -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 14px; flex:1; min-height:0;">
+
+            <!-- LEFT: Property & Installation Specs + Warranty (moved from Page 2) -->
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="specs-title">Property &amp; Installation Specifications</div>
+                <div class="specs-grid" id="specsGrid">
+                    <!-- Cards dynamically injected here -->
                 </div>
 
+                <div class="specs-title" style="margin-top: 4px;">Warranty Information</div>
+                <div class="specs-grid" id="warrantyGrid" style="grid-template-columns: repeat(2, 1fr);">
+                    <!-- Warranty cards dynamically injected here -->
+                </div>
+            </div>
+
+            <!-- RIGHT: Pricing + Notes below -->
+            <div style="display:flex; flex-direction:column; gap:0;">
                 <div class="pricing-col">
                     <div class="pricing-row">
                         <span>Basic System Cost</span>
@@ -510,331 +624,491 @@
                         <strong id="lblDiscount" style="color:var(--accent);">-</strong>
                     </div>
 
-                    <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:2px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less STC Panels Rebate</span>
-                        <span id="lblPanelRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                    <div class="pricing-row" style="border-top: 1.5px solid var(--teal); margin-top:3px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size:11px; font-weight:600; width: 50%; text-align: left;">Less STC Panels Rebate</span>
+                        <span id="lblPanelRebateQty" style="font-size:10px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
                         <strong id="lblPanelRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
                     <div class="pricing-row" id="rowBatteryRebate" style="display:none; justify-content: space-between; align-items: center;">
-                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less STC Battery Rebate</span>
-                        <span id="lblBatteryRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                        <span style="font-size:11px; font-weight:600; width: 50%; text-align: left;">Less STC Battery Rebate</span>
+                        <span id="lblBatteryRebateQty" style="font-size:10px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
                         <strong id="lblBatteryRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
                     <div class="pricing-row" id="rowVppRebate" style="display:none; justify-content: space-between; align-items: center;">
-                        <span style="font-size:9px; font-weight:600; width: 50%; text-align: left;">Less WA Battery Rebate</span>
-                        <span id="lblVppRebateQty" style="font-size:8px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
+                        <span style="font-size:11px; font-weight:600; width: 50%; text-align: left;">Less WA Battery Rebate</span>
+                        <span id="lblVppRebateQty" style="font-size:10px; color:var(--text-muted); width: 25%; text-align: right; padding-right: 8px; font-weight: 500;"></span>
                         <strong id="lblVppRebate" class="pricing-row-rebate" style="width: 25%; text-align: right;">-$0.00</strong>
                     </div>
 
                     <div class="pricing-row pricing-row-total">
-                        <span>Selling Price Total (Inc. GST)</span>
+                        <span>Final System Price (Inc. GST)</span>
                         <strong id="lblSellingPrice">$0.00</strong>
                     </div>
                     <div class="pricing-row">
-                        <span>Less Deposit Required <span style="font-size:8px; color:var(--text-muted); font-weight:400;">(10% Deposit)</span></span>
+                        <span>Less Deposit Required <span style="font-size:9.5px; color:var(--text-muted); font-weight:400;">(10% Deposit)</span></span>
                         <strong id="lblDeposit" style="color:var(--accent);">-$0.00</strong>
                     </div>
 
                     <div class="balance-banner">
-                        <span style="font-size:11px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
+                        <span style="font-size:13px; letter-spacing:0.5px;">Balance Due (Inc. GST)</span>
                         <span id="lblBalanceDue">$0.00</span>
                     </div>
-                    <ul class="pricing-notes" style="margin-top: 6px; padding-left: 10px; font-size: 7.2px; color: var(--text-muted); line-height: 1.3; list-style-type: disc; text-align: left; font-weight: 500;">
+                </div>
+
+                <!-- Notes below pricing -->
+                <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+                    <ul class="pricing-notes" style="margin: 0; padding-left: 14px; font-size: 9px; color: var(--text-muted); line-height: 1.5; list-style-type: disc; text-align: left; font-weight: 500;">
                         <li><strong style="color: var(--text-dark);">Quote Validity</strong>: 10 Days from issue date.</li>
                         <li><strong style="color: var(--text-dark);">System Notes</strong>: The system design is provisional. A fully certified installer will complete the final panel layout tailored to your actual site conditions on the day of installation or during site visit.</li>
                         <li><strong style="color: var(--text-dark);">STC &amp; Finance</strong>: The final Balance Due may vary if there are changes to the estimated STC Rebate value or approval process. Acceptance of this quote is subject to the Terms &amp; Conditions contained in this Quotation.</li>
                         <li><strong style="color: var(--text-dark);">Payment Term</strong>: The remaining Balance Due must be cleared at least 1 day before the installation commences.</li>
                     </ul>
-                    
-                    <div class="specs-title" style="margin-top: 12px; margin-bottom: 4px;">Quotation Notes</div>
-                    <div id="lblQuotationNotes" style="font-size: 7.5px; color: var(--text-dark); line-height: 1.35; background: var(--bg-light); border: 1px solid var(--border); padding: 6px 8px; border-radius: 4px; white-space: pre-line; text-align: left; font-weight: 500;">
-                        -
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Col: Specs dynamically represented in horizontal cards (3 columns) -->
-            <div class="right-col">
-                <div class="specs-title">Property &amp; Installation Specifications</div>
-                <div class="specs-grid" id="specsGrid">
-                    <!-- Cards dynamically injected here -->
-                </div>
-
-                <div class="specs-title" style="margin-top: 10px;">Warranty Information</div>
-                <div class="specs-grid" id="warrantyGrid" style="grid-template-columns: repeat(2, 1fr);">
-                    <!-- Warranty cards dynamically injected here -->
-                </div>
-
-                <!-- Daily Solar Production Chart -->
-                <div id="solarChartCard" style="margin-top:10px; background: linear-gradient(135deg, #0d2137 0%, #0e3352 60%, #0a4a5e 100%); border-radius:10px; padding:10px 12px 8px; box-shadow: 0 4px 20px rgba(13,117,126,0.25), inset 0 1px 0 rgba(255,255,255,0.08);">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                        <div style="background: rgba(13,177,159,0.18); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0db19f" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <div>
+                        <div class="specs-title" style="margin-bottom: 6px;">Quotation Notes</div>
+                        <div id="lblQuotationNotes" style="font-size: 9.5px; color: var(--text-dark); line-height: 1.5; background: var(--bg-light); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; white-space: pre-line; text-align: left; font-weight: 500;">
+                            -
                         </div>
-                        <div>
-                            <div style="color:#e8f4f8; font-size:8.5px; font-weight:700; letter-spacing:0.5px;">DAILY PRODUCTION PER MONTH</div>
-                            <div style="color:rgba(232,244,248,0.55); font-size:6.8px; margin-top:1px;">Avg kWh/day &middot; Australian Solar Irradiance (BOM)</div>
-                        </div>
-                        <div id="chartSysLabel" style="margin-left:auto; background:rgba(13,177,159,0.15); border:1px solid rgba(13,177,159,0.3); border-radius:12px; padding:2px 8px; color:#4dd9c8; font-size:7px; font-weight:700; white-space:nowrap; flex-shrink:0;">&#8212; kW</div>
-                    </div>
-                    <div id="solarProductionChart" style="width:100%; display:block; line-height:0;"></div>
-                </div>
-
-                <!-- Utility Costs / Savings Card -->
-                <div id="utilityCostCard" style="margin-top:8px; background:#ffffff; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px 12px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); min-height:85px; display:flex; align-items:stretch;">
-                    <div style="display:grid; grid-template-columns:1fr 1px 0.8fr 1px 1.2fr; gap:8px; width:100%; align-items:stretch;">
-                        
-                        <!-- Column 1: Icon and Title -->
-                        <div style="display:flex; flex-direction:column; justify-content:center; padding-right:2px;">
-                            <div style="background:var(--teal-light); border:1px solid rgba(31,95,91,0.15); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; margin-bottom:5px; color:var(--teal); flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                                    <rect x="7" y="9" width="14" height="10" rx="2"></rect>
-                                    <circle cx="14" cy="14" r="2"></circle>
-                                </svg>
-                            </div>
-                            <div style="font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; color:var(--teal); letter-spacing:0.3px; line-height:1.2;">Utility costs</div>
-                            <div style="font-size:7.5px; color:var(--text-muted); margin-top:2px; line-height:1.25;">How much will I save after installing solar?</div>
-                        </div>
-
-                        <!-- Divider 1 -->
-                        <div style="background:#e2e8f0; width:1px; margin:4px 0;"></div>
-
-                        <!-- Column 2: Before Solar -->
-                        <div style="display:flex; flex-direction:column; gap:6px; padding:0 2px; justify-content:center;">
-                            <div style="font-size:7.5px; font-weight:700; color:var(--text-dark); text-transform:uppercase; letter-spacing:0.3px; border-bottom:1.5px solid var(--text-dark); padding-bottom:1px; margin-bottom:2px; width:fit-content; line-height:1;">Before solar</div>
-                            
-                            <div>
-                                <div id="uMonthlyBefore" style="font-size:11.5px; font-weight:800; color:var(--text-dark); line-height:1.1;">—</div>
-                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">Average monthly bill</div>
-                            </div>
-                            
-                            <div>
-                                <div id="uAnnualBefore" style="font-size:10.5px; font-weight:700; color:var(--text-dark); line-height:1.1;">—</div>
-                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">Annual bill</div>
-                            </div>
-                        </div>
-
-                        <!-- Divider 2 -->
-                        <div style="background:#e2e8f0; width:1px; margin:4px 0;"></div>
-
-                        <!-- Column 3: With Solar -->
-                        <div style="display:flex; flex-direction:column; gap:6px; padding-left:2px; justify-content:center;">
-                            <div style="font-size:7.5px; font-weight:700; color:#0f9f90; text-transform:uppercase; letter-spacing:0.3px; border-bottom:1.5px solid #0f9f90; padding-bottom:1px; margin-bottom:2px; width:fit-content; line-height:1;">With solar</div>
-                            
-                            <div>
-                                <div style="display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; line-height:1.1;">
-                                    <div id="uMonthlyAfter" style="font-size:11.5px; font-weight:800; color:#0e9e90;">—</div>
-                                    <div id="uMonthlyPct" style="font-size:8px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
-                                </div>
-                                <div style="font-size:7px; color:var(--text-muted); margin-top:1px; line-height:1;">First year average</div>
-                            </div>
-                            
-                            <div>
-                                <div style="display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; line-height:1.1;">
-                                    <div id="uAnnualAfter" style="font-size:10.5px; font-weight:800; color:#0e9e90;">—</div>
-                                    <div id="uAnnualPct" style="font-size:8px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
-                                </div>
-                                <div id="uSavingsNote" style="font-size:7px; color:var(--text-muted); margin-top:1px; font-weight:600; line-height:1;">Est. annual savings —</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Environmental Analysis Card -->
-                <div id="environmentalCard" style="margin-top:8px; background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:10px; padding:6px 10px 6px; box-shadow: 0 4px 15px rgba(31,95,91,0.2), inset 0 1px 0 rgba(255,255,255,0.1);">
-                    <div style="display:grid; grid-template-columns: 0.9fr 2.1fr; gap:10px; align-items: center;">
-                        
-                        <!-- Left Column: Title and Text -->
-                        <div style="display:flex; flex-direction:column; justify-content:center; color:#ffffff; padding-right:4px;">
-                            <div style="font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; letter-spacing:0.3px; line-height:1.2; color:#ffffff; text-transform:uppercase;">Environmental Analysis</div>
-                            <div style="font-size:7px; color:rgba(255,255,255,0.8); margin-top:2px; line-height:1.2; font-weight:400; text-align: justify;">
-                                Your solar system will generate significant environmental benefits. These come primarily from avoided power plant emissions.
-                            </div>
-                        </div>
-
-                        <!-- Right Column: 3 stats side by side -->
-                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; text-align: center; align-items: start;">
-                            
-                            <!-- Stat 1: Trees -->
-                            <div style="display:flex; flex-direction:column; align-items:center;">
-                                <div style="color:#ffffff; margin-bottom:1px;">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 2a5 5 0 0 0-5 5c0 2.2 1.3 4 3 4.6V19a2 2 0 0 0 4 0v-7.4c1.7-.6 3-2.4 3-4.6a5 5 0 0 0-5-5z"></path>
-                                        <path d="M12 12v9"></path>
-                                    </svg>
-                                </div>
-                                <div id="envTrees" style="font-family:'Outfit', sans-serif; font-size:11.5px; font-weight:800; color:#ffffff; line-height:1;">—</div>
-                                <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:3px 0 2px;"></div>
-                                <div style="font-size:5.8px; color:rgba(255,255,255,0.75); line-height:1.1; font-weight:500;">Trees planted equivalent per year⁶'⁷</div>
-                            </div>
-
-                            <!-- Stat 2: Fuel -->
-                            <div style="display:flex; flex-direction:column; align-items:center;">
-                                <div style="color:#ffffff; margin-bottom:1px;">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3 14c0-3 3-3 3-6V3h12v5c0 3 3 3 3 6v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"></path>
-                                        <line x1="9" y1="9" x2="15" y2="9"></line>
-                                        <line x1="9" y1="13" x2="15" y2="13"></line>
-                                    </svg>
-                                </div>
-                                <div id="envFuel" style="font-family:'Outfit', sans-serif; font-size:11.5px; font-weight:800; color:#ffffff; line-height:1;">—</div>
-                                <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:3px 0 2px;"></div>
-                                <div style="font-size:5.8px; color:rgba(255,255,255,0.75); line-height:1.1; font-weight:500;">Avoided equivalent fuel per year (L)⁶'⁷</div>
-                            </div>
-
-                            <!-- Stat 3: Coal -->
-                            <div style="display:flex; flex-direction:column; align-items:center;">
-                                <div style="color:#ffffff; margin-bottom:1px;">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 12c-2-2.67-4-2.67-6 0a4 4 0 0 0-2 6.83A6 6 0 0 0 16 16v-2.17a4 4 0 0 0-4-1.83z"></path>
-                                        <path d="M18 10a4 4 0 0 0-7.5-2"></path>
-                                    </svg>
-                                </div>
-                                <div id="envCoal" style="font-family:'Outfit', sans-serif; font-size:11.5px; font-weight:800; color:#ffffff; line-height:1;">—</div>
-                                <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:3px 0 2px;"></div>
-                                <div style="font-size:5.8px; color:rgba(255,255,255,0.75); line-height:1.1; font-weight:500;">Avoided coal burnt per year (kg)⁶'⁷</div>
-                            </div>
-
-                        </div>
-
-                    </div>
-                    
-                    <!-- Compliance Footnote -->
-                    <div style="font-size:5.5px; color:rgba(255,255,255,0.55); text-align: left; margin-top:4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:3px; line-height:1.1; font-weight:400;">
-                        ⁶Environmental equivalency estimates based on greenhouse gas reduction metrics. ⁷Grid emission factors sourced from DCCEEW National Greenhouse Accounts (NGA) Factors 2025 workbook for Australian state electricity grids.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Payment Details & Energy Balance Row -->
-        <div class="payment-block" style="margin-bottom: 10px;">
-            <div class="payment-method" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; padding: 6px 12px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 4px; align-items: center;">
-                <!-- EFT Left Side -->
+
+        <!-- Payment Details: Two-Line Compact -->
+        <div id="paymentBlock" style="margin-top:10px; margin-bottom:8px; background:var(--bg-light); border:1px solid var(--border); border-radius:6px; padding:7px 14px; display:flex; flex-direction:column; gap:5px;">
+            <!-- Row 1: EFT -->
+            <div style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent); flex-shrink:0;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l9 4H3l9-4z"></path></svg>
+                <span style="font-size:9.5px; font-weight:700; color:var(--accent); white-space:nowrap;">EFT / Bank Transfer:</span>
+                <span style="font-size:9px; color:var(--text-dark);">
+                    <strong>Acct:</strong> Ares Energy Pty Ltd &nbsp;|&nbsp; <strong>BSB:</strong> 086 116 &nbsp;|&nbsp; <strong>A/C:</strong> 95 879 4865 &nbsp;|&nbsp; <strong>Ref:</strong> <span id="lblBankRef" style="font-weight:700; color:var(--accent);">-</span>
+                </span>
+            </div>
+            <!-- Row 2: Credit Card -->
+            <div style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent); flex-shrink:0;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                <span style="font-size:9.5px; font-weight:700; color:var(--accent); white-space:nowrap;">Credit Card (Visa / MasterCard):</span>
+                <span style="font-size:9px; color:var(--text-muted);">
+                    2% surcharge applies on all card transactions &nbsp;|&nbsp; TollFree: <strong style="color:var(--text-dark);">1300 717 583</strong>
+                </span>
+            </div>
+        </div>
+
+
+        <!-- Acceptance (moved from Page 2) -->
+        <div class="acceptance-block">
+            <p>See Additional Terms &amp; Conditions overleaf. I have read the terms and conditions herein and I accept and confirm the System order as detailed above:</p>
+            <div class="sig-row">
+                <div class="sig-col">
+                    <div style="min-height:40px; display:flex; align-items:flex-end; justify-content:center;">
+                        <img id="aresSignatureImg" src="/yashil_signature.png" alt="Ares Signature" style="max-height:40px; max-width:100%; object-fit:contain; display:block;">
+                    </div>
+                    <div class="sig-line">Signature(s)</div>
+                </div>
+                <div class="sig-col">
+                    <div style="font-weight:700; font-size:12px; font-family:'Outfit'; padding-bottom:2px;" id="lblAresSigDate">-</div>
+                    <div class="sig-line">Date</div>
+                </div>
+                <div class="sig-col">
+                    <div style="font-weight:700; font-size:12px; font-family:'Outfit'; padding-bottom:2px;" id="lblClientSigName">-</div>
+                    <div class="sig-line">Name(s)</div>
+                </div>
+                <div class="sig-col">
+                    <div style="height:38px;"></div>
+                    <div class="sig-line">Signature(s)</div>
+                </div>
+                <div class="sig-col">
+                    <div style="height:38px;"></div>
+                    <div class="sig-line">Date</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 1 Footer -->
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
+            <div>Ares Energy | ABN: 78 631 734 506</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 6px; border-radius:2px; font-weight:700;">Page <span class="page-num-val">1</span></div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 2: PROPOSED PANEL LAYOUT & PRODUCTION ANALYSIS ================= -->
+    <div class="page" id="page-2">
+        <!-- Brand Header -->
+        <div class="quote-header">
+            <div class="brand-block">
+                <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
+                <div class="accreditation-logos">
+                    <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                    <img src="/saa_accredited.png" alt="SAA Accredited">
+                </div>
+            </div>
+            <div class="brand-details">
+                <strong>Ares Energy Pty Ltd</strong><br>
+                ABN: 78 631 734 506<br>
+                Tollfree: 1300 717 583<br>
+                W: www.aresenergy.com.au | E: info@aresenergy.com.au
+            </div>
+        </div>
+
+        <!-- Title Banner -->
+        <div class="blue-banner" style="margin-bottom: 10px;">
+            <span>Proposed Panel Layout &amp; Production Analysis</span>
+        </div>
+
+        <!-- Proposed Panel Layout Container -->
+        <div style="margin-bottom: 4px; display:flex; flex-direction:column; flex:1; min-height:0;">
+            <div style="flex:1; border-radius:8px; overflow:hidden; border:1.5px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.04); background:#f8fafc; position:relative; display:flex; justify-content:center; align-items:center;">
+                <img id="layoutImage" src="/images/pylon_mock_layout.png" alt="Proposed Panel Layout" style="width:100%; height:100%; object-fit:cover; display:block;">
+            </div>
+            <!-- Address tag below image (on the right) -->
+            <div style="text-align:right; font-size:9.5px; font-weight:700; color:var(--text-dark); margin-top:3px; margin-bottom: 6px;">
+                <span id="layoutAddressLabel">&#8212;</span>
+            </div>
+        </div>
+
+        <!-- Row 1: Daily Production Chart LEFT, Environmental Analysis RIGHT -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items: stretch; margin-bottom: 6px; margin-top: auto;">
+            
+            <!-- Daily Solar Production Chart -->
+            <div id="solarChartCard" style="background: linear-gradient(135deg, #0d2137 0%, #0e3352 60%, #0a4a5e 100%); border-radius:10px; padding:10px 14px 8px; box-shadow: 0 4px 20px rgba(13,117,126,0.25), inset 0 1px 0 rgba(255,255,255,0.08); display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <div style="background: rgba(13,177,159,0.18); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0db19f" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    </div>
+                    <div>
+                        <div style="color:#e8f4f8; font-size:10px; font-weight:700; letter-spacing:0.5px;">DAILY PRODUCTION PER MONTH</div>
+                        <div style="color:rgba(232,244,248,0.55); font-size:8px; margin-top:1px;">Avg kWh/day &middot; Australian Solar Irradiance (BOM)</div>
+                    </div>
+                    <div id="chartSysLabel" style="margin-left:auto; background:rgba(13,177,159,0.15); border:1px solid rgba(13,177,159,0.3); border-radius:12px; padding:3px 10px; color:#4dd9c8; font-size:8.5px; font-weight:700; white-space:nowrap; flex-shrink:0;">&#8212; kW</div>
+                </div>
+                <div id="solarProductionChart" style="width:100%; display:block; line-height:0; margin: 4px 0;"></div>
+                
+                <!-- Chart Disclaimer Footnote -->
+                <div style="font-size: 6px; color: rgba(232,244,248,0.45); border-top: 1px solid rgba(255,255,255,0.08); padding-top: 5px; margin-top: 4px; line-height: 1.3; font-weight: 500; text-align: left; font-style: italic;">
+                    *Daily production values estimated using BOM solar irradiance averages, assuming standard panel orientation and 80% system efficiency factor.
+                </div>
+            </div>
+
+            <!-- Environmental Analysis (moved from Bottom) -->
+            <div id="environmentalCard" style="background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:10px; padding:10px 14px; box-shadow: 0 4px 15px rgba(31,95,91,0.2), inset 0 1px 0 rgba(255,255,255,0.1); display:flex; flex-direction:column; gap:8px; justify-content: space-between;">
+                <!-- Row 1: Header/Description -->
                 <div>
-                    <h5 style="display: flex; align-items: center; gap: 5px; font-size: 8.5px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l9 4H3l9-4z"></path></svg>
-                        EFT / Bank Transfer
-                    </h5>
-                    <div style="font-size: 8px; line-height: 1.35; color: var(--text-dark);">
-                        <strong>Account Name:</strong> Ares Energy Pty Ltd<br>
-                        <strong>BSB:</strong> 086 116 &nbsp;&nbsp;&nbsp; <strong>A/C:</strong> 95 879 4865 (NAB)<br>
-                        <strong>Ref:</strong> <span id="lblBankRef" style="font-weight:700; color:var(--accent);">-</span>
+                    <div style="font-family:'Outfit', sans-serif; font-size:13px; font-weight:800; letter-spacing:0.3px; line-height:1.2; color:#ffffff; text-transform:uppercase;">Environmental Analysis</div>
+                    <div style="font-size:9px; color:rgba(255,255,255,0.8); margin-top:4px; line-height:1.3; font-weight:400;">Your solar system will generate significant environmental benefits. These come primarily from avoided power plant emissions.</div>
+                </div>
+
+                <!-- Row 2: 3 stats side-by-side -->
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; text-align: center; align-items: start; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); margin-top: 8px; margin-bottom: 2px;">
+                    <!-- Trees -->
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="color:#ffffff; margin-bottom:3px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 13-5-4h10z"/><path d="m12 9-4-4h8z"/><path d="m12 17-6-5h12z"/><path d="M12 17v4"/></svg></div>
+                        <div id="envTrees" style="font-family:'Outfit', sans-serif; font-size:14px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                        <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                        <div style="font-size:7px; color:rgba(255,255,255,0.75); line-height:1.2; font-weight:500;">Trees planted equivalent per year<sup>⁶,⁷</sup></div>
+                    </div>
+                    <!-- Fuel -->
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="color:#ffffff; margin-bottom:3px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="15" y2="22"/><path d="M4 22V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/><rect x="6" y="6" width="6" height="4"/></svg></div>
+                        <div id="envFuel" style="font-family:'Outfit', sans-serif; font-size:14px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                        <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                        <div style="font-size:7px; color:rgba(255,255,255,0.75); line-height:1.2; font-weight:500;">Avoided equivalent fuel per year (L)<sup>⁶,⁷</sup></div>
+                    </div>
+                    <!-- Coal -->
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="color:#ffffff; margin-bottom:3px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+                        <div id="envCoal" style="font-family:'Outfit', sans-serif; font-size:14px; font-weight:800; color:#ffffff; line-height:1;">—</div>
+                        <div style="width:80%; height:1px; background:rgba(255,255,255,0.3); margin:4px 0 3px;"></div>
+                        <div style="font-size:7px; color:rgba(255,255,255,0.75); line-height:1.2; font-weight:500;">Avoided coal burnt per year (kg)<sup>⁶,⁷</sup></div>
                     </div>
                 </div>
 
-                <!-- Vertical Bifurcation Line inside the box -->
-                <div style="width: 1px; height: 32px; background: var(--border);"></div>
+                <!-- Sourcing footnote -->
+                <div style="font-size:5.5px; color:rgba(255,255,255,0.5); text-align: left; border-top: 1px solid rgba(255,255,255,0.1); padding-top:4px; line-height:1.2; font-weight:400;">
+                    ⁶Environmental equivalency estimates based on greenhouse gas reduction metrics. ⁷Grid emission factors sourced from DCCEEW National Greenhouse Accounts (NGA) Factors 2025 workbook for Australian state electricity grids.
+                </div>
+            </div>
 
-                <!-- Credit Card Right Side -->
-                <div style="padding-left: 5px;">
-                    <h5 style="display: flex; align-items: center; gap: 5px; font-size: 8.5px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                        Credit Card (Visa / MasterCard)
-                    </h5>
-                    <div style="font-size: 8px; line-height: 1.35; color: var(--text-muted);">
-                        Card surcharges of 2% apply to all card transactions.<br>
-                        Call TollFree on <strong>1300 717 583</strong> to Pay.
+        </div>
+
+        <!-- Page 2 Footer -->
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:auto;">
+            <div>Ares Energy | ABN: 78 631 734 506</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 6px; border-radius:2px; font-weight:700;">Page <span class="page-num-val">2</span></div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 3: SYSTEM SPECIFICATIONS & FINANCIAL ANALYSIS ================= -->
+    <div class="page" id="page-3">
+        <!-- Brand Header -->
+        <div class="quote-header">
+            <div class="brand-block">
+                <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
+                <div class="accreditation-logos">
+                    <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                    <img src="/saa_accredited.png" alt="SAA Accredited">
+                </div>
+            </div>
+            <div class="brand-details">
+                <strong>Ares Energy Pty Ltd</strong><br>
+                ABN: 78 631 734 506<br>
+                Tollfree: 1300 717 583<br>
+                W: www.aresenergy.com.au | E: info@aresenergy.com.au
+            </div>
+        </div>
+
+        <!-- Title Banner -->
+        <div class="blue-banner" style="margin-bottom: 12px;">
+            <span>System Specifications &amp; Financial Analysis</span>
+        </div>
+
+        <!-- Row 1: Utility Costs LEFT, Energy Balance RIGHT -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items: stretch; margin-bottom: 10px;">
+            
+            <!-- Utility Costs / Savings Card -->
+            <div id="utilityCostCard" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px; justify-content: space-between;">
+                <!-- Row 1: Header (Icon + Title) -->
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="background:var(--teal-light); border:1px solid rgba(31,95,91,0.15); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--teal); flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                            <rect x="7" y="9" width="14" height="10" rx="2"></rect>
+                            <circle cx="14" cy="14" r="2"></circle>
+                        </svg>
                     </div>
+                    <div>
+                        <div style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:var(--teal); letter-spacing:0.3px; line-height:1.1;">Utility Costs</div>
+                        <div style="font-size:8.5px; color:var(--text-muted); margin-top:2px; line-height:1.2;">How much will I save after installing solar?</div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Stats (Before vs With Solar) -->
+                <div style="display:grid; grid-template-columns: 1fr 1px 1.2fr; gap:8px; align-items: center; background: var(--bg-light); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);">
+                    <!-- Before Solar -->
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="font-size:7.5px; font-weight:700; color:var(--text-dark); text-transform:uppercase; letter-spacing:0.3px; border-bottom:1px solid var(--border); padding-bottom:2px; margin-bottom:2px; line-height:1;">Before solar</div>
+                        <div>
+                            <div id="uMonthlyBefore" style="font-size:12px; font-weight:800; color:var(--text-dark); line-height:1.1;">—</div>
+                            <div style="font-size:7px; color:var(--text-muted); line-height:1;">Monthly Bill</div>
+                        </div>
+                        <div>
+                            <div id="uAnnualBefore" style="font-size:11px; font-weight:700; color:var(--text-dark); line-height:1.1;">—</div>
+                            <div style="font-size:7px; color:var(--text-muted); line-height:1;">Annual Bill</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Divider -->
+                    <div style="background:var(--border); width:1px; height:100%;"></div>
+                    
+                    <!-- With Solar -->
+                    <div style="display:flex; flex-direction:column; gap:4px; padding-left: 2px;">
+                        <div style="font-size:7.5px; font-weight:700; color:#0f9f90; text-transform:uppercase; letter-spacing:0.3px; border-bottom:1px solid rgba(15,159,144,0.3); padding-bottom:2px; margin-bottom:2px; line-height:1;">With solar</div>
+                        <div>
+                            <div style="display:flex; align-items:baseline; gap:3px; line-height:1.1;">
+                                <div id="uMonthlyAfter" style="font-size:12px; font-weight:800; color:#0e9e90;">—</div>
+                                <div id="uMonthlyPct" style="font-size:8.5px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
+                            </div>
+                            <div style="font-size:7px; color:var(--text-muted); line-height:1;">First Year Avg</div>
+                        </div>
+                        <div>
+                            <div style="display:flex; align-items:baseline; gap:3px; line-height:1.1;">
+                                <div id="uAnnualAfter" style="font-size:11px; font-weight:800; color:#0e9e90;">—</div>
+                                <div id="uAnnualPct" style="font-size:8.5px; font-weight:700; color:#10b981; white-space:nowrap;">↓ —%</div>
+                            </div>
+                            <div id="uSavingsNote" style="font-size:7px; color:var(--text-muted); font-weight:600; line-height:1;">Est. savings —</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Disclaimer -->
+                <div id="uAssumedDisclaimer" style="font-size: 5.5px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px; line-height: 1.2; font-weight: 500; text-align: left; font-style: italic;">
+                    *Calculations based on assumed daily usage of <span id="uAssumedDailyUsage">—</span> kWh, electricity price of <span id="uAssumedRate">—</span>/kWh, daily supply charge of <span id="uAssumedSupply">—</span>/day, and Feed-in Tariff of <span id="uAssumedFiT">—</span>/kWh.
                 </div>
             </div>
 
             <!-- Energy Balance Card -->
-            <div class="payment-method" style="display: grid; grid-template-columns: 1fr auto 1.2fr; gap: 12px; padding: 6px 12px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 4px; align-items: center;">
-                <!-- Left Side: Title and Subtitle with Icon -->
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="background: var(--teal-light); border: 1px solid rgba(31,95,91,0.15); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: var(--teal); flex-shrink: 0;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--teal);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="17" x2="9" y2="12"></line><line x1="12" y1="17" x2="12" y2="9"></line><line x1="15" y1="17" x2="15" y2="14"></line></svg>
+            <div id="energyBalanceCard" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px; justify-content: space-between;">
+                <!-- Row 1: Header (Icon + Title) -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: var(--teal-light); border: 1px solid rgba(31,95,91,0.15); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--teal); flex-shrink: 0;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--teal);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="17" x2="9" y2="12"></line><line x1="12" y1="17" x2="12" y2="9"></line><line x1="15" y1="17" x2="15" y2="14"></line></svg>
                     </div>
                     <div>
-                        <h5 style="font-family: 'Outfit', sans-serif; font-size: 8.5px; font-weight: 700; color: var(--teal); line-height: 1.2; margin: 0; text-transform: uppercase; letter-spacing: 0.3px;">
-                            Energy balance
-                        </h5>
-                        <div style="font-size: 6.8px; line-height: 1.35; color: var(--text-muted); font-weight: 500;">
-                            Where will your power come from?
-                        </div>
+                        <h5 style="font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; color: var(--teal); line-height: 1.1; margin: 0; text-transform: uppercase; letter-spacing: 0.3px; justify-content: flex-start !important;">Energy Balance</h5>
+                        <div style="font-size: 8.5px; line-height: 1.2; color: var(--text-muted); font-weight: 500;">Where will your power come from?</div>
                     </div>
                 </div>
-
-                <!-- Vertical Divider -->
-                <div style="width: 1px; height: 32px; background: var(--border);"></div>
-
-                <!-- Right Side: Stacked Bar Chart & Labels -->
-                <div style="display: flex; flex-direction: column; justify-content: center; gap: 4px; padding-left: 5px;">
+                
+                <!-- Row 2: Stacked Bar Chart & Legend -->
+                <div style="display: flex; flex-direction: column; justify-content: center; gap: 6px; background: var(--bg-light); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);">
                     <!-- Horizontal Stacked Bar Chart -->
                     <div style="display: flex; width: 100%; height: 11px; border-radius: 3px; overflow: hidden; background: var(--border);">
                         <div id="ebSolarBar" style="width: 0%; height: 100%; background: var(--teal);"></div>
                         <div id="ebBatteryBar" style="width: 0%; height: 100%; background: #0db19f;"></div>
                         <div id="ebUtilityBar" style="width: 0%; height: 100%; background: #cbd5e1;"></div>
                     </div>
-                    <!-- Labels Row -->
-                    <div style="display: flex; justify-content: space-between; font-size: 7px; font-weight: 600; line-height: 1.15; color: var(--text-dark);">
-                        <div id="ebSolarLabel" style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <span style="font-size: 6px; color: var(--text-muted); text-transform: uppercase;">Solar</span>
-                            <span id="ebSolarPct" style="font-size: 7.5px; font-weight: 700; color: var(--teal);">0%</span>
+                    <!-- Legend Row -->
+                    <div style="display: flex; justify-content: space-between; font-size: 8px; font-weight: 600; line-height: 1.2; color: var(--text-dark); margin-top: 2px;">
+                        <div id="ebSolarLabel" style="display: flex; align-items: center; gap: 2px;">
+                            <span style="color: var(--text-muted); text-transform: uppercase; font-size: 7px;">Solar:</span>
+                            <span id="ebSolarPct" style="font-size: 9px; font-weight: 700; color: var(--teal);">0%</span>
                         </div>
-                        <div id="ebBatteryLabel" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-                            <span style="font-size: 6px; color: var(--text-muted); text-transform: uppercase;">Battery</span>
-                            <span id="ebBatteryPct" style="font-size: 7.5px; font-weight: 700; color: #0db19f;">0%</span>
+                        <div id="ebBatteryLabel" style="display: flex; align-items: center; gap: 2px;">
+                            <span style="color: var(--text-muted); text-transform: uppercase; font-size: 7px;">Battery:</span>
+                            <span id="ebBatteryPct" style="font-size: 9px; font-weight: 700; color: #0db19f;">0%</span>
                         </div>
-                        <div id="ebUtilityLabel" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right;">
-                            <span style="font-size: 6px; color: var(--text-muted); text-transform: uppercase;">Utility</span>
-                            <span id="ebUtilityPct" style="font-size: 7.5px; font-weight: 700; color: #64748b;">0%</span>
+                        <div id="ebUtilityLabel" style="display: flex; align-items: center; gap: 2px;">
+                            <span style="color: var(--text-muted); text-transform: uppercase; font-size: 7px;">Utility:</span>
+                            <span id="ebUtilityPct" style="font-size: 9px; font-weight: 700; color: #64748b;">0%</span>
                         </div>
                     </div>
-                    <!-- Tiny disclaimer footnote for compliance -->
-                    <div style="font-size: 4.8px; color: var(--text-muted); margin-top: 1px; font-weight: 500; text-align: left; line-height: 1;">
-                        *Estimated annual splits based on standard load profiles.
+                </div>
+                
+                <!-- Row 3: Footnote -->
+                <div style="font-size: 5.5px; color: var(--text-muted); border-top: 1px solid #e2e8f0; padding-top: 4px; line-height: 1.2; font-style: italic; text-align: left;">
+                    *Calculations based on monthly average daily solar irradiance (BOM), derived usage, and standard residential load profile.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 2: Annual Bill Comparison LEFT, Monthly Bill Comparison RIGHT -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:10px; align-items: stretch; margin-bottom: 12px;">
+            
+            <!-- Annual Bill Card -->
+            <div id="annualBillCard" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px; justify-content: space-between;">
+                <div>
+                    <div style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:var(--teal); letter-spacing:0.3px; line-height:1.1;">Annual Bill Over 20 Years</div>
+                    <div style="font-size:8px; color:var(--text-muted); margin-top:2px;">Projected cumulative electricity cost comparison</div>
+                </div>
+                
+                <!-- Legend -->
+                <div style="display:flex; gap:10px; font-size:8px; font-weight:600; margin-top:2px;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="display:inline-block; width:12px; height:3px; background:#94a3b8; border-radius:1px;"></span>
+                        <span style="color:var(--text-muted); font-size:7.5px;">Without Solar</span>
                     </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="display:inline-block; width:12px; height:3px; background:var(--teal); border-radius:1px;"></span>
+                        <span style="color:var(--text-muted); font-size:7.5px;">With Solar</span>
+                    </div>
+                </div>
+
+                <div id="annualBillChart" style="width:100%; display:block; line-height:0; margin: 4px 0;"></div>
+
+                <div style="font-size: 5.5px; color: var(--text-muted); border-top: 1px solid #e2e8f0; padding-top: 4px; line-height: 1.2; font-style: italic; text-align: left;">
+                    *Assumes annual grid price inflation of 5.0%.
+                </div>
+            </div>
+
+            <!-- Monthly Bill Card -->
+            <div id="monthlyBillCard" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px; justify-content: space-between;">
+                <div>
+                    <div style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:var(--teal); letter-spacing:0.3px; line-height:1.1;">Monthly Bill Comparison</div>
+                    <div style="font-size:8px; color:var(--text-muted); margin-top:2px;">Average monthly billing cycle comparison</div>
+                </div>
+
+                <!-- Legend -->
+                <div style="display:flex; gap:10px; font-size:8px; font-weight:600; margin-top:2px;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:#cbd5e1; border-radius:2px;"></span>
+                        <span style="color:var(--text-muted); font-size:7.5px;">Without Solar</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:var(--teal); border-radius:2px;"></span>
+                        <span style="color:var(--text-muted); font-size:7.5px;">With Solar / Credit</span>
+                    </div>
+                </div>
+
+                <div id="monthlyBillChart" style="width:100%; display:block; line-height:0; margin: 4px 0;"></div>
+
+                <div style="font-size: 5.5px; color: var(--text-muted); border-top: 1px solid #e2e8f0; padding-top: 4px; line-height: 1.2; font-style: italic; text-align: left;">
+                    *Calculations based on estimated monthly solar production offset against standard energy retailer tariff rates.
                 </div>
             </div>
         </div>
 
-        <!-- Acceptance -->
-        <div class="acceptance-block">
-            <p>See Additional Terms &amp; Conditions overleaf. I have read the terms and conditions herein and I accept and confirm the System order as detailed above:</p>
-            <div class="sig-row">
-                <!-- Ares Signature -->
-                <div class="sig-col">
-                    <div style="min-height:36px; display:flex; align-items:flex-end; justify-content:center;">
-                        <img id="aresSignatureImg" src="/yashil_signature.png" alt="Ares Signature" style="max-height:36px; max-width:100%; object-fit:contain; display:block;">
-                    </div>
-                    <div class="sig-line">Signature(s)</div>
+        <!-- 20 Year Financial Summary Header -->
+        <div id="financialSummaryHeader" style="font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; color:var(--teal); letter-spacing:0.3px; text-transform:uppercase; margin-bottom:6px; border-bottom:1.5px solid var(--border); padding-bottom:4px; margin-top: 4px;">
+            20 Year Financial Summary
+        </div>
+        <!-- 2x2 Grid of Financial Boxes -->
+        <div id="financialSummaryGrid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+            <!-- Card 1: NPV -->
+            <div style="background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:8px; padding:10px 12px; color:#ffffff; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 4px 12px rgba(31,95,91,0.15);">
+                <div>
+                    <div id="finNpvVal" style="font-family:'Outfit', sans-serif; font-size:18px; font-weight:800; line-height:1.1;">$—</div>
+                    <div style="font-size:9.5px; font-weight:700; color:#4dd9c8; margin-top:2px; line-height:1.2;">Net Present Value of Investment<sup>⁴</sup></div>
                 </div>
-                <!-- Ares Date (auto) -->
-                <div class="sig-col">
-                    <div style="font-weight:700; font-size:10px; font-family:'Outfit'; padding-bottom:2px;" id="lblAresSigDate">-</div>
-                    <div class="sig-line">Date</div>
-                </div>
-                <!-- Customer Name -->
-                <div class="sig-col">
-                    <div style="font-weight:700; font-size:10px; font-family:'Outfit'; padding-bottom:2px;" id="lblClientSigName">-</div>
-                    <div class="sig-line">Name(s)</div>
-                </div>
-                <!-- Customer Signature (blank) -->
-                <div class="sig-col">
-                    <div style="height:30px;"></div>
-                    <div class="sig-line">Signature(s)</div>
-                </div>
-                <!-- Customer Date (blank) -->
-                <div class="sig-col">
-                    <div style="height:30px;"></div>
-                    <div class="sig-line">Date</div>
+                <div style="font-size:6.5px; color:rgba(255,255,255,0.7); line-height:1.2; margin-top:6px; font-weight:400;">
+                    The Net Present Value (NPV) is the present day value of all future cash inflows minus outflows. A positive NPV indicates a good investment.
                 </div>
             </div>
+
+            <!-- Card 2: Payback Period -->
+            <div style="background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:8px; padding:10px 12px; color:#ffffff; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 4px 12px rgba(31,95,91,0.15);">
+                <div>
+                    <div id="finPaybackVal" style="font-family:'Outfit', sans-serif; font-size:18px; font-weight:800; line-height:1.1;">—</div>
+                    <div style="font-size:9.5px; font-weight:700; color:#4dd9c8; margin-top:2px; line-height:1.2;">Discounted Payback Period<sup>⁴</sup></div>
+                </div>
+                <div style="font-size:6.5px; color:rgba(255,255,255,0.7); line-height:1.2; margin-top:6px; font-weight:400;">
+                    Accounts for all discounted future cashflows. The resulting period will typically be longer than a simple payback calculation.
+                </div>
+            </div>
+
+            <!-- Card 3: Total ROI -->
+            <div style="background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:8px; padding:10px 12px; color:#ffffff; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 4px 12px rgba(31,95,91,0.15);">
+                <div>
+                    <div id="finRoiVal" style="font-family:'Outfit', sans-serif; font-size:18px; font-weight:800; line-height:1.1;">—%</div>
+                    <div style="font-size:9.5px; font-weight:700; color:#4dd9c8; margin-top:2px; line-height:1.2;">Total Return on Investment<sup>⁴</sup></div>
+                </div>
+                <div style="font-size:6.5px; color:rgba(255,255,255,0.7); line-height:1.2; margin-top:6px; font-weight:400;">
+                    The Return on Investment (ROI) is another measure of the efficiency of your solar investment. The higher the ROI, the better.
+                </div>
+            </div>
+
+            <!-- Card 4: IRR -->
+            <div style="background: linear-gradient(135deg, #1f5f5b 0%, #154542 100%); border-radius:8px; padding:10px 12px; color:#ffffff; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 4px 12px rgba(31,95,91,0.15);">
+                <div>
+                    <div id="finIrrVal" style="font-family:'Outfit', sans-serif; font-size:18px; font-weight:800; line-height:1.1;">—%</div>
+                    <div style="font-size:9.5px; font-weight:700; color:#4dd9c8; margin-top:2px; line-height:1.2;">Internal Rate of Return<sup>⁴</sup></div>
+                </div>
+                <div style="font-size:6.5px; color:rgba(255,255,255,0.7); line-height:1.2; margin-top:6px; font-weight:400;">
+                    The Internal Rate of Return is the discount rate that is used such that the NPV of future cash flows is exactly zero.
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3 Footer -->
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:auto;">
+            <div>Ares Energy | ABN: 78 631 734 506</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 6px; border-radius:2px; font-weight:700;">Page <span class="page-num-val">3</span></div>
         </div>
     </div>
 
-    <!-- ================= PAGE 2: TERMS & CONDITIONS (PART 1) ================= -->
-    <div class="page" id="page-2">
-        <div class="quote-header" style="border-bottom: 1.5px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;">
+    <!-- ================= PAGE 4: TERMS & CONDITIONS (PART 1) ================= -->
+    <div class="page" id="page-4">
+        <!-- Brand Header -->
+        <div class="quote-header">
             <div class="brand-block">
-                <img src="/ares_energy_logo.png" class="brand-logo" style="height:30px;" alt="Logo">
-                <span class="brand-name" style="font-size:15px;">ARES ENERGY</span>
+                <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
+                <!-- Accreditation Logos -->
+                <div class="accreditation-logos">
+                    <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                    <img src="/saa_accredited.png" alt="SAA Accredited">
+                </div>
             </div>
-            <span style="font-size:9px; color:var(--text-muted); font-weight:700;">CONTRACT TERMS &amp; CONDITIONS (1/2)</span>
+
+            <div class="brand-details">
+                <strong>Ares Energy Pty Ltd</strong><br>
+                ABN: 78 631 734 506<br>
+                Tollfree: 1300 717 583<br>
+                W: www.aresenergy.com.au | E: info@aresenergy.com.au
+            </div>
+        </div>
+
+        <!-- Title Banner -->
+        <div class="blue-banner" style="margin-bottom: 12px;">
+            <span>Contract Terms &amp; Conditions (1/2)</span>
         </div>
         <div class="page-content" style="padding:0;">
             <div class="terms-columns">
@@ -844,7 +1118,7 @@
                     <p><strong>1.2. Retailer:</strong> Refers to Ares Energy Pty Ltd (ABN: 78 631 734 506).</p>
                     <p><strong>1.3. Owner:</strong> Refers to the customer identified in the Quotation sheet.</p>
                     <p><strong>1.4. STC:</strong> Small-scale Technology Certificate created under the Renewable Energy (Electricity) Act 2000 (Cth).</p>
-
+ 
                     <h4>2. PERFORMANCE OBLIGATIONS</h4>
                     <p><strong>2.1. Retailer Responsibilities:</strong> The Retailer will design, supply, and arrange installation of the energy system in accordance with the specifications. Work will be carried out by a CEC/SAA accredited installer.</p>
                     <p><strong>2.2. Owner Responsibilities:</strong> The Owner warrants that they are the property owner, the roof has structural integrity to support the system, and safe access to the premises will be provided on the scheduled installation date.</p>
@@ -852,27 +1126,43 @@
                 <div>
                     <h4>3. SITE CONDITIONS &amp; PRICE ADJUSTMENTS</h4>
                     <p><strong>3.1.</strong> If unforeseen site conditions requiring structural modifications or electrical upgrades (e.g., switchboard replacements) are discovered on site, the Retailer will provide a written variation notice. If the Owner rejects the variation, the contract may be terminated with a full refund of deposit.</p>
-
+ 
                     <h4>4. STCS &amp; REBATES ASSIGNMENT</h4>
                     <p><strong>4.1.</strong> The Quotation price is calculated based on the assumption that the Owner assigns all rights to create STCs generated by the solar system to the Retailer.</p>
                     <p><strong>4.2.</strong> If the STCs application is rejected due to Owner ineligibility, or the Owner chooses to retain ownership of the STCs, the Owner agrees to pay the value of the STC discount back to the Retailer within 10 business days of invoice.</p>
                 </div>
             </div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
             <div>Ares Energy | ABN: 78 631 734 506</div>
-            <div style="background:var(--teal); color:#fff; padding:1px 5px; border-radius:2px; font-weight:700;">Page 2</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 6px; border-radius:2px; font-weight:700;">Page <span class="page-num-val">4</span></div>
         </div>
     </div>
 
-    <!-- ================= PAGE 3: TERMS & CONDITIONS (PART 2) ================= -->
-    <div class="page" id="page-3">
-        <div class="quote-header" style="border-bottom: 1.5px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;">
+    <!-- ================= PAGE 5: TERMS & CONDITIONS (PART 2) ================= -->
+    <div class="page" id="page-5">
+        <!-- Brand Header -->
+        <div class="quote-header">
             <div class="brand-block">
-                <img src="/ares_energy_logo.png" class="brand-logo" style="height:30px;" alt="Logo">
-                <span class="brand-name" style="font-size:15px;">ARES ENERGY</span>
+                <img src="/ares_energy_logo.png" class="brand-logo" alt="Ares Energy Logo">
+                <!-- Accreditation Logos -->
+                <div class="accreditation-logos">
+                    <img src="/netcc_approved.png" alt="NETCC Approved Seller">
+                    <img src="/saa_accredited.png" alt="SAA Accredited">
+                </div>
             </div>
-            <span style="font-size:9px; color:var(--text-muted); font-weight:700;">CONTRACT TERMS &amp; CONDITIONS (2/2)</span>
+
+            <div class="brand-details">
+                <strong>Ares Energy Pty Ltd</strong><br>
+                ABN: 78 631 734 506<br>
+                Tollfree: 1300 717 583<br>
+                W: www.aresenergy.com.au | E: info@aresenergy.com.au
+            </div>
+        </div>
+
+        <!-- Title Banner -->
+        <div class="blue-banner" style="margin-bottom: 12px;">
+            <span>Contract Terms &amp; Conditions (2/2)</span>
         </div>
         <div class="page-content" style="padding:0;">
             <div class="terms-columns">
@@ -880,7 +1170,7 @@
                     <h4>5. REFUNDS AND COOLING-OFF PERIOD</h4>
                     <p><strong>5.1.</strong> The Owner is protected by the Australian Consumer Law. The Owner has a right to cancel this contract and receive a 100% refund of deposit within 10 business days of signing (Cooling-off period).</p>
                     <p><strong>5.2.</strong> A full refund will also be issued if the system design is significantly altered from the Quotation, if installation cannot be completed within 6 weeks of target date, or if grid connection approval is refused by the distributor.</p>
-
+ 
                     <h4>6. COMPLAINTS &amp; DISPUTE RESOLUTION</h4>
                     <p><strong>6.1.</strong> Complaints may be submitted in writing via email to yashil@aresenergy.com.au or by calling 1300 717 583. We follow standard procedures outlined in AS ISO 10002-2006.</p>
                     <p><strong>6.2.</strong> We will acknowledge receipt of your complaint within 2 business days and provide a full resolution timeline within 15 days.</p>
@@ -888,16 +1178,16 @@
                 <div>
                     <h4>7. WARRANTIES AND GUARANTEES</h4>
                     <p><strong>7.1.</strong> A 5 year workmanship warranty applies to the installation. Manufacturer warranties apply for solar panels (25 years), inverter (5/10 years), and battery (10 years) as per manufacturer warranty documents.</p>
-
+ 
                     <h4>8. GRID CONNECTION &amp; ACCREDITATION</h4>
                     <p><strong>8.1.</strong> Connection approvals will be submitted by Ares Energy to Western Power on behalf of the customer. Actual network limits and export parameters are determined solely by Western Power.</p>
                     <p><strong>8.2.</strong> All installations comply with standard guidelines set by the Clean Energy Council and Solar Accreditation Australia.</p>
                 </div>
             </div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:10px;">
             <div>Ares Energy | ABN: 78 631 734 506</div>
-            <div style="background:var(--teal); color:#fff; padding:1px 5px; border-radius:2px; font-weight:700;">Page 3</div>
+            <div style="background:var(--teal); color:#fff; padding:1px 6px; border-radius:2px; font-weight:700;">Page <span class="page-num-val">5</span></div>
         </div>
     </div>
 
@@ -913,7 +1203,7 @@
             }
 
             try {
-                const res = await fetch(`/api/quotations/${id}/preview-data`);
+                const res = await fetch(`/api/quotations/${id}/preview-data` + window.location.search);
                 const data = await res.json();
                 
                 if (data.success) {
@@ -925,6 +1215,18 @@
                 console.error("Network error fetching details:", e);
             }
         });
+
+        // BOM-standard avg Peak Sun Hours per month per state (used across charts)
+        const PSH = {
+            'WA':  [8.2, 7.4, 6.3, 5.4, 4.2, 3.8, 4.0, 4.7, 5.5, 6.8, 7.5, 8.0],
+            'NSW': [6.3, 6.0, 5.4, 4.7, 4.0, 3.5, 3.8, 4.5, 5.2, 5.8, 6.3, 6.5],
+            'VIC': [5.8, 5.6, 5.0, 4.1, 3.3, 2.8, 3.1, 3.7, 4.5, 5.4, 5.8, 6.0],
+            'QLD': [6.8, 6.3, 6.5, 6.0, 5.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.0, 6.9],
+            'SA':  [7.2, 6.8, 5.9, 4.9, 3.9, 3.3, 3.6, 4.5, 5.5, 6.5, 7.0, 7.4],
+            'TAS': [5.0, 4.8, 4.2, 3.3, 2.5, 2.1, 2.3, 3.0, 3.9, 4.8, 5.3, 5.4],
+            'NT':  [7.5, 6.8, 7.2, 7.8, 8.0, 7.5, 8.0, 8.5, 8.8, 8.5, 8.2, 7.8],
+            'ACT': [6.2, 5.8, 5.2, 4.3, 3.5, 3.0, 3.3, 4.0, 4.9, 5.7, 6.0, 6.3]
+        };
 
         // Helper functions for safe DOM assignment to prevent JS errors if elements are missing
         function setText(id, val) {
@@ -938,6 +1240,20 @@
         function setDisplay(id, val) {
             const el = document.getElementById(id);
             if (el) el.style.display = val;
+        }
+
+        function updatePageNumbers() {
+            const pages = Array.from(document.querySelectorAll('.page'));
+            let visiblePageCount = 0;
+            pages.forEach((page) => {
+                if (page.style.display !== 'none') {
+                    visiblePageCount++;
+                    const pageNumSpan = page.querySelector('.page-num-val');
+                    if (pageNumSpan) {
+                        pageNumSpan.textContent = visiblePageCount;
+                    }
+                }
+            });
         }
 
         function populateTemplate(data) {
@@ -979,6 +1295,17 @@
             const addressParts = [lead.address, lead.suburb, lead.state, lead.postcode].filter(Boolean);
             const fullAddress = addressParts.join(', ') || 'Western Australia';
             setText('lblCustomerAddress', fullAddress);
+
+            // Proposed panel layout image and address text
+            const layoutImgEl = document.getElementById('layoutImage');
+            if (layoutImgEl) {
+                layoutImgEl.src = lead.pylon_layout_image || '/images/pylon_mock_layout.png';
+            }
+            const layoutAddrEl = document.getElementById('layoutAddressLabel');
+            if (layoutAddrEl) {
+                layoutAddrEl.textContent = fullAddress;
+            }
+
             setText('lblCustomerPhone', lead.phone_number || '-');
             setText('lblCustomerEmail', lead.email_id_1 || '-');
 
@@ -1001,9 +1328,43 @@
             const sysKw = ySummary.systemSizeKw || 0;
             const batKwh = ySummary.batteryCapacityKwh || 0;
             const sizeLabel = batKwh > 0 
-                ? `${sysKw.toFixed(2)}kW Solar System with ${batKwh.toFixed(0)}kWh Battery`
+                ? (sysKw > 0 ? `${sysKw.toFixed(2)}kW Solar System with ${batKwh.toFixed(0)}kWh Battery` : `${batKwh.toFixed(0)}kWh Battery Storage`)
                 : `${sysKw.toFixed(2)}kW Solar System`;
             setText('lblSystemSizeHeader', sizeLabel);
+
+            // Hide savings, environmental, and energy balance cards if there are no solar panels
+            if (sysKw <= 0) {
+                setDisplay('page-2', 'none'); // HIDE Proposed Panel Layout page completely!
+                setDisplay('page-3', 'none'); // HIDE System Specifications & Financial Analysis page completely!
+                setDisplay('utilityCostCard', 'none');
+                setDisplay('environmentalCard', 'none');
+                setDisplay('energyBalanceCard', 'none');
+                setDisplay('annualBillCard', 'none');
+                setDisplay('monthlyBillCard', 'none');
+                setDisplay('financialSummaryHeader', 'none');
+                setDisplay('financialSummaryGrid', 'none');
+                const paymentBlock = document.getElementById('paymentBlock');
+                if (paymentBlock) {
+                    paymentBlock.style.gridTemplateColumns = '1fr';
+                }
+            } else {
+                setDisplay('page-2', 'flex'); // SHOW Proposed Panel Layout page!
+                setDisplay('page-3', 'flex'); // SHOW System Specifications & Financial Analysis page!
+                setDisplay('utilityCostCard', 'flex');
+                setDisplay('environmentalCard', 'flex');
+                setDisplay('energyBalanceCard', 'flex');
+                setDisplay('annualBillCard', 'flex');
+                setDisplay('monthlyBillCard', 'flex');
+                setDisplay('financialSummaryHeader', 'block');
+                setDisplay('financialSummaryGrid', 'grid');
+                const paymentBlock = document.getElementById('paymentBlock');
+                if (paymentBlock) {
+                    paymentBlock.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                }
+            }
+
+            // Re-calculate page numbers dynamically based on visibility
+            updatePageNumbers();
 
             // Pricing extraction
             const sellingPrice = pricing.sellingPrice || 0;
@@ -1109,24 +1470,25 @@
 
             // Render product breakdown on Left Column
             const productListContainer = document.getElementById('productList');
-            if (productListContainer && pDetails.productsBreakdown) {
+            if (productListContainer && eng.products) {
                 productListContainer.innerHTML = '';
-                pDetails.productsBreakdown.forEach(prod => {
+                eng.products.forEach(prod => {
                     const itemRow = document.createElement('div');
                     itemRow.style.display = 'flex';
-                    itemRow.style.padding = '5px 0';
-                    itemRow.style.fontSize = '10.5px';
+                    itemRow.style.padding = '8px 0';
+                    itemRow.style.fontSize = '12px';
                     itemRow.style.borderBottom = '1px solid var(--border)';
                     
-                    let qtyLabel = `${prod.qty} x ${prod.type}`;
-                    if (prod.type === 'Panel') qtyLabel = `${prod.qty} x Panels`;
-                    if (prod.type === 'Inverter') qtyLabel = `${prod.qty} x Inverter`;
-                    if (prod.type === 'Battery') qtyLabel = `${prod.qty} x Battery`;
-                    if (prod.type === 'Wi-Fi' || prod.type === 'Monitoring' || prod.type === 'Unknown') qtyLabel = `${prod.qty} x Accessory`;
+                    let qtyLabel = `${prod.type} X ${prod.qty}`;
+                    if (prod.type === 'Panel') qtyLabel = `Panels X ${prod.qty}`;
+                    else if (prod.type === 'Inverter') qtyLabel = `Inverters X ${prod.qty}`;
+                    else if (prod.type === 'Battery') qtyLabel = `Battery X ${prod.qty}`;
+                    else if (prod.type === 'Wi-Component') qtyLabel = `Wi-Fi & Control X ${prod.qty}`;
+                    else if (prod.type === 'Accessories') qtyLabel = `Accessories X ${prod.qty}`;
 
                     itemRow.innerHTML = `
-                        <span style="font-weight:600; width:30%; color:var(--teal);">${qtyLabel}</span>
-                        <span style="width:70%; color:var(--text-dark);">${prod.name}</span>
+                        <span style="font-weight:700; width:30%; color:var(--teal); font-size:12px;">${qtyLabel}</span>
+                        <span style="width:70%; color:var(--text-dark); font-size:12px;">${prod.name}</span>
                     `;
                     productListContainer.appendChild(itemRow);
                 });
@@ -1142,16 +1504,32 @@
                 const svgBattery = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="12" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="15"></line><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line></svg>`;
                 const svgWorkmanship = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 11 11 13 15 9"></polyline></svg>`;
 
-                const warrantyItems = [
-                    { label: 'Panels', value: lead.war_panels || '25 Years Product Warranty / 30 Years Linear', svg: svgPanel },
-                    { label: 'Inverter', value: lead.war_inverter || '10 Years Inverter Warranty', svg: svgInverter }
-                ];
+                const hasPanel = eng.products && eng.products.some(p => p.type === 'Panel');
+                const hasInverter = eng.products && eng.products.some(p => p.type === 'Inverter');
+                const hasBattery = eng.products && eng.products.some(p => p.type === 'Battery');
 
-                if (batKwh > 0) {
+                const warrantyItems = [];
+
+                if (hasPanel) {
+                    warrantyItems.push({ label: 'Panels', value: lead.war_panels || '25 Years Product Warranty / 30 Years Linear', svg: svgPanel });
+                }
+                if (hasInverter) {
+                    warrantyItems.push({ label: 'Inverter', value: lead.war_inverter || '10 Years Inverter Warranty', svg: svgInverter });
+                }
+                if (hasBattery || batKwh > 0) {
                     warrantyItems.push({ label: 'Battery', value: lead.war_battery || '10 Years Battery Warranty', svg: svgBattery });
                 }
 
+                // Workmanship is always permanent
                 warrantyItems.push({ label: 'Workmanship', value: lead.war_workmanship || '5 Year Workmanship Warranty', svg: svgWorkmanship });
+
+                if (warrantyItems.length === 3) {
+                    warrantyGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                } else if (warrantyItems.length === 4 || warrantyItems.length === 2) {
+                    warrantyGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                } else {
+                    warrantyGrid.style.gridTemplateColumns = '1fr';
+                }
 
                 warrantyItems.forEach(item => {
                     const card = document.createElement('div');
@@ -1168,7 +1546,7 @@
             }
 
             // Render Quotation Notes
-            const inclusionsText = lead.quotation_inclusions || `Net Meter - Not Included - Please contact your Electricity Retailer\nBlackout Protection ${lead.battery_blackout === 'Yes' ? 'Included' : 'Not Included'}`;
+            const inclusionsText = eng.quotation_inclusions || lead.quotation_inclusions || `Net Meter - Not Included - Please contact your Electricity Retailer`;
             const inclusionLines = inclusionsText.split('\n').map(l => l.trim()).filter(Boolean);
             const notesContainer = document.getElementById('lblQuotationNotes');
             if (notesContainer) {
@@ -1185,17 +1563,6 @@
                 const container = document.getElementById('solarProductionChart');
                 if (!container) return;
 
-                // BOM-standard avg Peak Sun Hours per month per state
-                const PSH = {
-                    'WA':  [8.2, 7.4, 6.3, 5.4, 4.2, 3.8, 4.0, 4.7, 5.5, 6.8, 7.5, 8.0],
-                    'NSW': [6.3, 6.0, 5.4, 4.7, 4.0, 3.5, 3.8, 4.5, 5.2, 5.8, 6.3, 6.5],
-                    'VIC': [5.8, 5.6, 5.0, 4.1, 3.3, 2.8, 3.1, 3.7, 4.5, 5.4, 5.8, 6.0],
-                    'QLD': [6.8, 6.3, 6.5, 6.0, 5.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.0, 6.9],
-                    'SA':  [7.2, 6.8, 5.9, 4.9, 3.9, 3.3, 3.6, 4.5, 5.5, 6.5, 7.0, 7.4],
-                    'TAS': [5.0, 4.8, 4.2, 3.3, 2.5, 2.1, 2.3, 3.0, 3.9, 4.8, 5.3, 5.4],
-                    'NT':  [7.5, 6.8, 7.2, 7.8, 8.0, 7.5, 8.0, 8.5, 8.8, 8.5, 8.2, 7.8],
-                    'ACT': [6.2, 5.8, 5.2, 4.3, 3.5, 3.0, 3.3, 4.0, 4.9, 5.7, 6.0, 6.3]
-                };
                 const PR   = 0.80;
                 const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -1213,8 +1580,8 @@
                 const minVal = Math.min(...daily);
 
                 // SVG viewport (fixed coordinates — renders crisp at any scale)
-                const W = 340, H = 140;
-                const pL = 8, pR = 34, pT = 22, pB = 20;
+                const W = 340, H = 110;
+                const pL = 8, pR = 34, pT = 14, pB = 12;
                 const cW = W - pL - pR;
                 const cH = H - pT - pB;
                 const n  = 12;
@@ -1335,6 +1702,21 @@
                         maximumFractionDigits: 2
                     })}`;
                 }
+
+                // Populate assumed values disclaimer
+                const assumedDaily = parseFloat(ySummary.derivedDailyUsage) || 9.2;
+                const avgBill = parseFloat(eng.avg_bill) || 0;
+                const billPeriod = eng.billing_period || '';
+                
+                let billText = '';
+                if (avgBill > 0 && billPeriod) {
+                    billText = `Customer average bill of $${avgBill.toFixed(2)} (${billPeriod}), `;
+                }
+                
+                const footnoteEl = document.getElementById('uAssumedDisclaimer');
+                if (footnoteEl) {
+                    footnoteEl.innerHTML = `*Calculations are based on assumed values: ${billText}derived daily usage of <strong>${assumedDaily.toFixed(1)}</strong> kWh, electricity price of <strong>$${(ySummary.electricityUnitRate || 0.30).toFixed(2)}</strong>/kWh, daily supply charge of <strong>$${(ySummary.supplyChargeDay || 1.05).toFixed(2)}</strong>/day, and Feed-in Tariff of <strong>$${(ySummary.feedInTariff || 0.08).toFixed(2)}</strong>/kWh. Actual bills and savings may vary.`;
+                }
             })();
 
             // ============================================================
@@ -1384,6 +1766,223 @@
                     if (batteryLabel) batteryLabel.style.display = 'flex';
                     if (batteryBar) batteryBar.style.display = 'block';
                 }
+            })();
+
+            // ============================================================
+            // ANNUAL BILL CHART POPULATION
+            // ============================================================
+            (function populateAnnualBillChart() {
+                const container = document.getElementById('annualBillChart');
+                if (!container) return;
+
+                const financials = yieldData.financials || {};
+                const beforeSolarTotal = parseFloat(financials.beforeSolarTotal) || 0;
+                const withSolarTotal = parseFloat(financials.withSolarTotal) || 0;
+
+                const escalation = 0.05; // 5% inflation
+                const years = [1, 5, 10, 15, 20];
+                const allYears = Array.from({length: 20}, (_, i) => i + 1);
+
+                const dataWithout = allYears.map(y => beforeSolarTotal * Math.pow(1 + escalation, y - 1));
+                const dataWith = allYears.map(y => withSolarTotal * Math.pow(1 + escalation, y - 1));
+
+                const maxVal = Math.max(...dataWithout, ...dataWith);
+                const minVal = Math.min(0, ...dataWithout, ...dataWith);
+                const yMax = Math.ceil(maxVal / 1000) * 1000 || 6000;
+                const yMin = minVal < 0 ? Math.floor(minVal / 1000) * 1000 : 0;
+
+                const W = 340, H = 110;
+                const pL = 28, pR = 15, pT = 12, pB = 15;
+                const cW = W - pL - pR;
+                const cH = H - pT - pB;
+
+                const getX = (year) => pL + ((year - 1) / 19) * cW;
+                const getY = (val) => pT + cH * (1 - (val - yMin) / (yMax - yMin));
+
+                const parts = [];
+
+                // Grid lines & Y labels
+                const totalRange = yMax - yMin;
+                let step = 1000;
+                if (totalRange <= 2000) step = 500;
+                else if (totalRange <= 5000) step = 1000;
+                else if (totalRange <= 10000) step = 2000;
+                else step = 3000;
+
+                const gridSteps = [];
+                for (let v = yMin; v <= yMax; v += step) {
+                    gridSteps.push(v);
+                }
+
+                gridSteps.forEach(v => {
+                    const gy = getY(v);
+                    parts.push(`<line x1="${pL}" y1="${gy.toFixed(1)}" x2="${W - pR}" y2="${gy.toFixed(1)}" stroke="rgba(0,0,0,0.06)" stroke-width="0.7" stroke-dasharray="${v===0?'none':'3,3'}"/>`);
+                    const lbl = v < 0 ? `$${Math.abs(v).toLocaleString(undefined, {maximumFractionDigits:0})} CR` : `$${v.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+                    parts.push(`<text x="${pL - 4}" y="${(gy + 2).toFixed(1)}" fill="rgba(100,116,139,0.7)" font-size="6" font-family="Arial,sans-serif" text-anchor="end">${lbl}</text>`);
+                });
+
+                // Zero line (bold)
+                if (yMin < 0) {
+                    const yZero = getY(0);
+                    parts.push(`<line x1="${pL}" y1="${yZero.toFixed(1)}" x2="${W - pR}" y2="${yZero.toFixed(1)}" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>`);
+                }
+
+                // Line 1: Without Solar
+                const ptsWithout = allYears.map(y => `${getX(y).toFixed(1)},${getY(dataWithout[y-1]).toFixed(1)}`).join(' ');
+                parts.push(`<polyline points="${ptsWithout}" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`);
+
+                // Line 2: With Solar
+                const ptsWith = allYears.map(y => `${getX(y).toFixed(1)},${getY(dataWith[y-1]).toFixed(1)}`).join(' ');
+                parts.push(`<polyline points="${ptsWith}" fill="none" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`);
+
+                // Add dots on designated years (1, 5, 10, 15, 20)
+                years.forEach(y => {
+                    const x = getX(y);
+                    const yWithout = getY(dataWithout[y-1]);
+                    const yWith = getY(dataWith[y-1]);
+
+                    // Without solar dot
+                    parts.push(`<circle cx="${x.toFixed(1)}" cy="${yWithout.toFixed(1)}" r="2.5" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>`);
+                    // With solar dot
+                    parts.push(`<circle cx="${x.toFixed(1)}" cy="${yWith.toFixed(1)}" r="2.5" fill="#ffffff" stroke="var(--teal)" stroke-width="1.5"/>`);
+                });
+
+                // X Axis Labels
+                years.forEach(y => {
+                    const x = getX(y);
+                    parts.push(`<text x="${x.toFixed(1)}" y="${H - 4}" fill="rgba(100,116,139,0.7)" font-size="6" font-family="Arial,sans-serif" text-anchor="middle">Yr ${y}</text>`);
+                });
+
+                container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;">${parts.join('')}</svg>`;
+            })();
+
+            // ============================================================
+            // MONTHLY BILL CHART POPULATION
+            // ============================================================
+            (function populateMonthlyBillChart() {
+                const container = document.getElementById('monthlyBillChart');
+                if (!container) return;
+
+                const financials = yieldData.financials || {};
+                const beforeSolarTotal = parseFloat(financials.beforeSolarTotal) || 0;
+                const annualSavings = parseFloat(financials.annualSavings) || 0;
+
+                const stateKey = (lead.state || 'WA').toUpperCase().trim();
+                const psh = PSH[stateKey] || PSH['WA'];
+                const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+                const seasonalFactors = [1.05, 1.0, 0.95, 0.9, 0.95, 1.05, 1.1, 1.05, 0.95, 0.9, 0.95, 1.05];
+                const withoutSolarMonthly = seasonalFactors.map(factor => (beforeSolarTotal / 12) * factor);
+
+                const totalPsh = psh.reduce((sum, val) => sum + val, 0);
+                const withSolarMonthly = withoutSolarMonthly.map((bill, i) => {
+                    const monthlySavings = (psh[i] / totalPsh) * annualSavings;
+                    return bill - monthlySavings;
+                });
+
+                const yMaxVal = Math.max(...withoutSolarMonthly);
+                const yMinVal = Math.min(...withSolarMonthly);
+
+                const yMax = Math.ceil(Math.max(150, yMaxVal) / 50) * 50;
+                const yMin = yMinVal < 0 ? Math.floor(yMinVal / 50) * 50 : 0;
+
+                const W = 340, H = 110;
+                const pL = 28, pR = 10, pT = 12, pB = 15;
+                const cW = W - pL - pR;
+                const cH = H - pT - pB;
+
+                const getY = (val) => pT + cH * (1 - (val - yMin) / (yMax - yMin));
+
+                const parts = [];
+
+                // Grid lines & Y labels
+                const gridSteps = [];
+                for (let v = yMin; v <= yMax; v += 50) {
+                    gridSteps.push(v);
+                }
+                gridSteps.forEach(v => {
+                    const gy = getY(v);
+                    parts.push(`<line x1="${pL}" y1="${gy.toFixed(1)}" x2="${W - pR}" y2="${gy.toFixed(1)}" stroke="rgba(0,0,0,0.06)" stroke-width="0.7" stroke-dasharray="${v===0?'none':'3,3'}"/>`);
+                    const lbl = v < 0 ? `$${Math.abs(v)} CR` : `$${v}`;
+                    parts.push(`<text x="${pL - 4}" y="${(gy + 2).toFixed(1)}" fill="rgba(100,116,139,0.7)" font-size="6" font-family="Arial,sans-serif" text-anchor="end">${lbl}</text>`);
+                });
+
+                // Zero line (bold)
+                const yZero = getY(0);
+                parts.push(`<line x1="${pL}" y1="${yZero.toFixed(1)}" x2="${W - pR}" y2="${yZero.toFixed(1)}" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>`);
+
+                // Group width
+                const gW = cW / 12;
+                const bW = (gW - 3) / 2;
+
+                // Bars
+                withoutSolarMonthly.forEach((val, i) => {
+                    const valWith = withSolarMonthly[i];
+                    const xStart = pL + i * gW + 1.5;
+
+                    // Without Solar Bar (Gray)
+                    const yWithout = getY(val);
+                    const hWithout = Math.abs(yZero - yWithout);
+                    const topWithout = Math.min(yZero, yWithout);
+                    parts.push(`<rect x="${xStart.toFixed(1)}" y="${topWithout.toFixed(1)}" width="${bW.toFixed(1)}" height="${hWithout.toFixed(1)}" fill="#cbd5e1" rx="1"/>`);
+
+                    // With Solar Bar (Teal)
+                    const yWith = getY(valWith);
+                    const hWith = Math.abs(yZero - yWith);
+                    const topWith = Math.min(yZero, yWith);
+                    const barColor = valWith < 0 ? '#10b981' : 'var(--teal)'; // Green for credit, teal for cost
+                    parts.push(`<rect x="${(xStart + bW + 0.5).toFixed(1)}" y="${topWith.toFixed(1)}" width="${bW.toFixed(1)}" height="${hWith.toFixed(1)}" fill="${barColor}" rx="1"/>`);
+
+                    // Month label below
+                    parts.push(`<text x="${(xStart + bW).toFixed(1)}" y="${H - 4}" fill="rgba(100,116,139,0.7)" font-size="6.2" font-family="Arial,sans-serif" text-anchor="middle">${MONS[i]}</text>`);
+                });
+
+                container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;">${parts.join('')}</svg>`;
+            })();
+
+            // ============================================================
+            // 20-YEAR FINANCIAL SUMMARY BOXES POPULATION
+            // ============================================================
+            (function populateFinancialSummary() {
+                const inv = yieldData.investment || {};
+                const financials = yieldData.financials || {};
+                const beforeSolarTotal = parseFloat(financials.beforeSolarTotal) || 0;
+                const withSolarTotal = parseFloat(financials.withSolarTotal) || 0;
+                const annualSavings = parseFloat(financials.annualSavings) || 0;
+                const finalSellingPrice = pricing.sellingPrice || 0;
+
+                // NPV
+                const npvVal = inv.npv !== undefined ? inv.npv : 0;
+                setText('finNpvVal', npvVal < 0 
+                    ? `-$${Math.abs(npvVal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                    : `$${npvVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                );
+
+                // Payback Period (dynamic range calculation as per system price)
+                const paybackYrs = inv.paybackYears !== undefined && inv.paybackYears !== null ? inv.paybackYears : (finalSellingPrice / (annualSavings || 1));
+                let paybackText = "";
+                if (paybackYrs < 1) {
+                    paybackText = "Under 1 year";
+                } else if (paybackYrs <= 3) {
+                    paybackText = "2–3 years";
+                } else if (paybackYrs <= 5) {
+                    paybackText = "4–5 years";
+                } else {
+                    paybackText = `${Math.floor(paybackYrs)}–${Math.ceil(paybackYrs)} years`;
+                }
+                setText('finPaybackVal', paybackText);
+
+                // Total Return on Investment (cumulative 20-year ROI)
+                // Assumes 3% energy escalation and 0.5% degradation as in backend cashFlows
+                let totalSavings20 = 0;
+                for (let t = 1; t <= 20; t++) {
+                    totalSavings20 += annualSavings * Math.pow(1.03, t - 1) * Math.pow(0.995, t - 1);
+                }
+                const totalRoi = finalSellingPrice > 0 ? ((totalSavings20 - finalSellingPrice) / finalSellingPrice) * 100 : 0;
+                setText('finRoiVal', totalRoi > 0 ? `${Math.round(totalRoi)}%` : '—%');
+
+                // Internal Rate of Return (IRR)
+                setText('finIrrVal', inv.irrPercent !== undefined ? `${inv.irrPercent.toFixed(1)}%` : '—%');
             })();
         }
     </script>
