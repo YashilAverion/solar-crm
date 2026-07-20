@@ -1677,15 +1677,13 @@ db.run("ALTER TABLE users ADD COLUMN designation TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN mobile_number TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN email_signature TEXT DEFAULT NULL", () => { });
 
-// Auto-update all existing users' email_signature to include updated Facebook & WhatsApp URLs
+// Auto-update all existing users' email_signature to include updated Facebook, WhatsApp & transparent side-by-side badge logos
 db.all("SELECT id, full_name, email, role, designation, mobile_number, email_signature FROM users", [], (err, users) => {
     if (!err && users && users.length > 0) {
         const adminMod = require('./modules/admin');
         users.forEach(u => {
-            if (!u.email_signature || u.email_signature.includes('facebook.com/aresenergy') || u.email_signature.includes('wa.me/')) {
-                const newSig = adminMod.generateHTMLSignature(u.full_name, u.designation, u.role, u.email, u.mobile_number);
-                db.run("UPDATE users SET email_signature = ? WHERE id = ?", [newSig, u.id], () => {});
-            }
+            const newSig = adminMod.generateHTMLSignature(u.full_name, u.designation, u.role, u.email, u.mobile_number);
+            db.run("UPDATE users SET email_signature = ? WHERE id = ?", [newSig, u.id], () => {});
         });
     }
 });
