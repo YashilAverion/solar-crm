@@ -1930,6 +1930,79 @@ db.serialize(() => {
         )
     `);
 
+    // Email Templates Table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS email_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            template_name TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'Quotation',
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            variables_list TEXT,
+            is_default INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, () => {
+        db.get("SELECT COUNT(*) as count FROM email_templates", [], (err, row) => {
+            if (!err && row && row.count === 0) {
+                console.log("[DB] Seeding default Email Templates...");
+                const stmt = db.prepare(`
+                    INSERT INTO email_templates (template_name, category, subject, body, variables_list, is_default, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                `);
+
+                stmt.run(
+                    'Quotation Proposal Template',
+                    'Quotation',
+                    'Your Solar Quotation — {project_number}',
+                    `Dear {customer_name},\n\nPlease find attached your personalised solar quotation ({project_number}) from Ares Energy for your property at {address}.\n\nSystem Details:\n• System Size: {system_size}\n• Total Investment: {total_price}\n\nIf you have any questions or would like to discuss the proposal further, please don't hesitate to contact me.\n\nWarm regards,\n{sales_rep_name}\nAres Energy Team\nPhone: {company_phone}\nEmail: {company_email}\nWeb: www.aresenergy.com.au`,
+                    JSON.stringify(['{customer_name}', '{project_number}', '{address}', '{system_size}', '{total_price}', '{sales_rep_name}', '{company_phone}', '{company_email}']),
+                    1
+                );
+
+                stmt.run(
+                    'Sales Follow-Up & Special Offer',
+                    'Follow Up',
+                    'Following Up on Your Solar Proposal — {project_number}',
+                    `Dear {customer_name},\n\nI hope you are having a great week.\n\nI wanted to quickly follow up regarding the solar quotation ({project_number}) we recently sent for your property at {address}.\n\nDo you have any questions about the proposed system size ({system_size}), government rebates, or financial payback timeline?\n\nWe would love to help you lock in current rebate incentives before upcoming scheme updates.\n\nPlease let me know a convenient time for a brief call.\n\nWarm regards,\n{sales_rep_name}\nAres Energy Team\nPhone: {company_phone}`,
+                    JSON.stringify(['{customer_name}', '{project_number}', '{address}', '{system_size}', '{sales_rep_name}', '{company_phone}']),
+                    0
+                );
+
+                stmt.run(
+                    'Installation Booking Confirmation',
+                    'Installation',
+                    'Installation Schedule & Next Steps — {project_number}',
+                    `Dear {customer_name},\n\nThank you for choosing Ares Energy for your solar installation ({project_number}).\n\nWe are preparing your project documentation for grid connection approval. Our technical team will be in touch shortly to confirm the scheduled installation date and roof access details.\n\nProject Summary:\n• Address: {address}\n• System Size: {system_size}\n\nShould you need to update any contact details, please let us know.\n\nWarm regards,\nAres Energy Operations Team\nPhone: {company_phone}\nEmail: {company_email}`,
+                    JSON.stringify(['{customer_name}', '{project_number}', '{address}', '{system_size}', '{company_phone}', '{company_email}']),
+                    0
+                );
+
+                stmt.run(
+                    'Site Assessment Audit Request',
+                    'Site Audit',
+                    'Site Assessment & Inspection Confirmation — {project_number}',
+                    `Dear {customer_name},\n\nOur technical team is scheduling a site assessment for your solar installation ({project_number}) at {address}.\n\nOur clean energy technician will inspect the meter box, roof condition, and rafter layout to ensure a seamless installation process.\n\nPlease confirm if your preferred time slot works for you.\n\nWarm regards,\n{sales_rep_name}\nAres Energy Technical Team\nPhone: {company_phone}`,
+                    JSON.stringify(['{customer_name}', '{project_number}', '{address}', '{sales_rep_name}', '{company_phone}']),
+                    0
+                );
+
+                stmt.run(
+                    'Deposit & Payment Notice',
+                    'Payment',
+                    'Payment Receipt & Deposit Confirmation — {project_number}',
+                    `Dear {customer_name},\n\nWe have received your payment update for solar project {project_number}.\n\nThank you for your prompt response. Your order is now officially locked in for equipment dispatch.\n\nIf you have any questions, please contact our accounts team at {company_email}.\n\nWarm regards,\nAres Energy Accounts Team\nPhone: {company_phone}`,
+                    JSON.stringify(['{customer_name}', '{project_number}', '{company_email}', '{company_phone}']),
+                    0
+                );
+
+                stmt.finalize();
+            }
+        });
+    });
+
 });
 
 // Telephone number normalizer helper: extracts the last 9 digits of a numeric string

@@ -285,7 +285,8 @@ function ipFirewall(req, res, next) {
         '/australian-timezones.js',
         '/track.html',
         '/track',
-        '/quotation_template.html'
+        '/quotation_template.html',
+        '/email_templates.html'
     ];
 
     if (
@@ -1529,6 +1530,9 @@ const attendanceRouter = require('./modules/attendance');
 const complianceRouter = require('./modules/compliance');
 const payrollRoutes = require('./modules/payroll');
 const quotationRoutes = require('./modules/quotations');
+const emailTemplatesRoutes = require('./modules/email_templates');
+
+app.use('/api/email-templates', emailTemplatesRoutes);
 
 // ── PROJECT ID GENERATION MIDDLEWARE ───────────────────────
 const handleProjectGeneration = (req, res, next) => {

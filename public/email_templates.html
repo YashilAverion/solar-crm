@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Templates Master — Solar CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/responsive.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --surface: #ffffff;
+            --bg-light: #f8fafc;
+            --accent: #e8681e;
+            --accent-hover: #d05814;
+            --teal: #0284c7;
+            --border: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #0f172a;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-brand {
+            padding: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-menu {
+            padding: 15px 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-category {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            padding: 12px 12px 4px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .topbar-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-body {
+            padding: 24px 30px;
+        }
+
+        /* KPI Header Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .kpi-lbl {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .kpi-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Control Bar & Filter Tabs */
+        .control-bar {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .btn-add-tpl {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(232,104,30,0.3);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-add-tpl:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Template Cards Grid */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+        }
+
+        .tpl-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .tpl-card:hover {
+            border-color: var(--teal);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .tpl-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-Quotation { background: #e0f2fe; color: #0369a1; }
+        .badge-FollowUp { background: #fef3c7; color: #b45309; }
+        .badge-Installation { background: #dcfce7; color: #15803d; }
+        .badge-SiteAudit { background: #f3e8ff; color: #6b21a8; }
+        .badge-Payment { background: #fee2e2; color: #b91c1c; }
+        .badge-Custom { background: #f1f5f9; color: #475569; }
+
+        .tpl-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0 6px;
+        }
+
+        .tpl-subj {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+            background: var(--bg-light);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tpl-body-preview {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            flex: 1;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .tpl-vars-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .var-pill {
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .tpl-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        .btn-act {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-act:hover {
+            background: var(--bg-light);
+            border-color: #cbd5e1;
+        }
+
+        .btn-act.danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fca5a5;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 750px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 24px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px; right: 20px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        /* Variable Cheatsheet Pills */
+        .cheatsheet-box {
+            background: #f8fafc;
+            border: 1px dashed var(--teal);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .tag-btn {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--teal);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .tag-btn:hover {
+            background: var(--teal);
+            color: #fff;
+            border-color: var(--teal);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            ARES ENERGY
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-category">Main Dashboard</div>
+            <a href="/index.html" class="menu-item">📊 Project Master Leads</a>
+            <a href="/home.html" class="menu-item">🏠 Dashboard Home</a>
+            
+            <div class="menu-category">Masters &amp; Settings</div>
+            <a href="/products.html" class="menu-item">📦 Product Master</a>
+            <a href="/combo_master.html" class="menu-item">⚡ Combo Master</a>
+            <a href="/email_templates.html" class="menu-item active">📧 Email Templates Master</a>
+            <a href="/stc_master.html" class="menu-item">📜 STC Master</a>
+            <a href="/margin_master.html" class="menu-item">💵 Margin Master</a>
+            <a href="/installation_charges.html" class="menu-item">🛠️ Installation Charges</a>
+            <a href="/company_details.html" class="menu-item">🏢 Company Details</a>
+            <a href="/admin.html" class="menu-item">👥 User Management</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="topbar">
+            <div class="topbar-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                Email Templates Master
+            </div>
+            <div>
+                <button class="btn-add-tpl" onclick="openAddTemplateModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add New Template
+                </button>
+            </div>
+        </div>
+
+        <div class="content-body">
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-lbl">Total Templates</div>
+                        <div class="kpi-val" id="kpiTotal">0</div>
+                    </div>
+                    <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;">📁</div>
+                </div>
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-lbl">Quotation Templates</div>
+                        <div class="kpi-val" id="kpiQuotation">0</div>
+                    </div>
+                    <div class="kpi-icon" style="background:#fef3c7; color:#d97706;">📄</div>
+                </div>
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-lbl">Follow-Up Templates</div>
+                        <div class="kpi-val" id="kpiFollowup">0</div>
+                    </div>
+                    <div class="kpi-icon" style="background:#dcfce7; color:#15803d;">💬</div>
+                </div>
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-lbl">Supported Placeholders</div>
+                        <div class="kpi-val">8 Vars</div>
+                    </div>
+                    <div class="kpi-icon" style="background:#f3e8ff; color:#7e22ce;">✨</div>
+                </div>
+            </div>
+
+            <!-- Control Bar -->
+            <div class="control-bar">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" onclick="filterCategory('All', this)">All Categories</button>
+                    <button class="tab-btn" onclick="filterCategory('Quotation', this)">Quotation</button>
+                    <button class="tab-btn" onclick="filterCategory('Follow Up', this)">Follow Up</button>
+                    <button class="tab-btn" onclick="filterCategory('Installation', this)">Installation</button>
+                    <button class="tab-btn" onclick="filterCategory('Site Audit', this)">Site Audit</button>
+                    <button class="tab-btn" onclick="filterCategory('Payment', this)">Payment</button>
+                    <button class="tab-btn" onclick="filterCategory('Custom', this)">Custom</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="text" id="txtSearch" onkeyup="renderTemplates()" placeholder="Search templates..." style="padding:7px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; width:220px;" />
+                </div>
+            </div>
+
+            <!-- Templates Grid Container -->
+            <div class="templates-grid" id="templatesContainer">
+                <!-- Dynamically Rendered Cards -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Add / Edit Template Modal -->
+    <div id="tplFormModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeFormModal()">✕</button>
+            <div style="font-family:'Outfit', sans-serif; font-size:19px; font-weight:800; color:var(--primary); margin-bottom:16px;" id="modalFormTitle">
+                Create New Email Template
+            </div>
+
+            <input type="hidden" id="editTplId" value="">
+
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Template Name *</label>
+                    <input type="text" id="txtTplName" placeholder="e.g. Commercial Quotation Proposal" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; box-sizing:border-box; outline:none;" />
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Category *</label>
+                    <select id="selTplCategory" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; box-sizing:border-box; outline:none; background:#fff;">
+                        <option value="Quotation">Quotation</option>
+                        <option value="Follow Up">Follow Up</option>
+                        <option value="Installation">Installation</option>
+                        <option value="Site Audit">Site Audit</option>
+                        <option value="Payment">Payment</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Variable Tags Helper Cheatsheet -->
+            <div class="cheatsheet-box">
+                <div style="font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; margin-bottom:4px;">✨ Click Tag to Insert Placeholder at Cursor:</div>
+                <button type="button" class="tag-btn" onclick="insertTag('{customer_name}')">{customer_name}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{project_number}')">{project_number}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{address}')">{address}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{system_size}')">{system_size}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{total_price}')">{total_price}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{sales_rep_name}')">{sales_rep_name}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{company_phone}')">{company_phone}</button>
+                <button type="button" class="tag-btn" onclick="insertTag('{company_email}')">{company_email}</button>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Subject Line *</label>
+                <input type="text" id="txtTplSubject" placeholder="e.g. Your Solar Quotation — {project_number}" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; box-sizing:border-box; outline:none; font-weight:600;" />
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Email Body Content *</label>
+                <textarea id="txtTplBody" rows="8" placeholder="Type template text here..." style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; box-sizing:border-box; outline:none; font-family:inherit; line-height:1.5; resize:vertical;"></textarea>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" id="chkIsDefault" style="width:16px; height:16px; accent-color:var(--teal);">
+                    <span>Set as Default Template for Category</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" id="chkIsActive" checked style="width:16px; height:16px; accent-color:var(--teal);">
+                    <span>Active &amp; Available in Email Composer</span>
+                </label>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:14px;">
+                <button type="button" onclick="closeFormModal()" style="padding:8px 20px; border-radius:6px; border:1px solid var(--border); background:#fff; font-size:13px; font-weight:600; cursor:pointer;">Cancel</button>
+                <button type="button" onclick="saveTemplate()" style="padding:8px 24px; border-radius:6px; border:none; background:var(--accent); color:#fff; font-size:13px; font-weight:700; cursor:pointer;">Save Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Test Preview Modal -->
+    <div id="previewModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:650px;">
+            <button class="modal-close" onclick="document.getElementById('previewModal').style.display='none'">✕</button>
+            <div style="font-family:'Outfit', sans-serif; font-size:18px; font-weight:800; color:var(--primary); margin-bottom:12px;" id="previewModalTitle">
+                Live Template Render Preview
+            </div>
+            <div style="font-size:11px; color:var(--teal); background:#e0f2fe; padding:6px 10px; border-radius:6px; margin-bottom:14px; font-weight:600;">
+                ℹ️ Simulating live email output with sample customer data (John Citizen, Project #AR1013, 6.6kW System).
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Rendered Subject:</label>
+                <div id="previewSubj" style="font-size:13px; font-weight:700; color:var(--primary); background:var(--bg-light); padding:8px 12px; border-radius:6px; border:1px solid var(--border); margin-top:4px;"></div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Rendered Message Body:</label>
+                <div id="previewBody" style="font-size:13px; color:var(--text-dark); background:#fff; padding:12px; border-radius:6px; border:1px solid var(--border); margin-top:4px; line-height:1.6; white-space:pre-wrap;"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('previewModal').style.display='none'" style="padding:8px 20px; border-radius:6px; border:1px solid var(--border); background:var(--primary); color:#fff; font-size:13px; font-weight:600; cursor:pointer;">Close Preview</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let _templates = [];
+        let _selectedCategory = 'All';
+        let _lastFocusedInput = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTemplates();
+
+            // Track last focused text input for tag insertion
+            const subjInput = document.getElementById('txtTplSubject');
+            const bodyInput = document.getElementById('txtTplBody');
+            if (subjInput) subjInput.addEventListener('focus', () => _lastFocusedInput = subjInput);
+            if (bodyInput) bodyInput.addEventListener('focus', () => _lastFocusedInput = bodyInput);
+        });
+
+        async function fetchTemplates() {
+            try {
+                const res = await fetch('/api/email-templates');
+                const json = await res.json();
+                if (json.success) {
+                    _templates = json.data || [];
+                    updateKPIs();
+                    renderTemplates();
+                }
+            } catch(e) {
+                console.error('Failed to load templates:', e);
+            }
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpiTotal').textContent = _templates.length;
+            document.getElementById('kpiQuotation').textContent = _templates.filter(t => t.category === 'Quotation').length;
+            document.getElementById('kpiFollowup').textContent = _templates.filter(t => t.category === 'Follow Up').length;
+        }
+
+        function filterCategory(cat, btnEl) {
+            _selectedCategory = cat;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            renderTemplates();
+        }
+
+        function renderTemplates() {
+            const container = document.getElementById('templatesContainer');
+            const search = (document.getElementById('txtSearch').value || '').toLowerCase();
+
+            let list = _templates;
+            if (_selectedCategory !== 'All') {
+                list = list.filter(t => t.category === _selectedCategory);
+            }
+            if (search) {
+                list = list.filter(t => t.template_name.toLowerCase().includes(search) || t.subject.toLowerCase().includes(search) || t.body.toLowerCase().includes(search));
+            }
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align:center; padding:40px; background:#fff; border:1px solid var(--border); border-radius:12px; color:var(--text-muted);">
+                        📬 No email templates found. Click <strong>"+ Add New Template"</strong> to create one!
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(t => {
+                const categoryClass = 'badge-' + (t.category || 'Custom').replace(/\s+/g, '');
+                const vars = t.variables_list || [];
+
+                return `
+                    <div class="tpl-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="tpl-badge ${categoryClass}">${t.category}</span>
+                            ${t.is_default ? '<span style="font-size:10px; font-weight:700; background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:10px;">★ DEFAULT</span>' : ''}
+                        </div>
+                        <div class="tpl-title">${escapeHtml(t.template_name)}</div>
+                        <div class="tpl-subj">Subject: ${escapeHtml(t.subject)}</div>
+                        <div class="tpl-body-preview">${escapeHtml(t.body)}</div>
+
+                        <div class="tpl-vars-row">
+                            ${vars.map(v => `<span class="var-pill">${escapeHtml(v)}</span>`).join('')}
+                        </div>
+
+                        <div class="tpl-actions">
+                            <button type="button" class="btn-act" onclick="previewTemplate(${t.id})">👁️ Preview</button>
+                            <button type="button" class="btn-act" onclick="editTemplate(${t.id})">✏️ Edit</button>
+                            <button type="button" class="btn-act danger" onclick="deleteTemplate(${t.id}, '${escapeHtml(t.template_name)}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function insertTag(tag) {
+            const target = _lastFocusedInput || document.getElementById('txtTplBody');
+            if (!target) return;
+
+            const start = target.selectionStart || target.value.length;
+            const end = target.selectionEnd || target.value.length;
+            const text = target.value;
+
+            target.value = text.substring(0, start) + tag + text.substring(end);
+            target.focus();
+            target.selectionStart = target.selectionEnd = start + tag.length;
+        }
+
+        function openAddTemplateModal() {
+            document.getElementById('editTplId').value = '';
+            document.getElementById('modalFormTitle').textContent = 'Create New Email Template';
+            document.getElementById('txtTplName').value = '';
+            document.getElementById('selTplCategory').value = 'Quotation';
+            document.getElementById('txtTplSubject').value = '';
+            document.getElementById('txtTplBody').value = '';
+            document.getElementById('chkIsDefault').checked = false;
+            document.getElementById('chkIsActive').checked = true;
+
+            document.getElementById('tplFormModal').style.display = 'flex';
+        }
+
+        function editTemplate(id) {
+            const t = _templates.find(x => x.id === id);
+            if (!t) return;
+
+            document.getElementById('editTplId').value = t.id;
+            document.getElementById('modalFormTitle').textContent = 'Edit Email Template';
+            document.getElementById('txtTplName').value = t.template_name;
+            document.getElementById('selTplCategory').value = t.category;
+            document.getElementById('txtTplSubject').value = t.subject;
+            document.getElementById('txtTplBody').value = t.body;
+            document.getElementById('chkIsDefault').checked = !!t.is_default;
+            document.getElementById('chkIsActive').checked = !!t.is_active;
+
+            document.getElementById('tplFormModal').style.display = 'flex';
+        }
+
+        function closeFormModal() {
+            document.getElementById('tplFormModal').style.display = 'none';
+        }
+
+        async function saveTemplate() {
+            const id = document.getElementById('editTplId').value;
+            const name = document.getElementById('txtTplName').value.trim();
+            const category = document.getElementById('selTplCategory').value;
+            const subject = document.getElementById('txtTplSubject').value.trim();
+            const body = document.getElementById('txtTplBody').value.trim();
+            const is_default = document.getElementById('chkIsDefault').checked ? 1 : 0;
+            const is_active = document.getElementById('chkIsActive').checked ? 1 : 0;
+
+            if (!name || !subject || !body) {
+                Swal.fire('Required Fields', 'Please fill in Template Name, Subject Line, and Email Body.', 'warning');
+                return;
+            }
+
+            const payload = { template_name: name, category, subject, body, is_default, is_active };
+
+            try {
+                const url = id ? `/api/email-templates/${id}` : '/api/email-templates';
+                const method = id ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+
+                if (res.ok && json.success) {
+                    closeFormModal();
+                    fetchTemplates();
+                    Swal.fire('Saved!', 'Email template saved successfully.', 'success');
+                } else {
+                    Swal.fire('Error', json.error || 'Failed to save template.', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Network error. Could not save template.', 'error');
+            }
+        }
+
+        async function deleteTemplate(id, name) {
+            const confirm = await Swal.fire({
+                title: 'Delete Template?',
+                text: `Are you sure you want to delete "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Yes, Delete'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const res = await fetch(`/api/email-templates/${id}`, { method: 'DELETE' });
+                const json = await res.json();
+                if (res.ok && json.success) {
+                    fetchTemplates();
+                    Swal.fire('Deleted', 'Template removed.', 'success');
+                } else {
+                    Swal.fire('Error', json.error || 'Failed to delete template.', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Network error.', 'error');
+            }
+        }
+
+        async function previewTemplate(id) {
+            const t = _templates.find(x => x.id === id);
+            if (!t) return;
+
+            // Render test sample data
+            const sampleMap = {
+                '{customer_name}': 'John Citizen',
+                '{first_name}': 'John',
+                '{last_name}': 'Citizen',
+                '{project_number}': 'AR1013',
+                '{address}': '123 Solar Street, Parramatta NSW 2150',
+                '{system_size}': '6.6kW Solar System',
+                '{total_price}': '$4,990.00',
+                '{sales_rep_name}': 'Yashil Patel',
+                '{company_phone}': '1300 717 583',
+                '{company_email}': 'info@aresenergy.com.au'
+            };
+
+            let renderedSubj = t.subject;
+            let renderedBody = t.body;
+
+            Object.keys(sampleMap).forEach(k => {
+                const reg = new RegExp(k.replace(/[\{\}]/g, '\\$&'), 'g');
+                renderedSubj = renderedSubj.replace(reg, sampleMap[k]);
+                renderedBody = renderedBody.replace(reg, sampleMap[k]);
+            });
+
+            document.getElementById('previewSubj').textContent = renderedSubj;
+            document.getElementById('previewBody').textContent = renderedBody;
+            document.getElementById('previewModalTitle').textContent = `Preview: ${t.template_name}`;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>

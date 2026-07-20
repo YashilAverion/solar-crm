@@ -601,6 +601,7 @@
         <div class="sub-menu" style="display: none;">
             <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
             <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
+            <a href="/email_templates.html" class="menu-item" id="menu-email-templates" style="padding-left: 24px;">Email Templates Master</a>
             <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
             <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
             <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
@@ -7492,10 +7493,10 @@ function toggleNav(event, element) {
         <!-- Side-by-Side Template Selection Bar -->
         <div style="background:var(--bg-light); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px;">
             <div style="font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-                <span>Email Templates (Side by Side Selector)</span>
-                <span style="font-size:10px; font-weight:500; color:var(--text-muted);">Click any template to auto-fill subject &amp; body</span>
+                <span>Email Templates Master (Side by Side Selector)</span>
+                <a href="/email_templates.html" target="_blank" style="font-size:10px; font-weight:700; color:var(--accent); text-decoration:none;">⚙️ Manage Templates in Master</a>
             </div>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
+            <div id="emailTemplatesSideBar" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap:8px;">
                 <button type="button" id="btnTplQuotation" class="btn-email-tpl" onclick="applyEmailTemplate('quotation', this)" style="padding:8px 10px; border-radius:6px; border:1.5px solid var(--teal); background:#fff; cursor:pointer; font-size:11.5px; font-weight:700; color:var(--teal); text-align:center; transition:all 0.2s;">
                     📄 Quotation Proposal
                 </button>
@@ -7561,6 +7562,67 @@ function toggleNav(event, element) {
 <script>
 // ── SEND EMAIL MODAL LOGIC ────────────────────────────────────
 let _currentLeadEmailData = {};
+let _dbEmailTemplates = [];
+
+async function loadEmailTemplatesForModal() {
+    const bar = document.getElementById('emailTemplatesSideBar');
+    if (!bar) return;
+    try {
+        const res = await fetch('/api/email-templates?active=1');
+        const json = await res.json();
+        if (json.success && json.data.length > 0) {
+            _dbEmailTemplates = json.data;
+            bar.innerHTML = json.data.map((t, idx) => `
+                <button type="button" class="btn-email-tpl ${idx === 0 ? 'active' : ''}" onclick="applyDbEmailTemplate(${t.id}, this)" style="padding:8px 10px; border-radius:6px; border:${idx === 0 ? '1.5px solid var(--teal)' : '1px solid var(--border)'}; background:#fff; cursor:pointer; font-size:11.5px; font-weight:${idx === 0 ? '700' : '600'}; color:${idx === 0 ? 'var(--teal)' : 'var(--text-dark)'}; text-align:center; transition:all 0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${t.template_name}">
+                    ${t.category === 'Quotation' ? '📄' : t.category === 'Follow Up' ? '💬' : t.category === 'Installation' ? '📅' : t.category === 'Site Audit' ? '🔍' : t.category === 'Payment' ? '💳' : '✏️'} ${t.template_name}
+                </button>
+            `).join('') + `
+                <button type="button" class="btn-email-tpl" onclick="applyEmailTemplate('custom', this)" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-dark); text-align:center; transition:all 0.2s;">
+                    ✏️ Custom Body
+                </button>
+            `;
+            // Apply first template by default
+            if (json.data[0]) {
+                applyDbEmailTemplate(json.data[0].id, bar.children[0]);
+            }
+        }
+    } catch(e) {
+        console.error('Failed to load DB email templates:', e);
+    }
+}
+
+async function applyDbEmailTemplate(templateId, btnEl) {
+    const subjectInput = document.getElementById('emailSubject');
+    const bodyInput = document.getElementById('emailBody');
+    const leadId = currentProjectId || (document.getElementById('edit_id') ? document.getElementById('edit_id').value : null);
+
+    // Highlight button
+    document.querySelectorAll('.btn-email-tpl').forEach(b => {
+        b.style.borderColor = 'var(--border)';
+        b.style.color = 'var(--text-dark)';
+        b.style.fontWeight = '600';
+    });
+    if (btnEl) {
+        btnEl.style.borderColor = 'var(--teal)';
+        btnEl.style.color = 'var(--teal)';
+        btnEl.style.fontWeight = '700';
+    }
+
+    try {
+        const res = await fetch('/api/email-templates/render', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ templateId, leadId })
+        });
+        const json = await res.json();
+        if (json.success) {
+            subjectInput.value = json.renderedSubject || '';
+            bodyInput.value = json.renderedBody || '';
+        }
+    } catch(e) {
+        console.error('Failed to render template:', e);
+    }
+}
 
 function applyEmailTemplate(type, btnEl) {
     const projNo = _currentLeadEmailData.project_number || '';
@@ -7581,16 +7643,7 @@ function applyEmailTemplate(type, btnEl) {
         btnEl.style.fontWeight = '700';
     }
 
-    if (type === 'quotation') {
-        subjectInput.value = projNo ? `Your Solar Quotation — ${projNo}` : 'Your Solar Quotation from Ares Energy';
-        bodyInput.value = `Dear ${custName},\n\nPlease find attached your personalised solar quotation from Ares Energy. This quotation has been tailored to your property and energy needs.\n\nIf you have any questions or would like to discuss the proposal further, please don't hesitate to contact us.\n\nWarm regards,\nAres Energy Team\nPhone: 1300 717 583\nEmail: info@aresenergy.com.au\nWeb: www.aresenergy.com.au`;
-    } else if (type === 'followup') {
-        subjectInput.value = projNo ? `Following Up on Your Solar Proposal — ${projNo}` : 'Following Up on Your Solar Proposal';
-        bodyInput.value = `Dear ${custName},\n\nI hope you are having a great week.\n\nI wanted to quickly follow up regarding the solar quotation we recently sent for your property. Do you have any questions about the proposed system size, rebates, or financial payback timeline?\n\nWe would love to help you lock in the current rebate incentives before upcoming scheme updates.\n\nPlease let me know a convenient time for a brief call.\n\nWarm regards,\nAres Energy Team\nPhone: 1300 717 583`;
-    } else if (type === 'installation') {
-        subjectInput.value = projNo ? `Installation Schedule & Next Steps — ${projNo}` : 'Installation Schedule & Next Steps';
-        bodyInput.value = `Dear ${custName},\n\nThank you for choosing Ares Energy for your solar installation.\n\nWe are preparing your project documentation for grid connection approval. Our technical team will be in touch shortly to confirm the scheduled installation date and roof access details.\n\nShould you need to update any contact details, please let us know.\n\nWarm regards,\nAres Energy Operations Team\nPhone: 1300 717 583`;
-    } else if (type === 'custom') {
+    if (type === 'custom') {
         subjectInput.value = projNo ? `Update Regarding Solar Project — ${projNo}` : 'Update Regarding Your Solar Project';
         bodyInput.value = `Dear ${custName},\n\n\n\nWarm regards,\nAres Energy Team`;
     }
@@ -7608,8 +7661,8 @@ async function openSendEmailModal() {
     toInput.value = _currentLeadEmailData.email || '';
     if (ccInput) ccInput.value = '';
     
-    // Apply Quotation Template as default
-    applyEmailTemplate('quotation', document.getElementById('btnTplQuotation'));
+    // Dynamically load email templates from Master
+    loadEmailTemplatesForModal();
 
     // Configure attachment label
     const projNo = _currentLeadEmailData.project_number || 'Quotation';
