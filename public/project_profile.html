@@ -928,8 +928,35 @@ function toggleNav(event, element) {
                                 <option value="5 kW">5 kW</option>
                             </select>
                         </div>
-                        <div class="cf-row"><label>Avg Daily Usage (kWh)</label>
-                            <input type="number" id="tb_daily_usage" step="0.1" min="0" placeholder="e.g. 18.0">
+                        <!-- 3-Column Bill to Usage Sizing -->
+                        <div style="display: grid; grid-template-columns: 1.1fr 1.3fr 1.2fr; gap: 8px; margin-top: 10px; margin-bottom: 8px; padding: 0 4px;">
+                            <div>
+                                <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;">Average Bill ($)</label>
+                                <input type="number" id="tb_avg_bill" step="0.01" min="0" placeholder="e.g. 350" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 12px; height: 28px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;">Billing Period</label>
+                                <select id="tb_billing_period" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; font-size: 12px; height: 28px; box-sizing: border-box;">
+                                    <option value="">Select Period</option>
+                                    <option value="Quarterly 1">Quarterly 1</option>
+                                    <option value="Quarterly 2">Quarterly 2</option>
+                                    <option value="Quarterly 3">Quarterly 3</option>
+                                    <option value="Quarterly 4">Quarterly 4</option>
+                                    <option value="Half Yearly">Half Yearly</option>
+                                    <option value="Annually">Annually</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;">Avg Daily (kWh)</label>
+                                <input type="number" id="tb_daily_usage" readonly style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 12px; height: 28px; background: #f1f5f9; cursor: not-allowed; font-weight: 700; color: #0f172a; box-sizing: border-box;" placeholder="Auto">
+                            </div>
+                        </div>
+
+                        <!-- Suggested System Size Box (in red font with a *) -->
+                        <div id="suggested_system_box" style="margin: 4px 4px 10px; display: none;">
+                            <div id="suggested_system_text" style="color: #ef4444; font-size: 11px; font-weight: 700; line-height: 1.4; padding: 2px 0;">
+                                * Suggested Sizing (to achieve $0 Net Bill): ...
+                            </div>
                         </div>
                     </div>
 
@@ -973,7 +1000,7 @@ function toggleNav(event, element) {
                                 <label><input type="radio" name="tc_vpp" value="No" checked> No</label>
                             </div>
                         </div>
-                        <div class="cf-row"><label>Battery Blackout</label>
+                        <div class="cf-row" id="row_battery_blackout"><label>Battery Blackout</label>
                             <div class="radio-group-sm">
                                 <label><input type="radio" name="tc_blackout" value="Yes"> Yes</label>
                                 <label><input type="radio" name="tc_blackout" value="No" checked> No</label>
@@ -1017,7 +1044,7 @@ function toggleNav(event, element) {
                                         <line x1="6" y1="20" x2="6" y2="14"></line>
                                     </svg>
                                 </button>
-                                <button type="button" id="btnDownloadQuotationPDF" onclick="downloadQuotationPDF()" title="Generate & Download Quotation PDF" style="background: #fdf2e9; border: 1px solid #fcdbbf; border-radius: 6px; height: 26px; width: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: all 0.2s;" disabled>
+                                <button type="button" id="btnDownloadQuotationPDF" onclick="openQuotationPreview()" title="Generate & Preview Quotation PDF" style="background: #fdf2e9; border: 1px solid #fcdbbf; border-radius: 6px; height: 26px; width: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; transition: all 0.2s;" disabled>
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #e8681e; transition: color 0.2s;">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -2343,6 +2370,15 @@ function toggleNav(event, element) {
                 }
                 activateMasterSaveButton();
             });
+
+            // Bind Average Bill change events
+            const avgBillEl = document.getElementById('tb_avg_bill');
+            const billingPeriodEl = document.getElementById('tb_billing_period');
+            const retailerEl = document.getElementById('tb_retailer');
+
+            if (avgBillEl) avgBillEl.addEventListener('input', calculateDailyUsageAndSizing);
+            if (billingPeriodEl) billingPeriodEl.addEventListener('change', calculateDailyUsageAndSizing);
+            if (retailerEl) retailerEl.addEventListener('change', calculateDailyUsageAndSizing);
         });
 
         function toggleMeAbnField() { 
@@ -2439,6 +2475,8 @@ function toggleNav(event, element) {
                 safeSet('tb_retailer', projectData.retailer);
                 safeSet('tb_export_limit', projectData.export_limit);
                 safeSet('tb_daily_usage', projectData.daily_usage || '18.0');
+                safeSet('tb_avg_bill', projectData.avg_bill || '');
+                safeSet('tb_billing_period', projectData.billing_period || '');
 
                 safeSet('tc_panel_install', projectData.panel_install_type);
                 safeSetRadio('tc_battery_install', projectData.battery_install_type);
@@ -2460,54 +2498,26 @@ function toggleNav(event, element) {
                     const textarea = document.getElementById('tc_inclusions');
                     if (!textarea) return;
 
-                    const updateInclusionsFromBlackout = () => {
-                        let text = textarea.value.trim();
-                        
-                        // Default Net Meter line
-                        const defaultNetMeter = "Net Meter - Not Included - Please contact your Electricity Retailer";
-                        if (!text.includes("Net Meter - Not Included")) {
-                            if (text) {
-                                text = defaultNetMeter + "\n" + text;
-                            } else {
-                                text = defaultNetMeter;
-                            }
-                        }
-
-                        const blackoutVal = document.querySelector('input[name="tc_blackout"]:checked')?.value || 'No';
-                        const inclusionYes = "Blackout Protection Included";
-                        const inclusionNo = "Blackout Protection Not Included";
-
-                        if (blackoutVal === 'Yes') {
-                            if (text.includes(inclusionNo)) {
-                                text = text.replace(inclusionNo, inclusionYes);
-                            } else if (!text.includes(inclusionYes)) {
-                                text += (text ? "\n" : "") + inclusionYes;
-                            }
+                    let text = textarea.value.trim();
+                    const defaultNetMeter = "Net Meter - Not Included - Please contact your Electricity Retailer";
+                    if (!text.includes("Net Meter - Not Included")) {
+                        if (text) {
+                            text = defaultNetMeter + "\n" + text;
                         } else {
-                            if (text.includes(inclusionYes)) {
-                                text = text.replace(inclusionYes, inclusionNo);
-                            } else if (!text.includes(inclusionNo)) {
-                                text += (text ? "\n" : "") + inclusionNo;
-                            }
+                            text = defaultNetMeter;
                         }
-                        
-                        if (textarea.value !== text) {
-                            textarea.value = text;
-                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                            textarea.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                    };
+                    }
+                    if (textarea.value !== text) {
+                        textarea.value = text;
+                    }
 
                     // Add listeners if not already added
                     if (!window.inclusionsListenerAttached) {
                         document.querySelectorAll('input[name="tc_blackout"]').forEach(radio => {
-                            radio.addEventListener('change', updateInclusionsFromBlackout);
+                            radio.addEventListener('change', updateBatteryBlackoutVisibility);
                         });
                         window.inclusionsListenerAttached = true;
                     }
-
-                    // Always run on load to ensure default values are set correctly
-                    updateInclusionsFromBlackout();
                 };
                 initInclusionsLogic();
 
@@ -2629,7 +2639,8 @@ function toggleNav(event, element) {
                 window.isInitialTabRestore = true;
                 switchTab(savedTab);
                 window.isInitialTabRestore = false;
-
+                
+                calculateDailyUsageAndSizing();
             } catch (err) {
                 Swal.fire('Error', 'Failed to load project details.', 'error');
                 document.getElementById('metadataContent').innerText = 'Error: Failed to load data';
@@ -2773,10 +2784,7 @@ function toggleNav(event, element) {
                         if (btnYield) {
                             btnYield.disabled = false;
                         }
-                        const btnDownload = document.getElementById('btnDownloadQuotationPDF');
-                        if (btnDownload) {
-                            btnDownload.disabled = false;
-                        }
+                        validateQuotationButton();
                         updateDiscountApprovalUI();
                     }
                 }
@@ -2928,6 +2936,112 @@ function toggleNav(event, element) {
             document.getElementById('bifurcationModal').style.display = 'none';
         }
 
+        // ── AVERAGE BILL TO DAILY USAGE & SIZING CALCULATOR ───────────
+        function calculateDailyUsageAndSizing() {
+            const billEl = document.getElementById('tb_avg_bill');
+            const periodEl = document.getElementById('tb_billing_period');
+            const dailyUsageEl = document.getElementById('tb_daily_usage');
+            const retailerEl = document.getElementById('tb_retailer');
+            const sugBox = document.getElementById('suggested_system_box');
+            const sugText = document.getElementById('suggested_system_text');
+
+            if (!billEl || !periodEl || !dailyUsageEl) return;
+
+            const bill = parseFloat(billEl.value) || 0;
+            const period = periodEl.value;
+            const retailer = retailerEl ? retailerEl.value : 'Synergy';
+
+            // Retailer rates mapping
+            const rates = {
+                'Synergy': { supply: 1.05, rate: 0.3006, fit: 0.08 },
+                'Horizon Power': { supply: 1.05, rate: 0.30, fit: 0.08 },
+                'Default': { supply: 1.00, rate: 0.28, fit: 0.05 }
+            };
+
+            // State specific average sun hours (weather check)
+            const statePSH = {
+                'WA': 5.98,
+                'QLD': 5.00,
+                'NSW': 4.50,
+                'VIC': 4.00,
+                'SA': 4.80,
+                'TAS': 3.50,
+                'NT': 5.60,
+                'ACT': 4.50
+            };
+
+            const state = projectData?.state || 'WA';
+            const psh = statePSH[state] || statePSH['WA'];
+
+            if (bill > 0 && period) {
+                let days = 91.25; // Quarterly
+                if (period === 'Quarterly 1') days = 90.25;
+                else if (period === 'Quarterly 2') days = 91.00;
+                else if (period === 'Quarterly 3') days = 92.00;
+                else if (period === 'Quarterly 4') days = 92.00;
+                else if (period === 'Half Yearly') days = 182.5;
+                else if (period === 'Annually') days = 365.0;
+
+                const r = rates[retailer] || rates['Default'];
+                const supplyCost = r.supply * days;
+                const energyCost = Math.max(0, bill - supplyCost);
+                const totalUsageKwh = energyCost / r.rate;
+                const dailyUsage = totalUsageKwh / days;
+
+                dailyUsageEl.value = dailyUsage.toFixed(1);
+
+                // Sizing suggestion formula to reach $0 net bill:
+                const denomGen = 0.30 * r.rate + 0.70 * r.fit;
+                const reqGen = (r.supply * 365 + dailyUsage * 365 * r.rate) / denomGen;
+                const generationPerKw = psh * 365 * 0.80 * 0.87 * 0.90;
+                const reqPanelKw = reqGen / generationPerKw;
+
+                // Round and format panels suggestions
+                const sugPanelKw = Math.max(2.0, Math.ceil(reqPanelKw * 10) / 10);
+                const sugPanelsQty = Math.ceil(sugPanelKw / 0.475);
+                const sugBatteryKwh = Math.max(5, Math.round(dailyUsage * 0.60 / 5) * 5);
+
+                let sugMsg = `* Suggested Sizing (to achieve $0 Bill): ${sugPanelKw.toFixed(1)} kW Panels (~${sugPanelsQty} x 475W panels)`;
+                if (dailyUsage > 10) {
+                    sugMsg += ` & ${sugBatteryKwh} kWh Battery`;
+                } else {
+                    sugMsg += ` (Battery optional, ~5 kWh suggested)`;
+                }
+                sugMsg += `. Calculated based on local weather conditions for ${state}.`;
+
+                if (sugText) sugText.textContent = sugMsg;
+                if (sugBox) sugBox.style.display = 'block';
+            } else {
+                dailyUsageEl.value = '';
+                if (sugBox) sugBox.style.display = 'none';
+            }
+
+            validateQuotationButton();
+        }
+
+        function validateQuotationButton() {
+            const billEl = document.getElementById('tb_avg_bill');
+            const periodEl = document.getElementById('tb_billing_period');
+            const btnDownload = document.getElementById('btnDownloadQuotationPDF');
+
+            if (!btnDownload) return;
+
+            const hasBill = billEl && billEl.value && parseFloat(billEl.value) > 0;
+            const hasPeriod = periodEl && periodEl.value;
+
+            if (hasBill && hasPeriod) {
+                btnDownload.disabled = false;
+                btnDownload.style.opacity = '1';
+                btnDownload.style.cursor = 'pointer';
+                btnDownload.setAttribute('title', 'Generate & Preview Quotation PDF');
+            } else {
+                btnDownload.disabled = true;
+                btnDownload.style.opacity = '0.4';
+                btnDownload.style.cursor = 'not-allowed';
+                btnDownload.setAttribute('title', 'Please enter Average Bill and select Billing Period in Table B first.');
+            }
+        }
+
         async function showYieldModal() {
             const btnYield = document.getElementById('btnViewYield');
             if (btnYield) {
@@ -3035,30 +3149,105 @@ function toggleNav(event, element) {
             document.getElementById('yieldModal').style.display = 'none';
         }
 
-        async function downloadQuotationPDF() {
-            const btn = document.getElementById('btnDownloadQuotationPDF');
+        // ── QUOTATION PREVIEW MODAL ───────────────────────────────────
+        let quotationZoomVal = 1.0;
+
+        function openQuotationPreview() {
+            if (!currentProjectId) return;
+            const modal = document.getElementById('quotationPreviewModal');
+            const iframe = document.getElementById('quotationPreviewIframe');
+            const loading = document.getElementById('quotationPreviewLoading');
+            const refSpan = document.getElementById('quotationPreviewRef');
+
+            // Reset Zoom
+            quotationZoomVal = 1.0;
+            const zoomValSpan = document.getElementById('quotationPreviewZoomVal');
+            if (zoomValSpan) zoomValSpan.textContent = '100%';
+
+            // Show loading overlay
+            if (loading) loading.style.display = 'flex';
+            iframe.src = '';
+
+            // Set reference label
+            const projNo = _currentLeadEmailData.project_number || '';
+            const custName = ((_currentLeadEmailData.first_name || '') + ' ' + (_currentLeadEmailData.last_name || '')).trim();
+            if (refSpan) refSpan.textContent = projNo ? `— ${projNo}${custName ? ' · ' + custName : ''}` : '';
+
+            // Open modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Load quotation in iframe (slight delay so modal renders first)
+            setTimeout(() => {
+                iframe.src = `/quotation_template.html?id=${currentProjectId}&userId=${window.loggedInUserId || ''}`;
+            }, 80);
+        }
+
+        function closeQuotationPreview() {
+            const modal = document.getElementById('quotationPreviewModal');
+            const iframe = document.getElementById('quotationPreviewIframe');
+            const loading = document.getElementById('quotationPreviewLoading');
+            modal.style.display = 'none';
+            iframe.src = '';
+            if (loading) loading.style.display = 'flex';
+            document.body.style.overflow = '';
+        }
+
+        function downloadQuotationFromPreview() {
+            if (!currentProjectId) return;
+            const btn = document.getElementById('btnQuotePreviewDownload');
             if (btn) {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;"></span> Generating...';
                 btn.disabled = true;
-                const originalContent = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner" style="margin: 0; display: inline-block;"></span>';
-                
-                try {
-                    // Start download by redirecting browser
-                    window.location.href = `/api/quotations/${currentProjectId}/download-pdf`;
-                    
-                    // Re-enable button after some delay so they can try again if they want
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = originalContent;
-                    }, 4000);
-                } catch (err) {
-                    console.error("Error downloading quotation:", err);
-                    Swal.fire('Error', 'Failed to generate and download quotation PDF.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = originalContent;
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 5000);
+            }
+            // Trigger download in new tab so preview stays open
+            window.open(`/api/quotations/${currentProjectId}/download-pdf`, '_blank');
+        }
+
+        // Keep old function name as alias for any other references
+        async function downloadQuotationPDF() {
+            openQuotationPreview();
+        }
+
+        // Zoom Functions for Preview
+        function zoomInPreview() {
+            quotationZoomVal = Math.min(2.0, quotationZoomVal + 0.1);
+            applyZoomPreview();
+        }
+
+        function zoomOutPreview() {
+            quotationZoomVal = Math.max(0.5, quotationZoomVal - 0.1);
+            applyZoomPreview();
+        }
+
+        function resetZoomPreview() {
+            quotationZoomVal = 1.0;
+            applyZoomPreview();
+        }
+
+        function applyZoomPreview() {
+            const iframe = document.getElementById('quotationPreviewIframe');
+            if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+                const body = iframe.contentWindow.document.body;
+                if (body) {
+                    body.style.zoom = quotationZoomVal;
                 }
             }
+            const zoomValSpan = document.getElementById('quotationPreviewZoomVal');
+            if (zoomValSpan) zoomValSpan.textContent = Math.round(quotationZoomVal * 100) + '%';
         }
+
+        // Close preview on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('quotationPreviewModal');
+                if (modal && modal.style.display === 'flex') closeQuotationPreview();
+            }
+        });
+
+
 
         window.addEventListener('click', function(e) {
             const bifModal = document.getElementById('bifurcationModal');
@@ -5406,6 +5595,8 @@ function toggleNav(event, element) {
                 retailer: safeVal('tb_retailer'),
                 export_limit: safeVal('tb_export_limit'),
                 daily_usage: safeVal('tb_daily_usage'),
+                avg_bill: safeVal('tb_avg_bill'),
+                billing_period: safeVal('tb_billing_period'),
                 panel_install_type: safeVal('tc_panel_install'),
                 battery_install_type: safeRadioVal('tc_battery_install'),
                 battery_location: safeRadioVal('tc_battery_location'),
@@ -6740,6 +6931,68 @@ function toggleNav(event, element) {
             }
             // Refresh the "Max: X Panels" label on Panel rows
             updateMaxPanelLabel();
+            updateBatteryBlackoutVisibility();
+        }
+
+        function updateBatteryBlackoutVisibility() {
+            // Check if there is any Battery product in Table A
+            let hasBattery = false;
+            document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                const type = row.querySelector('.cp-type')?.value;
+                const code = (row.querySelector('.cp-code')?.value || '').trim();
+                const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                if (type === 'Battery' && qty > 0) {
+                    hasBattery = true;
+                }
+            });
+
+            // Toggle visibility of the Battery Blackout row
+            const blackoutRow = document.getElementById('row_battery_blackout');
+            if (blackoutRow) {
+                blackoutRow.style.display = hasBattery ? 'flex' : 'none';
+            }
+
+            // Sync inclusions note
+            const textarea = document.getElementById('tc_inclusions');
+            if (textarea) {
+                let text = textarea.value.trim();
+                const inclusionYes = "Blackout Protection Included";
+                const inclusionNo = "Blackout Protection Not Included";
+
+                if (hasBattery) {
+                    const blackoutVal = document.querySelector('input[name="tc_blackout"]:checked')?.value || 'No';
+                    if (blackoutVal === 'Yes') {
+                        if (text.includes(inclusionNo)) {
+                            text = text.replace(inclusionNo, inclusionYes);
+                        } else if (!text.includes(inclusionYes)) {
+                            text += (text ? "\n" : "") + inclusionYes;
+                        }
+                    } else {
+                        if (text.includes(inclusionYes)) {
+                            text = text.replace(inclusionYes, inclusionNo);
+                        } else if (!text.includes(inclusionNo)) {
+                            text += (text ? "\n" : "") + inclusionNo;
+                        }
+                    }
+                } else {
+                    // No battery, remove both inclusions
+                    if (text.includes(inclusionYes)) {
+                        text = text.replace(inclusionYes, '').trim();
+                    }
+                    if (text.includes(inclusionNo)) {
+                        text = text.replace(inclusionNo, '').trim();
+                    }
+                }
+
+                // Remove multiple blank lines that might occur during replacing
+                text = text.split('\n').filter(line => line.trim() !== '').join('\n');
+
+                if (textarea.value !== text) {
+                    textarea.value = text;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
         }
 
         /**
@@ -7088,6 +7341,7 @@ function toggleNav(event, element) {
         window.loggedInUsername = user.username;
         window.loggedInUser = user.full_name || user.username || 'System';
         window.loggedInRole = user.role || 'Standard';
+        window.loggedInUserId = user.id;
         
         const nameEl   = document.getElementById("sidebarName");
         const roleEl   = document.getElementById("sidebarRole");
@@ -7157,40 +7411,147 @@ function toggleNav(event, element) {
 
 </script>
 
-<!-- ── SEND EMAIL MODAL ─────────────────────────────────────── -->
-<div id="sendEmailModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:600px;">
-        <button class="modal-close" type="button" onclick="document.getElementById('sendEmailModal').style.display='none'">✕</button>
-        <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            Send Email to Customer
+<!-- ── QUOTATION PREVIEW MODAL ───────────────────────────────────── -->
+<div id="quotationPreviewModal" style="display:none; position:fixed; inset:0; z-index:99998; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;">
+    <!-- Dialog Box Container -->
+    <div style="background:#fff; width:95%; max-width:960px; height:90vh; border-radius:12px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.45); border:1px solid #cbd5e1; display:flex; flex-direction:column; overflow:hidden; position:relative;">
+        <!-- Action Bar -->
+        <div style="flex-shrink:0; height:54px; background:#0f172a; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid #1e293b;">
+            <div style="display:flex; align-items:center; gap:14px; width:33%;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8681e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span style="color:#f8fafc; font-weight:700; font-size:14px; letter-spacing:0.2px;">Quotation Preview</span>
+                <span id="quotationPreviewRef" style="color:#64748b; font-size:12px; font-weight:500;"></span>
+            </div>
+            
+            <!-- Zoom Controls (Middle) -->
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; width:34%;">
+                <div style="display:flex; align-items:center; gap:6px; background:#1e293b; border:1px solid #334155; padding:3px 10px; border-radius:8px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.25);">
+                    <button onclick="zoomOutPreview()" title="Zoom Out" style="background:transparent; border:none; color:#94a3b8; font-size:17px; font-weight:700; cursor:pointer; width:22px; height:22px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none; font-family:inherit; padding:0; line-height:1;" onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#94a3b8'">−</button>
+                    <span id="quotationPreviewZoomVal" style="color:#f8fafc; font-size:11px; font-weight:700; min-width:38px; text-align:center; user-select:none; font-family:monospace;">100%</span>
+                    <button onclick="zoomInPreview()" title="Zoom In" style="background:transparent; border:none; color:#94a3b8; font-size:17px; font-weight:700; cursor:pointer; width:22px; height:22px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none; font-family:inherit; padding:0; line-height:1;" onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#94a3b8'">+</button>
+                    <div style="width:1px; height:14px; background:#334155; margin:0 2px;"></div>
+                    <button onclick="resetZoomPreview()" title="Reset Zoom" style="background:transparent; border:none; color:#64748b; font-size:9px; font-weight:700; cursor:pointer; padding:0 2px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; text-transform:uppercase; outline:none; font-family:inherit;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">100%</button>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; width:33%;">
+                <button id="btnQuotePreviewDownload" onclick="downloadQuotationFromPreview()" style="height:34px; padding:0 16px; background:#1e293b; border:1px solid #334155; border-radius:7px; color:#f8fafc; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:7px; transition:all 0.2s; font-family:inherit;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download PDF
+                </button>
+                <button id="btnQuotePreviewEmail" onclick="openSendEmailModalForQuotation()" style="height:34px; padding:0 18px; background:#e8681e; border:none; border-radius:7px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:7px; transition:all 0.2s; font-family:inherit; box-shadow:0 4px 12px rgba(232,104,30,0.4);" onmouseover="this.style.background='#c9571a'" onmouseout="this.style.background='#e8681e'">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    Send Email
+                </button>
+                <button onclick="closeQuotationPreview()" title="Close Preview" style="height:34px; width:34px; background:transparent; border:1px solid #334155; border-radius:7px; color:#94a3b8; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" onmouseover="this.style.background='#1e293b'; this.style.color='#f8fafc'" onmouseout="this.style.background='transparent'; this.style.color='#94a3b8'">✕</button>
+            </div>
         </div>
+        <!-- Loading Indicator -->
+        <div id="quotationPreviewLoading" style="position:absolute; inset:54px 0 0 0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; z-index:1; pointer-events:none;">
+            <div style="width:44px; height:44px; border:3px solid #e2e8f0; border-top-color:#e8681e; border-radius:50%; animation:spin 0.9s linear infinite; margin-bottom:16px;"></div>
+            <span style="color:#64748b; font-size:13px; font-weight:500;">Generating quotation preview...</span>
+        </div>
+        <!-- Iframe -->
+        <iframe id="quotationPreviewIframe" src="" style="flex:1; width:100%; border:none; background:#cbd5e1;" onload="document.getElementById('quotationPreviewLoading').style.display='none';"></iframe>
+    </div>
+</div>
+
+
+<div id="sendEmailModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:850px; width:92%; border-radius:12px; padding:24px; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid var(--border);">
+        <button class="modal-close" type="button" onclick="document.getElementById('sendEmailModal').style.display='none'" style="font-size:18px; top:16px; right:20px;">✕</button>
+        
+        <!-- Header -->
+        <div class="modal-title" style="display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; color:var(--primary); margin-bottom:16px; border-bottom:2px solid var(--border); padding-bottom:12px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <span>Compose &amp; Send Email to Customer</span>
+        </div>
+
         <div id="emailOutlookStatus" style="display:none; background:#fff8e1; border:1px solid #fde68a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#7c5a00;">
             ⚠️ <strong>Outlook not connected.</strong> Please ask your Admin to link your Microsoft Outlook account from User Management.
         </div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-            <div class="field">
+
+        <input type="hidden" id="emailQuotationLeadId" value="">
+
+        <!-- Top Controls Grid: From, To, CC -->
+        <div style="display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:12px; margin-bottom:14px;">
+            <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">From (Your Outlook Account)</label>
-                <div id="emailFromDisplay" style="padding:6px 10px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; font-size:13px; color:var(--text-muted); font-style:italic;">Checking Outlook connection...</div>
+                <div id="emailFromDisplay" style="padding:7px 12px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; font-size:12px; color:var(--text-muted); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Checking Outlook connection...</div>
             </div>
-            <div class="field">
+            <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">To <span style="color:#b93a20;">*</span></label>
-                <input type="email" id="emailTo" placeholder="customer@example.com" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:13px; width:100%; box-sizing:border-box; outline:none;" />
+                <input type="email" id="emailTo" placeholder="customer@example.com" style="padding:7px 12px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:12.5px; width:100%; box-sizing:border-box; outline:none;" />
             </div>
-            <div class="field">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">Subject <span style="color:#b93a20;">*</span></label>
-                <input type="text" id="emailSubject" placeholder="e.g. Solar Project Update" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:13px; width:100%; box-sizing:border-box; outline:none;" />
-            </div>
-            <div class="field">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">Message Body <span style="color:#b93a20;">*</span></label>
-                <textarea id="emailBody" rows="8" placeholder="Type your email message here..." style="padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; width:100%; box-sizing:border-box; resize:vertical; outline:none; font-family:inherit; line-height:1.5;"></textarea>
-                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">✨ Tip: You can use basic HTML tags like &lt;b&gt;, &lt;br&gt;, &lt;ul&gt; for formatting.</div>
+            <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">CC (Carbon Copy)</label>
+                <input type="text" id="emailCc" placeholder="cc@example.com, info@aresenergy.com.au" style="padding:7px 12px; border:1px solid var(--border); border-radius:6px; height:34px; font-size:12.5px; width:100%; box-sizing:border-box; outline:none;" />
             </div>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);">
-            <button type="button" onclick="document.getElementById('sendEmailModal').style.display='none'" style="padding:8px 20px; border-radius:6px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:13px; font-weight:600; color:var(--text-dark);">Cancel</button>
-            <button type="button" id="btnDoSendEmail" onclick="sendEmailToCustomer()" style="padding:8px 24px; border-radius:6px; border:none; background:var(--accent); color:#fff; cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; box-shadow:0 4px 6px -1px rgba(232,104,30,0.3); transition:all 0.2s;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+
+        <!-- Side-by-Side Template Selection Bar -->
+        <div style="background:var(--bg-light); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px;">
+            <div style="font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                <span>Email Templates (Side by Side Selector)</span>
+                <span style="font-size:10px; font-weight:500; color:var(--text-muted);">Click any template to auto-fill subject &amp; body</span>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
+                <button type="button" id="btnTplQuotation" class="btn-email-tpl" onclick="applyEmailTemplate('quotation', this)" style="padding:8px 10px; border-radius:6px; border:1.5px solid var(--teal); background:#fff; cursor:pointer; font-size:11.5px; font-weight:700; color:var(--teal); text-align:center; transition:all 0.2s;">
+                    📄 Quotation Proposal
+                </button>
+                <button type="button" id="btnTplFollowup" class="btn-email-tpl" onclick="applyEmailTemplate('followup', this)" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-dark); text-align:center; transition:all 0.2s;">
+                    💬 Follow-Up &amp; Offer
+                </button>
+                <button type="button" id="btnTplInstallation" class="btn-email-tpl" onclick="applyEmailTemplate('installation', this)" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-dark); text-align:center; transition:all 0.2s;">
+                    📅 Installation Schedule
+                </button>
+                <button type="button" id="btnTplCustom" class="btn-email-tpl" onclick="applyEmailTemplate('custom', this)" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-dark); text-align:center; transition:all 0.2s;">
+                    ✏️ Blank / Custom Body
+                </button>
+            </div>
+        </div>
+
+        <!-- Subject Line -->
+        <div class="field" style="margin-bottom:12px;">
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">Subject <span style="color:#b93a20;">*</span></label>
+            <input type="text" id="emailSubject" placeholder="e.g. Your Solar Quotation — AR1013" style="padding:8px 12px; border:1px solid var(--border); border-radius:6px; height:36px; font-size:13px; width:100%; box-sizing:border-box; outline:none; font-weight:600;" />
+        </div>
+
+        <!-- Message Body Area -->
+        <div class="field" style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Message Body <span style="color:#b93a20;">*</span></label>
+                <span style="font-size:11px; color:var(--text-muted);">✨ Editable — supports basic HTML (&lt;b&gt;, &lt;br&gt;, &lt;ul&gt;)</span>
+            </div>
+            <textarea id="emailBody" rows="7" placeholder="Type your email message here..." style="padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; width:100%; box-sizing:border-box; resize:vertical; outline:none; font-family:inherit; line-height:1.5; background:#fff;"></textarea>
+        </div>
+
+        <!-- Email Attachments Section -->
+        <div id="emailAttachmentsBox" style="background:#f8fafc; border:1px dashed var(--teal); border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
+                <span>Email Attachments</span>
+                <span style="font-size:10px; color:var(--text-muted);">Auto-attached document</span>
+            </div>
+            <div id="emailAttachmentBadgeRow" style="display:flex; align-items:center; justify-content:space-between; background:#ffffff; border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div>
+                        <strong id="emailAttachFileName" style="font-size:12px; color:var(--primary); font-family:'Outfit', sans-serif;">Quotation.pdf</strong>
+                        <div style="font-size:10px; color:var(--text-muted);">Personalised A4 PDF quotation document</div>
+                    </div>
+                </div>
+                <label style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--teal); cursor:pointer;">
+                    <input type="checkbox" id="chkIncludeQuotationPdf" checked style="width:16px; height:16px; accent-color:var(--teal); cursor:pointer;">
+                    <span>Attach Quotation PDF</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; justify-content:flex-end; gap:12px; padding-top:14px; border-top:1px solid var(--border);">
+            <button type="button" onclick="document.getElementById('sendEmailModal').style.display='none'" style="padding:9px 22px; border-radius:6px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:13px; font-weight:600; color:var(--text-dark);">Cancel</button>
+            <button type="button" id="btnDoSendEmail" onclick="sendEmailToCustomer()" style="padding:9px 28px; border-radius:6px; border:none; background:var(--accent); color:#fff; cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; box-shadow:0 4px 10px rgba(232,104,30,0.3); transition:all 0.2s;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 Send Email
             </button>
         </div>
@@ -7201,23 +7562,63 @@ function toggleNav(event, element) {
 // ── SEND EMAIL MODAL LOGIC ────────────────────────────────────
 let _currentLeadEmailData = {};
 
+function applyEmailTemplate(type, btnEl) {
+    const projNo = _currentLeadEmailData.project_number || '';
+    const custName = ((_currentLeadEmailData.first_name || '') + ' ' + (_currentLeadEmailData.last_name || '')).trim() || 'Valued Customer';
+    
+    const subjectInput = document.getElementById('emailSubject');
+    const bodyInput = document.getElementById('emailBody');
+
+    // Highlight active button style
+    document.querySelectorAll('.btn-email-tpl').forEach(b => {
+        b.style.borderColor = 'var(--border)';
+        b.style.color = 'var(--text-dark)';
+        b.style.fontWeight = '600';
+    });
+    if (btnEl) {
+        btnEl.style.borderColor = 'var(--teal)';
+        btnEl.style.color = 'var(--teal)';
+        btnEl.style.fontWeight = '700';
+    }
+
+    if (type === 'quotation') {
+        subjectInput.value = projNo ? `Your Solar Quotation — ${projNo}` : 'Your Solar Quotation from Ares Energy';
+        bodyInput.value = `Dear ${custName},\n\nPlease find attached your personalised solar quotation from Ares Energy. This quotation has been tailored to your property and energy needs.\n\nIf you have any questions or would like to discuss the proposal further, please don't hesitate to contact us.\n\nWarm regards,\nAres Energy Team\nPhone: 1300 717 583\nEmail: info@aresenergy.com.au\nWeb: www.aresenergy.com.au`;
+    } else if (type === 'followup') {
+        subjectInput.value = projNo ? `Following Up on Your Solar Proposal — ${projNo}` : 'Following Up on Your Solar Proposal';
+        bodyInput.value = `Dear ${custName},\n\nI hope you are having a great week.\n\nI wanted to quickly follow up regarding the solar quotation we recently sent for your property. Do you have any questions about the proposed system size, rebates, or financial payback timeline?\n\nWe would love to help you lock in the current rebate incentives before upcoming scheme updates.\n\nPlease let me know a convenient time for a brief call.\n\nWarm regards,\nAres Energy Team\nPhone: 1300 717 583`;
+    } else if (type === 'installation') {
+        subjectInput.value = projNo ? `Installation Schedule & Next Steps — ${projNo}` : 'Installation Schedule & Next Steps';
+        bodyInput.value = `Dear ${custName},\n\nThank you for choosing Ares Energy for your solar installation.\n\nWe are preparing your project documentation for grid connection approval. Our technical team will be in touch shortly to confirm the scheduled installation date and roof access details.\n\nShould you need to update any contact details, please let us know.\n\nWarm regards,\nAres Energy Operations Team\nPhone: 1300 717 583`;
+    } else if (type === 'custom') {
+        subjectInput.value = projNo ? `Update Regarding Solar Project — ${projNo}` : 'Update Regarding Your Solar Project';
+        bodyInput.value = `Dear ${custName},\n\n\n\nWarm regards,\nAres Energy Team`;
+    }
+}
+
 async function openSendEmailModal() {
     const modal = document.getElementById('sendEmailModal');
     const statusDiv = document.getElementById('emailOutlookStatus');
     const fromDiv = document.getElementById('emailFromDisplay');
     const toInput = document.getElementById('emailTo');
-    const subjectInput = document.getElementById('emailSubject');
-    const bodyInput = document.getElementById('emailBody');
+    const ccInput = document.getElementById('emailCc');
     const sendBtn = document.getElementById('btnDoSendEmail');
 
     // Pre-fill from current lead data
-    const leadId = document.getElementById('edit_id') ? document.getElementById('edit_id').value : null;
     toInput.value = _currentLeadEmailData.email || '';
+    if (ccInput) ccInput.value = '';
     
-    const projectNo = _currentLeadEmailData.project_number || '';
-    const customerName = ((_currentLeadEmailData.first_name || '') + ' ' + (_currentLeadEmailData.last_name || '')).trim();
-    subjectInput.value = projectNo ? `Solar Project Update — ${projectNo}` : 'Solar Project Update';
-    bodyInput.value = customerName ? `Dear ${customerName},\n\nThank you for choosing Ares Energy.\n\n` : '';
+    // Apply Quotation Template as default
+    applyEmailTemplate('quotation', document.getElementById('btnTplQuotation'));
+
+    // Configure attachment label
+    const projNo = _currentLeadEmailData.project_number || 'Quotation';
+    const attachFileName = document.getElementById('emailAttachFileName');
+    if (attachFileName) attachFileName.textContent = `Quotation_${projNo}.pdf`;
+
+    // Reset quotation lead ID input
+    const quotationLeadIdInput = document.getElementById('emailQuotationLeadId');
+    if (quotationLeadIdInput) quotationLeadIdInput.value = currentProjectId || '';
 
     // Check Outlook connection for current user
     fromDiv.innerHTML = '<span style="color:var(--text-muted);">Checking...</span>';
@@ -7228,7 +7629,6 @@ async function openSendEmailModal() {
         const meRes = await fetch('/api/me');
         if (meRes.ok) {
             const me = await meRes.json();
-            // Fetch user's outlook status
             const uRes = await fetch('/admin/users');
             if (uRes.ok) {
                 const users = await uRes.json();
@@ -7251,14 +7651,25 @@ async function openSendEmailModal() {
     modal.style.display = 'flex';
 }
 
+async function openSendEmailModalForQuotation() {
+    closeQuotationPreview();
+    openSendEmailModal();
+}
+
 async function sendEmailToCustomer() {
     const to = document.getElementById('emailTo').value.trim();
+    const cc = document.getElementById('emailCc') ? document.getElementById('emailCc').value.trim() : '';
     const subject = document.getElementById('emailSubject').value.trim();
     const rawBody = document.getElementById('emailBody').value.trim();
     const sendBtn = document.getElementById('btnDoSendEmail');
+    const quotationLeadIdInput = document.getElementById('emailQuotationLeadId');
+    const chkAttach = document.getElementById('chkIncludeQuotationPdf');
+    
+    const shouldAttachPdf = chkAttach ? chkAttach.checked : true;
+    const attachLeadId = (shouldAttachPdf && quotationLeadIdInput) ? quotationLeadIdInput.value.trim() : '';
 
     if (!to || !subject || !rawBody) {
-        Swal.fire('Required Fields', 'Please fill in all required fields: To, Subject, and Message.', 'warning');
+        Swal.fire('Required Fields', 'Please fill in all required fields: To, Subject, and Message Body.', 'warning');
         return;
     }
 
@@ -7266,13 +7677,16 @@ async function sendEmailToCustomer() {
     const htmlBody = rawBody.replace(/\n/g, '<br>');
 
     sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span> Sending...';
+    sendBtn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span> ' + (attachLeadId ? 'Attaching PDF & Sending...' : 'Sending Email...');
 
     try {
+        const payload = { to, cc, subject, body: htmlBody };
+        if (attachLeadId) payload.leadId = attachLeadId;
+
         const res = await fetch('/crm/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to, subject, body: htmlBody })
+            body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -7280,8 +7694,8 @@ async function sendEmailToCustomer() {
         if (res.ok && data.success) {
             document.getElementById('sendEmailModal').style.display = 'none';
             Swal.fire({
-                title: '✅ Email Sent!',
-                html: `Your email to <b>${to}</b> has been sent successfully via Outlook.<br><small style="color:#6b7a8d;">The email will appear in your Outlook Sent folder.</small>`,
+                title: '✅ Email Sent Successfully!',
+                html: `Your email to <b>${to}</b> ${cc ? `(CC: ${cc})` : ''} has been sent via Outlook.${attachLeadId ? '<br><span style="color:#059669;font-weight:600;">📎 Quotation PDF was attached.</span>' : ''}<br><small style="color:#6b7a8d;">The email will appear in your Outlook Sent folder.</small>`,
                 icon: 'success',
                 confirmButtonColor: '#1c3557'
             });
@@ -7297,7 +7711,7 @@ async function sendEmailToCustomer() {
         Swal.fire('Error', 'Network error. Could not send email.', 'error');
     } finally {
         sendBtn.disabled = false;
-        sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Email';
+        sendBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Email';
     }
 }
 

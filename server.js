@@ -1363,7 +1363,7 @@ app.post('/crm/send-email', async (req, res) => {
     }
 
     const userId = req.session.user.id;
-    const { to, subject, body, leadId } = req.body;
+    const { to, cc, subject, body, leadId } = req.body;
 
     if (!to || !subject || !body) {
         return res.status(400).json({ error: 'Missing required fields: to, subject, and body are required.' });
@@ -1375,6 +1375,10 @@ app.post('/crm/send-email', async (req, res) => {
         const toRecipients = to.split(/[,;]/).map(email => ({
             emailAddress: { address: email.trim() }
         })).filter(r => r.emailAddress.address);
+
+        const ccRecipients = cc ? cc.split(/[,;]/).map(email => ({
+            emailAddress: { address: email.trim() }
+        })).filter(r => r.emailAddress.address) : [];
 
         if (toRecipients.length === 0) {
             return res.status(400).json({ error: 'No valid recipient email address provided.' });
@@ -1438,6 +1442,7 @@ app.post('/crm/send-email', async (req, res) => {
                     content: body
                 },
                 toRecipients: toRecipients,
+                ...(ccRecipients.length > 0 ? { ccRecipients } : {}),
                 ...(attachments.length > 0 ? { attachments } : {})
             },
             saveToSentItems: "true"
