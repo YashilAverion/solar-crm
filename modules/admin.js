@@ -2,7 +2,32 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { requireManager, isStrongPassword, getPasswordStrengthMessage } = require('../helpers');
+
+// Multer storage for custom email signature images (handwritten signatures, logos, banners)
+const sigUploadsDir = path.join(__dirname, '..', 'public', 'uploads', 'signatures');
+if (!fs.existsSync(sigUploadsDir)) {
+    fs.mkdirSync(sigUploadsDir, { recursive: true });
+}
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, sigUploadsDir),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || '.png';
+        cb(null, `sig_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`);
+    }
+});
+const uploadSig = multer({ storage });
+
+router.post('/upload-signature-image', requireManager, uploadSig.single('signature_image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No image file uploaded.' });
+    }
+    const publicUrl = `https://crm.aresenergy.com.au/uploads/signatures/${req.file.filename}`;
+    res.json({ success: true, url: publicUrl, filename: req.file.filename });
+});
 
 // Helper to generate professional HTML Email Signature matching Image 2
 function generateHTMLSignature(fullName, designation, role, email, mobile) {
