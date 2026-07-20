@@ -427,12 +427,16 @@
             }
             .page {
                 width: 100% !important;
+                max-width: 794px !important;
                 height: auto !important;
                 min-height: 0 !important;
                 margin: 0 auto 15px auto !important;
-                padding: 15px !important;
+                padding: 12px !important;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-                overflow: visible !important;
+                overflow: hidden !important;
+                background: #ffffff !important;
+                position: relative !important;
+                box-sizing: border-box !important;
             }
             .solutions-grid {
                 grid-template-columns: 1fr !important;
@@ -442,14 +446,15 @@
                 flex-direction: column !important;
                 align-items: center !important;
                 text-align: center !important;
-                gap: 10px !important;
+                gap: 8px !important;
                 width: 100% !important;
             }
             .quote-header {
                 flex-direction: column !important;
                 align-items: center !important;
                 text-align: center !important;
-                gap: 10px !important;
+                gap: 8px !important;
+                margin-bottom: 8px !important;
             }
             .brand-details {
                 text-align: center !important;
@@ -495,8 +500,26 @@
             }
             .terms-columns {
                 grid-template-columns: 1fr !important;
-                gap: 15px !important;
+                gap: 12px !important;
             }
+
+            /* Page 2 Mobile Responsive Image & Charts */
+            #page-2 #layoutImage {
+                max-height: 250px !important;
+                width: 100% !important;
+                object-fit: cover !important;
+            }
+            #page-2 div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            /* Page 3 Mobile Responsive Financial Cards (2x2 Grid) */
+            #page-3 div[style*="grid-template-columns: repeat(4, 1fr)"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+
             /* Scale up font-sizes slightly for mobile screen readability */
             .spec-card {
                 min-height: 40px !important;
