@@ -776,7 +776,18 @@ app.get('/track', (req, res) => {
 // ── AUTH MIDDLEWARE ────────────────────────────────────────
 function requireLogin(req, res, next) {
     const path = req.path;
+
+    // Allow internal localhost requests (e.g. Puppeteer rendering quotation PDFs)
+    const clientIp = getClientIp(req);
+    if (clientIp === '127.0.0.1' || clientIp === 'localhost' || clientIp === '0.0.0.0') {
+        return next();
+    }
+
     const bypassRoutes = [
+        '/quotation_template.html',
+        '/api/quotations',
+        '/track.html',
+        '/track',
         '/api/public/website-quote/calculate',
         '/api/mobile/store-auth/login',
         '/api/mobile/store-auth/session-validate',
