@@ -18,13 +18,13 @@ function generateHTMLSignature(fullName, designation, role, email, mobile) {
   <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
     <span style="font-size: 16px; font-weight: 800; color: #0284c7;">${repName}</span>
     <div style="display: inline-flex; gap: 6px; align-items: center; margin-left: 6px;">
-      <a href="https://facebook.com/aresenergy" target="_blank" style="text-decoration: none;">
+      <a href="https://www.facebook.com/people/Ares-Energy-Electricals/61584003342989/" target="_blank" style="text-decoration: none;">
         <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" width="18" height="18" alt="FB" style="vertical-align: middle;">
       </a>
       <a href="https://instagram.com/aresenergy" target="_blank" style="text-decoration: none;">
         <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="18" height="18" alt="IG" style="vertical-align: middle;">
       </a>
-      <a href="https://wa.me/${digitsOnly}" target="_blank" style="text-decoration: none;">
+      <a href="https://api.whatsapp.com/send/?phone=%2B${digitsOnly}&text&type=phone_number&app_absent=0" target="_blank" style="text-decoration: none;">
         <img src="https://cdn-icons-png.flaticon.com/512/1384/1384055.png" width="18" height="18" alt="WA" style="vertical-align: middle;">
       </a>
     </div>
