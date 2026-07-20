@@ -60,13 +60,13 @@ function generateHTMLSignature(fullName, designation, role, email, mobile) {
   <table border="0" cellpadding="0" cellspacing="0" style="margin-top: 14px; border-collapse: collapse;">
     <tr>
       <td style="padding-right: 16px; vertical-align: middle;">
-        <img src="http://212.38.94.6/sig_badge_ares.png" height="56" alt="Ares Energy & Electricals" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
+        <img src="https://crm.aresenergy.com.au/sig_badge_ares.png" height="56" alt="Ares Energy & Electricals" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
       </td>
       <td style="padding-right: 16px; vertical-align: middle;">
-        <img src="http://212.38.94.6/sig_badge_netcc.png" height="56" alt="NETCC Approved Seller" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
+        <img src="https://crm.aresenergy.com.au/sig_badge_netcc.png" height="56" alt="NETCC Approved Seller" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
       </td>
       <td style="vertical-align: middle;">
-        <img src="http://212.38.94.6/sig_badge_saa.png" height="56" alt="Solar Accreditation Australia" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
+        <img src="https://crm.aresenergy.com.au/sig_badge_saa.png" height="56" alt="Solar Accreditation Australia" style="height: 56px; width: auto; max-height: 56px; display: block; border: 0; background: transparent;">
       </td>
     </tr>
   </table>

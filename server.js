@@ -788,6 +788,10 @@ function requireLogin(req, res, next) {
         '/api/quotations',
         '/track.html',
         '/track',
+        '/sig_badge_ares.png',
+        '/sig_badge_netcc.png',
+        '/sig_badge_saa.png',
+        '/ares_energy_logo.png',
         '/api/public/website-quote/calculate',
         '/api/mobile/store-auth/login',
         '/api/mobile/store-auth/session-validate',
@@ -795,7 +799,14 @@ function requireLogin(req, res, next) {
         '/api/voipline/webhook'
     ];
 
-    if (bypassRoutes.some(r => path === r || path.startsWith(r + '?') || path.startsWith(r + '/'))) {
+    if (
+        path.endsWith('.png') ||
+        path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.svg') ||
+        path.endsWith('.ico') ||
+        bypassRoutes.some(r => path === r || path.startsWith(r + '?') || path.startsWith(r + '/'))
+    ) {
         return next();
     }
 
