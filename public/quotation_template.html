@@ -433,7 +433,7 @@
                 margin: 0 auto 15px auto !important;
                 padding: 12px !important;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-                overflow: hidden !important;
+                overflow: visible !important;
                 background: #ffffff !important;
                 position: relative !important;
                 box-sizing: border-box !important;
@@ -499,13 +499,23 @@
                 margin-top: 10px !important;
             }
             .terms-columns {
-                grid-template-columns: 1fr !important;
-                gap: 12px !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+                font-size: 8.5px !important;
+            }
+            #netccGuidesCard {
+                margin-top: 8px !important;
+                padding: 8px !important;
+            }
+            #netccGuidesCard div[style*="display:grid"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+                font-size: 7px !important;
             }
 
             /* Page 2 Mobile Responsive Image & Charts */
             #page-2 #layoutImage {
-                max-height: 250px !important;
+                max-height: 240px !important;
                 width: 100% !important;
                 object-fit: cover !important;
             }
@@ -553,10 +563,10 @@
                 font-size: 10px !important;
             }
             .terms-columns h4 {
-                font-size: 11px !important;
+                font-size: 10px !important;
             }
             .terms-columns p {
-                font-size: 9px !important;
+                font-size: 8.5px !important;
             }
         }
     </style>
