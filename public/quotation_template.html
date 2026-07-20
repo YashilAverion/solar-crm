@@ -1078,6 +1078,62 @@
             </div>
         </div>
 
+        <!-- Assumed Calculation Values Card -->
+        <div id="assumedValuesCard" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-top:6px;">
+            <div style="font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; color:var(--teal); letter-spacing:0.3px; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:3px; margin-bottom:6px;">
+                Assumed Calculation Values
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; font-size:8px;">
+                <!-- Column 1: System & Orientation -->
+                <div style="display:flex; flex-direction:column; gap:4px; background:var(--bg-light); padding:6px 8px; border-radius:4px; border:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">DC Array Power:</span>
+                        <strong id="assumedDcPower" style="color:var(--text-dark); font-weight:700;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Tilt / Orientation:</span>
+                        <strong id="assumedOrientation" style="color:var(--text-dark); font-weight:700;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">System Efficiency:</span>
+                        <strong style="color:var(--text-dark); font-weight:700;">87%</strong>
+                    </div>
+                </div>
+
+                <!-- Column 2: Tariffs & Grid -->
+                <div style="display:flex; flex-direction:column; gap:4px; background:var(--bg-light); padding:6px 8px; border-radius:4px; border:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Electricity Rate:</span>
+                        <strong id="assumedUnitRate" style="color:var(--text-dark); font-weight:700;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Supply Charge:</span>
+                        <strong id="assumedSupplyCharge" style="color:var(--text-dark); font-weight:700;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Feed-in Tariff (FiT):</span>
+                        <strong id="assumedFit" style="color:var(--text-dark); font-weight:700;">—</strong>
+                    </div>
+                </div>
+
+                <!-- Column 3: Assumptions & Degradation -->
+                <div style="display:flex; flex-direction:column; gap:4px; background:var(--bg-light); padding:6px 8px; border-radius:4px; border:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Self-Consumption:</span>
+                        <strong style="color:var(--text-dark); font-weight:700;">30%</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">Grid Rate Inflation:</span>
+                        <strong style="color:var(--text-dark); font-weight:700;">5.0% / year</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); font-weight:500;">PV Degradation:</span>
+                        <strong style="color:var(--text-dark); font-weight:700;">0.5% / year (20 Yr)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Page 3 Footer -->
         <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; margin-top:auto;">
             <div>Ares Energy | ABN: 78 631 734 506</div>
@@ -1983,6 +2039,24 @@
 
                 // Internal Rate of Return (IRR)
                 setText('finIrrVal', inv.irrPercent !== undefined ? `${inv.irrPercent.toFixed(1)}%` : '—%');
+            })();
+
+            // ============================================================
+            // ASSUMED CALCULATION VALUES POPULATION
+            // ============================================================
+            (function populateAssumedValues() {
+                const sysKw = ySummary.systemSizeKw || 0;
+                const tilt = eng.roof_angle || '20°';
+                const orient = ySummary.orientation || eng.orientation || 'North';
+                const elecRate = ySummary.electricityUnitRate || 0.30;
+                const supplyCharge = ySummary.supplyChargeDay || 1.05;
+                const fit = ySummary.feedInTariff || 0.08;
+
+                setText('assumedDcPower', sysKw > 0 ? `${sysKw.toFixed(2)} kW` : 'N/A');
+                setText('assumedOrientation', `${tilt} / ${orient}`);
+                setText('assumedUnitRate', `$${parseFloat(elecRate).toFixed(2)} / kWh`);
+                setText('assumedSupplyCharge', `$${parseFloat(supplyCharge).toFixed(2)} / day`);
+                setText('assumedFit', `$${parseFloat(fit).toFixed(2)} / kWh`);
             })();
         }
     </script>
