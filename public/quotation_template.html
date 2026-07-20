@@ -689,16 +689,16 @@
                 </div>
 
                 <!-- Notes below pricing -->
-                <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
-                    <ul class="pricing-notes" style="margin: 0; padding-left: 14px; font-size: 9px; color: var(--text-muted); line-height: 1.5; list-style-type: disc; text-align: left; font-weight: 500;">
+                <div style="margin-top:8px; display:flex; flex-direction:column;">
+                    <ul class="pricing-notes" style="margin: 0 0 6px 0; padding-left: 14px; font-size: 8.5px; color: var(--text-muted); line-height: 1.45; list-style-type: disc; text-align: left; font-weight: 500;">
                         <li><strong style="color: var(--text-dark);">Quote Validity</strong>: 10 Days from issue date.</li>
                         <li><strong style="color: var(--text-dark);">System Notes</strong>: The system design is provisional. A fully certified installer will complete the final panel layout tailored to your actual site conditions on the day of installation or during site visit.</li>
                         <li><strong style="color: var(--text-dark);">STC &amp; Finance</strong>: The final Balance Due may vary if there are changes to the estimated STC Rebate value or approval process. Acceptance of this quote is subject to the Terms &amp; Conditions contained in this Quotation.</li>
                         <li><strong style="color: var(--text-dark);">Payment Term</strong>: The remaining Balance Due must be cleared at least 1 day before the installation commences.</li>
                     </ul>
-                    <div>
-                        <div class="specs-title" style="margin-bottom: 6px;">Quotation Notes</div>
-                        <div id="lblQuotationNotes" style="font-size: 9.5px; color: var(--text-dark); line-height: 1.5; background: var(--bg-light); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; white-space: pre-line; text-align: left; font-weight: 500;">
+                    <div style="margin-top:4px;">
+                        <div class="specs-title" style="margin-bottom: 4px; margin-top: 4px;">Quotation Notes</div>
+                        <div id="lblQuotationNotes" style="font-size: 9px; color: #334155; line-height: 1.5; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; text-align: left; font-weight: 500;">
                             -
                         </div>
                     </div>
@@ -1800,10 +1800,10 @@
 
             // Render Quotation Notes
             const inclusionsText = eng.quotation_inclusions || lead.quotation_inclusions || `Net Meter - Not Included - Please contact your Electricity Retailer`;
-            const inclusionLines = inclusionsText.split('\n').map(l => l.trim()).filter(Boolean);
+            const inclusionLines = inclusionsText.split('\n').map(l => l.trim().replace(/^[-•*\s]+/, '')).filter(Boolean);
             const notesContainer = document.getElementById('lblQuotationNotes');
             if (notesContainer) {
-                notesContainer.innerHTML = `<ul style="margin: 0; padding-left: 12px; list-style-type: disc;">` + 
+                notesContainer.innerHTML = `<ul style="margin: 0; padding-left: 14px; list-style-type: disc; color: #334155;">` + 
                     inclusionLines.map(line => `<li style="margin-bottom: 2px;">${line}</li>`).join('') + 
                     `</ul>`;
             }
