@@ -284,7 +284,8 @@ function ipFirewall(req, res, next) {
         '/crm-autosave-toast.js',
         '/australian-timezones.js',
         '/track.html',
-        '/track'
+        '/track',
+        '/quotation_template.html'
     ];
 
     if (
@@ -1362,7 +1363,7 @@ app.post('/crm/send-email', async (req, res) => {
     }
 
     const userId = req.session.user.id;
-    const { to, subject, body } = req.body;
+    const { to, subject, body, leadId } = req.body;
 
     if (!to || !subject || !body) {
         return res.status(400).json({ error: 'Missing required fields: to, subject, and body are required.' });
@@ -1379,6 +1380,56 @@ app.post('/crm/send-email', async (req, res) => {
             return res.status(400).json({ error: 'No valid recipient email address provided.' });
         }
 
+        // Build attachments array — generate PDF if leadId provided
+        const attachments = [];
+        if (leadId) {
+            let pdfBrowser;
+            try {
+                const puppeteer = require('puppeteer');
+                const leadRow = await new Promise((resolve, reject) => {
+                    db.get('SELECT project_number FROM leads WHERE id = ?', [leadId], (err, row) => {
+                        if (err) reject(err); else resolve(row);
+                    });
+                });
+
+                pdfBrowser = await puppeteer.launch({
+                    headless: true,
+                    args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors']
+                });
+                const pdfPage = await pdfBrowser.newPage();
+                await pdfPage.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
+                await pdfPage.setRequestInterception(true);
+                pdfPage.on('request', r => {
+                    const headers = Object.assign({}, r.headers(), {
+                        'x-pdf-render-secret': process.env.SESSION_SECRET || 'solar-crm-secret-key-2024'
+                    });
+                    r.continue({ headers });
+                });
+                const PORT = process.env.PORT || 3000;
+                await pdfPage.goto(`http://localhost:${PORT}/quotation_template.html?id=${leadId}&userId=${userId}`, { waitUntil: 'networkidle0', timeout: 35000 });
+                await pdfPage.evaluateHandle(() => document.fonts.ready);
+                const pdfBuffer = await pdfPage.pdf({
+                    format: 'A4',
+                    printBackground: true,
+                    margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' }
+                });
+                await pdfBrowser.close();
+                pdfBrowser = null;
+
+                const filename = `Quotation_${leadRow?.project_number || leadId}.pdf`;
+                attachments.push({
+                    '@odata.type': '#microsoft.graph.fileAttachment',
+                    name: filename,
+                    contentType: 'application/pdf',
+                    contentBytes: Buffer.from(pdfBuffer).toString('base64')
+                });
+            } catch (pdfErr) {
+                console.error('Quotation PDF generation for email failed:', pdfErr.message);
+                if (pdfBrowser) await pdfBrowser.close().catch(() => {});
+                // Continue sending email without attachment rather than failing entirely
+            }
+        }
+
         const mailPayload = {
             message: {
                 subject: subject,
@@ -1386,7 +1437,8 @@ app.post('/crm/send-email', async (req, res) => {
                     contentType: 'HTML',
                     content: body
                 },
-                toRecipients: toRecipients
+                toRecipients: toRecipients,
+                ...(attachments.length > 0 ? { attachments } : {})
             },
             saveToSentItems: "true"
         };
@@ -1408,6 +1460,7 @@ app.post('/crm/send-email', async (req, res) => {
         res.status(500).json({ error: 'Failed to send email: ' + errMsg });
     }
 });
+
 
 // ── BLOCK DEPRECATED MODULES ───────────────────────────────
 app.get('/my_leads.html', (req, res) => {
@@ -2958,7 +3011,8 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         const beforeSolarAnnualEnergy = finalAnnualUsage * electricityUnitRate;
         const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;
 
-        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, finalAnnualUsage * 0.45));
+        // Pylon standard 30% solar self-consumption rate
+        let selfConsumedSolar = Math.min(annualGeneration * 0.30, finalAnnualUsage);
         if (totalBatteryKwh > 0) {
             const excessSolar = Math.max(0, annualGeneration - selfConsumedSolar);
             const storedEnergy = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
@@ -3017,10 +3071,10 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
         };
         const emissionFactor = ngaFactors[finalState] !== undefined ? ngaFactors[finalState] : 0.50;
 
-        const co2AvoidedKg = annualGeneration * emissionFactor;
-        const treesPlanted = co2AvoidedKg / 20;
-        const coalAvoidedKg = co2AvoidedKg / 2.86;
-        const fuelAvoidedLiters = co2AvoidedKg / 2.3;
+        const co2AvoidedKg = annualGeneration * 0.85;
+        const treesPlanted = co2AvoidedKg / 45.36;
+        const fuelAvoidedLiters = co2AvoidedKg / 2.72;
+        const coalAvoidedKg = co2AvoidedKg / 2.4;
 
         // Calculate Energy Balance (Where will your power come from?)
         let directSolarConsumed = Math.max(0, Math.min(annualGeneration * 0.30, finalAnnualUsage * 0.45));
@@ -3067,7 +3121,11 @@ app.post('/api/quotes/calculate-financial-yield', requireAuth, async (req, res) 
                 annualGenerationKwh: parseFloat(annualGeneration.toFixed(2)),
                 selfConsumptionKwh: parseFloat(selfConsumedSolar.toFixed(2)),
                 exportedSolarKwh: parseFloat(exportedSolar.toFixed(2)),
-                gridImportKwh: parseFloat(gridImport.toFixed(2))
+                gridImportKwh: parseFloat(gridImport.toFixed(2)),
+                electricityUnitRate: parseFloat(electricityUnitRate.toFixed(4)),
+                supplyChargeDay: parseFloat(supplyChargeDay.toFixed(4)),
+                feedInTariff: parseFloat(feedInTariff.toFixed(4)),
+                derivedDailyUsage: parseFloat((finalAnnualUsage / 365).toFixed(2))
             },
             monthlyProduction: monthlyAverageProduction,
             financials: {
