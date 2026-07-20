@@ -4,9 +4,73 @@ const db = require('../database/db');
 const bcrypt = require('bcrypt');
 const { requireManager, isStrongPassword, getPasswordStrengthMessage } = require('../helpers');
 
+// Helper to generate professional HTML Email Signature matching Image 2
+function generateHTMLSignature(fullName, designation, role, email, mobile) {
+    const repName = fullName || 'Solar Specialist';
+    const repRole = designation || role || 'Solar Energy Advisor';
+    const repEmail = email || 'info@aresenergy.com.au';
+    const repMobile = mobile || '0485 838 592';
+    const digitsOnly = repMobile.replace(/\D/g, '') || '61485838592';
+
+    return `<br><br>
+<p style="margin: 0 0 12px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13.5px; color: #333333; font-weight: 500;">Thank You</p>
+<div style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.4; color: #1c2b3a;">
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+    <span style="font-size: 16px; font-weight: 800; color: #0284c7;">${repName}</span>
+    <div style="display: inline-flex; gap: 6px; align-items: center; margin-left: 6px;">
+      <a href="https://facebook.com/aresenergy" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" width="18" height="18" alt="FB" style="vertical-align: middle;">
+      </a>
+      <a href="https://instagram.com/aresenergy" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="18" height="18" alt="IG" style="vertical-align: middle;">
+      </a>
+      <a href="https://wa.me/${digitsOnly}" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384055.png" width="18" height="18" alt="WA" style="vertical-align: middle;">
+      </a>
+    </div>
+  </div>
+  <div style="font-size: 13px; color: #475569; font-weight: 600; margin-bottom: 2px;">${repRole}</div>
+  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Ares Energy</div>
+
+  <div style="border-top: 1.5px solid #0284c7; border-bottom: 1.5px solid #0284c7; padding: 8px 0; margin: 8px 0 10px; max-width: 480px;">
+    <table style="border-collapse: collapse; font-size: 12px; color: #1e293b; width: 100%;">
+      <tr>
+        <td style="font-weight: 700; width: 70px; padding: 2px 0; color: #475569;">Email:</td>
+        <td style="padding: 2px 0;"><a href="mailto:${repEmail}" style="color: #1e293b; text-decoration: none; font-weight: 600;">${repEmail}</a></td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Mobile:</td>
+        <td style="padding: 2px 0; font-weight: 600;">${repMobile}</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Tollfree:</td>
+        <td style="padding: 2px 0; font-weight: 600;">1300 717 583</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Address:</td>
+        <td style="padding: 2px 0; font-weight: 600;">276 Kargotich Rd, Oakford WA 6121</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="margin-bottom: 10px;">
+    <a href="https://www.aresenergy.com.au" target="_blank" style="color: #0284c7; font-weight: 700; font-size: 13px; text-decoration: none;">www.aresenergy.com.au</a>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px;">
+    <img src="http://212.38.94.6/ares_energy_logo.png" height="42" alt="Ares Energy & Electricals" style="display: inline-block; object-fit: contain;">
+    <img src="https://s3.ap-southeast-2.amazonaws.com/assets.newenergytech.org.au/uploads/Consumer-information-products/NETCC_Approved_Seller_Logo.png" height="48" alt="Approved Seller NETCC" style="display: inline-block; object-fit: contain;">
+    <img src="https://solaraccreditation.com.au/wp-content/uploads/2023/11/SAA-Logo-RGB-Horizontal.png" height="42" alt="Solar Accreditation Australia" style="display: inline-block; object-fit: contain;">
+  </div>
+</div>`;
+}
+
+// Export signature helper
+router.generateHTMLSignature = generateHTMLSignature;
+
 // ── GET ALL USERS ─────────────────────────────────────────────
 router.get('/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, last_call_sync_timestamp FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -54,7 +118,7 @@ router.get('/users/:id/permissions', requireManager, (req, res) => {
 // ── CREATE USER ───────────────────────────────────────────────
 router.post('/users', requireManager, async (req, res) => {
     try {
-        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
+        const { username, password, full_name, email, role, can_edit, can_delete, status, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature } = req.body;
 
         if (!username || username.trim().length < 3) {
             return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
@@ -82,9 +146,13 @@ router.post('/users', requireManager, async (req, res) => {
         );
         if (existing) return res.status(400).json({ error: 'This username already exists.' });
 
+        const desig = (designation || '').trim();
+        const mob = (mobile_number || '').trim();
+        const sig = (email_signature && email_signature.trim()) ? email_signature.trim() : generateHTMLSignature(full_name, desig, role, email, mob);
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || ''], function(err) {
+        const sql = `INSERT INTO users (username, password, full_name, email, role, can_edit, can_delete, status, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        db.run(sql, [username.trim(), hashedPassword, full_name.trim(), email || '', role, can_edit || 'No', can_delete || 'No', status || 'Active', voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', desig, mob, sig], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             
             const userId = this.lastID;
@@ -114,7 +182,7 @@ router.post('/users', requireManager, async (req, res) => {
 // ── UPDATE USER ───────────────────────────────────────────────
 router.put('/users/:id', requireManager, async (req, res) => {
     try {
-        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key } = req.body;
+        const { full_name, username, email, role, can_edit, can_delete, status, password, custom_permissions, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature } = req.body;
         const id = req.params.id;
 
         if (!username || username.trim().length < 3) {
@@ -127,6 +195,10 @@ router.put('/users/:id', requireManager, async (req, res) => {
         if (!VALID_ROLES.includes(role)) {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
+
+        const desig = (designation || '').trim();
+        const mob = (mobile_number || '').trim();
+        const sig = (email_signature && email_signature.trim()) ? email_signature.trim() : generateHTMLSignature(full_name, desig, role, email, mob);
 
         const handlePermissionsSync = (callback) => {
             if (custom_permissions === undefined) {
@@ -157,16 +229,16 @@ router.put('/users/:id', requireManager, async (req, res) => {
                 return res.status(400).json({ error: getPasswordStrengthMessage() });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, password=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, designation=?, mobile_number=?, email_signature=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, hashedPassword, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', desig, mob, sig, id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 handlePermissionsSync(() => {
                     res.json({ success: true });
                 });
             });
         } else {
-            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=? WHERE id=?`;
-            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', id], (err) => {
+            const sql = `UPDATE users SET full_name=?, username=?, email=?, role=?, can_edit=?, can_delete=?, status=?, voipline_extension=?, voipline_api_key=?, voipline_outbound_line=?, voipline_secret_token=?, voipline_master_key=?, designation=?, mobile_number=?, email_signature=? WHERE id=?`;
+            db.run(sql, [full_name, username.trim(), email || '', role, can_edit, can_delete, status, voipline_extension || '', voipline_api_key || '', voipline_outbound_line || '', voipline_secret_token || '', voipline_master_key || '', desig, mob, sig, id], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
                 handlePermissionsSync(() => {
                     res.json({ success: true });

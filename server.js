@@ -1446,12 +1446,35 @@ app.post('/crm/send-email', async (req, res) => {
             }
         }
 
+        // Fetch sending user's professional HTML Email Signature
+        let userSig = '';
+        const userRow = await new Promise(resolve => {
+            db.get("SELECT full_name, email, role, designation, mobile_number, email_signature FROM users WHERE id = ?", [userId], (err, row) => resolve(row));
+        });
+        if (userRow) {
+            userSig = userRow.email_signature;
+            if (!userSig) {
+                const adminModule = require('./modules/admin');
+                if (typeof adminModule.generateHTMLSignature === 'function') {
+                    userSig = adminModule.generateHTMLSignature(userRow.full_name, userRow.designation, userRow.role, userRow.email, userRow.mobile_number);
+                }
+            }
+        }
+
+        let finalBodyHtml = body;
+        if (!finalBodyHtml.includes('<p>') && !finalBodyHtml.includes('<div>')) {
+            finalBodyHtml = finalBodyHtml.replace(/\n/g, '<br>');
+        }
+        if (userSig && !finalBodyHtml.includes('NETCC_Approved_Seller_Logo') && !finalBodyHtml.includes('Ares Energy & Electricals')) {
+            finalBodyHtml = finalBodyHtml + '<br>' + userSig;
+        }
+
         const mailPayload = {
             message: {
                 subject: subject,
                 body: {
                     contentType: 'HTML',
-                    content: body
+                    content: finalBodyHtml
                 },
                 toRecipients: toRecipients,
                 ...(ccRecipients.length > 0 ? { ccRecipients } : {}),
@@ -1645,11 +1668,14 @@ db.run("ALTER TABLE leads ADD COLUMN pylon_system_size REAL DEFAULT 0", () => { 
 db.run("ALTER TABLE leads ADD COLUMN pylon_layout_image TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE leads ADD COLUMN pylon_sld_pdf TEXT DEFAULT NULL", () => { });
 
-// ── ENSURE MICROSOFT OUTLOOK COLUMNS IN USERS TABLE ─────────────
+// ── ENSURE MICROSOFT OUTLOOK & EMAIL SIGNATURE COLUMNS IN USERS TABLE ─────────────
 db.run("ALTER TABLE users ADD COLUMN outlook_email TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN outlook_access_token TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN outlook_refresh_token TEXT DEFAULT NULL", () => { });
 db.run("ALTER TABLE users ADD COLUMN is_outlook_active INTEGER DEFAULT 0", () => { });
+db.run("ALTER TABLE users ADD COLUMN designation TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE users ADD COLUMN mobile_number TEXT DEFAULT NULL", () => { });
+db.run("ALTER TABLE users ADD COLUMN email_signature TEXT DEFAULT NULL", () => { });
 
 // ── LEADS API ROUTES ───────────────────────────────────────
 

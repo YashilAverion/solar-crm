@@ -934,6 +934,8 @@ document.addEventListener("DOMContentLoaded", function() {
                                 </optgroup>
                             </select>
                         </div>
+                        <div class="field"><label>Designation / Title</label><input type="text" id="u_designation" placeholder="e.g. Operation Manager"></div>
+                        <div class="field"><label>Mobile Phone</label><input type="text" id="u_mobile_number" placeholder="e.g. 0485 838 592"></div>
                         <div class="field"><label>Status</label><select id="u_status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
                         <div class="field"><label>Can Edit</label><select id="u_can_edit"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                         <div class="field" style="grid-column: span 2;"><label>Can Delete</label><select id="u_can_delete"><option value="No">No</option><option value="Yes">Yes</option></select></div>
@@ -955,11 +957,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 <!-- VERTICAL DIVIDER -->
                 <div style="width: 1px; background: #cbd5e1; align-self: stretch; margin: 0 4px;"></div>
                 
-                <!-- RIGHT COLUMN: VoIP Configuration & User-Specific Permissions -->
+                <!-- RIGHT COLUMN: VoIP Configuration, Signature & Overrides -->
                 <div style="flex: 1.1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding-right: 4px;">
                     <!-- Sleek sub-tab navigation -->
                     <div style="display: flex; gap: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 4px; flex-shrink: 0;">
                         <button type="button" id="tab_user_voip" class="sub-tab-btn active" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid var(--primary); cursor: pointer;" onclick="switchUserModalTab('voip')">VoIP & SIP Settings</button>
+                        <button type="button" id="tab_user_sig" class="sub-tab-btn" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid transparent; cursor: pointer;" onclick="switchUserModalTab('sig')">✉️ Email Signature</button>
                         <button type="button" id="tab_user_perms" class="sub-tab-btn" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid transparent; cursor: pointer;" onclick="switchUserModalTab('perms')">Module Access Overrides</button>
                     </div>
 
@@ -1006,6 +1009,22 @@ document.addEventListener("DOMContentLoaded", function() {
                             <div class="field"><label>SIP Password</label><input type="password" id="u_voipline_sip_password" placeholder="SIP Secret"></div>
                             <div class="field"><label>SIP Domain</label><input type="text" id="u_voipline_sip_domain" placeholder="au.voipcloud.online"></div>
                             <div class="field"><label>WSS URL</label><input type="text" id="u_voipline_wss_url" placeholder="wss://au.voipcloud.online:4443"></div>
+                        </div>
+                    </div>
+
+                    <!-- Email Signature Content Tab -->
+                    <div id="user_modal_sig_content" style="display: none; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #c5d3e8; padding-bottom:4px; flex-shrink:0;">
+                            <span style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase;">HTML Email Signature Config</span>
+                            <button type="button" class="act-btn" style="width:auto; padding:0 12px; height:24px; font-size:11px; font-weight:700; color:#fff; background:var(--accent); border:none; border-radius:5px;" onclick="generateSignatureFromFields()">✨ Auto-Generate Signature</button>
+                        </div>
+                        <div class="field" style="flex-shrink:0;">
+                            <label style="font-weight:700; font-size:10px; color:var(--text-muted); text-transform:uppercase;">Custom HTML Code (Editable)</label>
+                            <textarea id="u_email_signature" rows="6" style="width:100%; font-size:11px; font-family:monospace; padding:8px; border:1px solid var(--border); border-radius:6px; resize:vertical; outline:none; box-sizing:border-box;" oninput="updateSigPreview()"></textarea>
+                        </div>
+                        <div style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; border-bottom:1px solid #c5d3e8; padding-bottom:4px; margin-top:2px; flex-shrink:0;">Live Rendered Signature Preview</div>
+                        <div id="u_sig_preview" style="background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:12px; min-height:160px; overflow-y:auto; flex:1;">
+                            <div style="color:#94a3b8; font-size:12px;">Click "Auto-Generate Signature" above to build signature matching Image 2!</div>
                         </div>
                     </div>
 
@@ -1582,6 +1601,11 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('saveUserBtn').innerText = 'Create User';
         document.getElementById('password-strength-meter').style.display = 'none';
         
+        document.getElementById('u_designation').value = '';
+        document.getElementById('u_mobile_number').value = '';
+        document.getElementById('u_email_signature').value = '';
+        updateSigPreview();
+
         document.getElementById('u_allowed_specific_ip').value = '';
         document.getElementById('u_is_bypass_ip_restriction').checked = false;
         document.getElementById('u_is_voip_enabled').checked = false;
@@ -1619,6 +1643,11 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_username').value = u.username || '';
         document.getElementById('u_email').value = u.email || '';
         document.getElementById('u_role').value = u.role || 'Standard';
+        document.getElementById('u_designation').value = u.designation || '';
+        document.getElementById('u_mobile_number').value = u.mobile_number || '';
+        document.getElementById('u_email_signature').value = u.email_signature || '';
+        updateSigPreview();
+
         document.getElementById('u_can_edit').value = u.can_edit || 'No';
         document.getElementById('u_can_delete').value = u.can_delete || 'No';
         document.getElementById('u_status').value = u.status || 'Active';
@@ -1646,7 +1675,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const lastSync = u.voipline_last_sync ? new Date(u.voipline_last_sync).toLocaleString() : 'Never';
             _renderVoipSyncBadge(statusEl, lastSyncEl, voipEnabled, syncStatus, lastSync);
             
-            // Set up polling intervals based on user state
             if (!voipEnabled) {
                 if (voipStatusInterval) {
                     clearInterval(voipStatusInterval);
@@ -1696,41 +1724,115 @@ document.addEventListener("DOMContentLoaded", function() {
             if (voipStatusInterval) {
                 clearInterval(voipStatusInterval);
                 voipStatusInterval = null;
-                console.log('[VoIP] Cleared background pooling timer because VoIP was disabled.');
             }
         } else {
             if (!voipStatusInterval) {
                 checkVoIPLineStatus();
                 voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
-                console.log('[VoIP] Restarted background pooling timer because VoIP was enabled.');
             }
+        }
+    }
+
+    function generateSignatureFromFields() {
+        const fullName = document.getElementById('u_full_name').value.trim() || 'Solar Specialist';
+        const designation = document.getElementById('u_designation').value.trim() || document.getElementById('u_role').value || 'Solar Energy Advisor';
+        const email = document.getElementById('u_email').value.trim() || 'info@aresenergy.com.au';
+        const mobile = document.getElementById('u_mobile_number').value.trim() || '0485 838 592';
+        const digitsOnly = mobile.replace(/\D/g, '') || '61485838592';
+
+        const html = `<br><br>
+<p style="margin: 0 0 12px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13.5px; color: #333333; font-weight: 500;">Thank You</p>
+<div style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.4; color: #1c2b3a;">
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+    <span style="font-size: 16px; font-weight: 800; color: #0284c7;">${fullName}</span>
+    <div style="display: inline-flex; gap: 6px; align-items: center; margin-left: 6px;">
+      <a href="https://facebook.com/aresenergy" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" width="18" height="18" alt="FB" style="vertical-align: middle;">
+      </a>
+      <a href="https://instagram.com/aresenergy" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="18" height="18" alt="IG" style="vertical-align: middle;">
+      </a>
+      <a href="https://wa.me/${digitsOnly}" target="_blank" style="text-decoration: none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384055.png" width="18" height="18" alt="WA" style="vertical-align: middle;">
+      </a>
+    </div>
+  </div>
+  <div style="font-size: 13px; color: #475569; font-weight: 600; margin-bottom: 2px;">${designation}</div>
+  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Ares Energy</div>
+
+  <div style="border-top: 1.5px solid #0284c7; border-bottom: 1.5px solid #0284c7; padding: 8px 0; margin: 8px 0 10px; max-width: 480px;">
+    <table style="border-collapse: collapse; font-size: 12px; color: #1e293b; width: 100%;">
+      <tr>
+        <td style="font-weight: 700; width: 70px; padding: 2px 0; color: #475569;">Email:</td>
+        <td style="padding: 2px 0;"><a href="mailto:${email}" style="color: #1e293b; text-decoration: none; font-weight: 600;">${email}</a></td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Mobile:</td>
+        <td style="padding: 2px 0; font-weight: 600;">${mobile}</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Tollfree:</td>
+        <td style="padding: 2px 0; font-weight: 600;">1300 717 583</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; padding: 2px 0; color: #475569;">Address:</td>
+        <td style="padding: 2px 0; font-weight: 600;">276 Kargotich Rd, Oakford WA 6121</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="margin-bottom: 10px;">
+    <a href="https://www.aresenergy.com.au" target="_blank" style="color: #0284c7; font-weight: 700; font-size: 13px; text-decoration: none;">www.aresenergy.com.au</a>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px;">
+    <img src="http://212.38.94.6/ares_energy_logo.png" height="42" alt="Ares Energy & Electricals" style="display: inline-block; object-fit: contain;">
+    <img src="https://s3.ap-southeast-2.amazonaws.com/assets.newenergytech.org.au/uploads/Consumer-information-products/NETCC_Approved_Seller_Logo.png" height="48" alt="Approved Seller NETCC" style="display: inline-block; object-fit: contain;">
+    <img src="https://solaraccreditation.com.au/wp-content/uploads/2023/11/SAA-Logo-RGB-Horizontal.png" height="42" alt="Solar Accreditation Australia" style="display: inline-block; object-fit: contain;">
+  </div>
+</div>`;
+
+        document.getElementById('u_email_signature').value = html;
+        updateSigPreview();
+    }
+
+    function updateSigPreview() {
+        const val = document.getElementById('u_email_signature').value;
+        const prevEl = document.getElementById('u_sig_preview');
+        if (prevEl) {
+            prevEl.innerHTML = val || '<div style="color:#94a3b8; font-size:12px;">No signature set yet. Click "Auto-Generate Signature" above!</div>';
         }
     }
 
     function switchUserModalTab(tabName) {
         const tabVoip = document.getElementById('tab_user_voip');
+        const tabSig = document.getElementById('tab_user_sig');
         const tabPerms = document.getElementById('tab_user_perms');
         const voipContent = document.getElementById('user_modal_voip_content');
+        const sigContent = document.getElementById('user_modal_sig_content');
         const permsContent = document.getElementById('user_modal_perms_content');
         
+        [tabVoip, tabSig, tabPerms].forEach(t => {
+            if (t) {
+                t.classList.remove('active');
+                t.style.color = '#64748b';
+                t.style.borderBottom = '2px solid transparent';
+            }
+        });
+        [voipContent, sigContent, permsContent].forEach(c => {
+            if (c) c.style.display = 'none';
+        });
+
         if (tabName === 'voip') {
-            tabVoip.classList.add('active');
-            tabVoip.style.color = 'var(--primary)';
-            tabVoip.style.borderBottom = '2px solid var(--primary)';
-            tabPerms.classList.remove('active');
-            tabPerms.style.color = '#64748b';
-            tabPerms.style.borderBottom = '2px solid transparent';
-            voipContent.style.display = 'flex';
-            permsContent.style.display = 'none';
+            if (tabVoip) { tabVoip.classList.add('active'); tabVoip.style.color = 'var(--primary)'; tabVoip.style.borderBottom = '2px solid var(--primary)'; }
+            if (voipContent) voipContent.style.display = 'flex';
+        } else if (tabName === 'sig') {
+            if (tabSig) { tabSig.classList.add('active'); tabSig.style.color = 'var(--primary)'; tabSig.style.borderBottom = '2px solid var(--primary)'; }
+            if (sigContent) sigContent.style.display = 'flex';
+            updateSigPreview();
         } else {
-            tabPerms.classList.add('active');
-            tabPerms.style.color = 'var(--primary)';
-            tabPerms.style.borderBottom = '2px solid var(--primary)';
-            tabVoip.classList.remove('active');
-            tabVoip.style.color = '#64748b';
-            tabVoip.style.borderBottom = '2px solid transparent';
-            voipContent.style.display = 'none';
-            permsContent.style.display = 'flex';
+            if (tabPerms) { tabPerms.classList.add('active'); tabPerms.style.color = 'var(--primary)'; tabPerms.style.borderBottom = '2px solid var(--primary)'; }
+            if (permsContent) permsContent.style.display = 'flex';
         }
     }
 
@@ -1922,6 +2024,9 @@ document.addEventListener("DOMContentLoaded", function() {
             email: document.getElementById('u_email').value.trim(),
             password: document.getElementById('u_password').value,
             role: document.getElementById('u_role').value,
+            designation: (document.getElementById('u_designation')?.value || '').trim(),
+            mobile_number: (document.getElementById('u_mobile_number')?.value || '').trim(),
+            email_signature: (document.getElementById('u_email_signature')?.value || '').trim(),
             can_edit: document.getElementById('u_can_edit').value,
             can_delete: document.getElementById('u_can_delete').value,
             status: document.getElementById('u_status').value,
