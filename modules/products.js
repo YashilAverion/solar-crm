@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../database/db');
 const multer = require('multer');
 const fs = require('fs');
+const XLSX = require('xlsx');
 const { getSydneyTime, requireAuth, requireManager, getCurrentUser } = require('../helpers');
 
 const uploadDir = './public/uploads/products';
@@ -397,39 +398,6 @@ router.get('/cec/search', requireAuth, (req, res) => {
     });
 });
 
-function parseCSV(text) {
-    const lines = [];
-    let row = [""];
-    let inQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-        let c = text[i];
-        let next = text[i+1];
-        if (c === '"') {
-            if (inQuotes && next === '"') {
-                row[row.length - 1] += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (c === ',' && !inQuotes) {
-            row.push("");
-        } else if ((c === '\r' || c === '\n') && !inQuotes) {
-            if (c === '\r' && next === '\n') {
-                i++;
-            }
-            lines.push(row);
-            row = [""];
-        } else {
-            row[row.length - 1] += c;
-        }
-    }
-    if (row.length > 1 || row[0] !== "") {
-        lines.push(row);
-    }
-    return lines;
-}
-
 router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -444,12 +412,19 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
 
     try {
         const filePath = req.file.path;
-        const content = fs.readFileSync(filePath, 'utf8');
-        fs.unlinkSync(filePath); // delete temp file
+        
+        // Read file using XLSX (handles .csv, .xlsx, .xls, etc.)
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        // Convert to 2D array of values
+        const lines = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // delete temp file
 
-        const lines = parseCSV(content);
         if (lines.length < 2) {
-            return res.status(400).json({ error: 'CSV file is empty or invalid.' });
+            return res.status(400).json({ error: 'Uploaded file is empty or invalid.' });
         }
 
         let headerRowIdx = -1;
@@ -466,7 +441,7 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
         }
 
         if (headerRowIdx === -1) {
-            return res.status(400).json({ error: 'CSV must contain at least Manufacturer and Model columns.' });
+            return res.status(400).json({ error: 'Uploaded file must contain at least Manufacturer and Model columns.' });
         }
 
         const mfgIdx = headers.findIndex(h => h.includes('manufacturer') || h.includes('mfg') || h.includes('licensee') || h.includes('company') || h.includes('holder'));
@@ -481,22 +456,22 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
             const line = lines[i];
             if (line.length < 2 || !line[mfgIdx] || !line[modelIdx]) continue;
 
-            const manufacturer = line[mfgIdx].trim();
-            const brand = brandIdx !== -1 && line[brandIdx] ? line[brandIdx].trim() : manufacturer;
-            const model = line[modelIdx].trim();
-            const expiry_date = expiryIdx !== -1 && line[expiryIdx] ? line[expiryIdx].trim() : '';
-            const approved_date = approvedIdx !== -1 && line[approvedIdx] ? line[approvedIdx].trim() : '';
+            const manufacturer = String(line[mfgIdx]).trim();
+            const brand = brandIdx !== -1 && line[brandIdx] ? String(line[brandIdx]).trim() : manufacturer;
+            const model = String(line[modelIdx]).trim();
+            const expiry_date = expiryIdx !== -1 && line[expiryIdx] ? String(line[expiryIdx]).trim() : '';
+            const approved_date = approvedIdx !== -1 && line[approvedIdx] ? String(line[approvedIdx]).trim() : '';
             
             let capacity_value = 0;
             if (capIdx !== -1 && line[capIdx]) {
-                const match = line[capIdx].match(/[\d.]+/);
+                const match = String(line[capIdx]).match(/[\d.]+/);
                 if (match) capacity_value = parseFloat(match[0]);
             }
 
             // Create specs
             const specs = {};
             headers.forEach((h, idx) => {
-                if (line[idx]) specs[h] = line[idx].trim();
+                if (line[idx]) specs[h] = String(line[idx]).trim();
             });
 
             productsToInsert.push([
@@ -512,7 +487,7 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
         }
 
         if (productsToInsert.length === 0) {
-            return res.status(400).json({ error: 'No valid products found in the CSV file.' });
+            return res.status(400).json({ error: 'No valid products found in the file.' });
         }
 
         db.serialize(() => {
