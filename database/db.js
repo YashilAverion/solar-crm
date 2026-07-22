@@ -1198,10 +1198,15 @@ db.serialize(() => {
     });
 
     function runUserPermissionsInitialization() {
+        // Migrate existing user permissions from 'Projects' to 'Sales'
+        db.run("UPDATE user_permissions SET module_name = 'Sales' WHERE module_name = 'Projects'", (err) => {
+            if (err) console.error("[DB Migration] Error migrating Projects permissions to Sales:", err.message);
+        });
+
         const modulesAndFeatures = {
             'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
             'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
-            'Projects': ['Access Module', 'Leads'],
+            'Sales': ['Access Module', 'Leads'],
             'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
             'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
             'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],

@@ -433,7 +433,7 @@ db.serialize(() => {
         const modulesAndFeatures = {
             'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
             'Lead Master': ['Access Module', 'Master Leads', 'Delete Leads', 'Duplicate Leads', 'Lead Approvals', 'Add Lead', 'Edit Lead', 'View Revenue', 'Edit Address'],
-            'Projects': ['Access Module', 'Leads'],
+            'Sales': ['Access Module', 'Leads'],
             'Masters': ['Access Module', 'Product Master', 'STC Master', 'Rebate Live Master', 'Margin Master', 'Installation Charges Master'],
             'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
             'User Management': ['Access Module', 'Manage Users', 'Manage Roles']

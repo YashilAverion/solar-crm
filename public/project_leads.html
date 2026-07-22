@@ -258,9 +258,9 @@
             <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
         </div>
 
-        <!-- Projects -->
+        <!-- Sales -->
         <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Projects</span>
+            <span>Sales</span>
             <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
         </div>
         <div class="sub-menu" style="display: none;">
@@ -483,12 +483,12 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="stats-row">
-        <div class="stat-card" onclick="applyStatusFilter('all')" title="Show All Projects">
-            <div class="stat-label">Total Projects</div>
+        <div class="stat-card" onclick="applyStatusFilter('all')" title="Show All Sales">
+            <div class="stat-label">Total Sales</div>
             <div class="stat-val" id="statTotal">0</div>
-            <div class="stat-sub">All active projects</div>
+            <div class="stat-sub">All active sales</div>
         </div>
-        <div class="stat-card" onclick="applyStatusFilter('Planned')" title="Planned Projects">
+        <div class="stat-card" onclick="applyStatusFilter('Planned')" title="Planned Sales">
             <div class="stat-label">Planned</div>
             <div class="stat-val" id="statPlanned">0</div>
             <div class="stat-sub">Click to filter</div>
@@ -501,13 +501,13 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="stat-card" onclick="applyStatusFilter('Closed Won')" title="Closed Won">
             <div class="stat-label">Closed Won</div>
             <div class="stat-val" id="statClosedWon">0</div>
-            <div class="stat-sub">Completed projects</div>
+            <div class="stat-sub">Completed sales</div>
         </div>
     </div>
 
     <div class="content-area">
         <div class="table-toolbar">
-            <span class="tt-count" id="tableCount">0 Projects</span>
+            <span class="tt-count" id="tableCount">0 Sales</span>
             <div class="tt-spacer"></div>
             <span class="filter-chip fc-active" id="fc_all" onclick="setFilterChip('all')">All</span>
             <span class="filter-chip" id="fc_planned" onclick="setFilterChip('planned')">Planned</span>
@@ -788,7 +788,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const data = await res.json();
                     omniDrop.innerHTML = '';
                     if (!data || data.length === 0) {
-                        omniDrop.innerHTML = '<li style="padding:8px 12px; color:var(--text-muted); font-size:13px; font-style:italic;">No matching projects found</li>';
+                        omniDrop.innerHTML = '<li style="padding:8px 12px; color:var(--text-muted); font-size:13px; font-style:italic;">No matching sales found</li>';
                         omniDrop.style.display = 'block';
                         return;
                     }
@@ -1332,7 +1332,7 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
         document.getElementById('tableCount').innerText = `${totalLeadsCountFromServer} Project${totalLeadsCountFromServer !== 1 ? 's' : ''}`;
         
         if (leads.length === 0) {
-            body.innerHTML = `<tr><td colspan="13" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No projects found.</td></tr>`;
+            body.innerHTML = `<tr><td colspan="13" style="text-align:center; padding: 20px !important; color: var(--text-muted);">No sales found.</td></tr>`;
             return;
         }
 
@@ -1610,7 +1610,7 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
     function exportToExcel() {
         const leads = getFilteredLeads();
         if (!leads.length) { 
-            Swal.fire('No Data', 'No projects to export.', 'warning'); 
+            Swal.fire('No Data', 'No sales to export.', 'warning'); 
             return; 
         }
         
@@ -1633,8 +1633,8 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
         
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Projects');
-        XLSX.writeFile(wb, `Projects_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, 'Sales');
+        XLSX.writeFile(wb, `Sales_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     function showProjectSnapshot(id) {
@@ -1875,7 +1875,7 @@ return `<span class="status-badge ${map[status] || 'sb-planned'}">${status || 'P
                     check('/paid_payments.html', 'Ares Installation Outside', 'Paid Payments');
                     check('/company_details.html', 'Ares Installation Outside', 'Company Details');
                     check('/admin.html', 'Settings', 'Manage Users');
-                    check('/project_leads.html', 'Projects', 'Leads');
+                    check('/project_leads.html', 'Sales', 'Leads');
                     check('/lead_approvals.html', 'Lead Master', 'Lead Approvals');
                     check('/attendance.html', 'Attendance & Payroll', 'Employees');
                     check('/attendance.html#leave', 'Attendance & Payroll', 'Leave');
