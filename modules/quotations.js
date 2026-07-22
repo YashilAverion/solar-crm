@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require('../database/db');
 const { requireAuth } = require('../helpers');
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 // Helper to query single row as Promise
 function dbGet(sql, params = []) {
@@ -20,6 +22,16 @@ function dbAll(sql, params = []) {
         db.all(sql, params, (err, rows) => {
             if (err) reject(err);
             else resolve(rows || []);
+        });
+    });
+}
+
+// Helper to run query as Promise
+function dbRun(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) reject(err);
+            else resolve(this);
         });
     });
 }
@@ -1672,8 +1684,31 @@ router.get('/:id/download-pdf', async (req, res) => {
         await browser.close();
         browser = null;
 
+        // Save PDF to history and disk
+        const projectNum = lead.project_number || leadId;
+        const countRow = await dbGet("SELECT COUNT(*) as count FROM lead_quotations WHERE lead_id = ?", [leadId]);
+        const version = (countRow ? countRow.count : 0) + 1;
+        const saveFilename = `Quotation_${projectNum}_v${version}.pdf`;
+        
+        const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'quotations');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        const savePath = path.join(uploadDir, saveFilename);
+        fs.writeFileSync(savePath, pdfBuffer);
+        
+        const fileSize = (pdfBuffer.length / 1024).toFixed(1) + ' KB';
+        const fileUrl = `/uploads/quotations/${saveFilename}`;
+        const generatedBy = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
+        
+        await dbRun(
+            "INSERT INTO lead_quotations (lead_id, file_name, file_size, file_url, generated_by) VALUES (?, ?, ?, ?, ?)",
+            [leadId, saveFilename, fileSize, fileUrl, generatedBy]
+        );
+
         // 6. Return PDF stream
-        const filename = `Quotation_${lead.project_number || leadId}.pdf`;
+        const filename = `Quotation_${projectNum}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.send(pdfBuffer);
@@ -1682,6 +1717,21 @@ router.get('/:id/download-pdf', async (req, res) => {
         console.error("PDF generation route error:", err);
         if (browser) await browser.close().catch(() => {});
         res.status(500).send("Quotation PDF generation failed: " + err.message);
+    }
+});
+
+// Get list of generated quotations for a lead
+router.get('/:id/quotations-list', async (req, res) => {
+    try {
+        const leadId = req.params.id;
+        const list = await dbAll(
+            "SELECT * FROM lead_quotations WHERE lead_id = ? ORDER BY id DESC",
+            [leadId]
+        );
+        res.json({ success: true, quotations: list });
+    } catch (err) {
+        console.error("Error fetching quotations list:", err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

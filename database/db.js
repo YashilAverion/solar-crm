@@ -265,6 +265,20 @@ db.serialize(() => {
         )
     `);
 
+    // 6b. Lead Quotations Table (For logging generated quotation PDFs)
+    db.run(`
+        CREATE TABLE IF NOT EXISTS lead_quotations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lead_id INTEGER,
+            file_name TEXT,
+            file_size TEXT,
+            file_url TEXT,
+            generated_by TEXT,
+            generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE
+        )
+    `);
+
     // 7. Installation Saved Charges Table
     db.run(`
         CREATE TABLE IF NOT EXISTS installation_saved_charges (
