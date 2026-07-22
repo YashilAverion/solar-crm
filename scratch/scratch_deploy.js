@@ -4,7 +4,7 @@ const conn = new Client();
 conn.on('ready', () => {
   console.log('SSH connection established successfully to Live VPS.');
   
-  const cmd = 'cd /root/solar-crm && git fetch && git reset --hard origin/main && pm2 restart solar-crm';
+  const cmd = 'cd /root/solar-crm && git fetch && git reset --hard origin/main && npm install --omit=dev && pm2 restart solar-crm';
   console.log(`Executing remote command: ${cmd}`);
   
   conn.exec(cmd, (err, stream) => {

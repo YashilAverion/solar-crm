@@ -587,7 +587,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 <div id="cecModal" class="modal">
-    <div class="modal-content" style="max-width: 750px;">
+    <div class="modal-content" style="max-width: 1100px; width: 95%;">
         <button class="modal-close" onclick="document.getElementById('cecModal').style.display='none'">✕</button>
         
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
@@ -656,13 +656,17 @@ document.addEventListener("DOMContentLoaded", function() {
                         <th style="padding: 10px; width: 40px; text-align: center;"><input type="checkbox" id="cecSelectAll" onclick="toggleCecAllCheckboxes(this)" style="cursor: pointer;"></th>
                         <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Category</th>
                         <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Manufacturer</th>
-                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Model / Specifications</th>
+                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Brand</th>
+                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Model</th>
+                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Series / Tech Details</th>
+                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Capacity</th>
+                        <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Approved Date</th>
                         <th style="padding: 10px; text-align: left; font-weight: 700; color: #475569;">Expiry Date</th>
                     </tr>
                 </thead>
                 <tbody id="cecResultsTableBody">
                     <tr>
-                        <td colspan="5" style="padding: 20px; text-align: center; color: #94a3b8; font-style: italic;">Select filters or type a search query to load approved products.</td>
+                        <td colspan="9" style="padding: 20px; text-align: center; color: #94a3b8; font-style: italic;">Select filters or type a search query to load approved products.</td>
                     </tr>
                 </tbody>
             </table>
@@ -1663,7 +1667,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const manufacturers = cecDropdownsState.selectedManufacturers.join(',');
         const brands = cecDropdownsState.selectedBrands.join(',');
         
-        tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748b; font-style: italic;">Loading approved products...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="padding: 20px; text-align: center; color: #64748b; font-style: italic;">Loading approved products...</td></tr>`;
 
         try {
             const url = `/products/cec/search?category=${encodeURIComponent(category)}&search=${encodeURIComponent(query)}&manufacturers=${encodeURIComponent(manufacturers)}&brands=${encodeURIComponent(brands)}`;
@@ -1671,42 +1675,63 @@ document.addEventListener("DOMContentLoaded", function() {
             if (res.ok) {
                 const data = await res.json();
                 if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #94a3b8; font-style: italic;">No approved products found matching your filters.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="padding: 20px; text-align: center; color: #94a3b8; font-style: italic;">No approved products found matching your filters.</td></tr>`;
                     updateCecImportButton();
                     return;
                 }
 
                 tbody.innerHTML = data.map(p => {
                     let specsText = '';
+                    let seriesText = '';
                     try {
                         const specs = p.additional_specs_json ? JSON.parse(p.additional_specs_json) : {};
+                        
+                        // Find series column dynamically
+                        const seriesKey = Object.keys(specs).find(k => k.includes('series'));
+                        seriesText = seriesKey ? specs[seriesKey] : (specs.series || '-');
+                        
                         if (p.category === 'Panel') {
-                            specsText = `${p.capacity_value}W | Linear Warranty: ${specs.linear_warranty || '-'} Yrs`;
+                            const linearKey = Object.keys(specs).find(k => k.includes('linear'));
+                            const warrantyKey = Object.keys(specs).find(k => k.includes('warranty'));
+                            specsText = `Linear: ${specs[linearKey] || specs.linear_warranty || '-'} Yrs | Product: ${specs[warrantyKey] || specs.warranty || '-'} Yrs`;
                         } else if (p.category === 'Inverter') {
-                            specsText = `${specs.phase || ''} | ${specs.inv_type || ''} | AC: ${specs.ac_out || p.capacity_value}W | MPPT: ${specs.mppt || '-'}`;
+                            const phaseKey = Object.keys(specs).find(k => k.includes('phase'));
+                            const typeKey = Object.keys(specs).find(k => k.includes('type') || k.includes('sub-type'));
+                            const mpptKey = Object.keys(specs).find(k => k.includes('mppt') || k.includes('input'));
+                            specsText = `${specs[phaseKey] || ''} | ${specs[typeKey] || ''} | MPPT: ${specs[mpptKey] || '-'}`;
                         } else if (p.category === 'Battery') {
-                            specsText = `Capacity: ${p.capacity_value}kWh | Modules: ${specs.modules || '-'}`;
+                            const modulesKey = Object.keys(specs).find(k => k.includes('modules') || k.includes('cell'));
+                            specsText = `Modules: ${specs[modulesKey] || specs.modules || '-'}`;
                         }
-                    } catch(e) { specsText = `${p.capacity_value}`; }
+                    } catch(e) { specsText = ''; }
+
+                    let capText = '';
+                    if (p.category === 'Panel') capText = `${p.capacity_value} W`;
+                    else if (p.category === 'Inverter') capText = p.capacity_value >= 1000 ? `${p.capacity_value / 1000} kW` : `${p.capacity_value} W`;
+                    else if (p.category === 'Battery') capText = `${p.capacity_value} kWh`;
 
                     return `
                         <tr style="border-bottom: 1px solid #f1f5f9; hover:background-color:#f8fafc;">
                             <td style="padding: 8px; text-align: center;"><input type="checkbox" class="cec-row-checkbox" value="${p.id}" onclick="updateCecImportButton()" style="cursor: pointer;"></td>
                             <td style="padding: 8px;"><span class="filter-chip" style="font-size: 11px;">${p.category}</span></td>
                             <td style="padding: 8px; font-weight: 600; color: #1e293b;">${p.manufacturer}</td>
-                            <td style="padding: 8px; color: #475569;">
-                                <div style="font-weight: 500; color: #0f172a;">${p.model}</div>
+                            <td style="padding: 8px; color: #475569;">${p.brand || '-'}</td>
+                            <td style="padding: 8px; font-weight: 500; color: #0f172a;">${p.model}</td>
+                            <td style="padding: 8px; color: #64748b;">
+                                <div style="font-weight: 500;">${seriesText}</div>
                                 <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">${specsText}</div>
                             </td>
+                            <td style="padding: 8px; color: #0f172a; font-weight: 600;">${capText}</td>
+                            <td style="padding: 8px; color: #64748b;">${p.approved_date || '-'}</td>
                             <td style="padding: 8px; color: #64748b;">${p.expiry_date || '-'}</td>
                         </tr>
                     `;
                 }).join('');
             } else {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #ef4444; font-style: italic;">Failed to load approved list.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="padding: 20px; text-align: center; color: #ef4444; font-style: italic;">Failed to load approved list.</td></tr>`;
             }
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #ef4444; font-style: italic;">Error connecting to server.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="padding: 20px; text-align: center; color: #ef4444; font-style: italic;">Error connecting to server.</td></tr>`;
         }
         updateCecImportButton();
     }
