@@ -2821,9 +2821,17 @@ function toggleNav(event, element) {
                         
                         if (overrideSellingPriceEl) {
                             const currentOverrideVal = parseFloat(overrideSellingPriceEl.value) || 0;
-                            // If empty or 0, default to calculated selling price
-                            if (currentOverrideVal === 0) {
+                            // If empty, 0, or if the discount status is 'Rejected', default/reset to calculated selling price
+                            if (currentOverrideVal === 0 || projectData.discount_approval_status === 'Rejected') {
                                 overrideSellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
+                                if (projectData.discount_approval_status === 'Rejected') {
+                                    projectData.discount_approval_status = 'None';
+                                    projectData.discount_approved_by = null;
+                                    // Save the new reverted price to DB automatically
+                                    setTimeout(() => {
+                                        saveEngineeringGrid(false);
+                                    }, 100);
+                                }
                             }
                         }
                         
@@ -5896,9 +5904,20 @@ function toggleNav(event, element) {
                 
                 if (res.ok) {
                     Swal.fire('Success', `Discount ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 'success');
-                    projectData.discount_approval_status = action === 'approve' ? 'Approved' : 'Rejected';
-                    updateDiscountApprovalUI();
-                    activateSaveButtons();
+                    if (action === 'reject') {
+                        const calculatedPriceEl = document.getElementById('td_selling_price');
+                        const overridePriceEl = document.getElementById('td_override_selling_price');
+                        if (calculatedPriceEl && overridePriceEl) {
+                            overridePriceEl.value = parseFloat(calculatedPriceEl.value).toFixed(2);
+                        }
+                        projectData.discount_approval_status = 'None';
+                        projectData.discount_approved_by = null;
+                        await saveEngineeringGrid(false);
+                    } else {
+                        projectData.discount_approval_status = 'Approved';
+                        updateDiscountApprovalUI();
+                        activateSaveButtons();
+                    }
                 } else {
                     const err = await res.json();
                     Swal.fire('Error', err.error || `Failed to ${action} discount.`, 'error');
