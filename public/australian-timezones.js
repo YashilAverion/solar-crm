@@ -1423,7 +1423,7 @@
                             <path d="M16 13c-.83 0-2.5.42-3.17 1.05.7.9 1.17 2.05 1.17 3.45v2.5h8v-2.5c0-2.33-4.67-3.5-6-3.5z" fill="var(--menu-icon-accent)"/>
                         </svg>
                     `;
-                } else if (lowerText.startsWith('projects') || lowerText.startsWith('project') || lowerText.startsWith('active projects')) {
+                } else if (lowerText.startsWith('projects') || lowerText.startsWith('project') || lowerText.startsWith('active projects') || lowerText.startsWith('sales') || lowerText.startsWith('sale')) {
                     svgMarkup = `
                         <svg class="menu-icon-svg" width="16" height="16" viewBox="0 0 24 24" style="margin-right: 8px; flex-shrink: 0; display: inline-block; vertical-align: middle;">
                             <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="var(--menu-icon-base)"/>
@@ -1469,8 +1469,10 @@
                     `;
                 }
 
+                const hasToggle = item.querySelector('.toggle-icon') !== null;
+
                 if (svgMarkup) {
-                    item.innerHTML = svgMarkup + `<span>${text}</span>`;
+                    item.innerHTML = svgMarkup + `<span>${text}</span>` + (hasToggle ? `<span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>` : '');
                 }
             });
         } catch (e) {
