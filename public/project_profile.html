@@ -6506,6 +6506,7 @@ function toggleNav(event, element) {
 
                     updateCapacityField();
                     activateSaveButtons();
+                    updateMaxPanelLabel();
                     // Don't auto-add Inverter when qty is set programmatically (e.g. during combo expansion)
                     if (!isProgrammatic && type === 'Panel' && (parseFloat(qtyInput.value) || 0) > 1) {
                         addInverterRowBelow(row);
@@ -7148,19 +7149,41 @@ function toggleNav(event, element) {
          * Returns 0 if no inverter is selected or panel wattage is unknown.
          */
         function getMaxPanelsAllowed(panelRow) {
-            // Calculate total inverter DC power
+            // Check if there is any Battery selected
+            let hasBattery = false;
+            document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                const type = row.querySelector('.cp-type')?.value;
+                const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                if (type === 'Battery' && qty > 0) {
+                    hasBattery = true;
+                }
+            });
+
+            // Calculate total inverter DC power and AC power
             let totalInverterDC = 0;
+            let totalInverterAC = 0;
             document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
                 const type = row.querySelector('.cp-type')?.value;
                 if (type !== 'Inverter') return;
                 const code = (row.querySelector('.cp-code')?.value || '').trim();
                 const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 1;
+                const kwVal = parseFloat(row.querySelector('.cp-kw')?.value) || 0;
+                
+                totalInverterAC += kwVal * qty;
+                
                 const master = allActiveProducts.find(p => p.stock_code === code);
-                if (master && parseFloat(master.inv_rt_dc_power_kw) > 0) {
-                    totalInverterDC += parseFloat(master.inv_rt_dc_power_kw) * qty;
+                if (master) {
+                    if (parseFloat(master.inv_rt_dc_power_kw) > 0) {
+                        totalInverterDC += parseFloat(master.inv_rt_dc_power_kw) * qty;
+                    }
+                    if (kwVal <= 0 && parseFloat(master.inv_ac_output_power_kw) > 0) {
+                        totalInverterAC += parseFloat(master.inv_ac_output_power_kw) * qty;
+                    }
                 }
             });
-            if (totalInverterDC <= 0) return 0;
+
+            if (hasBattery && totalInverterDC <= 0) return 0;
+            if (!hasBattery && totalInverterAC <= 0) return 0;
 
             // Get panel wattage
             const code = (panelRow.querySelector('.cp-code')?.value || '').trim();
@@ -7175,33 +7198,58 @@ function toggleNav(event, element) {
             }
             if (panelWatts <= 0) return 0;
 
-            return Math.floor((totalInverterDC * 1000) / panelWatts);
+            if (hasBattery) {
+                return Math.floor((totalInverterDC * 1000) / panelWatts);
+            } else {
+                return Math.floor((totalInverterAC * 1.3333 * 1000) / panelWatts);
+            }
         }
 
         /**
          * updateMaxPanelLabel()
          * When an inverter is selected, calculates the maximum number of panels
-         * that can be installed based on inv_rt_dc_power_kw, and displays
-         * "Max: X Panels" in light red below the kW/kWh field of each Panel row.
+         * that can be installed based on whether a battery is selected, and displays
+         * "Max: X" in light red below the kW/kWh field of each Panel row.
          */
         function updateMaxPanelLabel() {
             // 1. Remove all existing labels
             document.querySelectorAll('.max-panel-label').forEach(el => el.remove());
 
-            // 2. Calculate total inverter DC power from all inverter rows
+            // Check if there is any Battery selected
+            let hasBattery = false;
+            document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
+                const type = row.querySelector('.cp-type')?.value;
+                const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 0;
+                if (type === 'Battery' && qty > 0) {
+                    hasBattery = true;
+                }
+            });
+
+            // 2. Calculate total inverter DC power and AC power from all inverter rows
             let totalInverterDC = 0;
+            let totalInverterAC = 0;
             document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
                 const type = row.querySelector('.cp-type')?.value;
                 if (type !== 'Inverter') return;
                 const code = (row.querySelector('.cp-code')?.value || '').trim();
                 const qty = parseFloat(row.querySelector('.cp-qty')?.value) || 1;
+                const kwVal = parseFloat(row.querySelector('.cp-kw')?.value) || 0;
+                
+                totalInverterAC += kwVal * qty;
+                
                 const master = allActiveProducts.find(p => p.stock_code === code);
-                if (master && parseFloat(master.inv_rt_dc_power_kw) > 0) {
-                    totalInverterDC += parseFloat(master.inv_rt_dc_power_kw) * qty;
+                if (master) {
+                    if (parseFloat(master.inv_rt_dc_power_kw) > 0) {
+                        totalInverterDC += parseFloat(master.inv_rt_dc_power_kw) * qty;
+                    }
+                    if (kwVal <= 0 && parseFloat(master.inv_ac_output_power_kw) > 0) {
+                        totalInverterAC += parseFloat(master.inv_ac_output_power_kw) * qty;
+                    }
                 }
             });
 
-            if (totalInverterDC <= 0) return; // No inverter with DC data
+            if (hasBattery && totalInverterDC <= 0) return;
+            if (!hasBattery && totalInverterAC <= 0) return;
 
             // 3. For each Panel row, calculate max panels and show the label
             document.querySelectorAll('#productRows .product-selection-row').forEach(row => {
@@ -7222,7 +7270,12 @@ function toggleNav(event, element) {
                 }
 
                 if (panelWatts > 0) {
-                    const maxPanels = Math.floor((totalInverterDC * 1000) / panelWatts);
+                    let maxPanels = 0;
+                    if (hasBattery) {
+                        maxPanels = Math.floor((totalInverterDC * 1000) / panelWatts);
+                    } else {
+                        maxPanels = Math.floor((totalInverterAC * 1.3333 * 1000) / panelWatts);
+                    }
                     // Insert label inside the kW/kWh <label> element (next to the heading text)
                     const kwInput = row.querySelector('.cp-kw');
                     const kwGroup = kwInput ? kwInput.closest('.product-field-group') : null;
