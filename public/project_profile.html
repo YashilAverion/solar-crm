@@ -1055,38 +1055,81 @@ function toggleNav(event, element) {
                                 </button>
                             </div>
                         </div>
-                        <div class="cf-row"><label>Grand Total</label>
-                            <div class="cf-price-group">
+                        <!-- Two-Column Side-by-Side Financial Layout -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 8px 12px; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">
+                            <div>Field</div>
+                            <div style="text-align: right; padding-right: 4px;">Calculated (Col 1)</div>
+                            <div style="text-align: right; padding-right: 4px;">Sales Override (Col 2)</div>
+                        </div>
+
+                        <!-- Grand Total Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #1e293b;">Grand Total</label>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
                                 <span class="cf-price-currency">$</span>
-                                <input type="number" id="td_grand_total">
+                                <input type="number" id="td_grand_total" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
+                            </div>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
+                                <span class="cf-price-currency">$</span>
+                                <input type="number" id="td_override_grand_total" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
                             </div>
                         </div>
-                        <div class="cf-row"><label>Rebates</label>
-                            <div class="cf-price-group">
+
+                        <!-- Rebates Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #1e293b;">Rebates</label>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
                                 <span class="cf-price-currency">$</span>
-                                <input type="number" id="td_rebates">
+                                <input type="number" id="td_rebates" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
+                            </div>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
+                                <span class="cf-price-currency">$</span>
+                                <input type="number" id="td_override_rebates" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
                             </div>
                         </div>
-                        <div class="cf-row"><label>Selling Price</label>
-                            <div class="cf-price-group">
+
+                        <!-- Selling Price Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #1e293b;">Selling Price</label>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
                                 <span class="cf-price-currency">$</span>
-                                <input type="number" id="td_selling_price">
+                                <input type="number" id="td_selling_price" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
+                            </div>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px; border-color: var(--primary);">
+                                <span class="cf-price-currency" style="color: var(--primary); font-weight: 700; background: #fff3e0;">$</span>
+                                <input type="number" id="td_override_selling_price" style="font-weight: 700;">
                             </div>
                         </div>
-                        <div class="cf-row" id="discount_approval_row" style="display: none; align-items: center; justify-content: flex-end; gap: 8px; margin-top: -6px; margin-bottom: 6px;">
+
+                        <!-- TL Approval Alert Row -->
+                        <div id="discount_approval_row" style="display: none; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px 12px; background: #fafafa; border-radius: 6px; border: 1px solid #f1f5f9;">
                             <span id="discount_badge" style="font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600;"></span>
                             <div id="discount_actions" style="display: flex; gap: 6px;"></div>
                         </div>
-                        <div class="cf-row"><label>Deposit</label>
-                            <div class="cf-price-group">
+
+                        <!-- Deposit Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #1e293b;">Deposit</label>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
                                 <span class="cf-price-currency">$</span>
-                                <input type="number" id="td_deposit">
+                                <input type="number" id="td_deposit" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
+                            </div>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
+                                <span class="cf-price-currency">$</span>
+                                <input type="number" id="td_override_deposit" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
                             </div>
                         </div>
-                        <div class="cf-row"><label>Margin Metrics</label>
-                            <div class="cf-price-group">
+
+                        <!-- Margin Metrics Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #1e293b;">Margin Metrics</label>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
                                 <span class="cf-price-currency">$</span>
-                                <input type="text" id="td_margin" placeholder="e.g. 2200.00">
+                                <input type="text" id="td_margin" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
+                            </div>
+                            <div class="cf-price-group" style="width: 100% !important; margin: 0; height: 30px;">
+                                <span class="cf-price-currency">$</span>
+                                <input type="text" id="td_override_margin" readonly style="background: #f8fafc; font-weight: 600; cursor: not-allowed;">
                             </div>
                         </div>
                         
@@ -2254,9 +2297,10 @@ function toggleNav(event, element) {
                 });
             }
 
-            const sellingPriceInput = document.getElementById('td_selling_price');
+            const sellingPriceInput = document.getElementById('td_override_selling_price');
             if (sellingPriceInput) {
                 sellingPriceInput.addEventListener('input', () => {
+                    activateSaveButtons();
                     updateDiscountApprovalUI();
                 });
             }
@@ -2525,6 +2569,7 @@ function toggleNav(event, element) {
                 safeSet('td_grand_total', projectData.grand_total);
                 safeSet('td_rebates', projectData.rebate_amount);
                 safeSet('td_selling_price', projectData.selling_price);
+                safeSet('td_override_selling_price', projectData.selling_price);
                 safeSet('td_deposit', projectData.deposit_amount);
                 safeSet('td_margin', projectData.margin_metrics);
                 
@@ -2755,26 +2800,42 @@ function toggleNav(event, element) {
                         const depositEl = document.getElementById('td_deposit');
                         const marginEl = document.getElementById('td_margin');
 
+                        const overrideGrandTotalEl = document.getElementById('td_override_grand_total');
+                        const overrideRebatesEl = document.getElementById('td_override_rebates');
+                        const overrideSellingPriceEl = document.getElementById('td_override_selling_price');
+                        const overrideDepositEl = document.getElementById('td_override_deposit');
+                        const overrideMarginEl = document.getElementById('td_override_margin');
+
+                        // Column 1 (Calculated)
                         if (grandTotalEl) grandTotalEl.value = parseFloat(data.grandTotal).toFixed(2);
                         if (rebatesEl) rebatesEl.value = parseFloat(data.rebates).toFixed(2);
+                        if (sellingPriceEl) sellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
+                        if (depositEl) depositEl.value = (parseFloat(data.sellingPrice) * 0.10).toFixed(2);
+                        if (marginEl) {
+                            marginEl.value = ((parseFloat(data.sellingPrice) + parseFloat(data.rebates)) - parseFloat(data.grandTotal)).toFixed(2);
+                        }
+
+                        // Column 2 (Override / Sales)
+                        if (overrideGrandTotalEl) overrideGrandTotalEl.value = parseFloat(data.grandTotal).toFixed(2);
+                        if (overrideRebatesEl) overrideRebatesEl.value = parseFloat(data.rebates).toFixed(2);
                         
-                        if (sellingPriceEl) {
-                            const currentVal = parseFloat(sellingPriceEl.value) || 0;
-                            const prevRecommended = window.lastCalculationDetails ? (parseFloat(window.lastCalculationDetails.sellingPrice) || 0) : 0;
-                            if (currentVal === 0 || Math.abs(currentVal - prevRecommended) < 0.05) {
-                                sellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
+                        if (overrideSellingPriceEl) {
+                            const currentOverrideVal = parseFloat(overrideSellingPriceEl.value) || 0;
+                            // If empty or 0, default to calculated selling price
+                            if (currentOverrideVal === 0) {
+                                overrideSellingPriceEl.value = parseFloat(data.sellingPrice).toFixed(2);
                             }
                         }
                         
                         window.lastCalculationDetails = data;
                         
-                        // Re-calculate deposit and margin based on the current selling price
-                        const currentSellingPrice = parseFloat(sellingPriceEl.value) || 0;
-                        if (depositEl) depositEl.value = (currentSellingPrice * 0.10).toFixed(2);
-                        if (marginEl) {
-                            const currentGrandTotal = parseFloat(grandTotalEl.value) || 0;
-                            const currentRebates = parseFloat(rebatesEl.value) || 0;
-                            marginEl.value = ((currentSellingPrice + currentRebates) - currentGrandTotal).toFixed(2);
+                        // Re-calculate override deposit and margin based on the current override selling price
+                        const finalOverridePrice = overrideSellingPriceEl ? (parseFloat(overrideSellingPriceEl.value) || 0) : 0;
+                        if (overrideDepositEl) overrideDepositEl.value = (finalOverridePrice * 0.10).toFixed(2);
+                        if (overrideMarginEl) {
+                            const currentGrandTotal = parseFloat(data.grandTotal) || 0;
+                            const currentRebates = parseFloat(data.rebates) || 0;
+                            overrideMarginEl.value = ((finalOverridePrice + currentRebates) - currentGrandTotal).toFixed(2);
                         }
 
                         // Enable View Bifurcation button
@@ -3068,7 +3129,7 @@ function toggleNav(event, element) {
                     leadId: currentProjectId,
                     postcode: projectData?.postcode || 0,
                     products: products,
-                    sellingPrice: parseFloat(document.getElementById('td_selling_price')?.value) || 0,
+                    sellingPrice: parseFloat(document.getElementById('td_override_selling_price')?.value) || 0,
                     daily_usage: parseFloat(document.getElementById('tb_daily_usage')?.value) || 18.0
                 };
 
@@ -4900,7 +4961,7 @@ function toggleNav(event, element) {
                 return;
             }
 
-            const sellingPrice = parseFloat(document.getElementById('td_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
+            const sellingPrice = parseFloat(document.getElementById('td_override_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
             const balanceAmount = parseFloat(document.getElementById('payBalanceAmount').value) || 0;
             const totalPaid = sellingPrice - balanceAmount;
             const customerName = `${projectData.first_name || ''} ${projectData.last_name || ''}`.trim() || 'Customer';
@@ -5168,7 +5229,7 @@ function toggleNav(event, element) {
                 return;
             }
 
-            const sellingPrice = parseFloat(document.getElementById('td_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
+            const sellingPrice = parseFloat(document.getElementById('td_override_selling_price')?.value) || parseFloat(projectData.selling_price) || 0;
             const balanceAmount = parseFloat(document.getElementById('payBalanceAmount').value) || 0;
             const totalPaid = sellingPrice - balanceAmount;
             const customerName = projectData.customer_name || 'Customer';
@@ -5495,7 +5556,7 @@ function toggleNav(event, element) {
             } else if (tabId === 'transcript') {
                 setTimeout(loadCallTranscripts, 100);
             } else if (tabId === 'payment') {
-                const sellPrice = parseFloat(document.getElementById('td_selling_price')?.value) || 0;
+                const sellPrice = parseFloat(document.getElementById('td_override_selling_price')?.value) || 0;
                 document.getElementById('payTotalAmount').value = sellPrice.toFixed(2);
                 calculatePaymentBalance();
             }
@@ -5562,18 +5623,15 @@ function toggleNav(event, element) {
             await triggerCalculation();
 
             // Check discount approval status before saving
-            const sellingPrice = parseFloat(document.getElementById('td_selling_price').value) || 0;
-            let recommended = parseFloat(projectData.recommended_selling_price) || 0;
-            if (window.lastCalculationDetails && window.lastCalculationDetails.success) {
-                recommended = parseFloat(window.lastCalculationDetails.sellingPrice) || 0;
-            }
+            const sellingPrice = parseFloat(document.getElementById('td_override_selling_price').value) || 0;
+            const recommended = parseFloat(document.getElementById('td_selling_price').value) || 0;
             if (sellingPrice < recommended && recommended > 0) {
                 const status = projectData.discount_approval_status || 'None';
                 if (isCreate && status !== 'Approved') {
                     Swal.fire({
                         icon: 'error',
                         title: 'Approval Required',
-                        text: `Selling price is below recommended. You cannot initiate installation until the discount is Approved by a Team Leader.`
+                        text: `Sales Selling price is below recommended. You cannot initiate installation until the discount is Approved by a Team Leader.`
                     });
                     return;
                 }
@@ -5581,7 +5639,7 @@ function toggleNav(event, element) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Approval Required',
-                        text: `Selling price ($${sellingPrice.toFixed(2)}) is below recommended price ($${recommended.toFixed(2)}). Please request Team Leader approval before saving.`
+                        text: `Sales Selling price ($${sellingPrice.toFixed(2)}) is below recommended price ($${recommended.toFixed(2)}). Please request Team Leader approval before saving.`
                     });
                     return;
                 }
@@ -5681,11 +5739,11 @@ function toggleNav(event, element) {
                 war_workmanship: safeVal('tc_war_workmanship'),
                 war_installation: safeVal('tc_war_installation'),
                 quotation_inclusions: safeVal('tc_inclusions'),
-                grand_total: safeVal('td_grand_total'),
-                rebate_amount: safeVal('td_rebates'),
-                selling_price: safeVal('td_selling_price'),
-                deposit_amount: safeVal('td_deposit'),
-                margin_metrics: safeVal('td_margin'),
+                grand_total: safeVal('td_override_grand_total'),
+                rebate_amount: safeVal('td_override_rebates'),
+                selling_price: safeVal('td_override_selling_price'),
+                deposit_amount: safeVal('td_override_deposit'),
+                margin_metrics: safeVal('td_override_margin'),
                 is_create_installation: isCreate
             };
             
@@ -5715,14 +5773,9 @@ function toggleNav(event, element) {
         function updateDiscountApprovalUI() {
             const grandTotal = parseFloat(document.getElementById('td_grand_total').value) || 0;
             const rebates = parseFloat(document.getElementById('td_rebates').value) || 0;
-            const sellingPrice = parseFloat(document.getElementById('td_selling_price').value) || 0;
             
-            // Standard recommended selling price is stored in projectData when calculation runs, 
-            // or loaded from projectData.recommended_selling_price.
-            let recommended = parseFloat(projectData.recommended_selling_price) || 0;
-            if (window.lastCalculationDetails && window.lastCalculationDetails.success) {
-                recommended = parseFloat(window.lastCalculationDetails.sellingPrice) || 0;
-            }
+            const sellingPrice = parseFloat(document.getElementById('td_override_selling_price').value) || 0;
+            const recommended = parseFloat(document.getElementById('td_selling_price').value) || 0;
 
             const row = document.getElementById('discount_approval_row');
             const badge = document.getElementById('discount_badge');
@@ -5730,15 +5783,18 @@ function toggleNav(event, element) {
 
             if (!row || !badge || !actions) return;
 
-            // Recalculate Margin & Deposit in real-time
-            const calculatedMargin = (sellingPrice + rebates) - grandTotal;
-            const marginEl = document.getElementById('td_margin');
-            if (marginEl) marginEl.value = calculatedMargin.toFixed(2);
+            // Recalculate Col 2 Margin & Deposit in real-time
+            const overrideMarginEl = document.getElementById('td_override_margin');
+            if (overrideMarginEl) {
+                overrideMarginEl.value = ((sellingPrice + rebates) - grandTotal).toFixed(2);
+            }
             
-            const depositEl = document.getElementById('td_deposit');
-            if (depositEl) depositEl.value = (sellingPrice * 0.10).toFixed(2);
+            const overrideDepositEl = document.getElementById('td_override_deposit');
+            if (overrideDepositEl) {
+                overrideDepositEl.value = (sellingPrice * 0.10).toFixed(2);
+            }
 
-            // Check if there is a discount
+            // Check if there is a discount compared to Column 1 (calculated)
             if (sellingPrice < recommended && recommended > 0) {
                 row.style.display = 'flex';
                 const discountVal = (recommended - sellingPrice).toFixed(2);
