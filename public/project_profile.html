@@ -2529,6 +2529,7 @@ function toggleNav(event, element) {
                 populateDistributorAndRetailerDropdowns(projectData.state, projectData.distributor, projectData.retailer);
                 safeSet('tb_distributor', projectData.distributor);
                 safeSet('tb_retailer', projectData.retailer);
+                populateExportLimitDropdown(projectData.state, projectData.export_limit);
                 safeSet('tb_export_limit', projectData.export_limit);
                 safeSet('tb_daily_usage', projectData.daily_usage || '18.0');
                 safeSet('tb_avg_bill', projectData.avg_bill || '');
@@ -7283,6 +7284,39 @@ function toggleNav(event, element) {
                 el.value = opt;
                 el.textContent = opt;
                 retSelect.appendChild(el);
+            });
+        }
+
+        const STATE_EXPORT_LIMITS = {
+            'WA': ['0 kW', '1.5 kW', '3 kW', '5 kW'],
+            'NSW': ['0 kW', '5 kW', '10 kW', 'No Limit'],
+            'VIC': ['0 kW', '5 kW', '10 kW', 'No Limit'],
+            'QLD': ['0 kW', '5 kW', '10 kW', 'No Limit'],
+            'SA': ['0 kW', '5 kW', '10 kW', 'No Limit'],
+            'ACT': ['0 kW', '5 kW', '10 kW', 'No Limit'],
+            'TAS': ['0 kW', '5 kW', '10 kW', 'No Limit']
+        };
+
+        function populateExportLimitDropdown(state, currentLimit) {
+            const exportSelect = document.getElementById('tb_export_limit');
+            if (!exportSelect) return;
+
+            const stateCode = (state || '').trim().toUpperCase();
+            const limits = STATE_EXPORT_LIMITS[stateCode] || ['0 kW', '1.5 kW', '3 kW', '5 kW', '10 kW', 'No Limit'];
+
+            // Compile limits list
+            let options = [...limits];
+            if (currentLimit && !options.includes(currentLimit)) {
+                options.unshift(currentLimit);
+            }
+
+            // Populate select
+            exportSelect.innerHTML = '';
+            options.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.textContent = opt;
+                exportSelect.appendChild(el);
             });
         }
 
