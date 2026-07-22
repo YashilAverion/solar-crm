@@ -452,20 +452,32 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
             return res.status(400).json({ error: 'CSV file is empty or invalid.' });
         }
 
-        const headers = lines[0].map(h => h.trim().toLowerCase());
+        let headerRowIdx = -1;
+        let headers = [];
+        for (let i = 0; i < Math.min(lines.length, 15); i++) {
+            const tempHeaders = lines[i].map(h => String(h).trim().toLowerCase());
+            const hasMfg = tempHeaders.some(h => h.includes('manufacturer') || h.includes('mfg') || h.includes('licensee') || h.includes('company') || h.includes('holder'));
+            const hasModel = tempHeaders.some(h => h.includes('model') || h.includes('product code') || h.includes('model number'));
+            if (hasMfg && hasModel) {
+                headerRowIdx = i;
+                headers = tempHeaders;
+                break;
+            }
+        }
+
+        if (headerRowIdx === -1) {
+            return res.status(400).json({ error: 'CSV must contain at least Manufacturer and Model columns.' });
+        }
+
         const mfgIdx = headers.findIndex(h => h.includes('manufacturer') || h.includes('mfg') || h.includes('licensee') || h.includes('company') || h.includes('holder'));
         const brandIdx = headers.findIndex(h => h.includes('brand'));
-        const modelIdx = headers.findIndex(h => h.includes('model') || h.includes('product code'));
+        const modelIdx = headers.findIndex(h => h.includes('model') || h.includes('product code') || h.includes('model number'));
         const expiryIdx = headers.findIndex(h => h.includes('expiry') || h.includes('expire'));
         const approvedIdx = headers.findIndex(h => h.includes('approved date') || h.includes('approval date') || h.includes('listed'));
         const capIdx = headers.findIndex(h => h.includes('power') || h.includes('capacity') || h.includes('rating') || h.includes('ac output') || h.includes('watt') || h.includes('w') || h.includes('kwh'));
 
-        if (mfgIdx === -1 || modelIdx === -1) {
-            return res.status(400).json({ error: 'CSV must contain at least Manufacturer and Model columns.' });
-        }
-
         const productsToInsert = [];
-        for (let i = 1; i < lines.length; i++) {
+        for (let i = headerRowIdx + 1; i < lines.length; i++) {
             const line = lines[i];
             if (line.length < 2 || !line[mfgIdx] || !line[modelIdx]) continue;
 
