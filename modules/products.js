@@ -397,6 +397,140 @@ router.get('/cec/search', requireAuth, (req, res) => {
     });
 });
 
+function parseCSV(text) {
+    const lines = [];
+    let row = [""];
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        let c = text[i];
+        let next = text[i+1];
+        if (c === '"') {
+            if (inQuotes && next === '"') {
+                row[row.length - 1] += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (c === ',' && !inQuotes) {
+            row.push("");
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+            if (c === '\r' && next === '\n') {
+                i++;
+            }
+            lines.push(row);
+            row = [""];
+        } else {
+            row[row.length - 1] += c;
+        }
+    }
+    if (row.length > 1 || row[0] !== "") {
+        lines.push(row);
+    }
+    return lines;
+}
+
+router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+    const category = req.body.category;
+    const clearFirst = req.body.clear === 'true';
+
+    if (!['Panel', 'Inverter', 'Battery'].includes(category)) {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Invalid or missing category for import.' });
+    }
+
+    try {
+        const filePath = req.file.path;
+        const content = fs.readFileSync(filePath, 'utf8');
+        fs.unlinkSync(filePath); // delete temp file
+
+        const lines = parseCSV(content);
+        if (lines.length < 2) {
+            return res.status(400).json({ error: 'CSV file is empty or invalid.' });
+        }
+
+        const headers = lines[0].map(h => h.trim().toLowerCase());
+        const mfgIdx = headers.findIndex(h => h.includes('manufacturer') || h.includes('mfg') || h.includes('licensee') || h.includes('company') || h.includes('holder'));
+        const brandIdx = headers.findIndex(h => h.includes('brand'));
+        const modelIdx = headers.findIndex(h => h.includes('model') || h.includes('product code'));
+        const expiryIdx = headers.findIndex(h => h.includes('expiry') || h.includes('expire'));
+        const approvedIdx = headers.findIndex(h => h.includes('approved date') || h.includes('approval date') || h.includes('listed'));
+        const capIdx = headers.findIndex(h => h.includes('power') || h.includes('capacity') || h.includes('rating') || h.includes('ac output') || h.includes('watt') || h.includes('w') || h.includes('kwh'));
+
+        if (mfgIdx === -1 || modelIdx === -1) {
+            return res.status(400).json({ error: 'CSV must contain at least Manufacturer and Model columns.' });
+        }
+
+        const productsToInsert = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.length < 2 || !line[mfgIdx] || !line[modelIdx]) continue;
+
+            const manufacturer = line[mfgIdx].trim();
+            const brand = brandIdx !== -1 && line[brandIdx] ? line[brandIdx].trim() : manufacturer;
+            const model = line[modelIdx].trim();
+            const expiry_date = expiryIdx !== -1 && line[expiryIdx] ? line[expiryIdx].trim() : '';
+            const approved_date = approvedIdx !== -1 && line[approvedIdx] ? line[approvedIdx].trim() : '';
+            
+            let capacity_value = 0;
+            if (capIdx !== -1 && line[capIdx]) {
+                const match = line[capIdx].match(/[\d.]+/);
+                if (match) capacity_value = parseFloat(match[0]);
+            }
+
+            // Create specs
+            const specs = {};
+            headers.forEach((h, idx) => {
+                if (line[idx]) specs[h] = line[idx].trim();
+            });
+
+            productsToInsert.push([
+                category,
+                manufacturer,
+                brand,
+                model,
+                capacity_value,
+                approved_date,
+                expiry_date,
+                JSON.stringify(specs)
+            ]);
+        }
+
+        if (productsToInsert.length === 0) {
+            return res.status(400).json({ error: 'No valid products found in the CSV file.' });
+        }
+
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+            
+            if (clearFirst) {
+                db.run("DELETE FROM cec_approved_products WHERE category = ?", [category]);
+            }
+
+            const stmt = db.prepare(`
+                INSERT INTO cec_approved_products (category, manufacturer, brand, model, capacity_value, approved_date, expiry_date, additional_specs_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            productsToInsert.forEach(p => {
+                stmt.run(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+            });
+
+            stmt.finalize();
+            db.run("COMMIT", (commitErr) => {
+                if (commitErr) return res.status(500).json({ error: commitErr.message });
+                res.json({ success: true, count: productsToInsert.length });
+            });
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.post('/cec/import', requireAuth, (req, res) => {
     const ids = req.body.ids;
     if (!Array.isArray(ids) || ids.length === 0) {

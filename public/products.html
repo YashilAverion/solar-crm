@@ -589,8 +589,25 @@ document.addEventListener("DOMContentLoaded", function() {
 <div id="cecModal" class="modal">
     <div class="modal-content" style="max-width: 750px;">
         <button class="modal-close" onclick="document.getElementById('cecModal').style.display='none'">✕</button>
-        <div class="modal-title">Search CEC Approved List</div>
-        <p style="font-size:11px;color:#718096;margin-bottom:16px;">Search approved solar panels, inverters, and batteries, select multiple items, and import them directly into the Product Master with auto-generated stock codes.</p>
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <div style="max-width: 480px;">
+                <div class="modal-title" style="margin-bottom: 4px;">Search CEC Approved List</div>
+                <p style="font-size:11px;color:#718096;margin:0;">Search approved solar panels, inverters, and batteries, select multiple items, and import them directly into the Product Master with auto-generated stock codes.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size: 11px; color: #475569; display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="cecCsvClearFirst" checked style="cursor: pointer; width: 13px; height: 13px;"> Clear category first
+                    </label>
+                    <button class="btn" onclick="triggerCecCsvUpload()" style="background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 32px;">
+                        📥 Import CEC CSV
+                    </button>
+                </div>
+                <input type="file" id="cecCsvFileInput" accept=".csv" onchange="uploadCecCsv(this)" style="display: none;">
+                <div id="cecCsvStatus" style="font-size: 10px; color: #64748b; font-weight: 500;"></div>
+            </div>
+        </div>
         
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; align-items: end; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; position: relative;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -1708,6 +1725,55 @@ document.addEventListener("DOMContentLoaded", function() {
         if (importBtn) {
             document.getElementById('cecSelCount').innerText = count;
             importBtn.disabled = count === 0;
+        }
+    }
+
+    function triggerCecCsvUpload() {
+        const category = document.getElementById('cecCategory').value;
+        if (!category) {
+            alert('Please select a specific Category (Panel, Inverter, or Battery) before importing a CSV.');
+            return;
+        }
+        document.getElementById('cecCsvFileInput').click();
+    }
+
+    async function uploadCecCsv(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const category = document.getElementById('cecCategory').value;
+        const clear = document.getElementById('cecCsvClearFirst').checked;
+        const statusEl = document.getElementById('cecCsvStatus');
+        
+        statusEl.innerText = "Uploading & parsing...";
+        statusEl.style.color = "#0284c7";
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', category);
+        formData.append('clear', clear);
+        
+        try {
+            const res = await fetch('/products/cec/upload-csv', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                const data = await res.json();
+                statusEl.innerText = `Success: Imported ${data.count} products!`;
+                statusEl.style.color = "#16a34a";
+                input.value = '';
+                await loadCecFilters();
+                await searchCecProducts();
+            } else {
+                const err = await res.json();
+                statusEl.innerText = `Error: ${err.error || 'Import failed'}`;
+                statusEl.style.color = "#dc2626";
+                input.value = '';
+            }
+        } catch (e) {
+            statusEl.innerText = "Error connecting to server.";
+            statusEl.style.color = "#dc2626";
+            input.value = '';
         }
     }
 
