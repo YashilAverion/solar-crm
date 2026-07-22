@@ -2838,6 +2838,18 @@ function toggleNav(event, element) {
                             overrideMarginEl.value = ((finalOverridePrice + currentRebates) - currentGrandTotal).toFixed(2);
                         }
 
+                        // Reset TL approval if calculated base price (Col 1) deviates from the previously saved recommended price
+                        const prevRecommended = parseFloat(projectData.recommended_selling_price) || 0;
+                        const newCalculated = parseFloat(data.sellingPrice) || 0;
+                        if (prevRecommended > 0 && Math.abs(newCalculated - prevRecommended) > 0.05) {
+                            if (finalOverridePrice < newCalculated) {
+                                if (projectData.discount_approval_status !== 'None') {
+                                    projectData.discount_approval_status = 'None';
+                                    projectData.discount_approved_by = null;
+                                }
+                            }
+                        }
+
                         // Enable View Bifurcation button
                         const btnBif = document.getElementById('btnViewBifurcation');
                         if (btnBif) {
@@ -5776,6 +5788,14 @@ function toggleNav(event, element) {
             
             const sellingPrice = parseFloat(document.getElementById('td_override_selling_price').value) || 0;
             const recommended = parseFloat(document.getElementById('td_selling_price').value) || 0;
+
+            // If override price has changed manually by the user, reset the approval status
+            const savedApprovedPrice = parseFloat(projectData.selling_price) || 0;
+            const currentStatus = projectData.discount_approval_status || 'None';
+            if ((currentStatus === 'Approved' || currentStatus === 'Pending') && Math.abs(sellingPrice - savedApprovedPrice) > 0.05) {
+                projectData.discount_approval_status = 'None';
+                projectData.discount_approved_by = null;
+            }
 
             const row = document.getElementById('discount_approval_row');
             const badge = document.getElementById('discount_badge');
