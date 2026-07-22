@@ -971,6 +971,16 @@ function toggleNav(event, element) {
                                 <option value="Replacement">Replacement</option>
                             </select>
                         </div>
+                        <div id="tc_addon_replacement_container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border-left: 3px solid var(--primary); border-radius: 4px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-weight: 600; font-size: 11px; color: var(--text-dark);">Existing Panels Qty & Model</label>
+                                <input type="text" id="tc_existing_panels" placeholder="e.g. 14 x Jinko 330W" style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; background: #ffffff;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+                                <label style="font-weight: 600; font-size: 11px; color: var(--text-dark);">Existing Inverter Qty & Model</label>
+                                <input type="text" id="tc_existing_inverter" placeholder="e.g. 1 x Fronius 5kW" style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; background: #ffffff;">
+                            </div>
+                        </div>
                         <div class="cf-row"><label>Battery Install Type</label>
                             <div class="radio-group-sm">
                                 <label><input type="radio" name="tc_battery_install" value="AC Couple"> AC Couple</label>
@@ -2524,6 +2534,9 @@ function toggleNav(event, element) {
                 safeSet('tb_billing_period', projectData.billing_period || '');
 
                 safeSet('tc_panel_install', projectData.panel_install_type);
+                safeSet('tc_existing_panels', projectData.existing_panels);
+                safeSet('tc_existing_inverter', projectData.existing_inverter);
+                toggleAddonReplacementFields();
                 safeSetRadio('tc_battery_install', projectData.battery_install_type);
                 safeSetRadio('tc_battery_location', projectData.battery_location);
                 safeSetRadio('tc_site_visit', (projectData.site_visit_req !== undefined && projectData.site_visit_req !== null) ? projectData.site_visit_req : 'No');
@@ -2560,6 +2573,19 @@ function toggleNav(event, element) {
                     if (!window.inclusionsListenerAttached) {
                         document.querySelectorAll('input[name="tc_blackout"]').forEach(radio => {
                             radio.addEventListener('change', updateBatteryBlackoutVisibility);
+                        });
+                        const panelInstallSelect = document.getElementById('tc_panel_install');
+                        if (panelInstallSelect) {
+                            panelInstallSelect.addEventListener('change', () => {
+                                toggleAddonReplacementFields();
+                                activateSaveButtons();
+                            });
+                        }
+                        ['tc_existing_panels', 'tc_existing_inverter'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.addEventListener('input', activateSaveButtons);
+                            }
                         });
                         window.inclusionsListenerAttached = true;
                     }
@@ -5747,6 +5773,8 @@ function toggleNav(event, element) {
                 avg_bill: safeVal('tb_avg_bill'),
                 billing_period: safeVal('tb_billing_period'),
                 panel_install_type: safeVal('tc_panel_install'),
+                existing_panels: safeVal('tc_existing_panels'),
+                existing_inverter: safeVal('tc_existing_inverter'),
                 battery_install_type: safeRadioVal('tc_battery_install'),
                 battery_location: safeRadioVal('tc_battery_location'),
                 site_visit_req: safeRadioVal('tc_site_visit'),
@@ -7159,6 +7187,22 @@ function toggleNav(event, element) {
                     textarea.dispatchEvent(new Event('input', { bubbles: true }));
                     textarea.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+            }
+        function toggleAddonReplacementFields() {
+            const selectEl = document.getElementById('tc_panel_install');
+            const container = document.getElementById('tc_addon_replacement_container');
+            if (!selectEl || !container) return;
+
+            const val = selectEl.value;
+            if (val === 'Add-On' || val === 'Replacement') {
+                container.style.display = 'flex';
+            } else {
+                container.style.display = 'none';
+                // Clear fields if hidden
+                const pInput = document.getElementById('tc_existing_panels');
+                const iInput = document.getElementById('tc_existing_inverter');
+                if (pInput) pInput.value = '';
+                if (iInput) iInput.value = '';
             }
         }
 
