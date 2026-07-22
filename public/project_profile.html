@@ -2526,6 +2526,7 @@ function toggleNav(event, element) {
                 safeSetRadio('tb_phase', projectData.electricity_phase || projectData.phase || '');
                 safeSet('tb_meter_number', projectData.meter_number);
                 safeSet('tb_nmi_number', projectData.nmi_number);
+                populateDistributorAndRetailerDropdowns(projectData.state, projectData.distributor, projectData.retailer);
                 safeSet('tb_distributor', projectData.distributor);
                 safeSet('tb_retailer', projectData.retailer);
                 safeSet('tb_export_limit', projectData.export_limit);
@@ -7205,6 +7206,84 @@ function toggleNav(event, element) {
                 if (pInput) pInput.value = '';
                 if (iInput) iInput.value = '';
             }
+        }
+
+        const STATE_UTILITY_MAPPING = {
+            'WA': {
+                distributors: ['Western Power', 'Horizon Power'],
+                retailers: ['Synergy', 'Horizon Power']
+            },
+            'NSW': {
+                distributors: ['Ausgrid', 'Endeavour Energy', 'Essential Energy'],
+                retailers: ['Origin Energy', 'AGL Energy', 'EnergyAustralia', 'Simply Energy', 'Red Energy', 'Lumo Energy', 'Alinta Energy', 'Powershop']
+            },
+            'VIC': {
+                distributors: ['Citipower', 'Powercor', 'United Energy', 'Jemena', 'AusNet Services'],
+                retailers: ['Origin Energy', 'AGL Energy', 'EnergyAustralia', 'Simply Energy', 'Red Energy', 'Lumo Energy', 'Momentum Energy', 'Powershop']
+            },
+            'QLD': {
+                distributors: ['Energex', 'Ergon Energy'],
+                retailers: ['Origin Energy', 'AGL Energy', 'EnergyAustralia', 'Ergon Energy Retail', 'Simply Energy', 'Alinta Energy', 'Red Energy']
+            },
+            'SA': {
+                distributors: ['SA Power Networks (SAPN)'],
+                retailers: ['Origin Energy', 'AGL Energy', 'EnergyAustralia', 'Simply Energy', 'Lumo Energy', 'Alinta Energy']
+            },
+            'ACT': {
+                distributors: ['Evoenergy'],
+                retailers: ['ActewAGL', 'Origin Energy', 'EnergyAustralia', 'Red Energy']
+            },
+            'TAS': {
+                distributors: ['TasNetworks'],
+                retailers: ['Aurora Energy', '1st Energy']
+            }
+        };
+
+        function populateDistributorAndRetailerDropdowns(state, currentDistributor, currentRetailer) {
+            const distSelect = document.getElementById('tb_distributor');
+            const retSelect = document.getElementById('tb_retailer');
+            if (!distSelect || !retSelect) return;
+
+            const stateCode = (state || '').trim().toUpperCase();
+            const mapping = STATE_UTILITY_MAPPING[stateCode] || { distributors: [], retailers: [] };
+
+            // Compile distributors list
+            let distOptions = [...mapping.distributors];
+            if (currentDistributor && !distOptions.includes(currentDistributor)) {
+                distOptions.unshift(currentDistributor);
+            }
+            if (distOptions.length === 0) {
+                // Default fallback if state unknown or not in list
+                distOptions = ['Western Power', 'Horizon Power', 'Ausgrid', 'Endeavour Energy', 'Essential Energy', 'Citipower', 'Powercor', 'SA Power Networks (SAPN)', 'Energex'];
+            }
+
+            // Compile retailers list
+            let retOptions = [...mapping.retailers];
+            if (currentRetailer && !retOptions.includes(currentRetailer)) {
+                retOptions.unshift(currentRetailer);
+            }
+            if (retOptions.length === 0) {
+                // Default fallback if state unknown or not in list
+                retOptions = ['Synergy', 'Horizon Power', 'Origin Energy', 'AGL Energy', 'EnergyAustralia', 'Simply Energy', 'Red Energy', 'Lumo Energy'];
+            }
+
+            // Populate distributors select
+            distSelect.innerHTML = '';
+            distOptions.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.textContent = opt;
+                distSelect.appendChild(el);
+            });
+
+            // Populate retailers select
+            retSelect.innerHTML = '';
+            retOptions.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.textContent = opt;
+                retSelect.appendChild(el);
+            });
         }
 
         /**
