@@ -592,19 +592,43 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="modal-title">Search CEC Approved List</div>
         <p style="font-size:11px;color:#718096;margin-bottom:16px;">Search approved solar panels, inverters, and batteries, select multiple items, and import them directly into the Product Master with auto-generated stock codes.</p>
         
-        <div style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; align-items: end; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; position: relative;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Category</label>
-                <select id="cecCategory" onchange="searchCecProducts()" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;">
+                <select id="cecCategory" onchange="onCecCategoryChange()" style="height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;">
                     <option value="">All Categories</option>
                     <option value="Panel">Panel</option>
                     <option value="Inverter">Inverter</option>
                     <option value="Battery">Battery</option>
                 </select>
             </div>
-            <div style="flex: 2; display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Search Manufacturer / Model</label>
-                <input type="text" id="cecQuery" oninput="searchCecProducts()" placeholder="e.g. Jinko, Fronius, Tiger Neo..." style="height: 36px; padding: 0 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; position: relative;">
+                <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Manufacturer</label>
+                <div class="cec-multiselect" id="cecMfgSelect" style="position: relative;">
+                    <div class="cec-select-box" onclick="toggleCecDropdown('cecMfgList', event)" style="height: 36px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; background: white; cursor: pointer; font-size: 13px;">
+                        <span id="cecMfgLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">All</span>
+                        <span>▼</span>
+                    </div>
+                    <div id="cecMfgList" class="cec-dropdown-list" style="display: none; position: absolute; top: 38px; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #cbd5e1; border-radius: 6px; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 8px; flex-direction: column; gap: 6px;">
+                        <!-- Checkboxes populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; position: relative;">
+                <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Brand</label>
+                <div class="cec-multiselect" id="cecBrandSelect" style="position: relative;">
+                    <div class="cec-select-box" onclick="toggleCecDropdown('cecBrandList', event)" style="height: 36px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; background: white; cursor: pointer; font-size: 13px;">
+                        <span id="cecBrandLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">All</span>
+                        <span>▼</span>
+                    </div>
+                    <div id="cecBrandList" class="cec-dropdown-list" style="display: none; position: absolute; top: 38px; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #cbd5e1; border-radius: 6px; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 8px; flex-direction: column; gap: 6px;">
+                        <!-- Checkboxes populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Search Model</label>
+                <input type="text" id="cecQuery" oninput="searchCecProducts()" placeholder="e.g. Tiger Neo, GEN24..." style="height: 36px; padding: 0 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;">
             </div>
         </div>
 
@@ -1467,23 +1491,166 @@ document.addEventListener("DOMContentLoaded", function() {
         container.appendChild(row);
     }
 
-    function openCecModal() {
+    let cecDropdownsState = {
+        manufacturers: [],
+        brands: [],
+        selectedManufacturers: [],
+        selectedBrands: []
+    };
+
+    function toggleCecDropdown(listId, event) {
+        if (event) event.stopPropagation();
+        const list = document.getElementById(listId);
+        const isVisible = list.style.display === 'flex';
+        
+        // Hide all lists first
+        document.querySelectorAll('.cec-dropdown-list').forEach(el => el.style.display = 'none');
+        
+        if (!isVisible) {
+            list.style.display = 'flex';
+        }
+    }
+
+    // Close dropdowns on outside click
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('.cec-multiselect')) {
+            document.querySelectorAll('.cec-dropdown-list').forEach(el => el.style.display = 'none');
+        }
+    });
+
+    async function openCecModal() {
         document.getElementById('cecCategory').value = '';
         document.getElementById('cecQuery').value = '';
         document.getElementById('cecSelectAll').checked = false;
-        searchCecProducts();
+        cecDropdownsState.selectedManufacturers = [];
+        cecDropdownsState.selectedBrands = [];
+        
+        await loadCecFilters();
+        await searchCecProducts();
         document.getElementById('cecModal').style.display = 'flex';
+    }
+
+    async function onCecCategoryChange() {
+        cecDropdownsState.selectedManufacturers = [];
+        cecDropdownsState.selectedBrands = [];
+        document.getElementById('cecSelectAll').checked = false;
+        
+        await loadCecFilters();
+        await searchCecProducts();
+    }
+
+    async function loadCecFilters() {
+        const category = document.getElementById('cecCategory').value;
+        try {
+            const res = await fetch(`/products/cec/filters?category=${encodeURIComponent(category)}`);
+            if (res.ok) {
+                const data = await res.json();
+                cecDropdownsState.manufacturers = data.manufacturers || [];
+                cecDropdownsState.brands = data.brands || [];
+                
+                renderCecFilterDropdowns();
+            }
+        } catch(e) {
+            console.error('Failed to load filters', e);
+        }
+    }
+
+    function renderCecFilterDropdowns() {
+        const mfgList = document.getElementById('cecMfgList');
+        const brandList = document.getElementById('cecBrandList');
+        
+        // Render manufacturers
+        if (cecDropdownsState.manufacturers.length === 0) {
+            mfgList.innerHTML = `<span style="font-size:11px;color:#94a3b8;font-style:italic;">No manufacturers</span>`;
+        } else {
+            mfgList.innerHTML = cecDropdownsState.manufacturers.map(m => {
+                const checked = cecDropdownsState.selectedManufacturers.includes(m) ? 'checked' : '';
+                return `
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;color:#334155;">
+                        <input type="checkbox" value="${m}" ${checked} onchange="onCecMfgCheckboxChange(this)" style="cursor:pointer;width:14px;height:14px;">
+                        <span>${m}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+        
+        // Render brands
+        if (cecDropdownsState.brands.length === 0) {
+            brandList.innerHTML = `<span style="font-size:11px;color:#94a3b8;font-style:italic;">No brands</span>`;
+        } else {
+            brandList.innerHTML = cecDropdownsState.brands.map(b => {
+                const checked = cecDropdownsState.selectedBrands.includes(b) ? 'checked' : '';
+                return `
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;color:#334155;">
+                        <input type="checkbox" value="${b}" ${checked} onchange="onCecBrandCheckboxChange(this)" style="cursor:pointer;width:14px;height:14px;">
+                        <span>${b}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+        
+        updateCecFilterLabels();
+    }
+
+    function onCecMfgCheckboxChange(cb) {
+        if (cb.checked) {
+            if (!cecDropdownsState.selectedManufacturers.includes(cb.value)) {
+                cecDropdownsState.selectedManufacturers.push(cb.value);
+            }
+        } else {
+            cecDropdownsState.selectedManufacturers = cecDropdownsState.selectedManufacturers.filter(x => x !== cb.value);
+        }
+        updateCecFilterLabels();
+        searchCecProducts();
+    }
+
+    function onCecBrandCheckboxChange(cb) {
+        if (cb.checked) {
+            if (!cecDropdownsState.selectedBrands.includes(cb.value)) {
+                cecDropdownsState.selectedBrands.push(cb.value);
+            }
+        } else {
+            cecDropdownsState.selectedBrands = cecDropdownsState.selectedBrands.filter(x => x !== cb.value);
+        }
+        updateCecFilterLabels();
+        searchCecProducts();
+    }
+
+    function updateCecFilterLabels() {
+        const mfgLabel = document.getElementById('cecMfgLabel');
+        const brandLabel = document.getElementById('cecBrandLabel');
+        
+        if (cecDropdownsState.selectedManufacturers.length === 0) {
+            mfgLabel.innerText = 'All';
+            mfgLabel.title = 'All';
+        } else {
+            const txt = cecDropdownsState.selectedManufacturers.join(', ');
+            mfgLabel.innerText = `${cecDropdownsState.selectedManufacturers.length} selected`;
+            mfgLabel.title = txt;
+        }
+
+        if (cecDropdownsState.selectedBrands.length === 0) {
+            brandLabel.innerText = 'All';
+            brandLabel.title = 'All';
+        } else {
+            const txt = cecDropdownsState.selectedBrands.join(', ');
+            brandLabel.innerText = `${cecDropdownsState.selectedBrands.length} selected`;
+            brandLabel.title = txt;
+        }
     }
 
     async function searchCecProducts() {
         const category = document.getElementById('cecCategory').value;
         const query = document.getElementById('cecQuery').value;
         const tbody = document.getElementById('cecResultsTableBody');
+        const manufacturers = cecDropdownsState.selectedManufacturers.join(',');
+        const brands = cecDropdownsState.selectedBrands.join(',');
         
         tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748b; font-style: italic;">Loading approved products...</td></tr>`;
 
         try {
-            const res = await fetch(`/products/cec/search?category=${encodeURIComponent(category)}&search=${encodeURIComponent(query)}`);
+            const url = `/products/cec/search?category=${encodeURIComponent(category)}&search=${encodeURIComponent(query)}&manufacturers=${encodeURIComponent(manufacturers)}&brands=${encodeURIComponent(brands)}`;
+            const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 if (data.length === 0) {

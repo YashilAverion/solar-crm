@@ -326,9 +326,42 @@ router.post('/bulk-delete', requireAuth, (req, res) => {
     });
 });
 // ── CEC APPROVED LIST ROUTE HANDLERS ────────────────────────────────
+router.get('/cec/filters', requireAuth, (req, res) => {
+    const category = req.query.category || '';
+
+    let mfgSql = "SELECT DISTINCT manufacturer FROM cec_approved_products";
+    let brandSql = "SELECT DISTINCT brand FROM cec_approved_products";
+    const mfgParams = [];
+    const brandParams = [];
+
+    if (category) {
+        mfgSql += " WHERE category = ?";
+        brandSql += " WHERE category = ?";
+        mfgParams.push(category);
+        brandParams.push(category);
+    }
+
+    mfgSql += " ORDER BY manufacturer ASC";
+    brandSql += " ORDER BY brand ASC";
+
+    db.all(mfgSql, mfgParams, (err, mfgRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        db.all(brandSql, brandParams, (brandErr, brandRows) => {
+            if (brandErr) return res.status(500).json({ error: brandErr.message });
+
+            res.json({
+                manufacturers: mfgRows.map(r => r.manufacturer),
+                brands: brandRows.map(r => r.brand)
+            });
+        });
+    });
+});
+
 router.get('/cec/search', requireAuth, (req, res) => {
     const category = req.query.category || '';
     const search = req.query.search || '';
+    const manufacturers = req.query.manufacturers ? req.query.manufacturers.split(',').filter(Boolean) : [];
+    const brands = req.query.brands ? req.query.brands.split(',').filter(Boolean) : [];
 
     let sql = "SELECT * FROM cec_approved_products WHERE 1=1";
     const params = [];
@@ -337,13 +370,26 @@ router.get('/cec/search', requireAuth, (req, res) => {
         sql += " AND category = ?";
         params.push(category);
     }
-    if (search) {
-        sql += " AND (manufacturer LIKE ? OR brand LIKE ? OR model LIKE ?)";
-        const likeTerm = `%${search}%`;
-        params.push(likeTerm, likeTerm, likeTerm);
+
+    if (manufacturers.length > 0) {
+        const placeholders = manufacturers.map(() => '?').join(',');
+        sql += ` AND manufacturer IN (${placeholders})`;
+        params.push(...manufacturers);
     }
 
-    sql += " ORDER BY brand ASC, model ASC LIMIT 100";
+    if (brands.length > 0) {
+        const placeholders = brands.map(() => '?').join(',');
+        sql += ` AND brand IN (${placeholders})`;
+        params.push(...brands);
+    }
+
+    if (search) {
+        sql += " AND (model LIKE ?)";
+        const likeTerm = `%${search}%`;
+        params.push(likeTerm);
+    }
+
+    sql += " ORDER BY brand ASC, model ASC LIMIT 200";
 
     db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });

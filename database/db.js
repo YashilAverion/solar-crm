@@ -223,38 +223,127 @@ db.serialize(() => {
                 if (!cntErr && row && row.count === 0) {
                     console.log('[DB] Seeding CEC Approved Products...');
                     const seedProducts = [
-                        // PANELS
+                        // PANELS - JINKO
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM410N-54HL4-V (410W Tiger Neo)', 410, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
                         ['Panel', 'JinkoSolar', 'Jinko', 'JKM415N-54HL4-V (415W Tiger Neo)', 415, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM420N-54HL4-V (420W Tiger Neo)', 420, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM425N-54HL4-V (425W Tiger Neo)', 425, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM430N-54HL4-V (430W Tiger Neo)', 430, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM435N-54HL4-V (435W Tiger Neo)', 435, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
                         ['Panel', 'JinkoSolar', 'Jinko', 'JKM440N-54HL4-V (440W Tiger Neo)', 440, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM470N-60HL4-V (470W Tiger Neo)', 470, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
                         ['Panel', 'JinkoSolar', 'Jinko', 'JKM475N-60HL4-V (475W Tiger Neo)', 475, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM480N-60HL4-V (480W Tiger Neo)', 480, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+
+                        // PANELS - TRINA
                         ['Panel', 'Trina Solar', 'Trina', 'TSM-415DE09R.05 (415W Vertex S)', 415, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-420DE09R.05 (420W Vertex S)', 420, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-425DE09R.05 (425W Vertex S)', 425, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-430DE09R.08 (430W Vertex S+)', 430, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-435DE09R.08 (435W Vertex S+)', 435, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
                         ['Panel', 'Trina Solar', 'Trina', 'TSM-440DE09R.08 (440W Vertex S+)', 440, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-445DE09R.08 (445W Vertex S+)', 445, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-450DE09R.08 (450W Vertex S+)', 450, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
                         ['Panel', 'Trina Solar', 'Trina', 'TSM-500DE21 (500W Vertex)', 500, '10-05-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
-                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-415M (415W Hi-MO 6)', 415, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
-                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-430M (430W Hi-MO 6)', 430, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-550DE21 (550W Vertex)', 550, '10-05-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+
+                        // PANELS - CANADIAN SOLAR
+                        ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6R-410MS (410W HiKu6)', 410, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
                         ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6R-415MS (415W HiKu6)', 415, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+                        ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6R-420MS (420W HiKu6)', 420, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+                        ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6R-425MS (425W HiKu6)', 425, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
                         ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6W-450MS (450W HiKu6)', 450, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
 
-                        // INVERTERS
-                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 5000TL-X (Single Phase Grid)', 5000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MOD 10KTL3-X (Three Phase Grid)', 10000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Growatt New Energy', 'Growatt', 'SPA 5000TL BL-UP (Single Phase Battery)', 5000, '15-06-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Battery Inverter', ac_out: 5000, dc_power: 6.5, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 5.0-1 (Single Phase Grid)', 5000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Fronius Australia', 'Fronius', 'Symo 10.0-3-M (Three Phase Grid)', 10000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        // PANELS - LONGI
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-410M (410W Hi-MO 6)', 410, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-415M (415W Hi-MO 6)', 415, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-420M (420W Hi-MO 6)', 420, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-430M (430W Hi-MO 6)', 430, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-440M (440W Hi-MO 6)', 440, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+
+                        // PANELS - REC
+                        ['Panel', 'REC Solar', 'REC', 'REC400Alpha Pure (400W)', 400, '10-10-2022', '31-12-2028', JSON.stringify({ warranty: 20, linear_warranty: 25 })],
+                        ['Panel', 'REC Solar', 'REC', 'REC410Alpha Pure (410W)', 410, '10-10-2022', '31-12-2028', JSON.stringify({ warranty: 20, linear_warranty: 25 })],
+                        ['Panel', 'REC Solar', 'REC', 'REC420Alpha Pure (420W)', 420, '10-10-2022', '31-12-2028', JSON.stringify({ warranty: 20, linear_warranty: 25 })],
+
+                        // PANELS - Q CELLS
+                        ['Panel', 'Hanwha Q CELLS', 'Q Cells', 'Q.PEAK DUO M-G11 (390W)', 390, '01-05-2022', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+                        ['Panel', 'Hanwha Q CELLS', 'Q Cells', 'Q.PEAK DUO M-G11 (400W)', 400, '01-05-2022', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+                        ['Panel', 'Hanwha Q CELLS', 'Q Cells', 'Q.PEAK DUO M-G11 (410W)', 410, '01-05-2022', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+
+                        // PANELS - SUNPOWER / MAXEON
+                        ['Panel', 'Maxeon Solar', 'Maxeon', 'Maxeon 3 (390W)', 390, '12-08-2021', '31-12-2029', JSON.stringify({ warranty: 40, linear_warranty: 40 })],
+                        ['Panel', 'Maxeon Solar', 'Maxeon', 'Maxeon 3 (400W)', 400, '12-08-2021', '31-12-2029', JSON.stringify({ warranty: 40, linear_warranty: 40 })],
+                        ['Panel', 'Maxeon Solar', 'Maxeon', 'Maxeon 6 (420W)', 420, '01-06-2023', '31-12-2030', JSON.stringify({ warranty: 40, linear_warranty: 40 })],
+                        ['Panel', 'Maxeon Solar', 'Maxeon', 'Maxeon 6 (430W)', 430, '01-06-2023', '31-12-2030', JSON.stringify({ warranty: 40, linear_warranty: 40 })],
+                        ['Panel', 'Maxeon Solar', 'Maxeon', 'Maxeon 6 (440W)', 440, '01-06-2023', '31-12-2030', JSON.stringify({ warranty: 40, linear_warranty: 40 })],
+
+                        // INVERTERS - FRONIUS
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 3.0-1 (Single Phase)', 3000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 3000, dc_power: 4.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 4.0-1 (Single Phase)', 4000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 4000, dc_power: 6.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 5.0-1 (Single Phase)', 5000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 6.0-1 (Single Phase)', 6000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 6000, dc_power: 9.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 8.2-1 (Single Phase)', 8200, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 8200, dc_power: 12.3, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Symo 5.0-3-M (Three Phase)', 5000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 10.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Symo 8.2-3-M (Three Phase)', 8200, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 8200, dc_power: 16.4, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Symo 10.0-3-M (Three Phase)', 10000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15.0, mppt: '2', warranty: 10 })],
                         ['Inverter', 'Fronius Australia', 'Fronius', 'GEN24 5.0 Plus (Single Phase Hybrid)', 5000, '20-02-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG5.0RS (Single Phase Grid)', 5000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
-                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG10RT (Three Phase Grid)', 10000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'GEN24 6.0 Plus (Single Phase Hybrid)', 6000, '20-02-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 6000, dc_power: 9.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'GEN24 8.0 Plus (Single Phase Hybrid)', 8000, '20-02-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 8000, dc_power: 12.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'GEN24 10.0 Plus (Single Phase Hybrid)', 10000, '20-02-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 10000, dc_power: 15.0, mppt: '2', warranty: 10 })],
+
+                        // INVERTERS - GROWATT
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 3000TL-X (Single Phase)', 3000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 3000, dc_power: 4.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 4200TL-X (Single Phase)', 4200, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 4200, dc_power: 6.3, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 5000TL-X (Single Phase)', 5000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 6000TL-X (Single Phase)', 6000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 6000, dc_power: 9.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MOD 5000TL3-X (Three Phase)', 5000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MOD 10KTL3-X (Three Phase)', 10000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'SPA 5000TL BL-UP (Single Phase Battery)', 5000, '15-06-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Battery Inverter', ac_out: 5000, dc_power: 6.5, mppt: '2', warranty: 10 })],
+
+                        // INVERTERS - SUNGROW
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG3.0RS (Single Phase)', 3000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 3000, dc_power: 4.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG5.0RS (Single Phase)', 5000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG8.0RS (Single Phase)', 8000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 8000, dc_power: 12.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG10RS (Single Phase)', 10000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15.0, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG5.0RT (Three Phase)', 5000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG10RT (Three Phase)', 10000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
                         ['Inverter', 'Sungrow Power', 'Sungrow', 'SH5.0RS (Single Phase Hybrid)', 5000, '01-05-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SH10RS (Single Phase Hybrid)', 10000, '01-05-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 10000, dc_power: 15.0, mppt: '2', warranty: 10 })],
+
+                        // INVERTERS - ENPHASE
+                        ['Inverter', 'Enphase Energy', 'Enphase', 'IQ7-60-2-US (Microinverter)', 250, '01-11-2020', '31-12-2025', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 250, dc_power: 0.35, mppt: '1', warranty: 15 })],
+                        ['Inverter', 'Enphase Energy', 'Enphase', 'IQ7+ (Microinverter)', 295, '01-11-2020', '31-12-2025', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 295, dc_power: 0.4, mppt: '1', warranty: 15 })],
+                        ['Inverter', 'Enphase Energy', 'Enphase', 'IQ8+-72-M-US (Microinverter)', 300, '01-11-2023', '31-12-2028', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 300, dc_power: 0.4, mppt: '1', warranty: 15 })],
                         ['Inverter', 'Enphase Energy', 'Enphase', 'IQ8AC-72-M-US (Microinverter)', 366, '01-11-2023', '31-12-2028', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 366, dc_power: 0.5, mppt: '1', warranty: 15 })],
                         ['Inverter', 'Enphase Energy', 'Enphase', 'IQ8HC-72-M-US (Microinverter)', 380, '01-11-2023', '31-12-2028', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 380, dc_power: 0.5, mppt: '1', warranty: 15 })],
 
-                        // BATTERIES
+                        // INVERTERS - SMA
+                        ['Inverter', 'SMA Solar Technology', 'SMA', 'Sunny Boy 3.0 (Single Phase)', 3000, '01-01-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 3000, dc_power: 4.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'SMA Solar Technology', 'SMA', 'Sunny Boy 5.0 (Single Phase)', 5000, '01-01-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'SMA Solar Technology', 'SMA', 'Sunny Tripower 10.0 (Three Phase)', 10000, '01-01-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+
+                        // BATTERIES - TESLA
                         ['Battery', 'Tesla Inc', 'Tesla', 'Powerwall 2', 13.5, '01-06-2020', '31-12-2029', JSON.stringify({ usable_kwh: 13.5, warranty: 10, modules: 1 })],
                         ['Battery', 'Tesla Inc', 'Tesla', 'Powerwall 3', 13.5, '01-01-2024', '31-12-2030', JSON.stringify({ usable_kwh: 13.5, warranty: 10, modules: 1 })],
+
+                        // BATTERIES - BYD
                         ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 5.1', 5.12, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 5.12, warranty: 10, modules: 2 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 7.7', 7.68, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 7.68, warranty: 10, modules: 3 })],
                         ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 10.2', 10.24, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 10.24, warranty: 10, modules: 4 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 12.8', 12.8, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 12.8, warranty: 10, modules: 5 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVM 8.3', 8.28, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 8.28, warranty: 10, modules: 3 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVM 11.0', 11.04, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 11.04, warranty: 10, modules: 4 })],
+
+                        // BATTERIES - SUNGROW
                         ['Battery', 'Sungrow Power', 'Sungrow', 'SBR096 (9.6kWh Stack)', 9.6, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 9.6, warranty: 10, modules: 3 })],
                         ['Battery', 'Sungrow Power', 'Sungrow', 'SBR128 (12.8kWh Stack)', 12.8, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 12.8, warranty: 10, modules: 4 })],
+                        ['Battery', 'Sungrow Power', 'Sungrow', 'SBR160 (16.0kWh Stack)', 16.0, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 16.0, warranty: 10, modules: 5 })],
+                        ['Battery', 'Sungrow Power', 'Sungrow', 'SBR192 (19.2kWh Stack)', 19.2, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 19.2, warranty: 10, modules: 6 })],
+
+                        // BATTERIES - ENPHASE
+                        ['Battery', 'Enphase Energy', 'Enphase', 'IQ Battery 3T', 3.36, '01-05-2021', '31-12-2027', JSON.stringify({ usable_kwh: 3.36, warranty: 10, modules: 1 })],
+                        ['Battery', 'Enphase Energy', 'Enphase', 'IQ Battery 10T', 10.08, '01-05-2021', '31-12-2027', JSON.stringify({ usable_kwh: 10.08, warranty: 10, modules: 3 })],
                         ['Battery', 'Enphase Energy', 'Enphase', 'IQ Battery 5P', 5.0, '01-07-2023', '31-12-2029', JSON.stringify({ usable_kwh: 5.0, warranty: 15, modules: 1 })]
                     ];
 
