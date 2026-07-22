@@ -203,6 +203,71 @@ db.serialize(() => {
         )
     `);
 
+    // 3c. CEC Approved Products Table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS cec_approved_products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT,
+            manufacturer TEXT,
+            brand TEXT,
+            model TEXT,
+            capacity_value REAL,
+            approved_date TEXT,
+            expiry_date TEXT,
+            additional_specs_json TEXT
+        )
+    `, (err) => {
+        if (!err) {
+            // Seed CEC Approved Products if empty
+            db.get("SELECT COUNT(*) as count FROM cec_approved_products", [], (cntErr, row) => {
+                if (!cntErr && row && row.count === 0) {
+                    console.log('[DB] Seeding CEC Approved Products...');
+                    const seedProducts = [
+                        // PANELS
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM415N-54HL4-V (415W Tiger Neo)', 415, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM440N-54HL4-V (440W Tiger Neo)', 440, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'JinkoSolar', 'Jinko', 'JKM475N-60HL4-V (475W Tiger Neo)', 475, '01-01-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 30 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-415DE09R.05 (415W Vertex S)', 415, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-440DE09R.08 (440W Vertex S+)', 440, '15-02-2023', '31-12-2028', JSON.stringify({ warranty: 25, linear_warranty: 30 })],
+                        ['Panel', 'Trina Solar', 'Trina', 'TSM-500DE21 (500W Vertex)', 500, '10-05-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-415M (415W Hi-MO 6)', 415, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'LONGI Green Energy', 'LONGI', 'LR5-54HTH-430M (430W Hi-MO 6)', 430, '01-04-2023', '31-12-2028', JSON.stringify({ warranty: 15, linear_warranty: 25 })],
+                        ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6R-415MS (415W HiKu6)', 415, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+                        ['Panel', 'Canadian Solar', 'Canadian Solar', 'CS6W-450MS (450W HiKu6)', 450, '20-03-2023', '31-12-2028', JSON.stringify({ warranty: 12, linear_warranty: 25 })],
+
+                        // INVERTERS
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MIN 5000TL-X (Single Phase Grid)', 5000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'MOD 10KTL3-X (Three Phase Grid)', 10000, '01-01-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Growatt New Energy', 'Growatt', 'SPA 5000TL BL-UP (Single Phase Battery)', 5000, '15-06-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Battery Inverter', ac_out: 5000, dc_power: 6.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Primo 5.0-1 (Single Phase Grid)', 5000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'Symo 10.0-3-M (Three Phase Grid)', 10000, '10-10-2021', '31-12-2026', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Fronius Australia', 'Fronius', 'GEN24 5.0 Plus (Single Phase Hybrid)', 5000, '20-02-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG5.0RS (Single Phase Grid)', 5000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SG10RT (Three Phase Grid)', 10000, '01-03-2022', '31-12-2027', JSON.stringify({ phase: 'Three Phase', inv_type: 'Grid Inverter', ac_out: 10000, dc_power: 15, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Sungrow Power', 'Sungrow', 'SH5.0RS (Single Phase Hybrid)', 5000, '01-05-2022', '31-12-2027', JSON.stringify({ phase: 'Single Phase', inv_type: 'Hybrid Inverter', ac_out: 5000, dc_power: 7.5, mppt: '2', warranty: 10 })],
+                        ['Inverter', 'Enphase Energy', 'Enphase', 'IQ8AC-72-M-US (Microinverter)', 366, '01-11-2023', '31-12-2028', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 366, dc_power: 0.5, mppt: '1', warranty: 15 })],
+                        ['Inverter', 'Enphase Energy', 'Enphase', 'IQ8HC-72-M-US (Microinverter)', 380, '01-11-2023', '31-12-2028', JSON.stringify({ phase: 'Single Phase', inv_type: 'Grid Inverter', ac_out: 380, dc_power: 0.5, mppt: '1', warranty: 15 })],
+
+                        // BATTERIES
+                        ['Battery', 'Tesla Inc', 'Tesla', 'Powerwall 2', 13.5, '01-06-2020', '31-12-2029', JSON.stringify({ usable_kwh: 13.5, warranty: 10, modules: 1 })],
+                        ['Battery', 'Tesla Inc', 'Tesla', 'Powerwall 3', 13.5, '01-01-2024', '31-12-2030', JSON.stringify({ usable_kwh: 13.5, warranty: 10, modules: 1 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 5.1', 5.12, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 5.12, warranty: 10, modules: 2 })],
+                        ['Battery', 'BYD Company', 'BYD', 'Battery-Box Premium HVS 10.2', 10.24, '15-09-2021', '31-12-2027', JSON.stringify({ usable_kwh: 10.24, warranty: 10, modules: 4 })],
+                        ['Battery', 'Sungrow Power', 'Sungrow', 'SBR096 (9.6kWh Stack)', 9.6, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 9.6, warranty: 10, modules: 3 })],
+                        ['Battery', 'Sungrow Power', 'Sungrow', 'SBR128 (12.8kWh Stack)', 12.8, '01-10-2022', '31-12-2028', JSON.stringify({ usable_kwh: 12.8, warranty: 10, modules: 4 })],
+                        ['Battery', 'Enphase Energy', 'Enphase', 'IQ Battery 5P', 5.0, '01-07-2023', '31-12-2029', JSON.stringify({ usable_kwh: 5.0, warranty: 15, modules: 1 })]
+                    ];
+
+                    const insertStmt = db.prepare("INSERT INTO cec_approved_products (category, manufacturer, brand, model, capacity_value, approved_date, expiry_date, additional_specs_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    seedProducts.forEach(p => {
+                        insertStmt.run(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    });
+                    insertStmt.finalize();
+                }
+            });
+        }
+    });
+
     // 4. Companies Table
     db.run(`
         CREATE TABLE IF NOT EXISTS companies (

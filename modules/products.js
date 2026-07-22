@@ -324,6 +324,152 @@ router.post('/bulk-delete', requireAuth, (req, res) => {
             });
         });
     });
+// ── CEC APPROVED LIST ROUTE HANDLERS ────────────────────────────────
+router.get('/cec/search', requireAuth, (req, res) => {
+    const category = req.query.category || '';
+    const search = req.query.search || '';
+
+    let sql = "SELECT * FROM cec_approved_products WHERE 1=1";
+    const params = [];
+
+    if (category) {
+        sql += " AND category = ?";
+        params.push(category);
+    }
+    if (search) {
+        sql += " AND (manufacturer LIKE ? OR brand LIKE ? OR model LIKE ?)";
+        const likeTerm = `%${search}%`;
+        params.push(likeTerm, likeTerm, likeTerm);
+    }
+
+    sql += " ORDER BY brand ASC, model ASC LIMIT 100";
+
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows || []);
+    });
+});
+
+router.post('/cec/import', requireAuth, (req, res) => {
+    const ids = req.body.ids;
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'No product IDs selected for import.' });
+    }
+
+    const currentUser = getCurrentUser(req);
+    const timeStr = getSydneyTime();
+
+    // Query selected products from cec_approved_products
+    const placeholders = ids.map(() => '?').join(',');
+    db.all(`SELECT * FROM cec_approved_products WHERE id IN (${placeholders})`, ids, (err, cecProducts) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!cecProducts || cecProducts.length === 0) return res.status(404).json({ error: 'No approved products found matching selected IDs.' });
+
+        // Retrieve current max stock code
+        db.get("SELECT stock_code FROM products ORDER BY CAST(stock_code AS INTEGER) DESC LIMIT 1", [], (stockErr, row) => {
+            let nextCode = 1001;
+            if (!stockErr && row && row.stock_code) {
+                let lastCode = parseInt(row.stock_code, 10);
+                if (!isNaN(lastCode)) nextCode = lastCode + 1;
+            }
+
+            db.serialize(() => {
+                db.run("BEGIN TRANSACTION");
+
+                const insertStmt = db.prepare(`
+                    INSERT INTO products (
+                        product_category, prod_name, manufacturer_name, brand_name, model_number, stock_code,
+                        pro_approved_date, pro_expiry_date, no_of_phase, type_of_inverter,
+                        panels_capacity_w, inv_rt_ac_out_w, inv_rt_dc_power_kw, inv_mppt,
+                        nominal_battery_capacity_kwh, usable_battery_kwh, no_of_battery_modules,
+                        pro_warranty_years, panels_linear_warranty_years, product_status, show_in_quotation,
+                        show_in_detailed_reports, child_products, dynamic_documents, created_at, last_update_on, last_updated_by
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 'Yes', 'Yes', '[]', '[]', ?, ?, ?)
+                `);
+
+                const histStmt = db.prepare(`
+                    INSERT INTO products_history (record_id, action, details, user_name, created_at)
+                    VALUES (?, 'Import', ?, ?, ?)
+                `);
+
+                let hasError = false;
+                let currentStockCode = nextCode;
+
+                cecProducts.forEach(cp => {
+                    const stock = String(currentStockCode++);
+                    let name = `${cp.brand} - ${cp.model}`.replace(/^ - | - $/g, '').trim();
+
+                    // Parse additional specs
+                    let specs = {};
+                    try { specs = cp.additional_specs_json ? JSON.parse(cp.additional_specs_json) : {}; } catch(e) {}
+
+                    // Category-specific mapping
+                    let phase = '';
+                    let invType = '';
+                    let panelsCap = null;
+                    let acOut = null;
+                    let dcPower = null;
+                    let mppt = '';
+                    let nomBatt = null;
+                    let usableBatt = null;
+                    let battMods = null;
+                    let prodWarranty = specs.warranty ? String(specs.warranty) : '10';
+                    let linearWarranty = specs.linear_warranty ? String(specs.linear_warranty) : '';
+
+                    if (cp.category === 'Panel') {
+                        panelsCap = cp.capacity_value;
+                    } else if (cp.category === 'Inverter') {
+                        acOut = specs.ac_out || cp.capacity_value;
+                        dcPower = specs.dc_power || null;
+                        mppt = specs.mppt || '';
+                        phase = specs.phase || '';
+                        invType = specs.inv_type || '';
+                    } else if (cp.category === 'Battery') {
+                        usableBatt = specs.usable_kwh || cp.capacity_value;
+                        nomBatt = specs.nominal_kwh || cp.capacity_value;
+                        battMods = specs.modules || 1;
+                    }
+
+                    insertStmt.run([
+                        cp.category, name, cp.manufacturer, cp.brand, cp.model, stock,
+                        cp.approved_date || '', cp.expiry_date || '', phase, invType,
+                        panelsCap, acOut, dcPower, mppt,
+                        nomBatt, usableBatt, battMods,
+                        prodWarranty, linearWarranty,
+                        timeStr, timeStr, currentUser || 'System'
+                    ], function(insErr) {
+                        if (insErr) {
+                            hasError = true;
+                        } else {
+                            const newProductId = this.lastID;
+                            histStmt.run([
+                                newProductId,
+                                `Imported approved product ${name} from CEC Approved List.`,
+                                currentUser || 'System',
+                                timeStr
+                            ], (hErr) => { if (hErr) hasError = true; });
+                        }
+                    });
+                });
+
+                insertStmt.finalize(() => {
+                    histStmt.finalize(() => {
+                        if (hasError) {
+                            db.run("ROLLBACK");
+                            return res.status(500).json({ error: 'Database transaction failed during import.' });
+                        }
+                        db.run("COMMIT", (commitErr) => {
+                            if (commitErr) {
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ error: 'Database transaction failed during import.' });
+                            }
+                            res.json({ success: true, count: cecProducts.length });
+                        });
+                    });
+                });
+            });
+        });
+    });
 });
 
 module.exports = router;
