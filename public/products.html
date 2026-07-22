@@ -1576,6 +1576,20 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    function filterCecDropdownOptions(listId, query) {
+        const list = document.getElementById(listId);
+        const labels = list.querySelectorAll('label');
+        const q = query.toLowerCase().trim();
+        labels.forEach(label => {
+            const txt = label.querySelector('span').innerText.toLowerCase();
+            if (txt.includes(q)) {
+                label.style.display = 'flex';
+            } else {
+                label.style.display = 'none';
+            }
+        });
+    }
+
     function renderCecFilterDropdowns() {
         const mfgList = document.getElementById('cecMfgList');
         const brandList = document.getElementById('cecBrandList');
@@ -1584,7 +1598,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (cecDropdownsState.manufacturers.length === 0) {
             mfgList.innerHTML = `<span style="font-size:11px;color:#94a3b8;font-style:italic;">No manufacturers</span>`;
         } else {
-            mfgList.innerHTML = cecDropdownsState.manufacturers.map(m => {
+            const searchHtml = `<input type="text" placeholder="Search manufacturer..." oninput="filterCecDropdownOptions('cecMfgList', this.value)" onclick="event.stopPropagation()" style="width: calc(100% - 2px); height: 28px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; margin-bottom: 8px; outline: none; position: sticky; top: 0; background: white; z-index: 10; box-sizing: border-box;">`;
+            
+            const itemsHtml = cecDropdownsState.manufacturers.map(m => {
                 const checked = cecDropdownsState.selectedManufacturers.includes(m) ? 'checked' : '';
                 return `
                     <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;color:#334155;">
@@ -1593,13 +1609,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     </label>
                 `;
             }).join('');
+            
+            mfgList.innerHTML = searchHtml + `<div style="display:flex; flex-direction:column; gap:6px;">${itemsHtml}</div>`;
         }
         
         // Render brands
         if (cecDropdownsState.brands.length === 0) {
             brandList.innerHTML = `<span style="font-size:11px;color:#94a3b8;font-style:italic;">No brands</span>`;
         } else {
-            brandList.innerHTML = cecDropdownsState.brands.map(b => {
+            const searchHtml = `<input type="text" placeholder="Search brand..." oninput="filterCecDropdownOptions('cecBrandList', this.value)" onclick="event.stopPropagation()" style="width: calc(100% - 2px); height: 28px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; margin-bottom: 8px; outline: none; position: sticky; top: 0; background: white; z-index: 10; box-sizing: border-box;">`;
+            
+            const itemsHtml = cecDropdownsState.brands.map(b => {
                 const checked = cecDropdownsState.selectedBrands.includes(b) ? 'checked' : '';
                 return `
                     <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;color:#334155;">
@@ -1608,6 +1628,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     </label>
                 `;
             }).join('');
+            
+            brandList.innerHTML = searchHtml + `<div style="display:flex; flex-direction:column; gap:6px;">${itemsHtml}</div>`;
         }
         
         updateCecFilterLabels();
