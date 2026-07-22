@@ -881,21 +881,36 @@ function calculateIRR(cashFlows) {
 router.get('/:id/preview-data', async (req, res) => {
     try {
         const leadId = req.params.id;
+        const queryUserId = req.query.userId;
         const lead = await dbGet("SELECT * FROM leads WHERE id = ?", [leadId]);
         if (!lead) return res.status(404).json({ success: false, error: 'Lead not found' });
 
-        // Fetch the assigned advisor's contact details from users table
+        // Fetch the active user's details (logged-in or query param)
         let advisor = { name: 'Yashil', email: 'info@aresenergy.com.au', phone: '0485 838 592' };
-        if (lead.assign_to) {
-            const advisorUser = await dbGet(
-                "SELECT full_name, email, voipline_outbound_line FROM users WHERE username = ? AND status = 'Active'",
+        const targetUserId = queryUserId || req.session?.user?.id;
+        let advisorUser = null;
+
+        if (targetUserId) {
+            advisorUser = await dbGet(
+                "SELECT username, full_name, email, voipline_outbound_line FROM users WHERE id = ? AND status = 'Active'",
+                [targetUserId]
+            );
+        }
+
+        if (!advisorUser && lead.assign_to) {
+            // Fallback to assigned advisor if no active user session
+            advisorUser = await dbGet(
+                "SELECT username, full_name, email, voipline_outbound_line FROM users WHERE username = ? AND status = 'Active'",
                 [lead.assign_to]
             );
-            if (advisorUser) {
-                advisor.name = advisorUser.full_name || lead.assign_to;
-                if (advisorUser.email) advisor.email = advisorUser.email;
-                if (advisorUser.voipline_outbound_line) advisor.phone = advisorUser.voipline_outbound_line;
-            }
+        }
+
+        if (advisorUser) {
+            const fullName = advisorUser.full_name || '';
+            const firstName = fullName.trim().split(/\s+/)[0] || advisorUser.username;
+            advisor.name = firstName;
+            if (advisorUser.email) advisor.email = advisorUser.email;
+            if (advisorUser.voipline_outbound_line) advisor.phone = advisorUser.voipline_outbound_line;
         }
 
         let eng = {};
@@ -1456,12 +1471,18 @@ router.get('/:id/preview-data', async (req, res) => {
         const beforeSolarAnnualEnergy = annualUsageKwh * electricityUnitRate;
         const beforeSolarAnnualTotal = beforeSolarAnnualSupply + beforeSolarAnnualEnergy;
 
-        let selfConsumedSolar = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
+        // Direct solar self-consumption (typically 30% of usage for residential solar-only)
+        let directSolarConsumed = Math.min(annualGeneration * 0.30, annualUsageKwh * 0.30);
+        
+        let batteryConsumed = 0;
         if (totalBatteryKwh > 0) {
-            const excessSolar = Math.max(0, annualGeneration - selfConsumedSolar);
-            const storedEnergy = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
-            selfConsumedSolar += storedEnergy;
+            const excessSolar = Math.max(0, annualGeneration - directSolarConsumed);
+            const remainingLoad = Math.max(0, annualUsageKwh - directSolarConsumed);
+            const maxBatteryDischarge = totalBatteryKwh * 280 * 0.90;
+            batteryConsumed = Math.min(excessSolar, remainingLoad, maxBatteryDischarge);
         }
+
+        let selfConsumedSolar = directSolarConsumed + batteryConsumed;
         selfConsumedSolar = Math.min(selfConsumedSolar, annualUsageKwh);
 
         const exportedSolar = Math.max(0, annualGeneration - selfConsumedSolar);
@@ -1513,32 +1534,26 @@ router.get('/:id/preview-data', async (req, res) => {
         };
         const emissionFactor = ngaFactors[state] !== undefined ? ngaFactors[state] : 0.50;
 
-        const co2AvoidedKg = annualGeneration * emissionFactor;
-        const treesPlanted = co2AvoidedKg / 20;
-        const coalAvoidedKg = co2AvoidedKg / 2.86;
-        const fuelAvoidedLiters = co2AvoidedKg / 2.3;
+        const co2AvoidedKg = annualGeneration * 0.85;
+        const treesPlanted = co2AvoidedKg / 45.36;
+        const fuelAvoidedLiters = co2AvoidedKg / 2.72;
+        const coalAvoidedKg = co2AvoidedKg / 2.4;
 
         // Calculate Energy Balance (Where will your power come from?)
-        let directSolarConsumed = Math.max(0, Math.min(annualGeneration * 0.30, annualUsageKwh * 0.45));
-        let batteryConsumed = 0;
+        let ebDirectSolarConsumed = Math.min(annualGeneration * 0.30, annualUsageKwh * 0.30);
+        let ebBatteryConsumed = 0;
         if (totalBatteryKwh > 0) {
-            const excessSolar = Math.max(0, annualGeneration - directSolarConsumed);
-            batteryConsumed = Math.max(0, Math.min(excessSolar, totalBatteryKwh * 280 * 0.90));
+            const excessSolar = Math.max(0, annualGeneration - ebDirectSolarConsumed);
+            const remainingLoad = Math.max(0, annualUsageKwh - ebDirectSolarConsumed);
+            const maxBatteryDischarge = totalBatteryKwh * 280 * 0.90;
+            ebBatteryConsumed = Math.min(excessSolar, remainingLoad, maxBatteryDischarge);
         }
         
-        // Ensure total self-consumption doesn't exceed total usage
-        const totalSelfConsumed = directSolarConsumed + batteryConsumed;
-        if (totalSelfConsumed > annualUsageKwh) {
-            const ratio = annualUsageKwh / totalSelfConsumed;
-            directSolarConsumed *= ratio;
-            batteryConsumed *= ratio;
-        }
+        const gridImportCalculated = Math.max(0, annualUsageKwh - (ebDirectSolarConsumed + ebBatteryConsumed));
         
-        const gridImportCalculated = Math.max(0, annualUsageKwh - (directSolarConsumed + batteryConsumed));
-        
-        const totalSum = (directSolarConsumed + batteryConsumed + gridImportCalculated) || 1;
-        const pctSolar = (directSolarConsumed / totalSum) * 100;
-        const pctBattery = (batteryConsumed / totalSum) * 100;
+        const totalSum = (ebDirectSolarConsumed + ebBatteryConsumed + gridImportCalculated) || 1;
+        const pctSolar = (ebDirectSolarConsumed / totalSum) * 100;
+        const pctBattery = (ebBatteryConsumed / totalSum) * 100;
         const pctUtility = (gridImportCalculated / totalSum) * 100;
         
         // Round to nearest integer and ensure they sum to exactly 100
@@ -1562,7 +1577,11 @@ router.get('/:id/preview-data', async (req, res) => {
                 annualGenerationKwh: parseFloat(annualGeneration.toFixed(2)),
                 selfConsumptionKwh: parseFloat(selfConsumedSolar.toFixed(2)),
                 exportedSolarKwh: parseFloat(exportedSolar.toFixed(2)),
-                gridImportKwh: parseFloat(gridImport.toFixed(2))
+                gridImportKwh: parseFloat(gridImport.toFixed(2)),
+                electricityUnitRate: parseFloat(electricityUnitRate.toFixed(4)),
+                supplyChargeDay: parseFloat(supplyChargeDay.toFixed(4)),
+                feedInTariff: parseFloat(feedInTariff.toFixed(4)),
+                derivedDailyUsage: parseFloat((annualUsageKwh / 365).toFixed(2))
             },
             monthlyProduction,
             financials: {
@@ -1635,9 +1654,10 @@ router.get('/:id/download-pdf', async (req, res) => {
             interceptedRequest.continue({ headers });
         });
 
-        // 3. Construct local URL
+        // 3. Construct local URL with logged-in user ID to pass to Puppeteer
         const PORT = process.env.PORT || 3000;
-        const quotationUrl = `http://localhost:${PORT}/quotation_template.html?id=${leadId}`;
+        const currentUserId = req.session?.user?.id || '';
+        const quotationUrl = `http://localhost:${PORT}/quotation_template.html?id=${leadId}&userId=${currentUserId}`;
 
         // 4. Wait for all network calls to load
         await page.goto(quotationUrl, { waitUntil: 'networkidle0', timeout: 35000 });

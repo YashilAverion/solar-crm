@@ -2453,7 +2453,8 @@ function toggleNav(event, element) {
 
                 const safeSet = (id, val) => { const el = document.getElementById(id); if(el) el.value = val !== undefined && val !== null ? val : ''; };
                 const safeSetRadio = (name, val) => { 
-                    if(val === undefined || val === null) return;
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(radio => radio.checked = false);
+                    if(val === undefined || val === null || val === '') return;
                     const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
                     if(el) el.checked = true;
                     else if (name === 'tb_phase') {
@@ -2466,7 +2467,7 @@ function toggleNav(event, element) {
                     }
                 };
 
-                safeSetRadio('tb_house_storey', projectData.house_storey || 'Single');
+                safeSetRadio('tb_house_storey', (projectData.house_storey !== undefined && projectData.house_storey !== null) ? projectData.house_storey : 'Single');
                 safeSet('tb_roof_type', projectData.roof_type);
                 safeSet('tb_roof_angle', projectData.roof_angle);
                 safeSetRadio('tb_phase', projectData.electricity_phase || projectData.phase || '');
@@ -2482,10 +2483,10 @@ function toggleNav(event, element) {
                 safeSet('tc_panel_install', projectData.panel_install_type);
                 safeSetRadio('tc_battery_install', projectData.battery_install_type);
                 safeSetRadio('tc_battery_location', projectData.battery_location);
-                safeSetRadio('tc_site_visit', projectData.site_visit_req || 'No');
-                safeSetRadio('tc_strata', projectData.strata_approval || 'No');
-                safeSetRadio('tc_vpp', projectData.vpp_rebate || 'No');
-                safeSetRadio('tc_blackout', projectData.battery_blackout || 'No');
+                safeSetRadio('tc_site_visit', (projectData.site_visit_req !== undefined && projectData.site_visit_req !== null) ? projectData.site_visit_req : 'No');
+                safeSetRadio('tc_strata', (projectData.strata_approval !== undefined && projectData.strata_approval !== null) ? projectData.strata_approval : 'No');
+                safeSetRadio('tc_vpp', (projectData.vpp_rebate !== undefined && projectData.vpp_rebate !== null) ? projectData.vpp_rebate : 'No');
+                safeSetRadio('tc_blackout', (projectData.battery_blackout !== undefined && projectData.battery_blackout !== null) ? projectData.battery_blackout : 'No');
                 
                 safeSet('tc_war_panels', projectData.war_panels);
                 safeSet('tc_war_inverter', projectData.war_inverter);
@@ -9674,6 +9675,32 @@ function analyzeSpeechForObjections(text) {
         }
     }
 }
+
+// Allow unselecting / toggling radio buttons in Table B & Table C (radio-group-sm)
+document.addEventListener('mousedown', function(e) {
+    const label = e.target.closest('.radio-group-sm label');
+    if (label) {
+        const radio = label.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.dataset.wasChecked = radio.checked;
+        }
+    } else {
+        const radio = e.target.closest('.radio-group-sm input[type="radio"]');
+        if (radio) {
+            radio.dataset.wasChecked = radio.checked;
+        }
+    }
+}, true);
+
+document.addEventListener('click', function(e) {
+    const radio = e.target.closest('.radio-group-sm input[type="radio"]');
+    if (radio && radio.dataset.wasChecked === 'true') {
+        radio.checked = false;
+        radio.dataset.wasChecked = 'false';
+        // Trigger change event to fire save/validation
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}, true);
 </script>
 </div>
     <script src="/responsive.js"></script>

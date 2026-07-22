@@ -348,14 +348,12 @@ async function setupPremiumHeader() {
         '#topbarProfileWrapper',
         '.profile-select-wrap',
         '.pref-gear-btn',
-        '#currentUserDisplay',
-        '#sidebarAvatar'
+        '#currentUserDisplay'
     ];
     elementsToPurge.forEach(selector => {
         const found = document.querySelectorAll(selector);
         found.forEach(el => {
             el.style.setProperty('display', 'none', 'important');
-            el.remove();
         });
     });
 
