@@ -3161,6 +3161,9 @@ function toggleNav(event, element) {
             const loading = document.getElementById('quotationPreviewLoading');
             const refSpan = document.getElementById('quotationPreviewRef');
 
+            // Reset compiled PDF URL reference
+            window.currentQuotationFileUrl = null;
+
             // Reset Zoom
             quotationZoomVal = 1.0;
             const zoomValSpan = document.getElementById('quotationPreviewZoomVal');
@@ -3183,6 +3186,17 @@ function toggleNav(event, element) {
             setTimeout(() => {
                 iframe.src = `/quotation_template.html?id=${currentProjectId}&userId=${window.loggedInUserId || ''}`;
             }, 80);
+
+            // Instant background PDF generation & DB logging
+            fetch(`/api/quotations/${currentProjectId}/generate-and-log`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.currentQuotationFileUrl = data.fileUrl;
+                        loadPreviousQuotations(currentProjectId);
+                    }
+                })
+                .catch(err => console.error("Error generating PDF in background:", err));
         }
 
         function closeQuotationPreview() {
@@ -3200,16 +3214,21 @@ function toggleNav(event, element) {
             const btn = document.getElementById('btnQuotePreviewDownload');
             if (btn) {
                 const orig = btn.innerHTML;
-                btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;"></span> Generating...';
+                btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 0.8s linear infinite;"></span> Downloading...';
                 btn.disabled = true;
-                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 5000);
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
             }
-            // Trigger download in new tab so preview stays open
-            window.open(`/api/quotations/${currentProjectId}/download-pdf`, '_blank');
-            // Reload previous quotes list after a short delay to allow PDF generation to log in DB
-            setTimeout(() => {
-                loadPreviousQuotations(currentProjectId);
-            }, 5500);
+            
+            if (window.currentQuotationFileUrl) {
+                // Open pre-compiled version instantly
+                window.open(window.currentQuotationFileUrl, '_blank');
+            } else {
+                // Fallback to on-the-fly generation if background generation hasn't completed yet
+                window.open(`/api/quotations/${currentProjectId}/download-pdf`, '_blank');
+                setTimeout(() => {
+                    loadPreviousQuotations(currentProjectId);
+                }, 5500);
+            }
         }
 
         // Keep old function name as alias for any other references
