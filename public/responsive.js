@@ -260,7 +260,7 @@ async function enforceSidebarPermissions() {
             { selector: 'a[href="/delete_leads.html"]', module: 'Lead Master', feature: 'Delete Lead' },
             { selector: 'a[href="/duplicate_leads.html"]', module: 'Lead Master', feature: 'Duplicate Lead' },
             { selector: 'a[href="/lead_approvals.html"]', module: 'Lead Master', feature: 'Lead Approvals' },
-            { selector: 'a[href="/project_leads.html"]', module: 'Projects', feature: 'Leads' },
+            { selector: 'a[href="/project_leads.html"]', module: 'Sales', feature: 'Leads' },
             { selector: 'a[href="/products.html"]', module: 'Masters', feature: 'Manage Products' },
             { selector: 'a[href="/combo_master.html"]', module: 'Masters', feature: 'Manage Products' },
             { selector: 'a[href="/stc_master.html"]', module: 'Masters', feature: 'Manage STC' },

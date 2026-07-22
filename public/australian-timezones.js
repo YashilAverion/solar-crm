@@ -1028,7 +1028,7 @@
             const searchWrap = document.createElement('div');
             searchWrap.className = 'search-wrap';
             searchWrap.innerHTML = `
-                <input type="text" id="globalOmniSearchInput" placeholder="Omnibox Search (Projects, Leads, Clients...)">
+                <input type="text" id="globalOmniSearchInput" placeholder="Omnibox Search (Sales, Leads, Clients...)">
                 <div id="globalOmniDropdown"></div>
             `;
             const spacer = tier2.querySelector('.tb-spacer') || tier2.lastChild;
