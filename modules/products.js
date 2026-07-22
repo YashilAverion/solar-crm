@@ -324,6 +324,7 @@ router.post('/bulk-delete', requireAuth, (req, res) => {
             });
         });
     });
+});
 // ── CEC APPROVED LIST ROUTE HANDLERS ────────────────────────────────
 router.get('/cec/search', requireAuth, (req, res) => {
     const category = req.query.category || '';
