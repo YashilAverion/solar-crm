@@ -398,6 +398,39 @@ router.get('/cec/search', requireAuth, (req, res) => {
     });
 });
 
+function formatExcelDate(val) {
+    if (!val) return '';
+    
+    // If it's a JavaScript Date object
+    if (val instanceof Date) {
+        return formatDateToDDMMYYYY(val);
+    }
+    
+    // If it's a numeric Excel serial number (e.g. 45877)
+    const num = Number(val);
+    if (!isNaN(num) && num > 30000 && num < 60000) {
+        // Excel base date is Dec 30, 1899 due to 1900 leap year bug
+        const date = new Date((num - 25569) * 86400 * 1000);
+        return formatDateToDDMMYYYY(date);
+    }
+    
+    // Try standard JS date parsing
+    const str = String(val).trim();
+    const parsed = Date.parse(str);
+    if (!isNaN(parsed)) {
+        return formatDateToDDMMYYYY(new Date(parsed));
+    }
+    
+    return str;
+}
+
+function formatDateToDDMMYYYY(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
 router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -414,7 +447,7 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
         const filePath = req.file.path;
         
         // Read file using XLSX (handles .csv, .xlsx, .xls, etc.)
-        const workbook = XLSX.readFile(filePath);
+        const workbook = XLSX.readFile(filePath, { cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         
@@ -459,8 +492,8 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
             const manufacturer = String(line[mfgIdx]).trim();
             const brand = brandIdx !== -1 && line[brandIdx] ? String(line[brandIdx]).trim() : manufacturer;
             const model = String(line[modelIdx]).trim();
-            const expiry_date = expiryIdx !== -1 && line[expiryIdx] ? String(line[expiryIdx]).trim() : '';
-            const approved_date = approvedIdx !== -1 && line[approvedIdx] ? String(line[approvedIdx]).trim() : '';
+            const expiry_date = expiryIdx !== -1 && line[expiryIdx] ? formatExcelDate(line[expiryIdx]) : '';
+            const approved_date = approvedIdx !== -1 && line[approvedIdx] ? formatExcelDate(line[approvedIdx]) : '';
             
             let capacity_value = 0;
             if (capIdx !== -1 && line[capIdx]) {
@@ -471,7 +504,14 @@ router.post('/cec/upload-csv', requireAuth, uploadDoc.single('file'), (req, res)
             // Create specs
             const specs = {};
             headers.forEach((h, idx) => {
-                if (line[idx]) specs[h] = String(line[idx]).trim();
+                if (line[idx]) {
+                    // Format dates inside specs as well if they are dates
+                    if (idx === expiryIdx || idx === approvedIdx) {
+                        specs[h] = formatExcelDate(line[idx]);
+                    } else {
+                        specs[h] = String(line[idx]).trim();
+                    }
+                }
             });
 
             productsToInsert.push([
