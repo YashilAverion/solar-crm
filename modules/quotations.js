@@ -1720,50 +1720,65 @@ router.get('/:id/download-pdf', async (req, res) => {
     }
 });
 
+// Helper function to compile PDF in background and update file_size in database
+function compilePdfInBackground(leadId, projectNum, version, savePath, saveFilename, currentUserId) {
+    puppeteer.launch({ 
+        headless: true, 
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
+    }).then(async (browser) => {
+        try {
+            const page = await browser.newPage();
+            await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
+
+            await page.setRequestInterception(true);
+            page.on('request', interceptedRequest => {
+                const headers = Object.assign({}, interceptedRequest.headers(), {
+                    'x-pdf-render-secret': process.env.SESSION_SECRET || 'solar-crm-secret-key-2024'
+                });
+                interceptedRequest.continue({ headers });
+            });
+
+            const PORT = process.env.PORT || 3000;
+            const quotationUrl = `http://localhost:${PORT}/quotation_template.html?id=${leadId}&userId=${currentUserId}`;
+
+            await page.goto(quotationUrl, { waitUntil: 'networkidle0', timeout: 35000 });
+            await page.evaluateHandle(() => document.fonts.ready);
+
+            const pdfBuffer = await page.pdf({ 
+                format: 'A4', 
+                printBackground: true,
+                margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' }
+            });
+            await browser.close();
+
+            fs.writeFileSync(savePath, pdfBuffer);
+            
+            const fileSize = (pdfBuffer.length / 1024).toFixed(1) + ' KB';
+            await dbRun(
+                "UPDATE lead_quotations SET file_size = ? WHERE file_name = ?",
+                [fileSize, saveFilename]
+            );
+            console.log(`[BACKGROUND PDF] Compiled and saved successfully: ${savePath} (${fileSize})`);
+        } catch (err) {
+            console.error(`[BACKGROUND PDF] Compilation failed for lead ${leadId}:`, err);
+            if (browser) await browser.close().catch(() => {});
+            await dbRun(
+                "UPDATE lead_quotations SET file_size = 'Failed' WHERE file_name = ?",
+                [saveFilename]
+            ).catch(() => {});
+        }
+    }).catch(err => {
+        console.error(`[BACKGROUND PDF] Launch error for lead ${leadId}:`, err);
+    });
+}
+
 // Generate PDF quotation in background and log to database
 router.post('/:id/generate-and-log', async (req, res) => {
-    let browser;
     try {
         const leadId = req.params.id;
         const lead = await dbGet("SELECT project_number FROM leads WHERE id = ?", [leadId]);
         if (!lead) return res.status(404).json({ success: false, error: 'Lead not found' });
 
-        // 1. Launch Puppeteer (Server-side rendering)
-        browser = await puppeteer.launch({ 
-            headless: true, 
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] 
-        });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
-
-        // 2. Enable request interception
-        await page.setRequestInterception(true);
-        page.on('request', interceptedRequest => {
-            const headers = Object.assign({}, interceptedRequest.headers(), {
-                'x-pdf-render-secret': process.env.SESSION_SECRET || 'solar-crm-secret-key-2024'
-            });
-            interceptedRequest.continue({ headers });
-        });
-
-        // 3. Construct local URL
-        const PORT = process.env.PORT || 3000;
-        const currentUserId = req.session?.user?.id || '';
-        const quotationUrl = `http://localhost:${PORT}/quotation_template.html?id=${leadId}&userId=${currentUserId}`;
-
-        // 4. Wait for network to load
-        await page.goto(quotationUrl, { waitUntil: 'networkidle0', timeout: 35000 });
-        await page.evaluateHandle(() => document.fonts.ready);
-
-        // 5. Generate PDF
-        const pdfBuffer = await page.pdf({ 
-            format: 'A4', 
-            printBackground: true,
-            margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' }
-        });
-        await browser.close();
-        browser = null;
-
-        // Save PDF to history and disk
         const projectNum = lead.project_number || leadId;
         const countRow = await dbGet("SELECT COUNT(*) as count FROM lead_quotations WHERE lead_id = ?", [leadId]);
         const version = (countRow ? countRow.count : 0) + 1;
@@ -1775,22 +1790,24 @@ router.post('/:id/generate-and-log', async (req, res) => {
         }
         
         const savePath = path.join(uploadDir, saveFilename);
-        fs.writeFileSync(savePath, pdfBuffer);
-        
-        const fileSize = (pdfBuffer.length / 1024).toFixed(1) + ' KB';
         const fileUrl = `/uploads/quotations/${saveFilename}`;
         const generatedBy = (req.session && req.session.user && req.session.user.full_name) ? req.session.user.full_name : 'System';
         
+        // Log instantly into DB with placeholder size
         await dbRun(
             "INSERT INTO lead_quotations (lead_id, file_name, file_size, file_url, generated_by) VALUES (?, ?, ?, ?, ?)",
-            [leadId, saveFilename, fileSize, fileUrl, generatedBy]
+            [leadId, saveFilename, 'Generating...', fileUrl, generatedBy]
         );
 
+        // Send response immediately (under 100ms)
         res.json({ success: true, fileUrl, fileName: saveFilename });
+
+        // Trigger PDF compilation in the background asynchronously
+        const currentUserId = req.session?.user?.id || '';
+        compilePdfInBackground(leadId, projectNum, version, savePath, saveFilename, currentUserId);
 
     } catch (err) {
         console.error("PDF generation/log route error:", err);
-        if (browser) await browser.close().catch(() => {});
         res.status(500).json({ success: false, error: "Quotation PDF generation failed: " + err.message });
     }
 });

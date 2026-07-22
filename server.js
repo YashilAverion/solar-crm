@@ -31,6 +31,7 @@
 //        └── db.js
 // ============================================================
 
+process.env.TZ = 'Australia/Sydney';
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
@@ -1554,6 +1555,21 @@ app.use(express.static('public', {
         }
     }
 })); // Browser will cache static files for 1 Day, except HTML files
+
+// Custom route to serve quotations, blocking temporarily if the background Puppeteer compiler is still writing the file
+app.get('/uploads/quotations/:filename', async (req, res) => {
+    const filepath = path.join(__dirname, 'public', 'uploads', 'quotations', req.params.filename);
+    for (let i = 0; i < 16; i++) {
+        if (fs.existsSync(filepath)) {
+            return res.sendFile(filepath);
+        }
+        await new Promise(r => setTimeout(r, 500));
+    }
+    if (fs.existsSync(filepath)) {
+        return res.sendFile(filepath);
+    }
+    res.status(404).send('File is still generating in the background, please refresh this page in a moment.');
+});
 
 // ── SERVE NEW UPLOADS FOLDER ───────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), { maxAge: '7d' })); // Cache uploaded docs

@@ -1337,7 +1337,7 @@
                 <!-- Personal Shift History (For standard users) -->
                 <div class="panel-card" id="employeesPersonalHistory">
                     <div class="panel-header">
-                        <span>My Timesheet History (Standardized to Perth Time)</span>
+                        <span>My Timesheet History (Standardized to Sydney Time)</span>
                     </div>
                     <div class="panel-body">
                         <div class="table-wrap">
@@ -2132,7 +2132,7 @@ function updateLiveClock() {
     const now = new Date();
     
     const timeOptions = {
-        timeZone: 'Australia/Perth',
+        timeZone: 'Australia/Sydney',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -2142,7 +2142,7 @@ function updateLiveClock() {
     if (liveClockEl) liveClockEl.textContent = now.toLocaleTimeString('en-AU', timeOptions);
     
     const dateOptions = {
-        timeZone: 'Australia/Perth',
+        timeZone: 'Australia/Sydney',
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -2997,7 +2997,7 @@ function loadPersonalShiftHistory() {
                 const formatTime = (isoStr) => {
                     if (!isoStr) return `<em style="color:var(--warning)">Active Shift</em>`;
                     const d = new Date(isoStr);
-                    return d.toLocaleTimeString('en-AU', { timeZone: 'Australia/Perth', hour: '2-digit', minute: '2-digit', hour12: true });
+                    return d.toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney', hour: '2-digit', minute: '2-digit', hour12: true });
                 };
                 
                 tr.innerHTML = `
