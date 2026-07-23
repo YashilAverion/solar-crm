@@ -682,6 +682,35 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 </div>
 
+<div id="cecPreviewModal" class="modal">
+    <div class="modal-content" style="max-width: 1300px; width: 98%;">
+        <button class="modal-close" onclick="document.getElementById('cecPreviewModal').style.display='none'">✕</button>
+        
+        <div style="margin-bottom: 16px;">
+            <div class="modal-title" style="margin-bottom: 4px;" id="cecPreviewModalTitle">CEC Import Preview & Edit</div>
+            <p style="font-size:11px;color:#718096;margin:0;">Verify or edit product specifications below before final import into the Product Master. Stock codes will be automatically generated.</p>
+        </div>
+
+        <div style="max-height: 480px; overflow-x: auto; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; background: white;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1600px;">
+                <thead id="cecPreviewTableHeader">
+                    <!-- Dynamic Headers based on category -->
+                </thead>
+                <tbody id="cecPreviewTableBody">
+                    <!-- Dynamic Rows with edit controls -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="tb-btn" onclick="document.getElementById('cecPreviewModal').style.display='none'">Cancel</button>
+            <button class="tb-btn" onclick="confirmFinalCecImport()" style="background: #10b981; color: white; border-color: #10b981; display: inline-flex; align-items: center; gap: 6px;">
+                💾 Confirm & Final Import
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="modal" class="modal">
     <div class="modal-content">
         <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">✕</button>
@@ -1513,6 +1542,9 @@ document.addEventListener("DOMContentLoaded", function() {
         container.appendChild(row);
     }
 
+    let currentCecSearchResults = [];
+    let selectedCecPreviewProducts = [];
+
     let cecDropdownsState = {
         manufacturers: [],
         brands: [],
@@ -1697,6 +1729,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
+                currentCecSearchResults = data;
                 if (data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="10" style="padding: 20px; text-align: center; color: #94a3b8; font-style: italic;">No approved products found matching your filters.</td></tr>`;
                     updateCecImportButton();
@@ -1844,21 +1877,335 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    async function importSelectedCecProducts() {
+    function showCecImportPreview() {
         const checked = document.querySelectorAll('.cec-row-checkbox:checked');
         const ids = Array.from(checked).map(cb => parseInt(cb.value, 10));
         
         if (ids.length === 0) return;
+        
+        // Filter current search results for selected items
+        selectedCecPreviewProducts = currentCecSearchResults.filter(p => ids.includes(p.id));
+        if (selectedCecPreviewProducts.length === 0) return;
+        
+        // Hide the search modal
+        document.getElementById('cecModal').style.display = 'none';
+        // Open the preview modal
+        document.getElementById('cecPreviewModal').style.display = 'flex';
+        
+        // Render headers and rows dynamically based on the category of the selected items
+        const category = selectedCecPreviewProducts[0].category;
+        renderCecPreviewTable(category);
+    }
 
-        const importBtn = document.getElementById('cecImportBtn');
-        importBtn.disabled = true;
-        importBtn.innerText = 'Importing...';
+    function renderCecPreviewTable(category) {
+        const headerEl = document.getElementById('cecPreviewTableHeader');
+        const tbodyEl = document.getElementById('cecPreviewTableBody');
+        
+        let headersHtml = '';
+        if (category === 'Battery') {
+            headersHtml = `
+                <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Category</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Product Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Manufacturer Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 140px;">Brand Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 160px;">Model Number</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Approved Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Expiry Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Product Series</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Number of Phase</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Nominal Battery kWh</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Usable Battery kWh</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">No. Of Battery Modules</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Warranty</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Status</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Quotation</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Reports</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Ext. Install.</th>
+                </tr>
+            `;
+        } else if (category === 'Panel') {
+            headersHtml = `
+                <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Category</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Product Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Manufacturer Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 140px;">Brand Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 160px;">Model Number</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Approved Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Expiry Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Panels Capacity (W)</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Warranty</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 150px;">Panel Linear Warranty (Yrs)</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Status</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Quotation</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Reports</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Ext. Install.</th>
+                </tr>
+            `;
+        } else if (category === 'Inverter') {
+            headersHtml = `
+                <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Category</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Product Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 220px;">Manufacturer Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 140px;">Brand Name</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 160px;">Model Number</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Approved Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Expiry Date</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Product Series</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Number of Phase</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Type of Inverter</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 130px;">Inv. Rated AC Output (W)</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 130px;">Inv. Rated DC Power (kW)</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Inv. MPPT</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 120px;">Product Warranty (Yrs)</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Product Status</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Quotation</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Reports</th>
+                    <th style="padding: 8px; text-align: left; font-weight: 700; color: #475569; width: 100px;">Show in Ext. Install.</th>
+                </tr>
+            `;
+        }
+        headerEl.innerHTML = headersHtml;
+
+        // Render rows
+        tbodyEl.innerHTML = selectedCecPreviewProducts.map((p, idx) => {
+            let specs = {};
+            try {
+                specs = p.additional_specs_json ? JSON.parse(p.additional_specs_json) : {};
+            } catch(e) { specs = {}; }
+
+            // Common default values
+            const defaultName = `${p.brand} - ${p.model}`.replace(/^ - | - $/g, '').trim();
+            
+            const seriesKey = Object.keys(specs).find(k => k.includes('series'));
+            const defaultSeries = seriesKey ? specs[seriesKey] : (specs.series || '');
+            
+            // Phase parsing
+            const phaseKey = Object.keys(specs).find(k => k.includes('phase'));
+            let defaultPhase = specs[phaseKey] || specs.phase || '';
+            defaultPhase = defaultPhase.toLowerCase().includes('3') ? '3-Phase' : (defaultPhase.toLowerCase().includes('1') ? '1-Phase' : 'N/A');
+
+            const styleInput = `width: 100%; box-sizing: border-box; height: 28px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;`;
+            const styleSelect = `width: 100%; box-sizing: border-box; height: 28px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; background: white;`;
+
+            if (category === 'Battery') {
+                const nomKey = Object.keys(specs).find(k => k.includes('nominal'));
+                const nominalVal = nomKey ? specs[nomKey] : p.capacity_value;
+                const useKey = Object.keys(specs).find(k => k.includes('usable'));
+                const usableVal = useKey ? specs[useKey] : p.capacity_value;
+                const modulesKey = Object.keys(specs).find(k => k.includes('modules') || k.includes('cell'));
+                const modulesVal = modulesKey ? specs[modulesKey] : 1;
+                const warrantyVal = specs.warranty || '10';
+
+                return `
+                    <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-approved-date" value="${p.approved_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-expiry-date" value="${p.expiry_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-product-series" value="${defaultSeries}" style="${styleInput}"></td>
+                        <td style="padding: 6px;">
+                            <select class="field-no-of-phase" style="${styleSelect}">
+                                <option value="N/A" ${defaultPhase === 'N/A' ? 'selected' : ''}>N/A</option>
+                                <option value="1-Phase" ${defaultPhase === '1-Phase' ? 'selected' : ''}>1-Phase</option>
+                                <option value="3-Phase" ${defaultPhase === '3-Phase' ? 'selected' : ''}>3-Phase</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;"><input type="number" step="any" class="field-nominal-battery-capacity-kwh" value="${nominalVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="number" step="any" class="field-usable-battery-kwh" value="${usableVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="number" class="field-no-of-battery-modules" value="${modulesVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-pro-warranty-years" value="${warrantyVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;">
+                            <select class="field-product-status" style="${styleSelect}">
+                                <option value="Active" selected>Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-quotation" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-detailed-reports" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-ext-install" style="${styleSelect}">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            } else if (category === 'Panel') {
+                const wattVal = p.capacity_value;
+                const warrantyVal = specs.warranty || '15';
+                const linearVal = specs.linear_warranty || '25';
+
+                return `
+                    <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-approved-date" value="${p.approved_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-expiry-date" value="${p.expiry_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="number" step="any" class="field-panels-capacity-w" value="${wattVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-pro-warranty-years" value="${warrantyVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-panels-linear-warranty-years" value="${linearVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;">
+                            <select class="field-product-status" style="${styleSelect}">
+                                <option value="Active" selected>Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-quotation" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-detailed-reports" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-ext-install" style="${styleSelect}">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            } else if (category === 'Inverter') {
+                const acOutVal = specs.ac_out || p.capacity_value;
+                const dcPowerVal = specs.dc_power || (p.capacity_value * 1.33 / 1000).toFixed(2);
+                const mpptVal = specs.mppt || '2';
+                const typeKey = Object.keys(specs).find(k => k.includes('type') || k.includes('sub-type'));
+                const invTypeVal = specs[typeKey] || specs.inv_type || 'Hybrid';
+                const warrantyVal = specs.warranty || '10';
+
+                return `
+                    <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-approved-date" value="${p.approved_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-expiry-date" value="${p.expiry_date || ''}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-product-series" value="${defaultSeries}" style="${styleInput}"></td>
+                        <td style="padding: 6px;">
+                            <select class="field-no-of-phase" style="${styleSelect}">
+                                <option value="N/A" ${defaultPhase === 'N/A' ? 'selected' : ''}>N/A</option>
+                                <option value="1-Phase" ${defaultPhase === '1-Phase' ? 'selected' : ''}>1-Phase</option>
+                                <option value="3-Phase" ${defaultPhase === '3-Phase' ? 'selected' : ''}>3-Phase</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;"><input type="text" class="field-type-of-inverter" value="${invTypeVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="number" step="any" class="field-inv-rt-ac-out-w" value="${acOutVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="number" step="any" class="field-inv-rt-dc-power-kw" value="${dcPowerVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-inv-mppt" value="${mpptVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-pro-warranty-years" value="${warrantyVal}" style="${styleInput}"></td>
+                        <td style="padding: 6px;">
+                            <select class="field-product-status" style="${styleSelect}">
+                                <option value="Active" selected>Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-quotation" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-detailed-reports" style="${styleSelect}">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td style="padding: 6px;">
+                            <select class="field-show-in-ext-install" style="${styleSelect}">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            }
+        }).join('');
+    }
+
+    async function confirmFinalCecImport() {
+        const rows = document.querySelectorAll('.cec-preview-row');
+        const productsToImport = [];
+
+        rows.forEach(row => {
+            const index = parseInt(row.getAttribute('data-index'), 10);
+            const originalProduct = selectedCecPreviewProducts[index];
+            const category = originalProduct.category;
+
+            const baseProduct = {
+                product_category: category,
+                prod_name: row.querySelector('.field-prod-name').value,
+                manufacturer_name: row.querySelector('.field-manufacturer-name').value,
+                brand_name: row.querySelector('.field-brand-name').value,
+                model_number: row.querySelector('.field-model-number').value,
+                pro_approved_date: row.querySelector('.field-approved-date').value,
+                pro_expiry_date: row.querySelector('.field-expiry-date').value,
+                product_status: row.querySelector('.field-product-status').value,
+                show_in_quotation: row.querySelector('.field-show-in-quotation').value,
+                show_in_detailed_reports: row.querySelector('.field-show-in-detailed-reports').value,
+                show_in_ext_install: row.querySelector('.field-show-in-ext-install').value,
+                pro_warranty_years: row.querySelector('.field-pro-warranty-years').value,
+            };
+
+            if (category === 'Battery') {
+                baseProduct.product_series = row.querySelector('.field-product-series').value;
+                baseProduct.no_of_phase = row.querySelector('.field-no-of-phase').value;
+                baseProduct.nominal_battery_capacity_kwh = parseFloat(row.querySelector('.field-nominal-battery-capacity-kwh').value) || 0;
+                baseProduct.usable_battery_kwh = parseFloat(row.querySelector('.field-usable-battery-kwh').value) || 0;
+                baseProduct.no_of_battery_modules = parseInt(row.querySelector('.field-no-of-battery-modules').value, 10) || 1;
+            } else if (category === 'Panel') {
+                baseProduct.panels_capacity_w = parseFloat(row.querySelector('.field-panels-capacity-w').value) || 0;
+                baseProduct.panels_linear_warranty_years = row.querySelector('.field-panels-linear-warranty-years').value;
+            } else if (category === 'Inverter') {
+                baseProduct.product_series = row.querySelector('.field-product-series').value;
+                baseProduct.no_of_phase = row.querySelector('.field-no-of-phase').value;
+                baseProduct.type_of_inverter = row.querySelector('.field-type-of-inverter').value;
+                baseProduct.inv_rt_ac_out_w = parseFloat(row.querySelector('.field-inv-rt-ac-out-w').value) || 0;
+                baseProduct.inv_rt_dc_power_kw = parseFloat(row.querySelector('.field-inv-rt-dc-power-kw').value) || 0;
+                baseProduct.inv_mppt = row.querySelector('.field-inv-mppt').value;
+            }
+
+            productsToImport.push(baseProduct);
+        });
 
         try {
+            Swal.fire({
+                title: 'Importing products...',
+                text: 'Please wait while products are added to Product Master.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
             const res = await fetch('/products/cec/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids })
+                body: JSON.stringify({ products: productsToImport })
             });
 
             if (res.ok) {
@@ -1869,19 +2216,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     icon: 'success',
                     confirmButtonColor: '#e8681e'
                 });
-                document.getElementById('cecModal').style.display = 'none';
-                // Refresh product list
-                fetchProducts();
+                document.getElementById('cecPreviewModal').style.display = 'none';
+                fetchProducts(); // Refresh main list
             } else {
                 const err = await res.json();
                 Swal.fire('Import Failed', err.error || 'Server error occurred during import.', 'error');
             }
         } catch (e) {
             Swal.fire('Import Error', 'Could not connect to the server.', 'error');
-        } finally {
-            importBtn.innerText = 'Import Selected';
-            updateCecImportButton();
         }
+    }
+
+    async function importSelectedCecProducts() {
+        showCecImportPreview();
     }
 
     function openAddProductModal(){
