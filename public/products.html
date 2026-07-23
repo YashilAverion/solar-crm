@@ -747,7 +747,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
                 <div class="field"><label id="lbl_product_series">Product Series</label><input type="text" name="product_series" id="product_series"></div>
                 <div class="field"><label id="lbl_no_of_phase">Number of Phase</label>
-                    <select name="no_of_phase" id="no_of_phase"><option value="">Select</option><option>Single Phase</option><option>Three Phase</option></select>
+                    <select name="no_of_phase" id="no_of_phase"><option value="">Select</option><option value="Single Phase">Single Phase</option><option value="Three Phase">Three Phase</option><option value="Both">Both</option></select>
                 </div>
                 <div class="field"><label id="lbl_type_of_inverter">Type of Inverter</label>
                     <select name="type_of_inverter" id="type_of_inverter">
@@ -2037,7 +2037,13 @@ document.addEventListener("DOMContentLoaded", function() {
             // Phase parsing
             const phaseKey = Object.keys(specs).find(k => k.includes('phase'));
             let defaultPhase = specs[phaseKey] || specs.phase || '';
-            defaultPhase = defaultPhase.toLowerCase().includes('3') ? '3-Phase' : (defaultPhase.toLowerCase().includes('1') ? '1-Phase' : 'N/A');
+            if (defaultPhase.toLowerCase().includes('3') || defaultPhase.toLowerCase().includes('three')) {
+                defaultPhase = 'Three Phase';
+            } else if (defaultPhase.toLowerCase().includes('1') || defaultPhase.toLowerCase().includes('single')) {
+                defaultPhase = 'Single Phase';
+            } else {
+                defaultPhase = 'N/A';
+            }
 
             const styleInput = `width: 100%; box-sizing: border-box; height: 28px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;`;
             const styleSelect = `width: 100%; box-sizing: border-box; height: 28px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; background: white;`;
@@ -2055,6 +2061,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 const hvLv = detectHvLv(p.model, specs);
                 const generatedName = `${p.brand} ${defaultSeries} ${nominalVal} kWh ${hvLv} Battery Storage (${p.model})`;
 
+                // Automated battery phase resolution based on keywords
+                const specText = (p.brand + ' ' + p.model + ' ' + JSON.stringify(specs) + ' ' + (p.additional_specs_json || '')).toLowerCase();
+                let resolvedPhase = 'Both';
+                const hasSingle = specText.includes('single phase') || specText.includes('1-phase') || specText.includes('1 phase') || specText.includes('h1') || specText.includes('ac1');
+                const hasThree = specText.includes('three phase') || specText.includes('3-phase') || specText.includes('3 phase') || specText.includes('h3') || specText.includes('ac3');
+                if (hasSingle && !hasThree) {
+                    resolvedPhase = 'Single Phase';
+                } else if (hasThree && !hasSingle) {
+                    resolvedPhase = 'Three Phase';
+                } else {
+                    resolvedPhase = 'Both';
+                }
+
                 return `
                     <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
@@ -2067,9 +2086,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td style="padding: 6px;"><input type="text" class="field-product-series" value="${defaultSeries}" style="${styleInput}"></td>
                         <td style="padding: 6px;">
                             <select class="field-no-of-phase" style="${styleSelect}">
-                                <option value="N/A" ${defaultPhase === 'N/A' ? 'selected' : ''}>N/A</option>
-                                <option value="1-Phase" ${defaultPhase === '1-Phase' ? 'selected' : ''}>1-Phase</option>
-                                <option value="3-Phase" ${defaultPhase === '3-Phase' ? 'selected' : ''}>3-Phase</option>
+                                <option value="Both" ${resolvedPhase === 'Both' ? 'selected' : ''}>Both</option>
+                                <option value="Single Phase" ${resolvedPhase === 'Single Phase' ? 'selected' : ''}>Single Phase</option>
+                                <option value="Three Phase" ${resolvedPhase === 'Three Phase' ? 'selected' : ''}>Three Phase</option>
+                                <option value="N/A" ${resolvedPhase === 'N/A' ? 'selected' : ''}>N/A</option>
                             </select>
                         </td>
                         <td style="padding: 6px;"><input type="number" step="any" class="field-nominal-battery-capacity-kwh" value="${nominalVal}" style="${styleInput}"></td>
@@ -2179,9 +2199,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td style="padding: 6px;"><input type="text" class="field-product-series" value="${defaultSeries}" style="${styleInput}"></td>
                         <td style="padding: 6px;">
                             <select class="field-no-of-phase" style="${styleSelect}">
+                                <option value="Single Phase" ${defaultPhase === 'Single Phase' ? 'selected' : ''}>Single Phase</option>
+                                <option value="Three Phase" ${defaultPhase === 'Three Phase' ? 'selected' : ''}>Three Phase</option>
+                                <option value="Both" ${defaultPhase === 'Both' ? 'selected' : ''}>Both</option>
                                 <option value="N/A" ${defaultPhase === 'N/A' ? 'selected' : ''}>N/A</option>
-                                <option value="1-Phase" ${defaultPhase === '1-Phase' ? 'selected' : ''}>1-Phase</option>
-                                <option value="3-Phase" ${defaultPhase === '3-Phase' ? 'selected' : ''}>3-Phase</option>
                             </select>
                         </td>
                         <td style="padding: 6px;"><input type="text" class="field-type-of-inverter" value="${invTypeVal}" style="${styleInput}"></td>
@@ -2314,8 +2335,35 @@ document.addEventListener("DOMContentLoaded", function() {
         const p=allProductsData.find(x=>x.id===id);if(!p)return;
         form.reset();document.getElementById('edit_id').value=p.id;document.getElementById('modalTitle').innerText='Edit Product';
         document.getElementById('saveBtn').innerText='Update Product';document.getElementById('saveBtn').disabled=true;
-        ['product_category','prod_name','manufacturer_name','brand_name','model_number','stock_code','pro_approved_date','pro_expiry_date','product_series','no_of_phase','type_of_inverter','panels_capacity_w','inv_rt_ac_out_w','inv_rt_dc_power_kw','inv_mppt','nominal_battery_capacity_kwh','usable_battery_kwh','no_of_battery_modules','pro_warranty_years','panels_linear_warranty_years','purchase_price','purchase_price_ex_gst'].forEach(f=>{const el=document.getElementById(f);if(el)el.value=p[f]||'';});
-        syncDateToText('pro_approved_date');syncDateToText('pro_expiry_date');
+        ['product_category','prod_name','manufacturer_name','brand_name','model_number','stock_code','product_series','no_of_phase','type_of_inverter','panels_capacity_w','inv_rt_ac_out_w','inv_rt_dc_power_kw','inv_mppt','nominal_battery_capacity_kwh','usable_battery_kwh','no_of_battery_modules','pro_warranty_years','panels_linear_warranty_years','purchase_price','purchase_price_ex_gst'].forEach(f=>{const el=document.getElementById(f);if(el)el.value=p[f]||'';});
+        
+        // Set approved date
+        const appDateInp = document.getElementById('pro_approved_date');
+        const appDateTxt = document.getElementById('pro_approved_date_text');
+        if (appDateInp && appDateTxt) {
+            const raw = p.pro_approved_date || '';
+            appDateTxt.value = raw;
+            if (raw.includes('-')) {
+                const parts = raw.split('-');
+                if (parts.length === 3) appDateInp.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+                appDateInp.value = '';
+            }
+        }
+
+        // Set expiry date
+        const expDateInp = document.getElementById('pro_expiry_date');
+        const expDateTxt = document.getElementById('pro_expiry_date_text');
+        if (expDateInp && expDateTxt) {
+            const raw = p.pro_expiry_date || '';
+            expDateTxt.value = raw;
+            if (raw.includes('-')) {
+                const parts = raw.split('-');
+                if (parts.length === 3) expDateInp.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+                expDateInp.value = '';
+            }
+        }
         if(p.product_status){const r=document.querySelector(`input[name="product_status"][value="${p.product_status}"]`);if(r)r.checked=true;}
         if(p.show_in_quotation){const r=document.querySelector(`input[name="show_in_quotation"][value="${p.show_in_quotation}"]`);if(r)r.checked=true;}
         if(p.show_in_detailed_reports){const r=document.querySelector(`input[name="show_in_detailed_reports"][value="${p.show_in_detailed_reports}"]`);if(r)r.checked=true;}
