@@ -1951,6 +1951,77 @@ document.addEventListener("DOMContentLoaded", function() {
         renderCecPreviewTable(category);
     }
 
+    function estimateBatteryModules(brand, model, nominalVal) {
+        if (!nominalVal || nominalVal <= 0) return 1;
+        const b = (brand || '').toLowerCase();
+        const m = (model || '').toLowerCase();
+        
+        // Foxess
+        if (b.includes('fox')) {
+            // CQ7 has 6.96 kWh modules
+            if (m.includes('cq7') || m.includes('eq7')) {
+                return Math.max(1, Math.round(nominalVal / 6.96));
+            }
+            // Mira LV (4.64 kWh)
+            if (m.includes('mira') && (nominalVal === 4.64 || nominalVal === 9.28 || nominalVal === 13.92 || nominalVal === 18.56)) {
+                return Math.max(1, Math.round(nominalVal / 4.64));
+            }
+            // Mira HV (2.45 kWh)
+            if (nominalVal === 2.45 || nominalVal === 4.9 || nominalVal === 7.35 || nominalVal === 9.8 || nominalVal === 12.25 || nominalVal === 14.7 || nominalVal === 17.15 || nominalVal === 19.6) {
+                return Math.max(1, Math.round(nominalVal / 2.45));
+            }
+            // EQ series (4.8 kWh or 4.7 kWh)
+            if (m.includes('eq')) {
+                return Math.max(1, Math.round(nominalVal / 4.79));
+            }
+        }
+        
+        // Growatt
+        if (b.includes('growatt')) {
+            // APX (5.0 kWh)
+            if (m.includes('apx')) {
+                return Math.max(1, Math.round(nominalVal / 5.0));
+            }
+            // AXE (5.12 kWh)
+            if (m.includes('axe') || m.includes('alp')) {
+                return Math.max(1, Math.round(nominalVal / 5.12));
+            }
+            // Hope (2.56 kWh)
+            if (m.includes('hope')) {
+                return Math.max(1, Math.round(nominalVal / 2.56));
+            }
+        }
+        
+        // Sungrow
+        if (b.includes('sungrow')) {
+            // SBR (3.2 kWh)
+            if (m.includes('sbr')) {
+                return Math.max(1, Math.round(nominalVal / 3.2));
+            }
+        }
+        
+        // BYD
+        if (b.includes('byd')) {
+            // HVS (2.56 kWh) or HVM (2.76 kWh)
+            if (m.includes('hvs')) {
+                return Math.max(1, Math.round(nominalVal / 2.56));
+            }
+            if (m.includes('hvm')) {
+                return Math.max(1, Math.round(nominalVal / 2.76));
+            }
+        }
+        
+        const commonSizes = [6.96, 5.12, 5.0, 4.64, 3.2, 2.76, 2.56, 2.45, 2.4];
+        for (const size of commonSizes) {
+            const remainder = nominalVal % size;
+            if (Math.abs(remainder) < 0.15 || Math.abs(remainder - size) < 0.15) {
+                return Math.max(1, Math.round(nominalVal / size));
+            }
+        }
+        
+        return 1;
+    }
+
     function renderCecPreviewTable(category) {
         const headerEl = document.getElementById('cecPreviewTableHeader');
         const tbodyEl = document.getElementById('cecPreviewTableBody');
@@ -2053,8 +2124,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 const nominalVal = nomKey ? specs[nomKey] : p.capacity_value;
                 const useKey = Object.keys(specs).find(k => k.includes('usable'));
                 const usableVal = useKey ? specs[useKey] : p.capacity_value;
+                
+                let modulesVal = 1;
                 const modulesKey = Object.keys(specs).find(k => k.includes('modules') || k.includes('cell'));
-                const modulesVal = modulesKey ? specs[modulesKey] : 1;
+                if (modulesKey && specs[modulesKey] && parseInt(specs[modulesKey], 10) > 1) {
+                    modulesVal = parseInt(specs[modulesKey], 10);
+                } else {
+                    modulesVal = estimateBatteryModules(p.brand, p.model, nominalVal);
+                }
                 const warrantyVal = specs.warranty || '10';
 
                 // Naming: Brand Name + Series + Nominal kWh + HV/LV + Battery Storage (Model Name)
