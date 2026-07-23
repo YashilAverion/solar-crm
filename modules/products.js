@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../database/db');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 const XLSX = require('xlsx');
 const { getSydneyTime, requireAuth, requireManager, getCurrentUser } = require('../helpers');
 
@@ -750,6 +751,7 @@ router.post('/cec/import', requireAuth, (req, res) => {
 
             let hasError = false;
             let currentStockCode = nextCode;
+            const importedProducts = [];
 
             products.forEach(p => {
                 const stock = String(currentStockCode++);
@@ -780,6 +782,12 @@ router.post('/cec/import', requireAuth, (req, res) => {
                         hasError = true;
                     } else {
                         const newProductId = this.lastID;
+                        importedProducts.push({
+                            id: newProductId,
+                            brand: p.brand_name,
+                            model: p.model_number,
+                            category: p.product_category
+                        });
                         histStmt.run([
                             newProductId,
                             `Imported approved product ${p.prod_name} from CEC Approved List.`,
@@ -801,6 +809,12 @@ router.post('/cec/import', requireAuth, (req, res) => {
                             db.run("ROLLBACK");
                             return res.status(500).json({ error: 'Database transaction failed during import.' });
                         }
+                        
+                        // Trigger background documents processor
+                        if (importedProducts.length > 0) {
+                            startBackgroundDocProcessor(importedProducts);
+                        }
+
                         res.json({ success: true, count: products.length });
                     });
                 });
@@ -808,5 +822,162 @@ router.post('/cec/import', requireAuth, (req, res) => {
         });
     });
 });
+
+// 🔥 BACKGROUND AUTOMATED DOCUMENT PROCESSOR 🔥
+const { exec } = require('child_process');
+const axios = require('axios');
+const puppeteer = require('puppeteer');
+
+function startBackgroundDocProcessor(products) {
+    processDocumentsForProducts(products).catch(err => {
+        console.error('[DocProcessor] Background processing failed:', err);
+    });
+}
+
+async function processDocumentsForProducts(products) {
+    console.log(`[DocProcessor] Starting background processing for ${products.length} products...`);
+    let browser;
+    try {
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+        for (const p of products) {
+            console.log(`[DocProcessor] Processing docs for: ${p.brand} ${p.model}`);
+            const searchTypes = [
+                { name: 'Datasheet', suffix: 'datasheet' },
+                { name: 'Installation Manual', suffix: 'installation manual' },
+                { name: 'Warranty Document', suffix: 'warranty' },
+                { name: 'SDA Document', suffix: 'SDA' }
+            ];
+
+            const foundDocs = [];
+
+            for (const type of searchTypes) {
+                const query = `${p.brand} ${p.model} ${type.suffix} filetype:pdf`;
+                console.log(`[DocProcessor] Searching: ${query}`);
+                
+                try {
+                    await page.goto(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+                        waitUntil: 'networkidle2',
+                        timeout: 10000
+                    });
+
+                    const pdfUrl = await page.evaluate(() => {
+                        const anchors = document.querySelectorAll('a');
+                        for (const a of anchors) {
+                            let href = a.href;
+                            if (href.includes('uddg=')) {
+                                const parts = href.split('uddg=');
+                                if (parts[1]) {
+                                    href = decodeURIComponent(parts[1].split('&')[0]);
+                                }
+                            }
+                            if (href.startsWith('http') && !href.includes('duckduckgo.com') && href.toLowerCase().includes('.pdf')) {
+                                return href;
+                            }
+                        }
+                        return null;
+                    });
+
+                    if (pdfUrl) {
+                        console.log(`[DocProcessor] Found PDF URL for ${type.name}: ${pdfUrl}`);
+                        const filename = `${Date.now()}-${safeName(p.brand + '_' + p.model + '_' + type.name.replace(/\s+/g, '_'))}.pdf`;
+                        const destPath = path.join(docUploadDir, filename);
+
+                        await downloadAndCompressPdf(pdfUrl, destPath);
+                        
+                        foundDocs.push({
+                            type: type.name,
+                            name: `${type.name} - ${p.brand} ${p.model}`,
+                            url: `/uploads/products/${filename}`
+                        });
+                    }
+                } catch (searchErr) {
+                    console.error(`[DocProcessor] Search/Download failed for query "${query}":`, searchErr.message);
+                }
+            }
+
+            if (foundDocs.length > 0) {
+                await new Promise((resolve) => {
+                    db.get("SELECT dynamic_documents FROM products WHERE id = ?", [p.id], (err, row) => {
+                        if (row) {
+                            let docs = [];
+                            try {
+                                docs = JSON.parse(row.dynamic_documents || '[]');
+                            } catch(e) { docs = []; }
+                            
+                            docs = docs.concat(foundDocs);
+
+                            db.run("UPDATE products SET dynamic_documents = ? WHERE id = ?", [JSON.stringify(docs), p.id], (updErr) => {
+                                if (updErr) {
+                                    console.error('[DocProcessor] Database update failed:', updErr);
+                                } else {
+                                    console.log(`[DocProcessor] Successfully updated dynamic documents for product ID ${p.id}`);
+                                }
+                                resolve();
+                            });
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }
+        }
+    } catch (e) {
+        console.error('[DocProcessor] Browser loop failed:', e);
+    } finally {
+        if (browser) await browser.close();
+    }
+}
+
+async function downloadAndCompressPdf(url, destPath) {
+    const tempPath = destPath + '.tmp';
+    
+    // Download
+    const response = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'stream',
+        timeout: 15000,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+    });
+
+    const writer = fs.createWriteStream(tempPath);
+    response.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+
+    // Check size
+    const stats = fs.statSync(tempPath);
+    const sizeInMB = stats.size / (1024 * 1024);
+    
+    if (sizeInMB > 3.0) {
+        console.log(`[DocProcessor] File is ${sizeInMB.toFixed(2)} MB, compressing...`);
+        await new Promise((resolve) => {
+            const cmd = `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${destPath}" "${tempPath}"`;
+            exec(cmd, (err) => {
+                if (err) {
+                    console.error('[DocProcessor] Ghostscript compression failed, using original file:', err);
+                    fs.renameSync(tempPath, destPath);
+                } else {
+                    console.log(`[DocProcessor] Compression complete. Saved to ${destPath}`);
+                    try { fs.unlinkSync(tempPath); } catch (e) {}
+                }
+                resolve();
+            });
+        });
+    } else {
+        fs.renameSync(tempPath, destPath);
+    }
+}
 
 module.exports = router;
