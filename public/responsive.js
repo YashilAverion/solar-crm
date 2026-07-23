@@ -710,6 +710,7 @@ function setupSearchFilterPills() {
         // 2. Active filter chips
         const activeChips = document.querySelectorAll('.filter-chip.fc-active, .filter-chip.active');
         activeChips.forEach(chip => {
+            if (chip.textContent.trim().toLowerCase() === 'all') return;
             createPill(`Filter: ${chip.textContent.trim()}`, () => {
                 chip.click();
                 setTimeout(renderPills, 100);
