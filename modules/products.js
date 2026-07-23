@@ -847,6 +847,16 @@ async function processDocumentsForProducts(products) {
 
         for (const p of products) {
             console.log(`[DocProcessor] Processing docs for: ${p.brand} ${p.model}`);
+            if (global.io) {
+                global.io.emit('product-doc-progress', {
+                    productId: p.id,
+                    brand: p.brand,
+                    model: p.model,
+                    message: 'Initializing...',
+                    status: 'searching'
+                });
+            }
+
             const searchTypes = [
                 { name: 'Datasheet', suffix: 'datasheet' },
                 { name: 'Installation Manual', suffix: 'installation manual' },
@@ -859,6 +869,15 @@ async function processDocumentsForProducts(products) {
             for (const type of searchTypes) {
                 const query = `${p.brand} ${p.model} ${type.suffix} filetype:pdf`;
                 console.log(`[DocProcessor] Searching: ${query}`);
+                if (global.io) {
+                    global.io.emit('product-doc-progress', {
+                        productId: p.id,
+                        brand: p.brand,
+                        model: p.model,
+                        message: `Searching for ${type.name}...`,
+                        status: 'searching'
+                    });
+                }
                 
                 try {
                     await page.goto(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
@@ -885,6 +904,16 @@ async function processDocumentsForProducts(products) {
 
                     if (pdfUrl) {
                         console.log(`[DocProcessor] Found PDF URL for ${type.name}: ${pdfUrl}`);
+                        if (global.io) {
+                            global.io.emit('product-doc-progress', {
+                                productId: p.id,
+                                brand: p.brand,
+                                model: p.model,
+                                message: `Downloading & compressing ${type.name}...`,
+                                status: 'downloading'
+                            });
+                        }
+
                         const filename = `${Date.now()}-${safeName(p.brand + '_' + p.model + '_' + type.name.replace(/\s+/g, '_'))}.pdf`;
                         const destPath = path.join(docUploadDir, filename);
 
@@ -917,6 +946,14 @@ async function processDocumentsForProducts(products) {
                                     console.error('[DocProcessor] Database update failed:', updErr);
                                 } else {
                                     console.log(`[DocProcessor] Successfully updated dynamic documents for product ID ${p.id}`);
+                                    if (global.io) {
+                                        global.io.emit('product-docs-updated', {
+                                            productId: p.id,
+                                            brand: p.brand,
+                                            model: p.model,
+                                            documents: docs
+                                        });
+                                    }
                                 }
                                 resolve();
                             });
@@ -925,6 +962,15 @@ async function processDocumentsForProducts(products) {
                         }
                     });
                 });
+            } else {
+                if (global.io) {
+                    global.io.emit('product-docs-updated', {
+                        productId: p.id,
+                        brand: p.brand,
+                        model: p.model,
+                        documents: []
+                    });
+                }
             }
         }
     } catch (e) {

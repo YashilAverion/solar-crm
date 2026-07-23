@@ -2547,6 +2547,92 @@ document.addEventListener("DOMContentLoaded", function() {
 
     window.onload=load;
 </script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    // Initialize Socket.io connection for real-time document progress and zero-refresh updates
+    const socket = io();
+    
+    socket.on('product-doc-progress', (data) => {
+        let progressToast = document.getElementById('doc-progress-toast');
+        if (!progressToast) {
+            progressToast = document.createElement('div');
+            progressToast.id = 'doc-progress-toast';
+            progressToast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: #0f172a;
+                color: #f8fafc;
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+                font-size: 13px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 320px;
+                transition: all 0.3s ease;
+                border: 1px solid #334155;
+            `;
+            document.body.appendChild(progressToast);
+        }
+        
+        progressToast.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 6px;">
+                <strong style="display: flex; align-items: center; gap: 6px;">🤖 Importing Documents</strong>
+                <span style="font-size: 10px; padding: 2px 6px; background: #3b82f6; border-radius: 20px; font-weight: 600;">ACTIVE</span>
+            </div>
+            <div style="font-weight: 500;">${data.brand} ${data.model}</div>
+            <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px;">
+                <div class="spinner-mini" style="width: 12px; height: 12px; border: 2px solid #cbd5e1; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span>${data.message}</span>
+            </div>
+        `;
+    });
+
+    socket.on('product-docs-updated', (data) => {
+        // 1. Update the local products data array
+        const p = allProductsData.find(x => x.id === data.productId);
+        if (p) {
+            p.dynamic_documents = data.documents;
+            // 2. Re-render products table silently
+            renderTable();
+            
+            // 3. Live Modal Sync: If edit modal is open for this product, update list live
+            const openEditId = document.getElementById('edit_id').value;
+            if (openEditId && parseInt(openEditId, 10) === data.productId) {
+                const docList = document.getElementById('dynamicDocumentsList');
+                if (docList) {
+                    docList.innerHTML = '';
+                    if (data.documents && data.documents.length > 0) {
+                        data.documents.forEach(doc => addDocumentRow(doc.type, doc.url, doc.name));
+                    }
+                    if (docList.children.length === 0) { addDocumentRow(); }
+                }
+            }
+        }
+        
+        // 4. Update the toast notification to show success
+        const progressToast = document.getElementById('doc-progress-toast');
+        if (progressToast) {
+            progressToast.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 6px;">
+                    <strong style="display: flex; align-items: center; gap: 6px; color: #10b981;">✅ Import Complete</strong>
+                </div>
+                <div style="font-weight: 500;">${data.brand} ${data.model}</div>
+                <div style="color: #94a3b8; font-size: 12px;">Successfully imported all product manuals & certificates.</div>
+            `;
+            setTimeout(() => {
+                progressToast.remove();
+            }, 4000);
+        }
+    });
+</script>
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 <script>
 (async function loadSidebarUser() {
     try {

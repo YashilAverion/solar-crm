@@ -4961,6 +4961,7 @@ const { Server } = require('socket.io');
 
 const server = http.createServer(app);
 const io = new Server(server);
+global.io = io;
 
 // Share Express session with Socket.IO
 io.engine.use(sessionMiddleware);
