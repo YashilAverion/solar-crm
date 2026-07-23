@@ -1877,7 +1877,26 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    function showCecImportPreview() {
+    function detectHvLv(model, specs) {
+        const modelLower = String(model).toLowerCase();
+        const specsStr = JSON.stringify(specs).toLowerCase();
+        if (modelLower.includes('-l') || modelLower.includes(' lv') || modelLower.includes('lv ') || modelLower.includes('low voltage') || specsStr.includes('low voltage') || specsStr.includes(' lv')) {
+            return 'LV';
+        }
+        if (modelLower.includes('-h') || modelLower.includes(' hv') || modelLower.includes('hv ') || modelLower.includes('high voltage') || specsStr.includes('high voltage') || specsStr.includes(' hv')) {
+            return 'HV';
+        }
+        return 'LV';
+    }
+
+    function detectInverterType(model, specs) {
+        const str = (model + ' ' + JSON.stringify(specs)).toLowerCase();
+        if (str.includes('hybrid')) return 'Hybrid';
+        if (str.includes('battery')) return 'Battery';
+        return 'Grid';
+    }
+
+    async function showCecImportPreview() {
         const checked = document.querySelectorAll('.cec-row-checkbox:checked');
         const ids = Array.from(checked).map(cb => parseInt(cb.value, 10));
         
@@ -1887,13 +1906,48 @@ document.addEventListener("DOMContentLoaded", function() {
         selectedCecPreviewProducts = currentCecSearchResults.filter(p => ids.includes(p.id));
         if (selectedCecPreviewProducts.length === 0) return;
         
+        const category = selectedCecPreviewProducts[0].category;
+
+        // If category is Panel, we fetch enriched specs concurrently
+        if (category === 'Panel') {
+            Swal.fire({
+                title: 'Enriching panel specifications...',
+                text: 'Searching web for Cell Count, Type, Facial and Glass details...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            
+            try {
+                await Promise.all(selectedCecPreviewProducts.map(async (p) => {
+                    const res = await fetch(`/products/cec/enrich-panel?model=${encodeURIComponent(p.model)}&brand=${encodeURIComponent(p.brand)}`);
+                    if (res.ok) {
+                        const enriched = await res.json();
+                        let specs = {};
+                        try {
+                            specs = p.additional_specs_json ? JSON.parse(p.additional_specs_json) : {};
+                        } catch(e) {}
+                        
+                        specs.cell_count = enriched.cell_count;
+                        specs.type = enriched.type;
+                        specs.facial_type = enriched.facial_type;
+                        specs.glass_type = enriched.glass_type;
+                        
+                        p.additional_specs_json = JSON.stringify(specs);
+                    }
+                }));
+                Swal.close();
+            } catch (e) {
+                console.error('Enrichment failed', e);
+                Swal.close();
+            }
+        }
+        
         // Hide the search modal
         document.getElementById('cecModal').style.display = 'none';
         // Open the preview modal
         document.getElementById('cecPreviewModal').style.display = 'flex';
         
-        // Render headers and rows dynamically based on the category of the selected items
-        const category = selectedCecPreviewProducts[0].category;
+        // Render headers and rows
         renderCecPreviewTable(category);
     }
 
@@ -1977,8 +2031,6 @@ document.addEventListener("DOMContentLoaded", function() {
             } catch(e) { specs = {}; }
 
             // Common default values
-            const defaultName = `${p.brand} - ${p.model}`.replace(/^ - | - $/g, '').trim();
-            
             const seriesKey = Object.keys(specs).find(k => k.includes('series'));
             const defaultSeries = seriesKey ? specs[seriesKey] : (specs.series || '');
             
@@ -1999,10 +2051,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 const modulesVal = modulesKey ? specs[modulesKey] : 1;
                 const warrantyVal = specs.warranty || '10';
 
+                // Naming: Brand Name + Series + Nominal kWh + HV/LV + Battery Storage (Model Name)
+                const hvLv = detectHvLv(p.model, specs);
+                const generatedName = `${p.brand} ${defaultSeries} ${nominalVal} kWh ${hvLv} Battery Storage (${p.model})`;
+
                 return `
                     <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
-                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${generatedName}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
                         <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
@@ -2051,10 +2107,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 const warrantyVal = specs.warranty || '15';
                 const linearVal = specs.linear_warranty || '25';
 
+                // Naming: Brand Name + Panel Capacity (W) + No. Of Cell + Type (N or P) + Facial Type Module (Mono or Bifacial) + Glass Type (Dual or Any) + Solar Panel + (Model Number)
+                const cellCount = specs.cell_count || 108;
+                const pType = specs.type || 'N Type';
+                const facial = specs.facial_type || 'Mono-Facial';
+                const glass = specs.glass_type || 'Dual Glass';
+                const generatedName = `${p.brand} ${wattVal} Watt ${cellCount} Cell ${pType} ${facial} Module with ${glass} Solar Panel (${p.model})`;
+
                 return `
                     <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
-                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${generatedName}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
                         <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
@@ -2097,10 +2160,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 const invTypeVal = specs[typeKey] || specs.inv_type || 'Hybrid';
                 const warrantyVal = specs.warranty || '10';
 
+                // Naming: Brand Name + Type Of Inverter (Grid, Hybrid, Battery) + Inv. Rated AC Output in kW + Phase of Inverter (1 or 3) + No. of MPPT (1,2,3,4,5) + Solar Inverter + (Model Number)
+                const invType = detectInverterType(p.model, specs);
+                const kwStr = acOutVal >= 1000 ? (acOutVal / 1000) + ' kW' : acOutVal + ' W';
+                const phaseStr = defaultPhase.replace('-', ' ');
+                const mpptStr = mpptVal ? `${mpptVal} MPPT` : '2 MPPT';
+                const generatedName = `${p.brand} ${invType} ${kwStr} ${phaseStr} ${mpptStr} Solar Inverter (${p.model})`;
+
                 return `
                     <tr class="cec-preview-row" data-index="${idx}" style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 6px;"><span class="filter-chip" style="font-size: 11px; margin: 0;">${p.category}</span></td>
-                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${defaultName}" style="${styleInput}"></td>
+                        <td style="padding: 6px;"><input type="text" class="field-prod-name" value="${generatedName}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-manufacturer-name" value="${p.manufacturer}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>
                         <td style="padding: 6px;"><input type="text" class="field-brand-name" value="${p.brand}" style="${styleInput}"></td>
                         <td style="padding: 6px;"><input type="text" class="field-model-number" value="${p.model}" style="${styleInput}" readonly style="background: #f1f5f9; color: #64748b;"></td>

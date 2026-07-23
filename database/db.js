@@ -217,6 +217,16 @@ db.serialize(() => {
             additional_specs_json TEXT
         )
     `, (err) => {
+        db.run(`
+            CREATE TABLE IF NOT EXISTS cec_panel_specs_cache (
+                model TEXT PRIMARY KEY,
+                cell_count INTEGER,
+                type TEXT,
+                facial_type TEXT,
+                glass_type TEXT,
+                created_at TEXT
+            )
+        `);
         if (!err) {
             // Seed CEC Approved Products if empty
             db.get("SELECT COUNT(*) as count FROM cec_approved_products", [], (cntErr, row) => {
