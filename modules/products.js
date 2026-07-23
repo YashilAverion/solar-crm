@@ -886,7 +886,12 @@ async function processDocumentsForProducts(products) {
                     });
 
                     const pdfUrl = await page.evaluate(() => {
-                        const anchors = document.querySelectorAll('a');
+                        const pdfUrls = [];
+                        let anchors = document.querySelectorAll('a.result__a');
+                        if (anchors.length === 0) {
+                            anchors = document.querySelectorAll('a');
+                        }
+                        
                         for (const a of anchors) {
                             let href = a.href;
                             if (href.includes('uddg=')) {
@@ -896,10 +901,50 @@ async function processDocumentsForProducts(products) {
                                 }
                             }
                             if (href.startsWith('http') && !href.includes('duckduckgo.com') && href.toLowerCase().includes('.pdf')) {
-                                return href;
+                                if (!pdfUrls.includes(href)) {
+                                    pdfUrls.push(href);
+                                }
                             }
                         }
-                        return null;
+
+                        if (pdfUrls.length === 0) return null;
+                        if (pdfUrls.length === 1) return pdfUrls[0];
+                        
+                        const candidates = pdfUrls.slice(0, 4).map(url => {
+                            let dateVal = 0;
+                            let verVal = 0;
+                            
+                            const cleanedUrl = url.replace(/[^a-zA-Z0-9]/g, '');
+                            const dateMatch = cleanedUrl.match(/20[239]\d{5}/);
+                            if (dateMatch) {
+                                dateVal = parseInt(dateMatch[0], 10);
+                            } else {
+                                const dateMatch6 = cleanedUrl.match(/20[239]\d{3}/);
+                                if (dateMatch6) {
+                                    dateVal = parseInt(dateMatch6[0] + '01', 10);
+                                }
+                            }
+                            
+                            const verMatch = url.match(/v(\d+(?:\.\d+)+)/i);
+                            if (verMatch) {
+                                const parts = verMatch[1].split('.').map(Number);
+                                verVal = parts.reduce((acc, val, idx) => acc + val / Math.pow(10, idx * 2), 0);
+                            }
+                            
+                            return { url, dateVal, verVal };
+                        });
+                        
+                        candidates.sort((a, b) => {
+                            if (b.dateVal !== a.dateVal) {
+                                return b.dateVal - a.dateVal;
+                            }
+                            if (b.verVal !== a.verVal) {
+                                return b.verVal - a.verVal;
+                            }
+                            return 0;
+                        });
+                        
+                        return candidates[0].url;
                     });
 
                     if (pdfUrl) {
