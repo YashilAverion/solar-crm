@@ -861,7 +861,7 @@ async function processDocumentsForProducts(products) {
                 { name: 'Datasheet', suffix: 'datasheet' },
                 { name: 'Installation Manual', suffix: 'installation manual' },
                 { name: 'Warranty Document', suffix: 'warranty' },
-                { name: 'SDA Document', suffix: 'SDA' }
+                { name: 'SDA Document', suffix: '"Declaration of Conformity" OR "SDoC" OR "Supplier Declaration"' }
             ];
 
             const foundDocs = [];
