@@ -1859,3 +1859,41 @@ body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select
     color: #475569 !important;
 }
 
+/* ========== GLOBAL FONT & SIZE OVERRIDES ========== */
+html, body, input, select, button, textarea, table, td, th, div, span, p, a {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif !important;
+    font-size: 14px !important;
+}
+
+/* ========== TITLE FONT SIZE OVERRIDES ========== */
+.topbar-title,
+.panel-header,
+.main-wrap h1,
+.main-wrap h2,
+.main-wrap h3,
+.main-wrap h4,
+.topbar-title h1,
+.topbar-title h2,
+.sb-logo-main span:nth-child(2) {
+    font-size: 16px !important;
+}
+
+/* ========== REMOVE SIDEBAR SUB-MENU VERTICAL GUIDELINES & TICK MARKS ========== */
+.sidebar .sub-menu,
+.sidebar .sub-menu * {
+    border-left: none !important;
+    border: none !important;
+    background-image: none !important;
+}
+.sidebar .sub-menu::before,
+.sidebar .sub-menu::after,
+.sidebar .sub-menu .menu-item::before,
+.sidebar .sub-menu .menu-item::after {
+    display: none !important;
+    content: none !important;
+}
+.sidebar .sub-menu .menu-item {
+    padding-left: 20px !important;
+}
+
+
