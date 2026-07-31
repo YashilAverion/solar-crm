@@ -5,241 +5,447 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #0f172a;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #a5d8f3 0%, #bce4fc 50%, #8ed1fc 100%);
+            position: relative;
+            overflow: hidden;
         }
 
-        .login-wrap {
+        /* Abstract Cloud Shapes Background */
+        .clouds-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.45);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+        .cloud-1 {
+            width: 700px;
+            height: 700px;
+            top: -250px;
+            left: -150px;
+            background: rgba(255, 255, 255, 0.55);
+        }
+        .cloud-2 {
+            width: 900px;
+            height: 900px;
+            bottom: -350px;
+            right: -250px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .cloud-3 {
+            width: 500px;
+            height: 500px;
+            top: 15%;
+            right: 5%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .login-container {
             width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .login-logo {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-        .login-logo-icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-        }
-        .login-logo-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-        .login-logo-sub {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 3px;
+            max-width: 960px;
+            margin: 20px;
+            z-index: 10;
         }
 
         .login-card {
-            background: #1e293b;
-            border-radius: 14px;
-            padding: 30px;
-            border: 1px solid #334155;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            background: #ffffff;
+            border-radius: 4px;
+            display: flex;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border-bottom: 5px solid #00b0ff;
+            min-height: 480px;
+        }
+
+        /* Left Side: Solar House Illustration */
+        .card-left {
+            width: 48%;
+            background-color: #e5f5ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border-right: 1px solid #f0f0f0;
+        }
+        .card-left img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Right Side: Login Form */
+        .card-right {
+            width: 52%;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .login-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #f8fafc;
+            font-size: 26px;
+            font-weight: 500;
+            color: #333333;
             margin-bottom: 6px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #888888;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            border: 0;
+            border-top: 1px solid #e8eef3;
+            margin-bottom: 35px;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 22px;
+            position: relative;
         }
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #94a3b8;
-            margin-bottom: 6px;
+
+        .input-container {
+            position: relative;
+            width: 100%;
         }
+
         .form-input {
             width: 100%;
-            height: 42px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 0 14px;
+            height: 46px;
+            padding: 0 16px;
+            border: 1px solid #dcdcdc;
+            border-radius: 4px;
             font-size: 14px;
-            color: #f8fafc;
-            font-family: 'Inter', system-ui, sans-serif;
-            transition: all 0.2s;
+            color: #333333;
             outline: none;
+            background: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: 'Inter', system-ui, sans-serif;
         }
+
         .form-input:focus {
-            border-color: #e8681e;
-            box-shadow: 0 0 0 3px rgba(232,104,30,0.15);
+            border-color: #00b0ff;
+            box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.08);
         }
-        .form-input::placeholder {
-            color: #475569;
+
+        /* Custom Placeholder with red asterisk */
+        .placeholder-label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999999;
+            font-size: 14px;
+            pointer-events: none;
+            transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
+        }
+
+        .placeholder-label .asterisk {
+            color: #ff4d4f;
+            margin-left: 2px;
+            font-weight: 600;
+        }
+
+        /* Hide placeholder when input is focused or has content */
+        .form-input:focus + .placeholder-label,
+        .form-input:not(:placeholder-shown) + .placeholder-label,
+        .form-input:-webkit-autofill + .placeholder-label {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Password visibility toggle icon button */
+        .pwd-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            z-index: 2;
+        }
+        .pwd-toggle:hover {
+            color: #666666;
+        }
+
+        /* Checkbox and button row */
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #666666;
+            cursor: pointer;
+            user-select: none;
+            gap: 8px;
+        }
+
+        .checkbox-label input {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #dcdcdc;
+            border-radius: 3px;
+            cursor: pointer;
+            accent-color: #00b0ff;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
         }
 
         .btn-login {
-            width: 100%;
-            height: 44px;
-            background: #e8681e;
-            color: #fff;
+            background: #39b5e0;
+            color: #ffffff;
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 700;
+            padding: 10px 32px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
             font-family: 'Inter', system-ui, sans-serif;
-            margin-top: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: 0 2px 6px rgba(57, 181, 224, 0.2);
         }
+
         .btn-login:hover {
-            background: #d05a14;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(232,104,30,0.4);
+            background: #2da1cb;
         }
+
+        .btn-login:active {
+            transform: scale(0.98);
+        }
+
         .btn-login:disabled {
-            background: #475569;
+            background: #b8e2f2;
             cursor: not-allowed;
-            transform: none;
             box-shadow: none;
         }
 
         .error-msg {
             display: none;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
-            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 4px;
+            padding: 12px 16px;
+            color: #ef4444;
             font-size: 13px;
             font-weight: 500;
-            margin-top: 14px;
+            margin-top: 24px;
+            line-height: 1.4;
         }
+
         .error-msg.visible {
             display: block;
         }
 
-        .login-footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #334155;
+        /* Spinner for loading state */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Responsive Breakpoints */
+        @media (max-width: 860px) {
+            .login-card {
+                flex-direction: column;
+                min-height: auto;
+            }
+            .card-left {
+                width: 100%;
+                height: 240px;
+                padding: 20px;
+                border-right: none;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .card-right {
+                width: 100%;
+                padding: 40px 30px;
+            }
+            .divider {
+                margin-bottom: 25px;
+            }
+        }
     </style>
-    <link rel="stylesheet" href="/responsive.css">
 </head>
 <body>
 
-<div class="login-wrap">
-    <div class="login-logo">
-        <img src="/ares_energy_logo.png" alt="Ares Energy Logo" style="height: 80px; width: auto; margin-bottom: 12px;">
-        <div class="login-logo-name">Ares Energy Solar CRM</div>
+    <!-- Sky background with cloud blobs -->
+    <div class="clouds-bg">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
     </div>
 
-    <div class="login-card">
-        <div class="login-title">Welcome Back</div>
-
-        <form id="loginForm" onsubmit="doLogin(event)">
-            <div class="form-group">
-                <label class="form-label">Username</label>
-                <input type="text" id="username" class="form-input" placeholder="Enter username" autocomplete="username">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Left panel containing illustration -->
+            <div class="card-left">
+                <img src="/images/solar_house.png" alt="Ares Energy Solar CRM">
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <div style="position: relative; display: flex; align-items: center; width: 100%;">
-                    <input type="password" id="password" class="form-input" placeholder="Enter password" autocomplete="current-password" style="padding-right: 38px;">
-                    <button type="button" id="passwordToggleBtn" style="position: absolute; right: 12px; background: none; border: none; padding: 0; cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center; outline: none;" onclick="togglePasswordDisplay()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    </button>
-                </div>
+            <!-- Right panel containing login form -->
+            <div class="card-right">
+                <h2 class="login-title">Login</h2>
+                <p class="login-subtitle">Welcome back, please login to your account</p>
+                
+                <hr class="divider">
+
+                <form id="loginForm" onsubmit="doLogin(event)">
+                    <!-- Username field with custom placeholder -->
+                    <div class="form-group">
+                        <div class="input-container">
+                            <input type="text" id="username" class="form-input" placeholder=" " autocomplete="username" required>
+                            <label class="placeholder-label">User Name <span class="asterisk">*</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Password field with custom placeholder & toggle visibility -->
+                    <div class="form-group">
+                        <div class="input-container">
+                            <input type="password" id="password" class="form-input" placeholder=" " autocomplete="current-password" required style="padding-right: 48px;">
+                            <label class="placeholder-label">Password <span class="asterisk">*</span></label>
+                            <button type="button" id="passwordToggleBtn" class="pwd-toggle" onclick="togglePasswordDisplay()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Options row (Checkbox and Button) -->
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            Remember Me
+                        </label>
+                        
+                        <div class="btn-container">
+                            <button type="submit" class="btn-login" id="loginBtn">
+                                Login
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="error-msg" id="errorMsg"></div>
             </div>
-
-            <button type="submit" class="btn-login" id="loginBtn">
-                Login
-            </button>
-        </form>
-
-        <div class="error-msg" id="errorMsg"></div>
+        </div>
     </div>
 
-    <div class="login-footer">
-        Ares Solar 2026 · All rights reserved
-    </div>
-</div>
+    <script>
+        // Pre-fill username if saved in local storage
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUsername = localStorage.getItem('solar_crm_remembered_username');
+            if (savedUsername) {
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
 
-<script>
-    async function doLogin(event) {
-        event.preventDefault();
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const btn      = document.getElementById('loginBtn');
-        const errDiv   = document.getElementById('errorMsg');
+        async function doLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const btn      = document.getElementById('loginBtn');
+            const errDiv   = document.getElementById('errorMsg');
 
-        errDiv.classList.remove('visible');
+            errDiv.classList.remove('visible');
 
-        if (!username || !password) {
-            errDiv.innerText = '⚠️ Both username and password are required.';
-            errDiv.classList.add('visible');
-            return;
-        }
+            if (!username || !password) {
+                errDiv.innerText = '⚠️ Both username and password are required.';
+                errDiv.classList.add('visible');
+                return;
+            }
 
-        btn.disabled    = true;
-        btn.innerHTML   = '<span class="spinner"></span>Logging in...';
+            btn.disabled    = true;
+            btn.innerHTML   = '<span class="spinner"></span>';
 
-        try {
-            const res  = await fetch('/login', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                btn.innerHTML = 'Success!';
-                window.location.href = '/home.html'; // Redirect to Home
+            // Handle Remember Me
+            if (rememberMe) {
+                localStorage.setItem('solar_crm_remembered_username', username);
             } else {
-                errDiv.innerText = '❌ ' + (data.error || 'Login failed.');
+                localStorage.removeItem('solar_crm_remembered_username');
+            }
+
+            try {
+                const res  = await fetch('/login', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    btn.innerHTML = 'Success!';
+                    window.location.href = '/home.html'; // Redirect to Home
+                } else {
+                    errDiv.innerText = '❌ ' + (data.error || 'Login failed.');
+                    errDiv.classList.add('visible');
+                    btn.disabled  = false;
+                    btn.innerHTML = 'Login';
+                }
+            } catch (e) {
+                errDiv.innerText = '❌ Unable to connect to the server. Is the server running?';
                 errDiv.classList.add('visible');
                 btn.disabled  = false;
                 btn.innerHTML = 'Login';
             }
-        } catch (e) {
-            errDiv.innerText = '❌ Unable to connect to the server. Is the server running?';
-            errDiv.classList.add('visible');
-            btn.disabled  = false;
-            btn.innerHTML = 'Login';
         }
-    }
 
-    function togglePasswordDisplay() {
-        const pwd = document.getElementById('password');
-        const btn = document.getElementById('passwordToggleBtn');
-        if (pwd.type === 'password') {
-            pwd.type = 'text';
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-        } else {
-            pwd.type = 'password';
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        function togglePasswordDisplay() {
+            const pwd = document.getElementById('password');
+            const btn = document.getElementById('passwordToggleBtn');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+            } else {
+                pwd.type = 'password';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            }
         }
-    }
-</script>
-<script src="/crm-autosave-toast.js?v=3"></script>
-    <script src="/australian-timezones.js"></script>
-    <script src="/responsive.js"></script>
+    </script>
 </body>
 </html>
