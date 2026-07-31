@@ -1746,3 +1746,116 @@ body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select
     padding: 24px !important;
     border-radius: 16px !important;
 }
+
+/* ========== SIDEBAR THEME REDESIGN OVERRIDES ========== */
+.sidebar {
+    width: 180px !important;
+    background: #f5f7fb !important;
+    border-right: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+}
+
+.sb-logo {
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #f5f7fb !important;
+}
+
+.sb-logo-main {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    display: flex !important;
+}
+
+.sb-logo-main span:nth-child(1) {
+    color: #1e293b !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+
+.sb-logo-main span:nth-child(2) {
+    color: #39b5e0 !important; /* Premium Solar CRM Blue */
+    font-weight: 700 !important;
+    font-size: 15px !important;
+}
+
+.sb-section {
+    color: #94a3b8 !important;
+    font-weight: 700 !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+
+.sidebar .menu-item {
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
+    padding: 8px 12px !important;
+    margin-bottom: 4px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.sidebar .menu-item:hover {
+    color: #0f172a !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+
+.sidebar .menu-item.active-menu {
+    color: #0f172a !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    font-weight: 700 !important;
+}
+
+/* Submenu container background */
+.sidebar .sub-menu {
+    background: transparent !important;
+}
+
+.sidebar .sub-menu .menu-item {
+    padding-left: 24px !important;
+    font-weight: 500 !important;
+}
+
+.sidebar .sub-menu .menu-item.active-menu {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+/* Sidebar Footer Overrides */
+.sb-footer {
+    border-top: 1px solid #e2e8f0 !important;
+    background: #f5f7fb !important;
+}
+
+.sb-uname {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+.sb-urole {
+    color: #64748b !important;
+}
+
+/* Sidebar Dropdown Chevrons */
+.sidebar .toggle-icon {
+    color: #94a3b8 !important;
+    margin-left: auto !important;
+    font-size: 10px !important;
+}
+
+.sidebar .menu-item:hover .toggle-icon,
+.sidebar .menu-item.active-menu .toggle-icon {
+    color: #475569 !important;
+}
+
