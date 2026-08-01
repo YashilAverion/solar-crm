@@ -1,24 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Solar CRM - Workspace Home</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/bootstrap.min.css">
+    <!-- Tabler Icon CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/plugins/tabler-icons/tabler-icons.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
+    
+    <!-- Dynamic Layout Loader JS -->
+    <script src="dreams-assets/assets/js/layout-loader.js"></script>
+
     <style>
         :root {
-            --primary: #1c3557;
-            --primary-hover: #16294a;
-            --accent: #e8681e;
-            --accent-hover: #d05a14;
-            --bg: #f4f6f9;
+            --primary: #e41f07; /* Dreams primary red */
+            --primary-hover: #c11a06;
+            --accent: #ffa201; /* Dreams orange */
+            --accent-hover: #e08f01;
+            --bg: #f7f8f9;
             --surface: #ffffff;
-            --border: #dde3ed;
-            --text-dark: #1c2b3a;
-            --text-muted: #6b7a8d;
+            --border: #e8e8e8;
+            --text-dark: #1f2020;
+            --text-muted: #707070;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        body { font-family: 'Golos Text', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
         input, select, button, textarea { font-family: inherit; font-size: 13px; }
         a { text-decoration: none; color: inherit; }
 
@@ -649,5 +660,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── NOTIFICATION BELL HANDLERS ───────────────────────────────────────
 </script>
     <script src="/responsive.js"></script>
+
+    <!-- Dreams Template Core Scripts -->
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
+    <script src="dreams-assets/assets/js/script.js"></script>
 </body>
 </html>
