@@ -806,6 +806,12 @@ function requireLogin(req, res, next) {
         path.endsWith('.jpeg') ||
         path.endsWith('.svg') ||
         path.endsWith('.ico') ||
+        path.endsWith('.css') ||
+        path.endsWith('.js') ||
+        path.endsWith('.woff') ||
+        path.endsWith('.woff2') ||
+        path.endsWith('.ttf') ||
+        path.endsWith('.eot') ||
         bypassRoutes.some(r => path === r || path.startsWith(r + '?') || path.startsWith(r + '/'))
     ) {
         return next();
