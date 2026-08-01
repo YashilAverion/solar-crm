@@ -1,12 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Lead Approvals - Solar CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/bootstrap.min.css">
+    <!-- Tabler Icon CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/plugins/tabler-icons/tabler-icons.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
+    
+    <!-- Dynamic Layout Loader JS -->
+    <script src="dreams-assets/assets/js/layout-loader.js"></script>
+
     <style>
-        :root { --primary: #1c3557; --primary-hover: #16294a; --accent: #e8681e; --accent-hover: #d05a14; --bg: #f4f6f9; --surface: #ffffff; --border: #dde3ed; --text-dark: #1c2b3a; --text-muted: #6b7a8d; }
+        :root {
+            --primary: #e41f07; /* Dreams primary red */
+            --primary-hover: #c11a06;
+            --accent: #ffa201; /* Dreams orange */
+            --accent-hover: #e08f01;
+            --bg: #f7f8f9;
+            --surface: #ffffff;
+            --border: #e8e8e8;
+            --text-dark: #1f2020;
+            --text-muted: #707070;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        body { font-family: 'Golos Text', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
         button { font-family: inherit; font-size: 13px; }
 
         /* ========== SIDEBAR ========== */
@@ -333,25 +356,38 @@ function toggleNav(event, element) {
         <div class="tb-spacer"></div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Pending Approvals</div>
-            <div class="stat-val" id="statTotal">0</div>
-            <div class="stat-sub">Awaiting decision</div>
+    <div class="row g-3 mb-3">
+        <div class="col-xl-3 col-md-6">
+            <div class="card flex-fill">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fs-12 text-muted fw-semibold">Pending Approvals</span>
+                        <span class="badge badge-soft-danger"><i class="ti ti-alert-circle"></i></span>
+                    </div>
+                    <h3 class="mb-1" id="statTotal">0</h3>
+                    <span class="fs-11 text-muted">Awaiting decision</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="content-area">
-        <div class="approvals-tabs" style="display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
-            <button class="tab-btn active-tab" id="tab-deletions" onclick="switchTab('deletions')" style="border: none; background: none; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; color: var(--text-dark);">
-                Deletion Requests <span class="tab-badge" id="deletionsCountBadge" style="background: #e2e8f0; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; color: var(--text-dark);">0</span>
-            </button>
-            <button class="tab-btn" id="tab-discounts" onclick="switchTab('discounts')" style="border: none; background: none; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; color: var(--text-muted);">
-                Discount Approvals <span class="tab-badge" id="discountsCountBadge" style="background: #e2e8f0; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; color: var(--text-dark);">0</span>
-            </button>
-        </div>
-        <div class="table-toolbar">
-            <span class="tt-count" id="tableCount">0 Leads</span>
+        <div class="card mb-3">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="tab-btn active-tab" id="tab-deletions" onclick="switchTab('deletions')">
+                            Deletion Requests <span class="badge bg-light text-dark ms-1" id="deletionsCountBadge">0</span>
+                        </button>
+                        <button class="tab-btn" id="tab-discounts" onclick="switchTab('discounts')">
+                            Discount Approvals <span class="badge bg-light text-dark ms-1" id="discountsCountBadge">0</span>
+                        </button>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-dark fs-13 py-2 px-3 border" id="tableCount">0 Leads</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="bulk-bar" id="bulkBar">
@@ -361,34 +397,40 @@ function toggleNav(event, element) {
             <button class="bulk-clear" onclick="clearSelection()">✕</button>
         </div>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr id="tableHeaders">
-                        <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
-                        <th>Type</th>
-                        <th>Entered Date</th>
-                        <th>Customer</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th>Source</th>
-                        <th>Assigned To</th>
-                        <th>Submitted By</th>
-                        <th>Age</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="leadsBody"></tbody>
-            </table>
+        <div class="card border-0 shadow-none mb-3">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr id="tableHeaders">
+                                <th class="cb-col"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th>
+                                <th>Type</th>
+                                <th>Entered Date</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Source</th>
+                                <th>Assigned To</th>
+                                <th>Submitted By</th>
+                                <th>Age</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadsBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="pagination-footer">
-        <div class="pf-left">
-            <span class="pf-label">Show:</span>
-            <select class="rows-select" id="rowsPerPage" onchange="changeRowsPerPage()"><option value="30">30</option><option value="50">50</option></select>
-            <span class="total-badge">Total: <span id="totalLeadsCount">0</span></span>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 p-3 bg-white border rounded">
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted fs-13">Show:</span>
+            <select class="form-select form-select-sm" id="rowsPerPage" onchange="changeRowsPerPage()" style="width: auto;">
+                <option value="30">30</option><option value="50">50</option>
+            </select>
+            <span class="badge bg-light text-dark fs-13 py-2 px-3 border">Total: <span id="totalLeadsCount" class="fw-bold">0</span></span>
         </div>
     </div>
 </div>
@@ -716,5 +758,11 @@ function toggleNav(event, element) {
 <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>
     <script src="/responsive.js"></script>
+
+    <!-- Dreams Template Core Scripts -->
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
+    <script src="dreams-assets/assets/js/script.js"></script>
 </body>
 </html>

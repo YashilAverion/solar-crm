@@ -1,280 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Ares Energy Solar CRM - Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ares Energy Solar CRM login portal">
+    <meta name="author" content="Ares Energy">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="dreams-assets/assets/img/favicon.png">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/bootstrap.min.css">
+
+    <!-- Tabler Icon CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/plugins/tabler-icons/tabler-icons.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #a5d8f3 0%, #bce4fc 50%, #8ed1fc 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Abstract Cloud Shapes Background */
-        .clouds-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
-            overflow: hidden;
-            pointer-events: none;
-        }
-        .cloud {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.45);
-            border-radius: 50%;
-            filter: blur(40px);
-        }
-        .cloud-1 {
-            width: 700px;
-            height: 700px;
-            top: -250px;
-            left: -150px;
-            background: rgba(255, 255, 255, 0.55);
-        }
-        .cloud-2 {
-            width: 900px;
-            height: 900px;
-            bottom: -350px;
-            right: -250px;
-            background: rgba(255, 255, 255, 0.4);
-        }
-        .cloud-3 {
-            width: 500px;
-            height: 500px;
-            top: 15%;
-            right: 5%;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 960px;
-            margin: 20px;
-            z-index: 10;
-        }
-
-        .login-card {
-            background: #ffffff;
-            border-radius: 4px;
-            display: flex;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border-bottom: 5px solid #00b0ff;
-            min-height: 480px;
-        }
-
-        /* Left Side: Solar House Illustration */
-        .card-left {
-            width: 48%;
-            background-color: #e5f5ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            border-right: 1px solid #f0f0f0;
-        }
-        .card-left img {
-            max-width: 100%;
-            max-height: 100%;
+        .auth-logo img {
+            max-height: 80px;
             object-fit: contain;
         }
-
-        /* Right Side: Login Form */
-        .card-right {
-            width: 52%;
-            padding: 50px 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        .account-bg-01 {
+            background-image: url('dreams-assets/assets/img/authentication/login-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
-
-        .login-title {
-            font-size: 26px;
-            font-weight: 500;
-            color: #333333;
-            margin-bottom: 6px;
-        }
-
-        .login-subtitle {
-            font-size: 14px;
-            color: #888888;
-            margin-bottom: 20px;
-        }
-
-        .divider {
-            border: 0;
-            border-top: 1px solid #e8eef3;
-            margin-bottom: 35px;
-        }
-
-        .form-group {
-            margin-bottom: 22px;
-            position: relative;
-        }
-
-        .input-container {
-            position: relative;
-            width: 100%;
-        }
-
-        .form-input {
-            width: 100%;
-            height: 46px;
-            padding: 0 16px;
-            border: 1px solid #dcdcdc;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #333333;
-            outline: none;
-            background: #ffffff;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-
-        .form-input:focus {
-            border-color: #00b0ff;
-            box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.08);
-        }
-
-        /* Custom Placeholder with red asterisk */
-        .placeholder-label {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #999999;
-            font-size: 14px;
-            pointer-events: none;
-            transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
-        }
-
-        .placeholder-label .asterisk {
-            color: #ff4d4f;
-            margin-left: 2px;
-            font-weight: 600;
-        }
-
-        /* Hide placeholder when input is focused or has content */
-        .form-input:focus + .placeholder-label,
-        .form-input:not(:placeholder-shown) + .placeholder-label,
-        .form-input:-webkit-autofill + .placeholder-label {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* Password visibility toggle icon button */
-        .pwd-toggle {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            color: #999999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            outline: none;
-            z-index: 2;
-        }
-        .pwd-toggle:hover {
-            color: #666666;
-        }
-
-        /* Checkbox and button row */
-        .form-options {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            color: #666666;
-            cursor: pointer;
-            user-select: none;
-            gap: 8px;
-        }
-
-        .checkbox-label input {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #dcdcdc;
-            border-radius: 3px;
-            cursor: pointer;
-            accent-color: #00b0ff;
-        }
-
-        .btn-container {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .btn-login {
-            background: #39b5e0;
-            color: #ffffff;
-            border: none;
-            padding: 10px 32px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            font-family: 'Inter', system-ui, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 2px 6px rgba(57, 181, 224, 0.2);
-        }
-
-        .btn-login:hover {
-            background: #2da1cb;
-        }
-
-        .btn-login:active {
-            transform: scale(0.98);
-        }
-
-        .btn-login:disabled {
-            background: #b8e2f2;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .error-msg {
-            display: none;
-            background: rgba(239, 68, 68, 0.06);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 4px;
-            padding: 12px 16px;
-            color: #ef4444;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 24px;
-            line-height: 1.4;
-        }
-
-        .error-msg.visible {
-            display: block;
-        }
-
-        /* Spinner for loading state */
         .spinner {
             display: inline-block;
             width: 16px;
@@ -287,93 +44,91 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 860px) {
-            .login-card {
-                flex-direction: column;
-                min-height: auto;
-            }
-            .card-left {
-                width: 100%;
-                height: 240px;
-                padding: 20px;
-                border-right: none;
-                border-bottom: 1px solid #f0f0f0;
-            }
-            .card-right {
-                width: 100%;
-                padding: 40px 30px;
-            }
-            .divider {
-                margin-bottom: 25px;
-            }
-        }
     </style>
 </head>
-<body>
+<body class="account-page bg-white">
 
-    <!-- Sky background with cloud blobs -->
-    <div class="clouds-bg">
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
-        <div class="cloud cloud-3"></div>
-    </div>
+    <!-- Begin Wrapper -->
+    <div class="main-wrapper">
+        <div class="overflow-hidden p-3 acc-vh">
+            <!-- start row -->
+            <div class="row vh-100 w-100 g-0"> 
+                <!-- Left panel containing form -->
+                <div class="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
+                    <div class="row h-100">
+                        <div class="col-md-10 mx-auto d-flex flex-column justify-content-between">
+                            <form id="loginForm" onsubmit="doLogin(event)" class="vh-100 d-flex justify-content-between flex-column p-4 pb-0">
+                                <div class="text-center mb-4 auth-logo mt-3">
+                                    <img src="averion_logo.jpg" class="img-fluid" alt="Ares Energy Logo">
+                                </div>
+                                <div>
+                                    <div class="mb-4">
+                                        <h3 class="mb-2">Sign In</h3>
+                                        <p class="mb-0">Access the Solar CRM panel using your email and passcode.</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">User Name <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-flat">
+                                            <input type="text" id="username" class="form-control" placeholder="Enter your username" autocomplete="username" required>
+                                            <span class="input-group-text">
+                                                <i class="ti ti-user"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-flat pass-group">
+                                            <input type="password" id="password" class="form-control pass-input" placeholder="Enter your password" autocomplete="current-password" required>
+                                            <span class="input-group-text toggle-password" style="cursor: pointer;" onclick="togglePasswordDisplay()">
+                                                <i class="ti ti-eye-off" id="togglePasswordIcon"></i>
+                                            </span>
+                                        </div>
+                                    </div>
 
-    <div class="login-container">
-        <div class="login-card">
-            <!-- Left panel containing illustration -->
-            <div class="card-left">
-                <img src="/images/solar_house.png" alt="Ares Energy Solar CRM">
+                                    <!-- Error Alert container -->
+                                    <div class="alert alert-danger mb-3" role="alert" id="errorMsg" style="display: none;"></div>
+
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <div class="form-check form-check-md d-flex align-items-center">
+                                            <input class="form-check-input mt-0" type="checkbox" id="rememberMe">
+                                            <label class="form-check-label text-dark ms-1" for="rememberMe">
+                                                Remember Me
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary w-100" id="loginBtn">Sign In</button>
+                                    </div>
+                                </div>
+                                <div class="text-center pb-4 mt-auto">
+                                    <p class="text-dark mb-0">Copyright &copy; <script>document.write(new Date().getFullYear())</script> - Ares Energy Solar CRM</p>
+                                </div>
+                            </form>
+                        </div> <!-- end col -->
+                    </div>
+                </div>
+
+                <!-- Right panel containing background -->
+                <div class="col-lg-6 account-bg-01 d-none d-lg-block"></div> 
             </div>
-
-            <!-- Right panel containing login form -->
-            <div class="card-right">
-                <h2 class="login-title">Login</h2>
-                <p class="login-subtitle">Welcome back, please login to your account</p>
-                
-                <hr class="divider">
-
-                <form id="loginForm" onsubmit="doLogin(event)">
-                    <!-- Username field with custom placeholder -->
-                    <div class="form-group">
-                        <div class="input-container">
-                            <input type="text" id="username" class="form-input" placeholder=" " autocomplete="username" required>
-                            <label class="placeholder-label">User Name <span class="asterisk">*</span></label>
-                        </div>
-                    </div>
-
-                    <!-- Password field with custom placeholder & toggle visibility -->
-                    <div class="form-group">
-                        <div class="input-container">
-                            <input type="password" id="password" class="form-input" placeholder=" " autocomplete="current-password" required style="padding-right: 48px;">
-                            <label class="placeholder-label">Password <span class="asterisk">*</span></label>
-                            <button type="button" id="passwordToggleBtn" class="pwd-toggle" onclick="togglePasswordDisplay()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Options row (Checkbox and Button) -->
-                    <div class="form-options">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="rememberMe">
-                            Remember Me
-                        </label>
-                        
-                        <div class="btn-container">
-                            <button type="submit" class="btn-login" id="loginBtn">
-                                Login
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="error-msg" id="errorMsg"></div>
-            </div>
+            <!-- end row -->
         </div>
     </div>
+    <!-- End Wrapper -->
 
+    <!-- jQuery -->
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>    
+
+    <!-- Main JS -->
+    <script src="dreams-assets/assets/js/script.js"></script>
+
+    <!-- Page Logic JS -->
     <script>
         // Pre-fill username if saved in local storage
         document.addEventListener('DOMContentLoaded', () => {
@@ -392,16 +147,16 @@
             const btn      = document.getElementById('loginBtn');
             const errDiv   = document.getElementById('errorMsg');
 
-            errDiv.classList.remove('visible');
+            errDiv.style.display = 'none';
 
             if (!username || !password) {
                 errDiv.innerText = '⚠️ Both username and password are required.';
-                errDiv.classList.add('visible');
+                errDiv.style.display = 'block';
                 return;
             }
 
             btn.disabled    = true;
-            btn.innerHTML   = '<span class="spinner"></span>';
+            btn.innerHTML   = '<span class="spinner"></span> Logging in...';
 
             // Handle Remember Me
             if (rememberMe) {
@@ -423,27 +178,27 @@
                     window.location.href = '/home.html'; // Redirect to Home
                 } else {
                     errDiv.innerText = '❌ ' + (data.error || 'Login failed.');
-                    errDiv.classList.add('visible');
+                    errDiv.style.display = 'block';
                     btn.disabled  = false;
-                    btn.innerHTML = 'Login';
+                    btn.innerHTML = 'Sign In';
                 }
             } catch (e) {
                 errDiv.innerText = '❌ Unable to connect to the server. Is the server running?';
-                errDiv.classList.add('visible');
+                errDiv.style.display = 'block';
                 btn.disabled  = false;
-                btn.innerHTML = 'Login';
+                btn.innerHTML = 'Sign In';
             }
         }
 
         function togglePasswordDisplay() {
             const pwd = document.getElementById('password');
-            const btn = document.getElementById('passwordToggleBtn');
+            const icon = document.getElementById('togglePasswordIcon');
             if (pwd.type === 'password') {
                 pwd.type = 'text';
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                icon.className = 'ti ti-eye';
             } else {
                 pwd.type = 'password';
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                icon.className = 'ti ti-eye-off';
             }
         }
     </script>

@@ -1,23 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Installation Charges - Solar CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/bootstrap.min.css">
+    <!-- Tabler Icon CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/plugins/tabler-icons/tabler-icons.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
+    
+    <!-- Dynamic Layout Loader JS -->
+    <script src="dreams-assets/assets/js/layout-loader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         :root {
-            --primary: #1c3557;
-            --primary-hover: #16294a;
-            --accent: #e8681e;
-            --accent-hover: #d05a14;
-            --bg: #f4f6f9;
+            --primary: #e41f07; /* Dreams primary red */
+            --primary-hover: #c11a06;
+            --accent: #ffa201; /* Dreams orange */
+            --accent-hover: #e08f01;
+            --bg: #f7f8f9;
             --surface: #ffffff;
-            --border: #dde3ed;
-            --text-dark: #1c2b3a;
-            --text-muted: #6b7a8d;
+            --border: #e8e8e8;
+            --text-dark: #1f2020;
+            --text-muted: #707070;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
+        body { font-family: 'Golos Text', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
         input, select, button, textarea { font-family: inherit; font-size: 13px; }
 
         /* ========== SIDEBAR ========== */
@@ -401,22 +414,25 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="content-area">
-        <div class="table-wrap">
-            <table id="chargesTable">
-                <thead>
-                    <tr>
-                        <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
-                        <th style="width: 40px;">Sr</th>
-                        <th>Charge Name</th>
-                        <th>Calculation Type</th>
-                        <th>Rate/Charge ($)</th>
-                        <th>State</th>
-                        <th style="width: 80px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="chargesBody">
-                </tbody>
-            </table>
+        <div class="card border-0 shadow-none mb-3">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-nowrap mb-0" id="chargesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                                <th style="width: 40px;">Sr</th>
+                                <th>Charge Name</th>
+                                <th>Calculation Type</th>
+                                <th>Rate/Charge ($)</th>
+                                <th>State</th>
+                                <th style="width: 80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chargesBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -943,5 +959,11 @@ document.addEventListener("DOMContentLoaded", function() {
 <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>
     <script src="/responsive.js"></script>
+
+    <!-- Dreams Template Core Scripts -->
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
+    <script src="dreams-assets/assets/js/script.js"></script>
 </body>
 </html>
