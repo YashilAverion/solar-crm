@@ -167,6 +167,15 @@
                 <button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
                     <i class="ti ti-arrow-bar-to-right"></i>
                 </button>
+
+                <!-- Global Search -->
+                <div class="me-auto d-flex align-items-center header-search d-lg-flex d-none search-wrap" style="position: relative; max-width: 320px; margin-left: 15px;">
+                    <div class="input-icon position-relative me-2" style="width: 100%;">
+                        <input type="text" class="form-control" id="globalOmniSearchInput" placeholder="Search Keyword" autocomplete="off">
+                        <span class="input-icon-addon d-inline-flex p-0 header-search-icon"><i class="ti ti-command"></i></span>
+                    </div>
+                    <div id="globalOmniDropdown" style="position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 4px 0;"></div>
+                </div>
                 
                 <h4 class="mb-0 ms-3 d-none d-md-inline-block text-dark fw-bold" id="pageHeaderTitle">Dashboard</h4>
             </div>
@@ -463,6 +472,59 @@
                     });
                 } else {
                     document.exitFullscreen();
+                }
+            });
+        }
+
+        // 7. Global Omnibox Search Logic (Debounced Fetch)
+        const searchInput = document.getElementById('globalOmniSearchInput');
+        const searchDropdown = document.getElementById('globalOmniDropdown');
+        let searchTimeout;
+
+        if (searchInput && searchDropdown) {
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                clearTimeout(searchTimeout);
+
+                if (query.length < 2) {
+                    searchDropdown.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch('/api/projects/global-search?q=' + encodeURIComponent(query))
+                        .then(res => res.json())
+                        .then(data => {
+                            searchDropdown.innerHTML = '';
+                            if (data && data.length > 0) {
+                                data.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'omni-result-item';
+                                    div.style.padding = '8px 12px';
+                                    div.style.borderBottom = '1px solid #f1f5f9';
+                                    div.style.cursor = 'pointer';
+                                    div.style.fontSize = '12px';
+                                    div.style.color = '#1f2020';
+                                    div.textContent = `${item.project_number || 'No Ref'} - ${item.first_name} ${item.last_name || ''} - ${item.address || ''}`;
+                                    div.onclick = () => {
+                                        window.location.href = `/index.html?search=${item.project_number}`;
+                                    };
+                                    searchDropdown.appendChild(div);
+                                });
+                                searchDropdown.style.display = 'block';
+                            } else {
+                                searchDropdown.innerHTML = '<div class="omni-result-item" style="padding: 8px 12px; font-size:12px; color:#707070;">No results found</div>';
+                                searchDropdown.style.display = 'block';
+                            }
+                        })
+                        .catch(err => console.error('Search error:', err));
+                }, 300);
+            });
+
+            // Close Omnibox on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-wrap')) {
+                    searchDropdown.style.display = 'none';
                 }
             });
         }
