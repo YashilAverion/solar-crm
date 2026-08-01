@@ -1,6 +1,13 @@
 (function () {
     "use strict";
 
+    // Dynamically insert theme-script.js in head synchronously during parsing
+    if (!document.querySelector('script[src*="theme-script.js"]')) {
+        const themeScript = document.createElement("script");
+        themeScript.src = "/dreams-assets/assets/js/theme-script.js";
+        document.head.appendChild(themeScript);
+    }
+
     // Sidebar structure definition matching our Solar CRM modules
     const sidebarHtml = `
     <div class="sidebar" id="sidebar">
@@ -150,7 +157,7 @@
     const headerHtml = `
     <header class="navbar-header">
         <div class="page-container topbar-menu">
-            <div class="d-flex align-items-center gap-2">
+            <div class="header-left d-flex align-items-center gap-2">
                 <!-- Logo -->
                 <a href="/home.html" class="logo">
                     <span class="logo-light">

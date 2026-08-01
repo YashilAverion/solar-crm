@@ -6,29 +6,42 @@ Template Name: CRMS - Bootstrap Admin Template
 (function () {
     "use strict";
 
-	// Variables declarations
-	const wrapper = document.querySelector('.main-wrapper');
-	const overlay = document.createElement('div');
-	overlay.className = 'sidebar-overlay';
-	if (wrapper) {
-		wrapper.parentNode.insertBefore(overlay, wrapper);
-	}
+	// Dynamically create and append the sidebar-overlay when DOM is loaded
+	document.addEventListener('DOMContentLoaded', function () {
+		const wrapper = document.querySelector('.main-wrapper');
+		if (wrapper && !document.querySelector('.sidebar-overlay')) {
+			const overlay = document.createElement('div');
+			overlay.className = 'sidebar-overlay';
+			wrapper.parentNode.insertBefore(overlay, wrapper);
+		}
+		
+		// Initialize the sidebar menu links click listeners
+		initSidebarMenu();
+	});
 
 	// Toggle Mobile Menu
 	document.addEventListener('click', function (e) {
 		if (!e.target.closest('#mobile_btn')) return;
 		e.preventDefault();
-		wrapper.classList.toggle('slide-nav');
-		overlay.classList.toggle('opened');
-		document.documentElement.classList.toggle('menu-opened');
+		const wrapper = document.querySelector('.main-wrapper');
+		const overlay = document.querySelector('.sidebar-overlay');
+		if (wrapper && overlay) {
+			wrapper.classList.toggle('slide-nav');
+			overlay.classList.toggle('opened');
+			document.documentElement.classList.toggle('menu-opened');
+		}
 	});
 
 	// Close sidebar on close button click
 	document.addEventListener('click', function (e) {
 		if (!e.target.closest('.sidebar-close, .sidebar-overlay')) return;
-		wrapper.classList.remove('slide-nav');
-		overlay.classList.remove('opened');
-		document.documentElement.classList.remove('menu-opened');
+		const wrapper = document.querySelector('.main-wrapper');
+		const overlay = document.querySelector('.sidebar-overlay');
+		if (wrapper && overlay) {
+			wrapper.classList.remove('slide-nav');
+			overlay.classList.remove('opened');
+			document.documentElement.classList.remove('menu-opened');
+		}
 	});
 
 	// Sidebar
@@ -135,8 +148,8 @@ Template Name: CRMS - Bootstrap Admin Template
 		}, duration);
 	}
 
-	// Initialize Sidebar
-	initSidebarMenu();
+	// Initialize Sidebar (Already initialized inside DOMContentLoaded listener above)
+	// initSidebarMenu();
 
 	// Mouse Over
 	document.addEventListener('mouseover', function (e) {

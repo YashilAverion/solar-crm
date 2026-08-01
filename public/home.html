@@ -22,86 +22,19 @@
             --primary-hover: #c11a06;
             --accent: #ffa201; /* Dreams orange */
             --accent-hover: #e08f01;
-            --bg: #f7f8f9;
-            --surface: #ffffff;
-            --border: #e8e8e8;
-            --text-dark: #1f2020;
-            --text-muted: #707070;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Golos Text', system-ui, sans-serif; font-size: 13px; background: var(--bg); overflow: hidden; height: 100vh; color: var(--text-dark); }
-        input, select, button, textarea { font-family: inherit; font-size: 13px; }
-        a { text-decoration: none; color: inherit; }
-
-        /* ========== SIDEBAR ========== */
-        .sidebar { width: 180px; background: #0f172a; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
-        .sb-logo { padding: 12px 14px 10px; border-bottom: 1px solid #1e293b; }
-        .sb-logo-main { font-size: 15px; font-weight: 700; color: #f8fafc; display:flex; align-items:center; gap:7px; }
-        .sb-menu { padding: 8px; flex: 1; overflow-y: auto; }
-        .sb-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px 4px; }
-        .menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 1px; font-size: 13px; color: #94a3b8; text-decoration: none; cursor: pointer; transition: all 0.2s; border-radius: 7px; font-weight: 500; }
-        .menu-item:hover { color: #f8fafc; background: #1e293b; }
-        .menu-item.active-menu { color: #fff; background: var(--accent); box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); }
-        .menu-icon { font-size: 14px; width: 18px; text-align: center; }
-        .sb-footer { padding: 10px 12px; border-top: 1px solid #1e293b; background: #0b1120; }
-        .sb-user { display: flex; align-items: center; gap: 10px; }
-        .sb-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .sb-uinfo { flex: 1; min-width: 0; }
-        .sb-uname { font-size: 0.85rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sb-urole { font-size: 0.7rem; color: #64748b; margin-top: 1px; }
-
-        /* ========== MAIN LAYOUT ========== */
-        .main-wrap { margin-left: 180px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* ========== TOPBAR ========== */
-        .topbar { background: var(--surface); height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; justify-content: space-between; }
-        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
-        .search-wrap { position: relative; flex: 1; max-width: 320px; margin-left: 10px; }
-        .search-wrap input { width: 100%; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); padding: 0 10px; font-size: 13px; color: var(--text-dark); transition: all 0.2s; position: relative; z-index: 5; }
-        .search-wrap input:focus { border-color: var(--primary); background: var(--surface); outline: none; box-shadow: 0 0 0 3px rgba(28,53,87,0.1); }
-        #globalOmniDropdown { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 4px 0; }
-        #globalOmniDropdown .omni-result-item { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 12px; color: var(--text-dark); transition: background 0.15s; }
-        #globalOmniDropdown .omni-result-item:last-child { border-bottom: none; }
-        #globalOmniDropdown .omni-result-item:hover { background-color: #f1f5f9; color: var(--primary); }
-        .tb-spacer { flex: 1; }
-        .user-profile { font-weight: 600; color: var(--text-muted); font-size: 13px; }
-
-        /* ========== CONTENT AREA ========== */
-        .content-area { flex: 1; overflow-y: auto; padding: 12px 16px 16px; display: flex; flex-direction: column; min-height: 0; gap: 16px; }
-
-        /* ========== QUICK ACTION DOCK ========== */
-        .quick-action-dock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex-shrink: 0; }
-        .action-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 12px; font-size: 13px; font-weight: 600; color: var(--text-dark); cursor: pointer; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .action-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 4px 10px rgba(232,104,30,0.08); transform: translateY(-1px); }
-
-        /* ========== GRID LAYOUT ========== */
-        .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; min-height: 0; }
-        .grid-col { display: flex; flex-direction: column; height: 100%; }
-        .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); height: 100%; }
-        .panel-header { padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid var(--border); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; color: var(--text-muted); }
-        .panel-body { padding: 14px 16px; flex: 1; overflow-y: auto; }
-
-        /* ========== DATA LIST & ALERTS ========== */
-        .data-list { list-style: none; padding: 0; margin: 0; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
-        .data-row:last-child { border-bottom: none; }
-        .data-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-        .data-value { font-size: 13px; font-weight: 700; color: var(--text-dark); }
-
-        .alert-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; background-color: #f8fafc; transition: all 0.2s; }
-        .alert-item:last-child { margin-bottom: 0; }
-        .alert-item:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.02); transform: translateX(2px); }
-        .alert-item.urgent { border-left: 4px solid #ef4444; }
-        .alert-item.warn { border-left: 4px solid #f59e0b; }
-        .alert-item.info { border-left: 4px solid #3b82f6; }
-        .alert-title { font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 3px; }
-        .alert-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
-
-        /* Scrollbars */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .avatar-list-stacked {
+            display: flex;
+            align-items: center;
+        }
+        .avatar-list-stacked .avatar {
+            margin-left: -8px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .avatar-list-stacked .avatar:first-child {
+            margin-left: 0;
+        }
     </style>
     <link rel="icon" type="image/png" href="/ares_energy_logo.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -109,361 +42,196 @@
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="sb-logo">
-        <div class="sb-logo-main" style="flex-direction: column; align-items: flex-start; gap: 2px;">
-            <span style="font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; font-weight: 800;">Ares Energy</span>
-            <span style="font-size: 15px; color: #fff; font-weight: 700;">Solar CRM</span>
-        </div>
-    </div>
-    <div class="sb-menu">
-        <div class="sb-section">CRM Navigation</div>
-        
-        <a href="/home.html" class="menu-item" data-target="home">
-            <span>Home</span>
-        </a>
-        
-        <!-- Dashboard -->
-        <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Dashboard</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <a href="/dashboard_sales.html" class="menu-item" id="menu-dash-sales" data-target="dashboard-sales" style="padding-left: 24px;">Sales</a>
-            <a href="/dashboard_installation.html" class="menu-item" id="menu-dash-inst" data-target="dashboard-install" style="padding-left: 24px;">Installation</a>
-            <a href="/dashboard_service.html" class="menu-item" id="menu-dash-serv" data-target="dashboard-service" style="padding-left: 24px;">Service</a>
-            <a href="/dashboard_ares_installation.html" class="menu-item" id="menu-dash-ares" data-target="dashboard-ares" style="padding-left: 24px;">Ares Installation</a>
-        </div>
-
-        <!-- Lead Master -->
-        <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Lead Master</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <a href="/" class="menu-item" id="menu-master-leads" data-target="master-leads" style="padding-left: 24px;">Master Leads</a>
-            <a href="/delete_leads.html" class="menu-item" id="menu-delete-leads" data-target="delete-leads" style="padding-left: 24px;">Delete Leads</a>
-            <a href="/duplicate_leads.html" class="menu-item" id="menu-duplicate-leads" data-target="duplicate-leads" style="padding-left: 24px;">Duplicate Leads</a>
-            <a href="/lead_approvals.html" class="menu-item" id="menu-lead-approvals" data-target="lead-approvals" style="padding-left: 24px;">Lead Approvals</a>
-        </div>
-
-        <!-- Sales -->
-        <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Sales</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <a href="/project_leads.html" class="menu-item" id="menu-project-leads" data-target="project-leads" style="padding-left: 24px;">Leads</a>
-        </div>
-
-        <!-- Masters -->
-        <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Masters</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <a href="/products.html" class="menu-item" id="menu-product-master" data-target="product-master" style="padding-left: 24px;">Product Master</a>
-            <a href="/combo_master.html" class="menu-item" style="padding-left: 24px;">Combo Master</a>
-            <a href="/email_templates.html" class="menu-item" id="menu-email-templates" style="padding-left: 24px;">Email Templates Master</a>
-            <a href="/stc_master.html" class="menu-item" id="menu-stc-master" data-target="stc-master" style="padding-left: 24px;">STC Master</a>
-            <a href="/rebate_live_master.html" class="menu-item" id="menu-rebate-master" data-target="rebate-master" style="padding-left: 24px;">Rebate Live Master</a>
-            <a href="/margin_master.html" class="menu-item" id="menu-margin-master" data-target="margin-master" style="padding-left: 24px;">Margin Master</a>
-            <a href="/installation_charges.html" class="menu-item" id="menu-install-charges" data-target="installation-charges" style="padding-left: 24px;">Installation Charges Master</a>
-        </div>
-
-        <!-- Ares Installation Outside -->
-        <div class="menu-item" onclick="toggleNav(event, this)">
-            <span>Ares Installation Outside</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <a href="/installations.html" class="menu-item" id="menu-installations" data-target="installations" style="padding-left: 24px;">Installations</a>
-            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
-                <span>Payment Status</span>
-                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+    <div class="content pb-0">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+            <div>
+                <h4 class="mb-0 text-dark fw-bold">Dashboard</h4>
             </div>
-            <div class="sub-menu" style="display: none;">
-                <a href="/outstanding_payments.html" class="menu-item" id="menu-out-pay" data-target="outstanding-payments" style="padding-left: 36px;">Outstanding Payments</a>
-                <a href="/paid_payments.html" class="menu-item" id="menu-paid-pay" data-target="paid-payments" style="padding-left: 36px;">Paid Payments</a>
-            </div>
-            <a href="/company_details.html" class="menu-item" id="menu-company-details" data-target="company-details" style="padding-left: 24px;">Company Details</a>
-        </div>
-        
-        <!-- User Management (Isolated) -->
-        <a href="/admin.html" class="menu-item" id="menu-user-mgmt" data-target="user-management" style="margin-top: 14px;">
-            <span>User Management</span>
-        </a>
-
-        <!-- Attendance & Payroll (Compliance Module) -->
-        <div class="menu-item" onclick="toggleNav(event, this)" style="margin-top: 14px;">
-            <span>Attendance & Payroll</span>
-            <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-        </div>
-        <div class="sub-menu" style="display: none;">
-            <!-- Ares Energy & Gill's Electrical -->
-            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
-                <span>Ares & Gill's</span>
-                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-            </div>
-            <div class="sub-menu" style="display: none;">
-                <!-- Employees Management -->
-                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
-                    <span>Employees Management</span>
-                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+                <div class="avatar-list-stacked me-2">
+                    <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">A</span>
+                    <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">Y</span>
+                    <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">G</span>
+                    <span class="avatar bg-primary border text-white avatar-rounded d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size:12px; border-radius:50%;">+</span>
                 </div>
-                <div class="sub-menu" style="display: none;">
-                    <a href="/attendance.html" class="menu-item" id="menu-emp-employees" data-target="emp-employees" style="padding-left: 48px;">Employees</a>
-                    <a href="/attendance.html#leave" class="menu-item" id="menu-emp-leave" data-target="emp-leave" style="padding-left: 48px;">Leave</a>
-                    <a href="/attendance.html#timesheets" class="menu-item" id="menu-emp-timesheets" data-target="emp-timesheets" style="padding-left: 48px;">Timesheets</a>
-                </div>
-
-                <!-- Payroll Processing -->
-                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
-                    <span>Payroll Processing</span>
-                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-                </div>
-                <div class="sub-menu" style="display: none;">
-                    <a href="/attendance.html#pay" class="menu-item" id="menu-pay-employee" data-target="pay-employee" style="padding-left: 48px;">Pay Employees</a>
-                    <a href="/attendance.html#super" class="menu-item" id="menu-superannuation" data-target="superannuation" style="padding-left: 48px;">Superannuation</a>
-                </div>
-            </div>
-
-            <!-- Averion Global LLP -->
-            <div class="menu-item" style="padding-left: 24px;" onclick="toggleNav(event, this)">
-                <span>Averion Global LLP</span>
-                <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-            </div>
-            <div class="sub-menu" style="display: none;">
-                <!-- Employees Management -->
-                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
-                    <span>Employees Management</span>
-                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-                </div>
-                <div class="sub-menu" style="display: none;">
-                    <a href="/attendance.html#averion-employees" class="menu-item" id="menu-averion-employees" data-target="averion-employees" style="padding-left: 48px;">Employees</a>
-                    <a href="/attendance.html#averion-leave" class="menu-item" id="menu-averion-leave" data-target="averion-leave" style="padding-left: 48px;">Leave</a>
-                    <a href="/attendance.html#averion-timesheets" class="menu-item" id="menu-averion-timesheets" data-target="averion-timesheets" style="padding-left: 48px;">Timesheet</a>
-                </div>
-
-                <!-- Payroll Processing -->
-                <div class="menu-item" style="padding-left: 36px;" onclick="toggleNav(event, this)">
-                    <span>Payroll Processing</span>
-                    <span class="toggle-icon" style="margin-left: auto; font-size: 10px;">▼</span>
-                </div>
-                <div class="sub-menu" style="display: none;">
-                    <a href="/attendance.html#averion-pay" class="menu-item" id="menu-averion-pay" data-target="averion-pay" style="padding-left: 48px;">Pay Employees</a>
-                    <a href="/attendance.html#averion-pt" class="menu-item" id="menu-averion-pt" data-target="averion-pt" style="padding-left: 48px;">Professional Tax</a>
-                    <a href="/attendance.html#averion-tax-slab" class="menu-item" id="menu-averion-tax-slab" data-target="averion-tax-slab" style="padding-left: 48px;">Income Tax Slab</a>
+                <div class="daterangepick form-control w-auto d-flex align-items-center me-2 py-1 px-2">
+                    <i class="ti ti-calendar text-dark me-2"></i>
+                    <span class="text-dark" id="currentDateRange">Today</span>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="sb-footer">
-        <div class="sb-user">
-            <div class="sb-avatar" id="sidebarAvatar">U</div>
-            <div class="sb-uinfo">
-                <div class="sb-uname" id="sidebarName">Loading...</div>
-                <div class="sb-urole" id="sidebarRole">...</div>
+
+        <!-- Quick Action Buttons -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='index.html?action=new'"><i class="ti ti-plus"></i> Add New Lead</button>
             </div>
-            <a href="/logout" title="Logout" style="margin-left:auto; color:#ef4444; text-decoration:none; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='index.html'"><i class="ti ti-list"></i> View Master Leads</button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='project_leads.html'"><i class="ti ti-user-up"></i> View Sales</button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='products.html'"><i class="ti ti-box"></i> View Active Inventory</button>
+            </div>
         </div>
-    </div>
-</div>
 
-<div class="main-wrap">
-    <!-- Header dynamically loaded by layout-loader.js, keeping only content body -->
-    <div class="content-area" style="overflow-y: auto;">
-        <div class="content pb-0">
-            <!-- Page Header -->
-            <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-                <div>
-                    <h4 class="mb-0 text-dark fw-bold">Dashboard</h4>
-                </div>
-                <div class="gap-2 d-flex align-items-center flex-wrap">
-                    <div class="avatar-list-stacked me-2">
-                        <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">A</span>
-                        <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">Y</span>
-                        <span class="avatar avatar-rounded border bg-white p-1 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight:700; border-radius:50%;">G</span>
-                        <span class="avatar bg-primary border text-white avatar-rounded d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size:12px; border-radius:50%;">+</span>
-                    </div>
-                    <div class="daterangepick form-control w-auto d-flex align-items-center me-2 py-1 px-2">
-                        <i class="ti ti-calendar text-dark me-2"></i>
-                        <span class="text-dark" id="currentDateRange">Today</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Action Buttons -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='index.html?action=new'"><i class="ti ti-plus"></i> Add New Lead</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='index.html'"><i class="ti ti-list"></i> View Master Leads</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='project_leads.html'"><i class="ti ti-user-up"></i> View Sales</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="window.location.href='products.html'"><i class="ti ti-box"></i> View Active Inventory</button>
-                </div>
-            </div>
-
-            <!-- Row 1: Charts -->
-            <div class="row g-3 mb-4">
-                <!-- Revenue Analytics (Bar Chart) -->
-                <div class="col-xxl-8 col-xl-7 d-flex">
-                    <div class="card flex-fill border-0 shadow-none mb-3">
-                        <div class="card-body pb-0">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                                <h5 class="mb-0 fs-16 fw-bold text-dark"><span class="line-title d-block me-2 bg-danger" style="width: 4px; height: 16px; display: inline-block; vertical-align: middle;"></span>Revenue Analytics</h5>
+        <!-- Row 1: Charts -->
+        <div class="row g-3 mb-4">
+            <!-- Revenue Analytics (Bar Chart) -->
+            <div class="col-xxl-8 col-xl-7 d-flex">
+                <div class="card flex-fill border-0 shadow-none mb-3">
+                    <div class="card-body pb-0">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                            <h5 class="mb-0 fs-16 fw-bold text-dark"><span class="line-title d-block me-2 bg-danger" style="width: 4px; height: 16px; display: inline-block; vertical-align: middle;"></span>Revenue Analytics</h5>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <h4 class="mb-0 text-dark fw-bold" id="dashboardRevenueText">$0.00</h4>
+                                <p class="mb-0 text-muted">Closed Won Revenue (AUD)</p>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                                <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <h4 class="mb-0 text-dark fw-bold" id="dashboardRevenueText">$0.00</h4>
-                                    <p class="mb-0 text-muted">Closed Won Revenue (AUD)</p>
+                        </div>
+                        <div style="min-height: 300px; width: 100%;">
+                            <canvas id="revenueChart" style="max-height: 300px; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline stage breakdown (Donut Chart) -->
+            <div class="col-xxl-4 col-xl-5 d-flex">
+                <div class="card flex-fill border-0 shadow-none mb-3">
+                    <div class="card-body pb-0">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                            <h5 class="mb-0 fs-16 fw-bold text-dark"><span class="line-title d-block me-2 bg-danger" style="width: 4px; height: 16px; display: inline-block; vertical-align: middle;"></span>Pipeline Distribution</h5>
+                        </div>
+                        <div style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="pipelineChart" style="max-height: 280px; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: KPI Metrics Cards -->
+        <div class="row g-3 mb-4">
+            <!-- Won Revenue -->
+            <div class="col-lg-3 col-sm-6">
+                <div class="card border-0 shadow-none mb-3">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg rounded-circle text-success d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(16,185,129,0.15); font-size:20px; border-radius:50%;">
+                            <i class="ti ti-currency-dollar"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted fs-12 d-block">Closed Won Revenue</span>
+                            <h4 class="fw-bold mb-0 text-success" id="kpi-won-rev">$0.00</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Active Leads -->
+            <div class="col-lg-3 col-sm-6">
+                <div class="card border-0 shadow-none mb-3">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg rounded-circle text-primary d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(59,130,246,0.15); font-size:20px; border-radius:50%;">
+                            <i class="ti ti-chart-arcs"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted fs-12 d-block">Active Leads</span>
+                            <h4 class="fw-bold mb-0 text-primary" id="kpi-active-leads">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Active Projects -->
+            <div class="col-lg-3 col-sm-6">
+                <div class="card border-0 shadow-none mb-3">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg rounded-circle text-info d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(6,182,212,0.15); font-size:20px; border-radius:50%;">
+                            <i class="ti ti-assembly"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted fs-12 d-block">Active Projects</span>
+                            <h4 class="fw-bold mb-0 text-info" id="kpi-active-projects">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Pipeline Revenue -->
+            <div class="col-lg-3 col-sm-6">
+                <div class="card border-0 shadow-none mb-3">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg rounded-circle text-warning d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(245,158,11,0.15); font-size:20px; border-radius:50%;">
+                            <i class="ti ti-wallet"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted fs-12 d-block">Revenue Pipeline</span>
+                            <h4 class="fw-bold mb-0 text-warning" id="kpi-pipeline-rev">$0.00</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Leaderboard & Alerts -->
+        <div class="row g-3 mb-4">
+            <!-- Leaderboard -->
+            <div class="col-xl-6 d-flex">
+                <div class="card flex-fill border-0 shadow-none mb-3">
+                    <div class="card-header border-0 bg-transparent pt-3 pb-0">
+                        <h5 class="card-title mb-0 fw-bold fs-15 text-dark">Top Sales Rep Leaderboard</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Rep Name</th>
+                                        <th>Active Leads</th>
+                                        <th>Won Leads</th>
+                                        <th>Conversion Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardList">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Loading rep performance...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts & Tasks -->
+            <div class="col-xl-6 d-flex">
+                <div class="card flex-fill border-0 shadow-none mb-3">
+                    <div class="card-header border-0 bg-transparent pt-3 pb-0">
+                        <h5 class="card-title mb-0 fw-bold fs-15 text-dark">Critical Task Reminders & Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="alert alert-danger border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #fff1f0; color: #d9383a; border-radius: 8px;">
+                                <i class="ti ti-alert-circle fs-18"></i>
+                                <div>
+                                    <strong class="d-block text-dark">Duplicate Leads Review</strong>
+                                    <span class="fs-12 text-muted">Ares CRM detected duplicate entries. Review approvals panel.</span>
                                 </div>
                             </div>
-                            <div style="min-height: 300px; width: 100%;">
-                                <canvas id="revenueChart" style="max-height: 300px; width: 100%;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pipeline stage breakdown (Donut Chart) -->
-                <div class="col-xxl-4 col-xl-5 d-flex">
-                    <div class="card flex-fill border-0 shadow-none mb-3">
-                        <div class="card-body pb-0">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                                <h5 class="mb-0 fs-16 fw-bold text-dark"><span class="line-title d-block me-2 bg-danger" style="width: 4px; height: 16px; display: inline-block; vertical-align: middle;"></span>Pipeline Distribution</h5>
-                            </div>
-                            <div style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
-                                <canvas id="pipelineChart" style="max-height: 280px; width: 100%;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Row 2: KPI Metrics Cards -->
-            <div class="row g-3 mb-4">
-                <!-- Won Revenue -->
-                <div class="col-lg-3 col-sm-6">
-                    <div class="card border-0 shadow-none mb-3">
-                        <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="avatar avatar-lg rounded-circle text-success d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(16,185,129,0.15); font-size:20px; border-radius:50%;">
-                                <i class="ti ti-currency-dollar"></i>
-                            </div>
-                            <div>
-                                <span class="text-muted fs-12 d-block">Closed Won Revenue</span>
-                                <h4 class="fw-bold mb-0 text-success" id="kpi-won-rev">$0.00</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Active Leads -->
-                <div class="col-lg-3 col-sm-6">
-                    <div class="card border-0 shadow-none mb-3">
-                        <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="avatar avatar-lg rounded-circle text-primary d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(59,130,246,0.15); font-size:20px; border-radius:50%;">
-                                <i class="ti ti-chart-arcs"></i>
-                            </div>
-                            <div>
-                                <span class="text-muted fs-12 d-block">Active Leads</span>
-                                <h4 class="fw-bold mb-0 text-primary" id="kpi-active-leads">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Active Projects -->
-                <div class="col-lg-3 col-sm-6">
-                    <div class="card border-0 shadow-none mb-3">
-                        <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="avatar avatar-lg rounded-circle text-info d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(6,182,212,0.15); font-size:20px; border-radius:50%;">
-                                <i class="ti ti-assembly"></i>
-                            </div>
-                            <div>
-                                <span class="text-muted fs-12 d-block">Active Projects</span>
-                                <h4 class="fw-bold mb-0 text-info" id="kpi-active-projects">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Pipeline Revenue -->
-                <div class="col-lg-3 col-sm-6">
-                    <div class="card border-0 shadow-none mb-3">
-                        <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="avatar avatar-lg rounded-circle text-warning d-flex align-items-center justify-content-center" style="width:48px; height:48px; background: rgba(245,158,11,0.15); font-size:20px; border-radius:50%;">
-                                <i class="ti ti-wallet"></i>
-                            </div>
-                            <div>
-                                <span class="text-muted fs-12 d-block">Revenue Pipeline</span>
-                                <h4 class="fw-bold mb-0 text-warning" id="kpi-pipeline-rev">$0.00</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Row 3: Leaderboard & Alerts -->
-            <div class="row g-3 mb-4">
-                <!-- Leaderboard -->
-                <div class="col-xl-6 d-flex">
-                    <div class="card flex-fill border-0 shadow-none mb-3">
-                        <div class="card-header border-0 bg-transparent pt-3 pb-0">
-                            <h5 class="card-title mb-0 fw-bold fs-15 text-dark">Top Sales Rep Leaderboard</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Rep Name</th>
-                                            <th>Active Leads</th>
-                                            <th>Won Leads</th>
-                                            <th>Conversion Rate</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="leaderboardList">
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">Loading rep performance...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Alerts & Tasks -->
-                <div class="col-xl-6 d-flex">
-                    <div class="card flex-fill border-0 shadow-none mb-3">
-                        <div class="card-header border-0 bg-transparent pt-3 pb-0">
-                            <h5 class="card-title mb-0 fw-bold fs-15 text-dark">Critical Task Reminders & Alerts</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex flex-column gap-2">
-                                <div class="alert alert-danger border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #fff1f0; color: #d9383a; border-radius: 8px;">
-                                    <i class="ti ti-alert-circle fs-18"></i>
-                                    <div>
-                                        <strong class="d-block text-dark">Duplicate Leads Review</strong>
-                                        <span class="fs-12 text-muted">Ares CRM detected duplicate entries. Review approvals panel.</span>
-                                    </div>
+                            <div class="alert alert-warning border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #fffbe6; color: #d48806; border-radius: 8px;">
+                                <i class="ti ti-alert-triangle fs-18"></i>
+                                <div>
+                                    <strong class="d-block text-dark">Payment Collection Reminder</strong>
+                                    <span class="fs-12 text-muted">Grid approvals are ready for installation scheduling.</span>
                                 </div>
-                                <div class="alert alert-warning border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #fffbe6; color: #d48806; border-radius: 8px;">
-                                    <i class="ti ti-alert-triangle fs-18"></i>
-                                    <div>
-                                        <strong class="d-block text-dark">Payment Collection Reminder</strong>
-                                        <span class="fs-12 text-muted">Grid approvals are ready for installation scheduling.</span>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #e6f7ff; color: #096dd9; border-radius: 8px;">
-                                    <i class="ti ti-info-circle fs-18"></i>
-                                    <div>
-                                        <strong class="d-block text-dark">Database Speed Enforced</strong>
-                                        <span class="fs-12 text-muted">SQLite WAL and indexing optimized successfully. CRM speed increased.</span>
-                                    </div>
+                            </div>
+                            <div class="alert alert-info border-0 d-flex align-items-center gap-2 mb-0" role="alert" style="background-color: #e6f7ff; color: #096dd9; border-radius: 8px;">
+                                <i class="ti ti-info-circle fs-18"></i>
+                                <div>
+                                    <strong class="d-block text-dark">Database Speed Enforced</strong>
+                                    <span class="fs-12 text-muted">SQLite WAL and indexing optimized successfully. CRM speed increased.</span>
                                 </div>
                             </div>
                         </div>
@@ -472,169 +240,144 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- SIDEBAR CONTROLLER JS -->
-<script>
-function toggleNav(event, element) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const subMenu = element.nextElementSibling;
-    if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
-    
-    const icon = element.querySelector('.toggle-icon');
-    const isCurrentlyOpen = subMenu.style.display === 'block';
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fetch and Render Workspace Analytics
+        fetch('/api/analytics/summary')
+            .then(res => res.json())
+            .then(resObj => {
+                if (!resObj.success) return;
 
-    const parent = element.parentElement;
-    const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
-    const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
-    
-    siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
-    siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
-
-    if (!isCurrentlyOpen) {
-        subMenu.style.display = 'block';
-        if (icon) icon.innerText = '▲';
-    }
-}
-
-// Global searchdocument.addEventListener('DOMContentLoaded', () => {
-    // Fetch and Render Workspace Analytics
-    fetch('/api/analytics/summary')
-        .then(res => res.json())
-        .then(resObj => {
-            if (!resObj.success) return;
-
-            // 1. KPI Stats Populate
-            const activeLeadsCount = resObj.pipeline.reduce((acc, stage) => {
-                if (stage.status !== 'Closed Won' && stage.status !== 'Closed Lost') {
-                    return acc + stage.count;
-                }
-                return acc;
-            }, 0);
-            document.getElementById('kpi-active-leads').textContent = activeLeadsCount;
-
-            const plannedObj = resObj.pipeline.find(s => s.status === 'Planned') || { count: 0 };
-            const inProgObj = resObj.pipeline.find(s => s.status === 'In Progress') || { count: 0 };
-            const activeProjCount = plannedObj.count + inProgObj.count;
-            document.getElementById('kpi-active-projects').textContent = activeProjCount;
-
-            const completedInstalls = resObj.operations.find(o => o.status === 'Completed' || o.status === 'Installed') || { total_amount: 0 };
-            const wonRevenue = completedInstalls.total_amount || 0;
-            const formattedWon = '$' + wonRevenue.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('kpi-won-rev').textContent = formattedWon;
-            document.getElementById('dashboardRevenueText').textContent = formattedWon;
-
-            const pendingInstalls = resObj.operations.find(o => o.status === 'Pending') || { total_amount: 0 };
-            const pipelineRevenue = pendingInstalls.total_amount || 0;
-            document.getElementById('kpi-pipeline-rev').textContent = '$' + pipelineRevenue.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            // 2. Render Pipeline Distribution (Doughnut Chart)
-            const pipelineLabels = resObj.pipeline.map(s => s.status);
-            const pipelineCounts = resObj.pipeline.map(s => s.count);
-
-            new Chart(document.getElementById('pipelineChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: pipelineLabels,
-                    datasets: [{
-                        data: pipelineCounts,
-                        backgroundColor: [
-                            '#e41f07', // Dreams Red
-                            '#ffa201', // Dreams Orange
-                            '#3b82f6', // blue
-                            '#1c3557', // dark blue
-                            '#10b981', // green
-                            '#6b7a8d', // gray
-                            '#cbd5e1'  // light gray
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 10, font: { family: 'Golos Text', size: 10 } }
-                        }
+                // 1. KPI Stats Populate
+                const activeLeadsCount = resObj.pipeline.reduce((acc, stage) => {
+                    if (stage.status !== 'Closed Won' && stage.status !== 'Closed Lost') {
+                        return acc + stage.count;
                     }
-                }
-            });
+                    return acc;
+                }, 0);
+                document.getElementById('kpi-active-leads').textContent = activeLeadsCount;
 
-            // 3. Render Revenue Analytics (Red Bar Chart)
-            const revLabels = resObj.monthlyRevenue.map(m => m.month);
-            const revAmounts = resObj.monthlyRevenue.map(m => m.revenue);
+                const plannedObj = resObj.pipeline.find(s => s.status === 'Planned') || { count: 0 };
+                const inProgObj = resObj.pipeline.find(s => s.status === 'In Progress') || { count: 0 };
+                const activeProjCount = plannedObj.count + inProgObj.count;
+                document.getElementById('kpi-active-projects').textContent = activeProjCount;
 
-            new Chart(document.getElementById('revenueChart'), {
-                type: 'bar',
-                data: {
-                    labels: revLabels,
-                    datasets: [{
-                        label: 'Projected Revenue ($)',
-                        data: revAmounts,
-                        backgroundColor: '#e41f07',
-                        borderRadius: 5,
-                        barThickness: 18
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
+                const completedInstalls = resObj.operations.find(o => o.status === 'Completed' || o.status === 'Installed') || { total_amount: 0 };
+                const wonRevenue = completedInstalls.total_amount || 0;
+                const formattedWon = '$' + wonRevenue.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('kpi-won-rev').textContent = formattedWon;
+                document.getElementById('dashboardRevenueText').textContent = formattedWon;
+
+                const pendingInstalls = resObj.operations.find(o => o.status === 'Pending') || { total_amount: 0 };
+                const pipelineRevenue = pendingInstalls.total_amount || 0;
+                document.getElementById('kpi-pipeline-rev').textContent = '$' + pipelineRevenue.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // 2. Render Pipeline Distribution (Doughnut Chart)
+                const pipelineLabels = resObj.pipeline.map(s => s.status);
+                const pipelineCounts = resObj.pipeline.map(s => s.count);
+
+                new Chart(document.getElementById('pipelineChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: pipelineLabels,
+                        datasets: [{
+                            data: pipelineCounts,
+                            backgroundColor: [
+                                '#e41f07', // Dreams Red
+                                '#ffa201', // Dreams Orange
+                                '#3b82f6', // blue
+                                '#1c3557', // dark blue
+                                '#10b981', // green
+                                '#6b7a8d', // gray
+                                '#cbd5e1'  // light gray
+                            ],
+                            borderWidth: 1
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { font: { family: 'Golos Text', size: 10 } }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { family: 'Golos Text', size: 10 } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 10, font: { family: 'Golos Text', size: 10 } }
+                            }
                         }
                     }
-                }
-            });
-
-            // 4. Render Sales Leaderboard List
-            const leaderList = document.getElementById('leaderboardList');
-            leaderList.innerHTML = '';
-            if (resObj.salesReps.length === 0) {
-                leaderList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No reps stats available.</td></tr>';
-            } else {
-                resObj.salesReps.forEach((rep, idx) => {
-                    const rate = rep.total_leads > 0 ? Math.round((rep.won_leads / rep.total_leads) * 100) : 0;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="avatar avatar-rounded bg-light text-dark d-flex align-items-center justify-content-center fw-bold" style="width:28px; height:28px; font-size:11px; border-radius:50%;">${rep.rep.charAt(0).toUpperCase()}</span>
-                                <span class="fw-semibold text-dark">${rep.rep}</span>
-                            </div>
-                        </td>
-                        <td class="fw-semibold text-dark">${rep.total_leads}</td>
-                        <td class="fw-bold text-success">${rep.won_leads}</td>
-                        <td>
-                            <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 11px;">${rate}%</span>
-                        </td>
-                    `;
-                    leaderList.appendChild(tr);
                 });
-            }
-        })
-        .catch(err => console.error('Dashboard metrics fetch error:', err));
-});
-</script>
-<script src="/responsive.js"></script>
 
-<!-- Dreams Template Core Scripts -->
-<script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
-<script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
-<script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
-<script src="dreams-assets/assets/js/script.js"></script>
+                // 3. Render Revenue Analytics (Red Bar Chart)
+                const revLabels = resObj.monthlyRevenue.map(m => m.month);
+                const revAmounts = resObj.monthlyRevenue.map(m => m.revenue);
+
+                new Chart(document.getElementById('revenueChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: revLabels,
+                        datasets: [{
+                            label: 'Projected Revenue ($)',
+                            data: revAmounts,
+                            backgroundColor: '#e41f07',
+                            borderRadius: 5,
+                            barThickness: 18
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f1f5f9' },
+                                ticks: { font: { family: 'Golos Text', size: 10 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { family: 'Golos Text', size: 10 } }
+                            }
+                        }
+                    }
+                });
+
+                // 4. Render Sales Leaderboard List
+                const leaderList = document.getElementById('leaderboardList');
+                leaderList.innerHTML = '';
+                if (resObj.salesReps.length === 0) {
+                    leaderList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No reps stats available.</td></tr>';
+                } else {
+                    resObj.salesReps.forEach((rep, idx) => {
+                        const rate = rep.total_leads > 0 ? Math.round((rep.won_leads / rep.total_leads) * 100) : 0;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-rounded bg-light text-dark d-flex align-items-center justify-content-center fw-bold" style="width:28px; height:28px; font-size:11px; border-radius:50%;">${rep.rep.charAt(0).toUpperCase()}</span>
+                                    <span class="fw-semibold text-dark">${rep.rep}</span>
+                                </div>
+                            </td>
+                            <td class="fw-semibold text-dark">${rep.total_leads}</td>
+                            <td class="fw-bold text-success">${rep.won_leads}</td>
+                            <td>
+                                <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 11px;">${rate}%</span>
+                            </td>
+                        `;
+                        leaderList.appendChild(tr);
+                    });
+                }
+            })
+            .catch(err => console.error('Dashboard metrics fetch error:', err));
+    });
+    </script>
+    <script src="/responsive.js"></script>
+
+    <!-- Dreams Template Core Scripts -->
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
+    <script src="dreams-assets/assets/js/script.js"></script>
 </body>
 </html>
