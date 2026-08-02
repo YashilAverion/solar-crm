@@ -231,13 +231,20 @@
 
     // Wait until document is ready to rewrite layout
     document.addEventListener("DOMContentLoaded", function () {
+        // Move any body style tags to the head so they are preserved
+        document.body.querySelectorAll("style").forEach(styleEl => {
+            if (styleEl.parentElement !== document.head) {
+                document.head.appendChild(styleEl);
+            }
+        });
+
         // Strip legacy layout overrides from inline style tags to prevent theme conflicts
         document.querySelectorAll("style").forEach(styleEl => {
             if (!styleEl.id) {
                 let css = styleEl.innerHTML;
                 css = css.replace(/\*\s*\{\s*box-sizing:\s*border-box;\s*margin:\s*0;\s*padding:\s*0;\s*\}/g, '');
-                css = css.replace(/body\s*\{\s*font-family:\s*['"]Golos\s*Text['"],[\s\S]+?color:\s*var\(--text-dark\);\s*\}/g, '');
-                css = css.replace(/\/\*\s*=+\s*SIDEBAR\s*=+\s*\*\/[\s\S]+?(?=\/\*\s*=+\s*(?:STATS ROW|CONTENT AREA & TOOLBAR)\s*=+\s*\*\/)/g, '');
+                css = css.replace(/body\s*\{\s*font-family:\s*['"]Golos\s*Text['"][^}]+?\}/g, '');
+                css = css.replace(/\/\*\s*=+\s*SIDEBAR\s*=+\s*\*\/[\s\S]+?(?=\/\*\s*=+\s*(?:STATS ROW|CONTENT AREA & TOOLBAR|HORIZONTAL METADATA STRIP|WORKSPACE CONTENT|ENGINEERING GRID)\s*=+\s*\*\/)/g, '');
                 styleEl.innerHTML = css;
             }
         });
