@@ -27,12 +27,11 @@
         <div class="sidebar-logo">
             <div class="d-flex align-items-center">
                 <a href="/home.html" class="logo logo-normal">
-                    <img src="averion_logo.jpg" alt="Logo" style="max-height: 40px; border-radius: 4px;">
+                    <img src="/dreams-assets/assets/img/logo.svg" alt="Logo">
                 </a>
                 <a href="/home.html" class="logo-small">
-                    <img src="averion_logo.jpg" alt="Logo" style="max-height: 30px; border-radius: 4px;">
+                    <img src="/dreams-assets/assets/img/logo-small.svg" alt="Logo">
                 </a>
-                <span class="ms-2 fw-bold text-dark d-none-mini" style="font-size: 14px; white-space: nowrap;">Solar CRM</span>
             </div>
             <button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
                 <i class="ti ti-arrow-bar-to-left"></i>
@@ -153,8 +152,8 @@
                 <!-- Logo -->
                 <a href="/home.html" class="logo">
                     <span class="logo-light">
-                        <span class="logo-lg"><img src="averion_logo.jpg" alt="logo" style="max-height: 40px; border-radius: 4px;"></span>
-                        <span class="logo-sm"><img src="averion_logo.jpg" alt="small logo" style="max-height: 30px; border-radius: 4px;"></span>
+                        <span class="logo-lg"><img src="/dreams-assets/assets/img/logo.svg" alt="logo" style="max-height: 38px;"></span>
+                        <span class="logo-sm"><img src="/dreams-assets/assets/img/logo-small.svg" alt="small logo" style="max-height: 30px;"></span>
                     </span>
                 </a>
 
@@ -175,14 +174,9 @@
                     </div>
                     <div id="globalOmniDropdown" style="position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 4px 0;"></div>
                 </div>
-                
-                <h4 class="mb-0 ms-3 d-none d-md-inline-block text-dark fw-bold" id="pageHeaderTitle">Dashboard</h4>
             </div>
 
             <div class="d-flex align-items-center">
-                <!-- Page Actions Container -->
-                <div id="pageActionButtonsContainer" class="d-flex align-items-center gap-2 me-3"></div>
-
                 <!-- Minimize -->
                 <div class="header-item">
                     <div class="dropdown me-2">
@@ -197,16 +191,59 @@
                     </button>
                 </div>
 
+                <!-- Dashboard/Grid Shortcut Icon -->
+                <div class="header-item me-2">
+                    <a href="/home.html" class="btn topbar-link d-inline-flex align-items-center justify-content-center p-0" style="background: #e0f2fe; color: #0284c7; border-radius: 8px; width: 34px; height: 34px;">
+                        <i class="ti ti-layout-grid fs-16"></i>
+                    </a>
+                </div>
+
+                <!-- Security/Shield Shortcut Icon -->
+                <div class="header-item me-2">
+                    <a href="/admin.html" class="btn topbar-link d-inline-flex align-items-center justify-content-center p-0" style="background: #f3e8ff; color: #7e22ce; border-radius: 8px; width: 34px; height: 34px;">
+                        <i class="ti ti-shield fs-16"></i>
+                    </a>
+                </div>
+
+                <!-- Logs/Document Shortcut Icon -->
+                <div class="header-item me-2">
+                    <a href="/activity_logs.html" class="btn topbar-link d-inline-flex align-items-center justify-content-center p-0" style="background: #fef3c7; color: #d97706; border-radius: 8px; width: 34px; height: 34px;">
+                        <i class="ti ti-file-text fs-16"></i>
+                    </a>
+                </div>
+
+                <!-- Vertical Divider -->
+                <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 10px 0 6px;"></div>
+
+                <!-- Notification Bell -->
+                <div class="header-item me-2 position-relative">
+                    <a href="javascript:void(0);" class="btn topbar-link d-inline-flex align-items-center justify-content-center p-0">
+                        <i class="ti ti-bell fs-20" style="color: #64748b;"></i>
+                    </a>
+                    <span class="position-absolute translate-middle p-1 bg-danger border border-light rounded-circle" style="top: 8px; right: -2px;"></span>
+                </div>
+
+                <!-- Activity Flag -->
+                <div class="header-item me-3 position-relative">
+                    <a href="javascript:void(0);" class="btn topbar-link d-inline-flex align-items-center justify-content-center p-0">
+                        <i class="ti ti-flag fs-20" style="color: #64748b;"></i>
+                    </a>
+                    <span class="position-absolute translate-middle p-1 bg-danger border border-light rounded-circle" style="top: 8px; right: -2px;"></span>
+                </div>
+
                 <!-- User Dropdown -->
                 <div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
                     <a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
-                        <div class="user-info d-flex align-items-center">
-                            <span class="avatar avatar-md rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" id="headerUserAvatar" style="width: 38px; height: 38px; font-size: 13px;">SU</span>
+                        <div class="user-info d-flex align-items-center position-relative">
+                            <img src="/dreams-assets/assets/img/profiles/avatar-02.jpg" alt="User Profile" class="rounded-circle border" style="width: 36px; height: 36px; object-fit: cover;" id="headerUserAvatarImg" onError="this.style.display='none'; document.getElementById('headerUserAvatarText').style.display='flex';">
+                            <span class="avatar avatar-md rounded-circle bg-danger text-white d-none align-items-center justify-content-center fw-bold" id="headerUserAvatarText" style="width: 36px; height: 36px; font-size: 13px;">SU</span>
+                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle" style="transform: translate(2px, 2px);"></span>
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end p-0">
                         <div class="d-flex align-items-center p-3 border-bottom rounded-top">
-                            <span class="avatar avatar-lg rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" id="dropdownUserAvatar" style="width: 48px; height: 48px; font-size: 16px;">SU</span>
+                            <img src="/dreams-assets/assets/img/profiles/avatar-02.jpg" alt="User Profile" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;" id="dropdownUserAvatarImg" onError="this.style.display='none'; document.getElementById('dropdownUserAvatarText').style.display='flex';">
+                            <span class="avatar avatar-lg rounded-circle bg-danger text-white d-none align-items-center justify-content-center fw-bold" id="dropdownUserAvatarText" style="width: 48px; height: 48px; font-size: 16px;">SU</span>
                             <div class="ms-2">
                                 <h6 class="mb-0 text-dark fw-bold" id="dropdownUserName">System User</h6>
                                 <span class="fs-12 text-muted" id="dropdownUserRole">Standard Role</span>
@@ -289,8 +326,32 @@
         // Inject header and sidebar inside mainWrapper
         mainWrapperDiv.innerHTML = headerHtml + sidebarHtml;
 
-        // Move page action buttons from old topbar into the new header container
-        const pageActionContainer = mainWrapperDiv.querySelector("#pageActionButtonsContainer");
+        // Create page-wrapper & content wrapper
+        const pageWrapperDiv = document.createElement("div");
+        pageWrapperDiv.className = "page-wrapper";
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "content";
+
+        // Create page-header container inside content
+        const pageHeaderDiv = document.createElement("div");
+        pageHeaderDiv.className = "page-header mb-4 pb-3 border-bottom";
+        pageHeaderDiv.innerHTML = `
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title text-dark fw-bold mb-0" style="font-size: 20px;">${pageTitleText}</h4>
+                </div>
+                <div class="col-sm-6 text-sm-end mt-2 mt-sm-0">
+                    <div id="pageActionButtonsContainer" class="d-inline-flex align-items-center gap-2 justify-content-sm-end flex-wrap"></div>
+                </div>
+            </div>
+        `;
+        contentDiv.appendChild(pageHeaderDiv);
+
+        pageWrapperDiv.appendChild(contentDiv);
+        mainWrapperDiv.appendChild(pageWrapperDiv);
+
+        // Move page action buttons from old topbar into the new page-header actions container
+        const pageActionContainer = pageHeaderDiv.querySelector("#pageActionButtonsContainer");
         if (oldTopbar && pageActionContainer) {
             const actions = Array.from(oldTopbar.children).filter(child => {
                 return !child.classList.contains("topbar-title") && 
@@ -304,15 +365,6 @@
 
         // Now safe to remove old topbar
         if (oldTopbar) oldTopbar.remove();
-
-        // Create page-wrapper & content wrapper
-        const pageWrapperDiv = document.createElement("div");
-        pageWrapperDiv.className = "page-wrapper";
-        const contentDiv = document.createElement("div");
-        contentDiv.className = "content";
-
-        pageWrapperDiv.appendChild(contentDiv);
-        mainWrapperDiv.appendChild(pageWrapperDiv);
 
         // Move all content children into the new contentDiv
         contentChildren.forEach(child => {
@@ -329,10 +381,6 @@
         } else {
             document.body.appendChild(mainWrapperDiv);
         }
-
-        // Set topbar page header title
-        const headerTitleEl = document.getElementById("pageHeaderTitle");
-        if (headerTitleEl) headerTitleEl.innerText = pageTitleText;
 
         // 4. Handle active menu state selection based on path + hash
         const currentPath = window.location.pathname;
