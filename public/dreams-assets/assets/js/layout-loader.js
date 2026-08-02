@@ -337,10 +337,10 @@
         pageHeaderDiv.className = "page-header mb-2 pb-2 border-bottom";
         pageHeaderDiv.innerHTML = `
             <div class="row align-items-center">
-                <div class="col-sm-6">
-                    <h4 class="page-title text-dark fw-bold mb-0" style="font-size: 20px;">${pageTitleText}</h4>
+                <div class="col-sm-3">
+                    <h4 class="page-title text-dark fw-bold mb-0" style="font-size: 18px;">${pageTitleText}</h4>
                 </div>
-                <div class="col-sm-6 text-sm-end mt-2 mt-sm-0">
+                <div class="col-sm-9 text-sm-end mt-2 mt-sm-0">
                     <div id="pageActionButtonsContainer" class="d-inline-flex align-items-center gap-2 justify-content-sm-end flex-wrap"></div>
                 </div>
             </div>
@@ -944,6 +944,12 @@
             .tb-btn:hover {
                 background: #f1f5f9 !important;
                 border-color: #94a3b8 !important;
+            }
+            #pageActionButtonsContainer .tb-btn, #pageActionButtonsContainer button {
+                height: 32px !important;
+                padding: 0 10px !important;
+                font-size: 12.5px !important;
+                border-radius: 6px !important;
             }
             .btn-add, .tb-btn.btn-add {
                 background: #e41f07 !important;
