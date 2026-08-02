@@ -244,7 +244,15 @@
                 let css = styleEl.innerHTML;
                 css = css.replace(/\*\s*\{\s*box-sizing:\s*border-box;\s*margin:\s*0;\s*padding:\s*0;\s*\}/g, '');
                 css = css.replace(/body\s*\{\s*font-family:\s*['"]Golos\s*Text['"][^}]+?\}/g, '');
-                css = css.replace(/\/\*\s*=+\s*SIDEBAR\s*=+\s*\*\/[\s\S]+?(?=\/\*\s*=+\s*(?:STATS ROW|CONTENT AREA & TOOLBAR|HORIZONTAL METADATA STRIP|WORKSPACE CONTENT|ENGINEERING GRID)\s*=+\s*\*\/)/g, '');
+                css = css.replace(/\.sidebar\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.sb-[a-zA-Z0-9_-]+\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.menu-item\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.menu-item:[a-zA-Z0-9_-]+\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.main-wrap\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.topbar\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.topbar-title\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.search-wrap\s*\{[^}]+?\}/g, '');
+                css = css.replace(/\.search-wrap\s+input\s*\{[^}]+?\}/g, '');
                 styleEl.innerHTML = css;
             }
         });
