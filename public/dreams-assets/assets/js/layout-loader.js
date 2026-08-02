@@ -253,6 +253,12 @@
         const oldSidebar = document.querySelector(".sidebar");
         const oldScriptController = document.querySelector("script[src*='responsive.js']");
 
+        // Preserve userProfile hidden input if it exists
+        const userProfileInput = document.getElementById("userProfile");
+        if (userProfileInput) {
+            document.body.appendChild(userProfileInput);
+        }
+
         // Remove old sidebar and topbar elements from DOM
         if (oldSidebar) oldSidebar.remove();
         if (oldTopbar) oldTopbar.remove();
