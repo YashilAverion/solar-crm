@@ -559,5 +559,131 @@
                 }
             });
         }
+
+        // ── Global Actions Formatting System ──
+        // Inject global action button overrides CSS
+        const globalStyle = document.createElement("style");
+        globalStyle.id = "global-action-overrides";
+        globalStyle.innerHTML = `
+            th:last-child, td:last-child {
+                min-width: 110px !important;
+                white-space: nowrap !important;
+                text-align: center !important;
+            }
+            .actions-cell, td div[style*="display: grid; grid-template-columns: repeat(2, 1fr)"] {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                width: auto !important;
+                margin: auto !important;
+            }
+            .act-btn {
+                width: 28px !important;
+                height: 28px !important;
+                border-radius: 50% !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border: 1px solid #cbd5e1 !important;
+                background: #ffffff !important;
+                color: #475569 !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease-in-out !important;
+                padding: 0 !important;
+                font-size: 14px !important;
+                margin: 0 !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            }
+            .act-btn i {
+                font-size: 14px !important;
+                line-height: 1 !important;
+                display: inline-block !important;
+            }
+            .act-btn:hover {
+                transform: translateY(-1px) !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+            }
+            .act-btn[title="Edit"]:hover {
+                background: #0284c7 !important;
+                color: #ffffff !important;
+                border-color: #0284c7 !important;
+            }
+            .act-btn[title="History"]:hover,
+            .act-btn[title="View Log"]:hover {
+                background: #64748b !important;
+                color: #ffffff !important;
+                border-color: #64748b !important;
+            }
+            .act-btn-del:hover,
+            .act-btn[title="Delete"]:hover {
+                background: #ef4444 !important;
+                color: #ffffff !important;
+                border-color: #ef4444 !important;
+            }
+            .act-btn[title="Assign"]:hover {
+                background: #10b981 !important;
+                color: #ffffff !important;
+                border-color: #10b981 !important;
+            }
+            .act-btn[title="Transfer"]:hover {
+                background: #f59e0b !important;
+                color: #ffffff !important;
+                border-color: #f59e0b !important;
+            }
+            .act-btn[title="Approve Delete"]:hover {
+                background: #10b981 !important;
+                color: #ffffff !important;
+                border-color: #10b981 !important;
+            }
+            .act-btn:disabled {
+                opacity: 0.4 !important;
+                cursor: not-allowed !important;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+        `;
+        document.head.appendChild(globalStyle);
+
+        // Run replacing logic
+        function replaceEmojisWithIcons() {
+            document.querySelectorAll(".act-btn").forEach(btn => {
+                if (btn.querySelector("i")) return;
+
+                const title = (btn.getAttribute("title") || "").toLowerCase();
+                const text = btn.textContent.trim();
+
+                let iconClass = "";
+                if (title === "edit" || text === "✏️") {
+                    iconClass = "ti ti-edit";
+                } else if (title === "history" || title === "view log" || text === "🕒") {
+                    iconClass = "ti ti-history";
+                } else if (title === "delete" || text === "🗑️") {
+                    iconClass = "ti ti-trash";
+                } else if (title === "assign" || text === "👤") {
+                    iconClass = "ti ti-user-plus";
+                } else if (title === "transfer" || text === "🔄") {
+                    iconClass = "ti ti-refresh";
+                } else if (title === "approve delete" || text === "✅") {
+                    iconClass = "ti ti-check";
+                } else if (title.includes("view") || text === "📄") {
+                    iconClass = "ti ti-file-text";
+                }
+
+                if (iconClass) {
+                    btn.innerHTML = `<i class="${iconClass}"></i>`;
+                }
+            });
+        }
+
+        // Run immediately
+        replaceEmojisWithIcons();
+
+        // Setup observer
+        const observer = new MutationObserver(() => {
+            replaceEmojisWithIcons();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
     });
 })();
