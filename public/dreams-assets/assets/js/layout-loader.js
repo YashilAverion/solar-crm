@@ -1033,6 +1033,17 @@
         });
         tooltipObserver.observe(document.body, { childList: true, subtree: true });
 
+        // Hide table-toolbar on Products page specifically (user requested as filters already exist in modal)
+        if (window.location.pathname === "/products.html") {
+            const prodStyle = document.createElement("style");
+            prodStyle.innerHTML = `
+                .content-area > .table-toolbar {
+                    display: none !important;
+                }
+            `;
+            document.head.appendChild(prodStyle);
+        }
+
         // Run replacing logic
         function replaceEmojisWithIcons() {
             document.querySelectorAll(".act-btn").forEach(btn => {
