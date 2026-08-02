@@ -956,8 +956,76 @@
                 border-color: #c11a06 !important;
                 color: #ffffff !important;
             }
+
+            /* Override Bootstrap Row/Col Stats Cards to be snug (Product Master, etc.) */
+            .content > .row.g-3.mb-3, .content > .row.mb-3 {
+                margin-bottom: 8px !important;
+                gap: 8px !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+            }
+            .content > .row.g-3.mb-3 > div[class*="col-"], .content > .row.mb-3 > div[class*="col-"] {
+                flex: 1 !important;
+                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .content > .row.g-3.mb-3 .card, .content > .row.mb-3 .card {
+                border-radius: 8px !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01) !important;
+                margin-bottom: 0 !important;
+            }
+            .content > .row.g-3.mb-3 .card-body, .content > .row.mb-3 .card-body {
+                padding: 8px 12px !important;
+            }
+            .content > .row.g-3.mb-3 .card-body h3, .content > .row.mb-3 .card-body h3 {
+                font-size: 18px !important;
+                font-weight: 700 !important;
+                color: #1e293b !important;
+                margin: 0 !important;
+                line-height: 1.1 !important;
+            }
+            .content > .row.g-3.mb-3 .card-body span.fs-12, .content > .row.mb-3 .card-body span.fs-12 {
+                font-size: 10px !important;
+                font-weight: 700 !important;
+                color: #64748b !important;
+                text-transform: uppercase !important;
+                margin-bottom: 2px !important;
+                display: inline-block !important;
+            }
+            .content > .row.g-3.mb-3 .card-body span.fs-11, .content > .row.mb-3 .card-body span.fs-11 {
+                font-size: 11px !important;
+                color: #94a3b8 !important;
+                margin-top: 1px !important;
+                display: inline-block !important;
+            }
+            .content > .row.g-3.mb-3 .card-body .d-flex.align-items-center.justify-content-between,
+            .content > .row.mb-3 .card-body .d-flex.align-items-center.justify-content-between {
+                margin-bottom: 2px !important;
+            }
+
+            /* Product Name & Manufacturer Columns Ellipsis truncation to prevent overlap & allow no-scroll fitting */
+            .cell-wrap-prod, .cell-wrap-mfg, td[data-col="col_name"], td[data-col="col_mfg"] {
+                max-width: 160px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
         `;
         document.head.appendChild(globalStyle);
+
+        // Global lightweight MutationObserver to automatically attach hover tooltips to text cells
+        const tooltipObserver = new MutationObserver(() => {
+            document.querySelectorAll("table td").forEach(td => {
+                if (td.children.length === 0 || (td.children.length === 1 && td.children[0].tagName === "SPAN")) {
+                    if (!td.getAttribute("title") && td.innerText.trim().length > 0) {
+                        td.setAttribute("title", td.innerText.trim());
+                    }
+                }
+            });
+        });
+        tooltipObserver.observe(document.body, { childList: true, subtree: true });
 
         // Run replacing logic
         function replaceEmojisWithIcons() {
