@@ -1,6 +1,19 @@
 (function () {
     "use strict";
 
+    // Centralized Search Input Bridge to prevent null crashes and enable global search filtering
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        let el = originalGetElementById.apply(this, arguments);
+        if (!el && (id === 'globalSearch' || id === 'searchInput' || id === 'txtSearch')) {
+            el = originalGetElementById.call(this, 'globalOmniSearch') || 
+                 document.querySelector('.search-wrap input') || 
+                 document.querySelector('.header-search input');
+        }
+        return el;
+    };
+
+
     // Dynamically insert theme-script.js in head synchronously during parsing
     if (!document.querySelector('script[src*="theme-script.js"]')) {
         const themeScript = document.createElement("script");
