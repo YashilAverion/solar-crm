@@ -260,12 +260,7 @@
             document.body.appendChild(userProfileInput);
         }
 
-        // 3. Create the new wrapper structure
-        const mainWrapperDiv = document.createElement("div");
-        mainWrapperDiv.className = "main-wrapper";
 
-        // Inject header and sidebar inside mainWrapper
-        mainWrapperDiv.innerHTML = headerHtml + sidebarHtml;
 
         // Remove old sidebar and topbar elements from DOM (keep topbar for a second to extract actions)
         if (oldSidebar) oldSidebar.remove();
