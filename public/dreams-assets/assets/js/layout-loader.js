@@ -6,7 +6,7 @@
     document.getElementById = function(id) {
         let el = originalGetElementById.apply(this, arguments);
         if (!el && (id === 'globalSearch' || id === 'searchInput' || id === 'txtSearch')) {
-            el = originalGetElementById.call(this, 'globalOmniSearch') || 
+            el = originalGetElementById.call(this, 'globalOmniSearchInput') || 
                  document.querySelector('.search-wrap input') || 
                  document.querySelector('.header-search input');
         }
@@ -118,44 +118,24 @@
                     <li>
                         <ul>
                             <li class="submenu">
-                                <a href="javascript:void(0);"><i class="ti ti-list-check"></i><span>Ares & Gill's</span><span class="menu-arrow"></span></a>
+                                <a href="javascript:void(0);"><i class="ti ti-folder-check"></i><span>Ares & Gill's</span><span class="menu-arrow"></span></a>
                                 <ul>
-                                    <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);">Employees Mgmt<span class="menu-arrow inside-submenu"></span></a>
-                                        <ul>
-                                            <li><a href="/attendance.html" class="menu-item-link" id="nav-emp-employees">Employees</a></li>
-                                            <li><a href="/attendance.html#leave" class="menu-item-link" id="nav-emp-leave">Leave</a></li>
-                                            <li><a href="/attendance.html#timesheets" class="menu-item-link" id="nav-emp-timesheets">Timesheets</a></li>
-                                        </ul>
-                                    </li>
-                                    <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);">Payroll Processing<span class="menu-arrow inside-submenu"></span></a>
-                                        <ul>
-                                            <li><a href="/attendance.html#pay" class="menu-item-link" id="nav-pay-employee">Pay Employees</a></li>
-                                            <li><a href="/attendance.html#super" class="menu-item-link" id="nav-superannuation">Superannuation</a></li>
-                                        </ul>
-                                    </li>
+                                    <li><a href="/attendance.html" class="menu-item-link" id="nav-emp-employees">Employees</a></li>
+                                    <li><a href="/attendance.html#leave" class="menu-item-link" id="nav-emp-leave">Leaves</a></li>
+                                    <li><a href="/attendance.html#timesheets" class="menu-item-link" id="nav-emp-timesheets">Timesheets</a></li>
+                                    <li><a href="/attendance.html#pay" class="menu-item-link" id="nav-emp-pay">Pay Employee</a></li>
+                                    <li><a href="/attendance.html#super" class="menu-item-link" id="nav-emp-super">Superannuation</a></li>
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"><i class="ti ti-list-check"></i><span>Averion Global</span><span class="menu-arrow"></span></a>
+                                <a href="javascript:void(0);"><i class="ti ti-file-text"></i><span>Averion Global</span><span class="menu-arrow"></span></a>
                                 <ul>
-                                    <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);">Employees Mgmt<span class="menu-arrow inside-submenu"></span></a>
-                                        <ul>
-                                            <li><a href="/attendance.html#averion-employees" class="menu-item-link" id="nav-averion-employees">Employees</a></li>
-                                            <li><a href="/attendance.html#averion-leave" class="menu-item-link" id="nav-averion-leave">Leave</a></li>
-                                            <li><a href="/attendance.html#averion-timesheets" class="menu-item-link" id="nav-averion-timesheets">Timesheets</a></li>
-                                        </ul>
-                                    </li>
-                                    <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);">Payroll Processing<span class="menu-arrow inside-submenu"></span></a>
-                                        <ul>
-                                            <li><a href="/attendance.html#averion-pay" class="menu-item-link" id="nav-averion-pay">Pay Employees</a></li>
-                                            <li><a href="/attendance.html#averion-pt" class="menu-item-link" id="nav-averion-pt">Professional Tax</a></li>
-                                            <li><a href="/attendance.html#averion-tax-slab" class="menu-item-link" id="nav-averion-tax-slab">Income Tax Slab</a></li>
-                                        </ul>
-                                    </li>
+                                    <li><a href="/attendance.html#averion-employees" class="menu-item-link" id="nav-averion-employees">Employees</a></li>
+                                    <li><a href="/attendance.html#averion-leave" class="menu-item-link" id="nav-averion-leave">Leaves</a></li>
+                                    <li><a href="/attendance.html#averion-timesheets" class="menu-item-link" id="nav-averion-timesheets">Timesheets</a></li>
+                                    <li><a href="/attendance.html#averion-pay" class="menu-item-link" id="nav-averion-pay">Pay Employee</a></li>
+                                    <li><a href="/attendance.html#averion-pt" class="menu-item-link" id="nav-averion-pt">PT Slab</a></li>
+                                    <li><a href="/attendance.html#averion-tax-slab" class="menu-item-link" id="nav-averion-tax-slab">Income Tax Slab</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -166,7 +146,6 @@
     </div>
     `;
 
-    // Topbar header HTML template
     const headerHtml = `
     <header class="navbar-header">
         <div class="page-container topbar-menu">
@@ -201,6 +180,9 @@
             </div>
 
             <div class="d-flex align-items-center">
+                <!-- Page Actions Container -->
+                <div id="pageActionButtonsContainer" class="d-flex align-items-center gap-2 me-3"></div>
+
                 <!-- Minimize -->
                 <div class="header-item">
                     <div class="dropdown me-2">
@@ -218,21 +200,21 @@
                 <!-- User Dropdown -->
                 <div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
                     <a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
-                        <div class="avatar avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" id="headerUserAvatar" style="width: 38px; height: 38px; font-weight:700;">U</div>
-                        <span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+                        <div class="user-info d-flex align-items-center">
+                            <span class="avatar avatar-md rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" id="headerUserAvatar" style="width: 38px; height: 38px; font-size: 13px;">SU</span>
+                        </div>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
-                        <div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
-                            <div class="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" id="dropdownUserAvatar" style="width:42px; height:42px; font-weight:700;">U</div>
+                    <div class="dropdown-menu dropdown-menu-end p-0">
+                        <div class="d-flex align-items-center p-3 border-bottom rounded-top">
+                            <span class="avatar avatar-lg rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" id="dropdownUserAvatar" style="width: 48px; height: 48px; font-size: 16px;">SU</span>
                             <div class="ms-2">
-                                <p class="fw-medium text-dark mb-0" id="dropdownUserName">Loading...</p>
-                                <span class="d-block fs-13 text-muted" id="dropdownUserRole">...</span>
+                                <h6 class="mb-0 text-dark fw-bold" id="dropdownUserName">System User</h6>
+                                <span class="fs-12 text-muted" id="dropdownUserRole">Standard Role</span>
                             </div>
                         </div>
-                        <div class="pt-2 mt-2 border-top">
-                            <a href="/logout" class="dropdown-item text-danger">
-                                <i class="ti ti-logout me-1 fs-17 align-middle"></i>
-                                <span class="align-middle">Sign Out</span>
+                        <div class="p-1">
+                            <a class="dropdown-item d-flex align-items-center p-2 rounded" href="/logout" style="color: #ef4444;">
+                                <i class="ti ti-logout me-2"></i>Logout
                             </a>
                         </div>
                     </div>
@@ -242,16 +224,8 @@
     </header>
     `;
 
-    // Wait until document is ready to rewrite layout
     document.addEventListener("DOMContentLoaded", function () {
-        // Move any body style tags to the head so they are preserved
-        document.body.querySelectorAll("style").forEach(styleEl => {
-            if (styleEl.parentElement !== document.head) {
-                document.head.appendChild(styleEl);
-            }
-        });
-
-        // Strip legacy layout overrides from inline style tags to prevent theme conflicts
+        // Strip legacy structural layout selectors to avoid overriding Dreams
         document.querySelectorAll("style").forEach(styleEl => {
             if (!styleEl.id) {
                 let css = styleEl.innerHTML;
@@ -275,7 +249,6 @@
         const pageTitleText = originalTitle ? originalTitle.innerText.split(" - ")[0] : "Solar CRM";
 
         // 2. Locate core content on the page
-        // If there's an existing .main-wrap, we pull its inner elements
         const oldMainWrap = document.querySelector(".main-wrap");
         const oldTopbar = document.querySelector(".topbar");
         const oldSidebar = document.querySelector(".sidebar");
@@ -287,9 +260,15 @@
             document.body.appendChild(userProfileInput);
         }
 
-        // Remove old sidebar and topbar elements from DOM
+        // 3. Create the new wrapper structure
+        const mainWrapperDiv = document.createElement("div");
+        mainWrapperDiv.className = "main-wrapper";
+
+        // Inject header and sidebar inside mainWrapper
+        mainWrapperDiv.innerHTML = headerHtml + sidebarHtml;
+
+        // Remove old sidebar and topbar elements from DOM (keep topbar for a second to extract actions)
         if (oldSidebar) oldSidebar.remove();
-        if (oldTopbar) oldTopbar.remove();
 
         // Target content container
         let contentContainer;
@@ -314,6 +293,22 @@
 
         // Inject header and sidebar inside mainWrapper
         mainWrapperDiv.innerHTML = headerHtml + sidebarHtml;
+
+        // Move page action buttons from old topbar into the new header container
+        const pageActionContainer = mainWrapperDiv.querySelector("#pageActionButtonsContainer");
+        if (oldTopbar && pageActionContainer) {
+            const actions = Array.from(oldTopbar.children).filter(child => {
+                return !child.classList.contains("topbar-title") && 
+                       !child.classList.contains("tb-spacer") && 
+                       !child.classList.contains("search-wrap");
+            });
+            actions.forEach(act => {
+                pageActionContainer.appendChild(act);
+            });
+        }
+
+        // Now safe to remove old topbar
+        if (oldTopbar) oldTopbar.remove();
 
         // Create page-wrapper & content wrapper
         const pageWrapperDiv = document.createElement("div");
