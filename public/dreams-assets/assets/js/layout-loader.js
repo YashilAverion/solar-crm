@@ -334,7 +334,7 @@
 
         // Create page-header container inside content
         const pageHeaderDiv = document.createElement("div");
-        pageHeaderDiv.className = "page-header mb-4 pb-3 border-bottom";
+        pageHeaderDiv.className = "page-header mb-2 pb-2 border-bottom";
         pageHeaderDiv.innerHTML = `
             <div class="row align-items-center">
                 <div class="col-sm-6">
@@ -696,12 +696,24 @@
                 background: #f8fafc !important;
             }
             .table tbody tr td {
-                padding: 8px 12px !important; /* SNUG PADDING FOR SPACE OPTIMIZATION */
-                font-size: 13px !important;
+                padding: 6px 10px !important; /* ULTRA SNUG PADDING FOR SPACE OPTIMIZATION */
+                font-size: 12.5px !important;
                 color: #334155 !important;
                 border-bottom: 1px solid #f1f5f9 !important;
                 vertical-align: middle !important;
                 font-weight: 500 !important;
+            }
+            /* Prevent wrapping on key metadata columns to maintain snug row heights */
+            .table td:nth-child(2),
+            .table td:nth-child(3),
+            .table td:nth-child(4),
+            .table td:nth-child(6),
+            .table td:nth-child(9),
+            .table td:nth-child(10),
+            .table td:nth-child(11),
+            .table td:nth-child(12),
+            .table th {
+                white-space: nowrap !important;
             }
             .table tbody tr:last-child td {
                 border-bottom: none !important;
@@ -790,23 +802,24 @@
             /* Stats Cards Styling Override */
             .stats-row {
                 display: grid !important;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-                gap: 16px !important;
-                padding: 16px 24px 8px !important;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+                gap: 8px !important;
+                padding: 8px 12px 4px !important;
                 background: #f8fafc !important;
+                margin-bottom: 8px !important;
             }
             .stat-card {
                 background: #ffffff !important;
-                border-radius: 12px !important;
-                padding: 18px 20px !important;
+                border-radius: 8px !important;
+                padding: 8px 12px !important;
                 border: 1px solid #e2e8f0 !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02) !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01) !important;
                 position: relative !important;
                 overflow: hidden !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
-                min-height: 80px !important;
+                min-height: 54px !important;
                 transition: all 0.2s ease !important;
             }
             .stat-card::before {
@@ -818,24 +831,39 @@
                 border-color: #cbd5e1 !important;
             }
             .stat-label {
-                font-size: 11px !important;
+                font-size: 10px !important;
                 font-weight: 700 !important;
                 color: #64748b !important;
                 text-transform: uppercase !important;
-                letter-spacing: 0.6px !important;
-                margin-bottom: 6px !important;
+                letter-spacing: 0.5px !important;
+                margin-bottom: 2px !important;
             }
             .stat-val {
-                font-size: 24px !important;
+                font-size: 18px !important;
                 font-weight: 700 !important;
                 color: #1e293b !important;
                 margin: 0 !important;
                 letter-spacing: -0.5px !important;
+                line-height: 1.1 !important;
             }
             .stat-sub {
-                font-size: 12px !important;
+                font-size: 11px !important;
                 color: #94a3b8 !important;
-                margin-top: 4px !important;
+                margin-top: 1px !important;
+            }
+            
+            /* Content and Toolbar Space Optimization Overrides */
+            .content {
+                padding: 12px 16px 0 !important;
+            }
+            .table-toolbar {
+                padding: 4px 8px !important;
+                margin-bottom: 6px !important;
+                gap: 4px !important;
+            }
+            .filter-chip {
+                padding: 2px 8px !important;
+                font-size: 11.5px !important;
             }
             
             /* Status Badges */
