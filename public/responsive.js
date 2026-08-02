@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupHamburgerMenu() {
+    if (document.querySelector('script[src*="layout-loader.js"]') || document.querySelector('.main-wrapper')) return;
     const topbar = document.querySelector('.topbar');
     const sidebar = document.querySelector('.sidebar');
     
@@ -85,6 +86,7 @@ function setupHamburgerMenu() {
 }
 
 async function setupLayoutPreferences() {
+    if (document.querySelector('script[src*="layout-loader.js"]') || document.querySelector('.main-wrapper')) return;
     const topbar = document.querySelector('.topbar');
     if (!topbar) return;
 
@@ -320,6 +322,7 @@ async function enforceSidebarPermissions() {
    PREMIUM FLOATING HEADER WIDGETS & THEMING LOGIC
    ========================================================================== */
 async function setupPremiumHeader() {
+    if (document.querySelector('script[src*="layout-loader.js"]') || document.querySelector('.main-wrapper')) return;
     const topbar = document.querySelector('.topbar');
     if (!topbar) return;
 

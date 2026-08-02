@@ -231,6 +231,17 @@
 
     // Wait until document is ready to rewrite layout
     document.addEventListener("DOMContentLoaded", function () {
+        // Strip legacy layout overrides from inline style tags to prevent theme conflicts
+        document.querySelectorAll("style").forEach(styleEl => {
+            if (!styleEl.id) {
+                let css = styleEl.innerHTML;
+                css = css.replace(/\*\s*\{\s*box-sizing:\s*border-box;\s*margin:\s*0;\s*padding:\s*0;\s*\}/g, '');
+                css = css.replace(/body\s*\{\s*font-family:\s*['"]Golos\s*Text['"],[\s\S]+?color:\s*var\(--text-dark\);\s*\}/g, '');
+                css = css.replace(/\/\*\s*=+\s*SIDEBAR\s*=+\s*\*\/[\s\S]+?(?=\/\*\s*=+\s*(?:STATS ROW|CONTENT AREA & TOOLBAR)\s*=+\s*\*\/)/g, '');
+                styleEl.innerHTML = css;
+            }
+        });
+
         // 1. Get original page title
         const originalTitle = document.getElementById("pageTitle") || document.querySelector("title");
         const pageTitleText = originalTitle ? originalTitle.innerText.split(" - ")[0] : "Solar CRM";

@@ -71,7 +71,12 @@
             });
         };
 
-        // Avoid duplicate injection
+        // Avoid duplicate injection and return early if using the new Dreams layout loader
+        if (document.querySelector('script[src*="layout-loader.js"]') || document.querySelector('.main-wrapper')) {
+            console.log("[Timezone Helper] New layout loader detected. Bypassing legacy overrides.");
+            return;
+        }
+
         if (document.querySelector('.notification-container') || document.getElementById('crm-dynamic-brand-styles')) return;
 
         const topbar = document.querySelector('.topbar');
