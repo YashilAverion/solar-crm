@@ -446,97 +446,124 @@
         }
 
         // 4. Handle active menu state selection based on path + hash
-        const currentPath = window.location.pathname;
-        const currentHash = window.location.hash;
-        
-        let targetLinkId = "";
+        function updateSidebarHighlightState() {
+            const currentPath = window.location.pathname;
+            const currentHash = window.location.hash;
+            let targetLinkId = "";
 
-        // Determine link id
-        if (currentPath === "/home.html") {
-            targetLinkId = "nav-home";
-        } else if (currentPath === "/dashboard_sales.html") {
-            targetLinkId = "nav-dash-sales";
-        } else if (currentPath === "/dashboard_installation.html") {
-            targetLinkId = "nav-dash-inst";
-        } else if (currentPath === "/dashboard_service.html") {
-            targetLinkId = "nav-dash-serv";
-        } else if (currentPath === "/dashboard_ares_installation.html") {
-            targetLinkId = "nav-dash-ares";
-        } else if (currentPath === "/" || currentPath === "/index.html") {
-            targetLinkId = "nav-master-leads";
-        } else if (currentPath === "/delete_leads.html") {
-            targetLinkId = "nav-delete-leads";
-        } else if (currentPath === "/duplicate_leads.html") {
-            targetLinkId = "nav-duplicate-leads";
-        } else if (currentPath === "/lead_approvals.html") {
-            targetLinkId = "nav-lead-approvals";
-        } else if (currentPath === "/project_leads.html") {
-            targetLinkId = "nav-project-leads";
-        } else if (currentPath === "/products.html") {
-            targetLinkId = "nav-product-master";
-        } else if (currentPath === "/combo_master.html") {
-            targetLinkId = "nav-combo-master";
-        } else if (currentPath === "/email_templates.html") {
-            targetLinkId = "nav-email-templates";
-        } else if (currentPath === "/stc_master.html") {
-            targetLinkId = "nav-stc-master";
-        } else if (currentPath === "/rebate_live_master.html") {
-            targetLinkId = "nav-rebate-master";
-        } else if (currentPath === "/margin_master.html") {
-            targetLinkId = "nav-margin-master";
-        } else if (currentPath === "/installation_charges.html") {
-            targetLinkId = "nav-install-charges";
-        } else if (currentPath === "/installations.html") {
-            targetLinkId = "nav-installations";
-        } else if (currentPath === "/outstanding_payments.html") {
-            targetLinkId = "nav-out-pay";
-        } else if (currentPath === "/paid_payments.html") {
-            targetLinkId = "nav-paid-pay";
-        } else if (currentPath === "/company_details.html") {
-            targetLinkId = "nav-company-details";
-        } else if (currentPath === "/admin.html") {
-            targetLinkId = "nav-user-mgmt";
-        } else if (currentPath === "/attendance.html") {
-            // Check hash values for attendance
-            if (currentHash === "#leave") {
-                targetLinkId = "nav-emp-leave";
-            } else if (currentHash === "#timesheets") {
-                targetLinkId = "nav-emp-timesheets";
-            } else if (currentHash === "#pay") {
-                targetLinkId = "nav-emp-pay";
-            } else if (currentHash === "#super") {
-                targetLinkId = "nav-emp-super";
-            } else if (currentHash === "#averion-employees") {
-                targetLinkId = "nav-averion-employees";
-            } else if (currentHash === "#averion-leave") {
-                targetLinkId = "nav-averion-leave";
-            } else if (currentHash === "#averion-timesheets") {
-                targetLinkId = "nav-averion-timesheets";
-            } else if (currentHash === "#averion-pay") {
-                targetLinkId = "nav-averion-pay";
-            } else if (currentHash === "#averion-pt") {
-                targetLinkId = "nav-averion-pt";
-            } else if (currentHash === "#averion-tax-slab") {
-                targetLinkId = "nav-averion-tax-slab";
-            } else {
-                targetLinkId = "nav-emp-employees";
-            }
-        }
-
-        if (targetLinkId) {
-            const activeEl = document.getElementById(targetLinkId);
-            if (activeEl) {
-                activeEl.classList.add("active");
-                if (activeEl.parentElement) {
-                    activeEl.parentElement.classList.add("active");
+            // Determine link id
+            if (currentPath === "/home.html") {
+                targetLinkId = "nav-home";
+            } else if (currentPath === "/dashboard_sales.html") {
+                targetLinkId = "nav-dash-sales";
+            } else if (currentPath === "/dashboard_installation.html") {
+                targetLinkId = "nav-dash-inst";
+            } else if (currentPath === "/dashboard_service.html") {
+                targetLinkId = "nav-dash-serv";
+            } else if (currentPath === "/dashboard_ares_installation.html") {
+                targetLinkId = "nav-dash-ares";
+            } else if (currentPath === "/" || currentPath === "/index.html") {
+                targetLinkId = "nav-master-leads";
+            } else if (currentPath === "/delete_leads.html") {
+                targetLinkId = "nav-delete-leads";
+            } else if (currentPath === "/duplicate_leads.html") {
+                targetLinkId = "nav-duplicate-leads";
+            } else if (currentPath === "/lead_approvals.html") {
+                targetLinkId = "nav-lead-approvals";
+            } else if (currentPath === "/project_leads.html") {
+                targetLinkId = "nav-project-leads";
+            } else if (currentPath === "/products.html") {
+                targetLinkId = "nav-product-master";
+            } else if (currentPath === "/combo_master.html") {
+                targetLinkId = "nav-combo-master";
+            } else if (currentPath === "/email_templates.html") {
+                targetLinkId = "nav-email-templates";
+            } else if (currentPath === "/stc_master.html") {
+                targetLinkId = "nav-stc-master";
+            } else if (currentPath === "/rebate_live_master.html") {
+                targetLinkId = "nav-rebate-master";
+            } else if (currentPath === "/margin_master.html") {
+                targetLinkId = "nav-margin-master";
+            } else if (currentPath === "/installation_charges.html") {
+                targetLinkId = "nav-install-charges";
+            } else if (currentPath === "/installations.html") {
+                targetLinkId = "nav-installations";
+            } else if (currentPath === "/outstanding_payments.html") {
+                targetLinkId = "nav-out-pay";
+            } else if (currentPath === "/paid_payments.html") {
+                targetLinkId = "nav-paid-pay";
+            } else if (currentPath === "/company_details.html") {
+                targetLinkId = "nav-company-details";
+            } else if (currentPath === "/admin.html") {
+                targetLinkId = "nav-user-mgmt";
+            } else if (currentPath === "/attendance.html") {
+                // Check hash values for attendance
+                if (currentHash === "#leave") {
+                    targetLinkId = "nav-emp-leave";
+                } else if (currentHash === "#timesheets") {
+                    targetLinkId = "nav-emp-timesheets";
+                } else if (currentHash === "#pay") {
+                    targetLinkId = "nav-emp-pay";
+                } else if (currentHash === "#super") {
+                    targetLinkId = "nav-emp-super";
+                } else if (currentHash === "#averion-employees") {
+                    targetLinkId = "nav-averion-employees";
+                } else if (currentHash === "#averion-leave") {
+                    targetLinkId = "nav-averion-leave";
+                } else if (currentHash === "#averion-timesheets") {
+                    targetLinkId = "nav-averion-timesheets";
+                } else if (currentHash === "#averion-pay") {
+                    targetLinkId = "nav-averion-pay";
+                } else if (currentHash === "#averion-pt") {
+                    targetLinkId = "nav-averion-pt";
+                } else if (currentHash === "#averion-tax-slab") {
+                    targetLinkId = "nav-averion-tax-slab";
+                } else {
+                    targetLinkId = "nav-emp-employees";
                 }
-                console.log("ANTIGRAVITY_LOG: Successfully added 'active' class to element and parent list item:", targetLinkId);
-            } else {
-                console.log("ANTIGRAVITY_LOG: Failed to find element with ID:", targetLinkId);
             }
-        } else {
-            console.log("ANTIGRAVITY_LOG: No targetLinkId determined for path:", currentPath);
+
+            // Remove active classes from all links & list items in the sidebar
+            document.querySelectorAll("#sidebar-menu a").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll("#sidebar-menu li").forEach(el => el.classList.remove("active"));
+
+            if (targetLinkId) {
+                const activeEl = document.getElementById(targetLinkId);
+                if (activeEl) {
+                    activeEl.classList.add("active");
+                    const parentLi = activeEl.parentElement;
+                    if (parentLi) {
+                        parentLi.classList.add("active");
+                    }
+                    
+                    // Traverse up to open all parent submenus
+                    let parentSubmenu = activeEl.closest(".submenu");
+                    while (parentSubmenu) {
+                        parentSubmenu.classList.add("active");
+                        const submenuLink = parentSubmenu.querySelector("a");
+                        if (submenuLink) {
+                            submenuLink.classList.add("subdrop");
+                        }
+                        const submenuUl = parentSubmenu.querySelector("ul");
+                        if (submenuUl) {
+                            submenuUl.style.display = "block";
+                        }
+                        parentSubmenu = parentSubmenu.parentElement ? parentSubmenu.parentElement.closest(".submenu") : null;
+                    }
+                    console.log("ANTIGRAVITY_LOG: Successfully added 'active' class to element and parent list item:", targetLinkId);
+                } else {
+                    console.log("ANTIGRAVITY_LOG: Failed to find element with ID:", targetLinkId);
+                }
+            } else {
+                console.log("ANTIGRAVITY_LOG: No targetLinkId determined for path:", currentPath);
+            }
         }
+
+        // Run immediately on page load
+        updateSidebarHighlightState();
+
+        // Listen for dynamic hash routing changes
+        window.addEventListener("hashchange", updateSidebarHighlightState);
 
         // 5. Fetch Logged-in User Session Details
         (async function fetchSessionUser() {
