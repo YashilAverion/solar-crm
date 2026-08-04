@@ -211,20 +211,20 @@
         .xero-ts-table tbody td.td-hours { text-align: right; padding-right: 20px; font-weight: 700; color: var(--text-dark); }
 
         /* ========== TIMESHEET SPREADSHEET (Premium Modern Style) ========== */
-        .ts-sheet-panel { display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 24px; overflow: clip; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
+        .ts-sheet-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px; overflow: clip; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
         .ts-sheet-panel.open { display: block; }
-        .ts-sheet-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 10px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+        .ts-sheet-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 10px 16px; background: #f8fafc; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
         .ts-sheet-toolbar .ts-field { display: flex; flex-direction: column; gap: 4px; }
-        .ts-sheet-toolbar .ts-field label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ts-sheet-toolbar .ts-field label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .ts-sheet-toolbar .ts-field select,
-        .ts-sheet-toolbar .ts-field input { height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 9px; font-size: 12px; font-weight: 500; font-family: inherit; color: #1e293b; background: #fff; min-width: 115px; outline: none; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .ts-sheet-toolbar .ts-field input { height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 9px; font-size: 12px; font-weight: 500; font-family: inherit; color: var(--text-dark); background: var(--surface); min-width: 115px; outline: none; transition: all 0.2s; box-shadow: none; }
         .ts-sheet-toolbar .ts-field select { min-width: 165px; }
         .ts-sheet-toolbar .ts-field select:focus,
-        .ts-sheet-toolbar .ts-field input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-        .ts-grid-wrap { overflow: auto; max-height: calc(100vh - 262px); border-bottom: 1px solid #e2e8f0; }
+        .ts-sheet-toolbar .ts-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
+        .ts-grid-wrap { overflow: auto; max-height: calc(100vh - 262px); border-bottom: 1px solid var(--border); }
         .ts-grid { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'Inter', system-ui, sans-serif; }
         .ts-grid thead { position: sticky; top: 0; z-index: 3; }
-        .ts-grid tr.col-titles th { background: #0f172a; color: #f8fafc; font-size: 9px; font-weight: 700; padding: 7px 4px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #1e293b; text-align: center; white-space: nowrap; }
+        .ts-grid tr.col-titles th { background: #f8fafc; color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 7px 4px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; white-space: nowrap; }
         .ts-grid tr.col-titles th.wide { min-width: 100px; }
         /* Column min-widths to prevent text/digit clipping */
         .ts-grid tr.col-titles th:nth-child(1) { min-width: 38px; }  /* Week */
@@ -243,8 +243,8 @@
         .ts-grid tr.col-titles th:nth-child(15),
         .ts-grid tr.col-titles th:nth-child(16) { min-width: 68px; } /* Addl/Total/Weekly */
         .ts-grid tbody td { padding: 1px 2px; border-bottom: 1px solid #f1f5f9; text-align: center; vertical-align: middle; white-space: nowrap; height: 30px; font-size: 11px; background: #fff; color: #334155; }
-        .ts-grid tbody td input[type="text"] { width: 100%; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 500; background: #fff; outline: none; color: #334155; transition: all 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); box-sizing: border-box; }
-        .ts-grid tbody td input[type="text"]:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
+        .ts-grid tbody td input[type="text"] { width: 100%; height: 24px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 11px; font-weight: 500; background: #fff; outline: none; color: #334155; transition: all 0.2s; box-shadow: none; box-sizing: border-box; }
+        .ts-grid tbody td input[type="text"]:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
         .ts-grid tbody td input[type="text"]::placeholder { color: #cbd5e1; }
         /* Full-width inputs — no more digit clipping */
         .ts-grid tbody td input.gi,
@@ -271,8 +271,8 @@
             width: 100% !important;
             min-width: 98px !important;
             height: 24px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
             padding: 0 2px;
             font-size: 11px;
             font-weight: 500;
@@ -280,14 +280,14 @@
             outline: none;
             color: #334155;
             cursor: pointer;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+            box-shadow: none;
             transition: all 0.2s;
             text-align: center !important;
             text-align-last: center !important;
         }
         .ts-grid tbody td select.grm:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(228,31,7,0.1);
         }
         .save-status {
             display: block;
@@ -297,7 +297,7 @@
             font-weight: 500;
         }
         .ts-grid tbody td.ro { background: #f8fafc !important; color: #64748b; font-weight: 500; }
-        .ts-grid tbody td.calc { background: #eff6ff !important; color: #1e40af; font-weight: 600; }
+        .ts-grid tbody td.calc { background: #fff2f0 !important; color: #b91c1c; font-weight: 600; }
         .ts-grid tbody td.smry { background: #ecfdf5 !important; color: #065f46; font-weight: 700; }
         .ts-grid tbody tr.sat td { background: #f8fafc; }
         .ts-grid tbody tr.sat td.ro { background: #f1f5f9 !important; }
@@ -425,11 +425,11 @@
         /* Custom highlight for focused cells/inputs */
         .ts-grid tbody td input:focus,
         .ts-grid tbody td select.grm:focus {
-            border-color: #3b82f6 !important;
-            background-color: #fef08a !important; /* highlight yellow */
-            color: #000 !important;
+            border-color: var(--primary) !important;
+            background-color: #fff2f0 !important; /* highlight light red */
+            color: var(--text-dark) !important;
             font-weight: 600 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4) !important;
+            box-shadow: 0 0 0 2px rgba(228,31,7,0.2) !important;
         }
 
         /* Override total time cell background to inherit default row background (remove blue) */
