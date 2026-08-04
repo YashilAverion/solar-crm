@@ -8498,13 +8498,15 @@ function deletePayrollRecord(id) {
 let lastSelectedPayrollIdx = -1;
 
 function initPayrollKeyboardNavigation() {
-    const historyBody = document.getElementById('payrollHistoryBody');
-    if (!historyBody) return;
-    
-    // Keydown navigation & Shift-based multiselection
-    historyBody.addEventListener('keydown', (e) => {
-        const activeRow = document.activeElement;
-        if (!activeRow || !activeRow.classList.contains('payroll-row')) return;
+    document.addEventListener('keydown', (e) => {
+        // Only run if active view is payroll (#pay)
+        if (window.location.hash !== '#pay') return;
+        
+        const activeRow = document.activeElement ? document.activeElement.closest('.payroll-row') : null;
+        if (!activeRow) return;
+        
+        const historyBody = document.getElementById('payrollHistoryBody');
+        if (!historyBody) return;
         
         const rows = Array.from(historyBody.querySelectorAll('.payroll-row'));
         const idx = rows.indexOf(activeRow);
@@ -8523,7 +8525,6 @@ function initPayrollKeyboardNavigation() {
                         checkbox.checked = true;
                         updatePayrollRowStyle(nextRow, true);
                     }
-                    // Also make sure active row is checked
                     const activeCheckbox = activeRow.querySelector('.payroll-row-checkbox');
                     if (activeCheckbox) {
                         activeCheckbox.checked = true;
@@ -8546,7 +8547,6 @@ function initPayrollKeyboardNavigation() {
                         checkbox.checked = true;
                         updatePayrollRowStyle(prevRow, true);
                     }
-                    // Also make sure active row is checked
                     const activeCheckbox = activeRow.querySelector('.payroll-row-checkbox');
                     if (activeCheckbox) {
                         activeCheckbox.checked = true;
@@ -8577,15 +8577,17 @@ function updatePayrollRowStyle(row, isChecked) {
 }
 
 function handlePayrollRowClick(e, tr) {
-    if (e.target.closest('button') || e.target.closest('input[type="checkbox"]') || e.target.closest('svg')) {
+    // Focus the row immediately so keyboard navigation catches it
+    tr.focus();
+    
+    if (e.target.closest('button') || e.target.closest('svg')) {
         return;
     }
     
+    const isCheckbox = e.target.closest('input[type="checkbox"]');
     const historyBody = document.getElementById('payrollHistoryBody');
     const rows = Array.from(historyBody.querySelectorAll('.payroll-row'));
     const idx = rows.indexOf(tr);
-    
-    tr.focus();
     
     if (e.shiftKey && lastSelectedPayrollIdx !== -1) {
         e.preventDefault();
@@ -8602,6 +8604,19 @@ function handlePayrollRowClick(e, tr) {
         updatePayrollBulkDeleteButton();
     } else {
         lastSelectedPayrollIdx = idx;
+        if (!isCheckbox) {
+            // Toggle current row checkbox if they clicked the row text
+            const checkbox = tr.querySelector('.payroll-row-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updatePayrollRowStyle(tr, checkbox.checked);
+                updatePayrollBulkDeleteButton();
+            }
+        } else {
+            // Just update style if they clicked checkbox directly
+            updatePayrollRowStyle(tr, isCheckbox.checked);
+            updatePayrollBulkDeleteButton();
+        }
     }
 }
 
