@@ -419,7 +419,9 @@
             const actions = Array.from(oldTopbar.children).filter(child => {
                 return !child.classList.contains("topbar-title") && 
                        !child.classList.contains("tb-spacer") && 
-                       !child.classList.contains("search-wrap");
+                       !child.classList.contains("search-wrap") &&
+                       !child.classList.contains("user-profile") &&
+                       child.id !== "currentUserDisplay";
             });
             actions.forEach(act => {
                 pageActionContainer.appendChild(act);
@@ -1139,6 +1141,164 @@
             }
             #colCustomizerMenu::-webkit-scrollbar-thumb:hover {
                 background: #94a3b8 !important;
+            }
+
+            /* ==========================================
+               Dreams CRM Style Enhancements for Tables, Panels, Cards, and Forms
+               ========================================== */
+            .panel-card, .tab-panel .panel-card {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+                margin-bottom: 20px !important;
+                overflow: hidden !important;
+            }
+            .panel-header, .tab-panel .panel-header {
+                background: #ffffff !important;
+                border-bottom: 1px solid #f1f5f9 !important;
+                padding: 14px 18px !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+            .panel-header span, .panel-header h4, .tab-panel .panel-header span {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                color: #1e293b !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+            }
+            .panel-body, .tab-panel .panel-body {
+                padding: 18px !important;
+            }
+            
+            /* Table Modernization */
+            .table-wrap table, .tab-panel table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-family: 'Golos Text', sans-serif !important;
+                margin-top: 10px !important;
+                background: #ffffff !important;
+            }
+            .table-wrap table thead th, .tab-panel table thead th {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                color: #334155 !important;
+                background-color: #f8fafc !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                padding: 12px 14px !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+            }
+            .table-wrap table tbody td, .tab-panel table tbody td {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 12px !important;
+                color: #475569 !important;
+                padding: 12px 14px !important;
+                border-bottom: 1px solid #f1f5f9 !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                vertical-align: middle !important;
+            }
+            .table-wrap table tbody tr:hover, .tab-panel table tbody tr:hover {
+                background-color: #f8fafc !important;
+            }
+            
+            /* Input & Dropdown Controls Override */
+            .filter-select, select.filter-select, input.filter-select, select.form-select {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 12px !important;
+                color: #334155 !important;
+                border: 1px solid #d1d5db !important;
+                border-radius: 6px !important;
+                padding: 6px 12px !important;
+                background-color: #ffffff !important;
+                outline: none !important;
+                height: 34px !important;
+                transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+            }
+            .filter-select:focus, select.filter-select:focus, input.filter-select:focus, select.form-select:focus {
+                border-color: #e41f07 !important;
+                box-shadow: 0 0 0 2px rgba(228, 31, 7, 0.1) !important;
+            }
+            .filter-select::placeholder {
+                color: #94a3b8 !important;
+            }
+
+            /* Buttons Override */
+            .btn-calc, button.btn-calc, button.btn-primary, .btn-calc:hover, button.btn-calc:hover {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                background: #e41f07 !important;
+                border: 1px solid #e41f07 !important;
+                border-radius: 6px !important;
+                padding: 8px 16px !important;
+                height: 34px !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease-in-out !important;
+                box-shadow: 0 4px 12px rgba(228, 31, 7, 0.15) !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            .btn-calc:hover, button.btn-calc:hover, button.btn-primary:hover {
+                background: #c11a06 !important;
+                border-color: #c11a06 !important;
+                box-shadow: 0 4px 12px rgba(193, 26, 6, 0.25) !important;
+            }
+            
+            /* Submenu labels (EMPLOYEE, MONTH, etc.) */
+            .payslip-generator label, .supervisor-filters label, .supervisor-header label, .tab-panel label {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 10px !important;
+                font-weight: 700 !important;
+                color: #64748b !important;
+                text-transform: uppercase !important;
+                margin-bottom: 4px !important;
+                letter-spacing: 0.5px !important;
+            }
+
+            /* Action Buttons inside tables */
+            .btn-table-action-icon, button.btn-table-action-icon {
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 6px !important;
+                padding: 6px !important;
+                color: #475569 !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease-in-out !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            .btn-table-action-icon:hover {
+                background: #f1f5f9 !important;
+                color: #e41f07 !important;
+                border-color: #cbd5e1 !important;
+            }
+            .btn-table-action-icon.btn-reject:hover {
+                color: #ef4444 !important;
+            }
+            
+            /* Text elements formatting */
+            .tab-panel h4 {
+                font-family: 'Golos Text', sans-serif !important;
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                color: #1e293b !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                margin-top: 24px !important;
+                margin-bottom: 12px !important;
             }
         `;
         document.head.appendChild(globalStyle);
