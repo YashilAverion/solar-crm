@@ -539,7 +539,6 @@
                     // Traverse up to open all parent submenus
                     let parentSubmenu = activeEl.closest(".submenu");
                     while (parentSubmenu) {
-                        parentSubmenu.classList.add("active");
                         const submenuLink = parentSubmenu.querySelector("a");
                         if (submenuLink) {
                             submenuLink.classList.add("subdrop");
