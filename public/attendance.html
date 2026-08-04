@@ -2480,7 +2480,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Route SPA view based on URL hash fragment
             renderHashTab();
         })
-        .catch(() => {
+        .catch((err) => {
+            console.error('ATTENDANCE ERROR DETECTED:', err.stack || err);
             window.location.href = '/login';
         });
         
@@ -2790,7 +2791,8 @@ function renderHashTab() {
         }
     }
     
-    document.getElementById('pageTitleHeader').textContent = titleStr;
+    const pageTitleHeader = document.getElementById('pageTitleHeader');
+    if (pageTitleHeader) pageTitleHeader.textContent = titleStr;
     const panel = document.getElementById(targetPanelId);
     if (panel) panel.style.display = 'block';
     
