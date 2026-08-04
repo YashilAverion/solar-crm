@@ -265,16 +265,35 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                     const generatedBy = req.session.user.full_name || req.session.user.username || 'System';
 
                     // 4. Save/Update in payroll_historical_records (UPSERT logic to prevent duplicates)
-                    db.get(
+                    // 4. Save/Update in payroll_historical_records (UPSERT logic + automatic duplicates cleaning)
+                    db.all(
                         `SELECT id FROM payroll_historical_records 
-                         WHERE user_id = ? AND pay_period_start = ? AND pay_period_end = ?`,
+                         WHERE user_id = ? AND pay_period_start = ? AND pay_period_end = ?
+                         ORDER BY id ASC`,
                         [user_id, pay_period_start, pay_period_end],
-                        (checkErr, existingRecord) => {
+                        (checkErr, existingRecords) => {
                             if (checkErr) {
                                 return res.status(500).json({ error: checkErr.message });
                             }
 
-                            if (existingRecord) {
+                            if (existingRecords && existingRecords.length > 0) {
+                                const primaryId = existingRecords[0].id;
+                                
+                                // If there are extra duplicate records from previous bugs, delete them!
+                                if (existingRecords.length > 1) {
+                                    const extraIds = existingRecords.slice(1).map(r => r.id);
+                                    const placeholders = extraIds.map(() => '?').join(',');
+                                    db.run(
+                                        `DELETE FROM payroll_historical_records WHERE id IN (${placeholders})`,
+                                        extraIds,
+                                        (delErr) => {
+                                            if (delErr) {
+                                                console.error('Failed to clean up duplicate payroll records:', delErr);
+                                            }
+                                        }
+                                    );
+                                }
+                                
                                 // Update existing record
                                 db.run(
                                     `UPDATE payroll_historical_records SET 
@@ -294,7 +313,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
                                         roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedRemainingHours, roundedGrossPay, 
                                         roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
                                         generatedBy, JSON.stringify(calculationMetadata),
-                                        existingRecord.id
+                                        primaryId
                                     ],
                                     function(updateErr) {
                                         if (updateErr) {
@@ -303,7 +322,7 @@ router.post('/calculate-period', requireAuth, (req, res) => {
 
                                         res.status(200).json({
                                             success: true,
-                                            payslip_id: existingRecord.id,
+                                            payslip_id: primaryId,
                                             user_id,
                                             pay_period_start,
                                             pay_period_end,
