@@ -22,12 +22,14 @@
             return originalValueGetter.call(this);
         },
         set: function(val) {
+            const valStr = (val === null || val === undefined) ? '' : String(val);
+            
             // Case 1: JS updates native date input -> Sync to text input in DD-MM-YYYY
             if (this.type === 'date' && this.id) {
                 let textInp = document.getElementById(this.id + '_text') || document.querySelector(`input[id="${this.id}_text"]`);
                 if (textInp) {
-                    if (val && val.includes('-')) {
-                        let parts = val.split('-');
+                    if (valStr && valStr.includes('-')) {
+                        let parts = valStr.split('-');
                         if (parts.length === 3 && parts[0].length === 4) {
                             let formatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
                             if (originalValueGetter.call(textInp) !== formatted) {
@@ -35,7 +37,7 @@
                                 textInp.dataset.lastVal = formatted;
                             }
                         }
-                    } else if (!val) {
+                    } else if (!valStr) {
                         originalValueSetter.call(textInp, '');
                         textInp.dataset.lastVal = '';
                     }
@@ -45,7 +47,7 @@
             // Case 2: JS updates text input -> Sync to native date input in YYYY-MM-DD
             if (this.type === 'text' && this.id && this.id.endsWith('_text')) {
                 // If the value assigned is in YYYY-MM-DD format (database raw format), convert it to DD-MM-YYYY!
-                let matchYMD = val && val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                let matchYMD = valStr && valStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
                 if (matchYMD) {
                     let formatted = `${matchYMD[3]}-${matchYMD[2]}-${matchYMD[1]}`;
                     originalValueSetter.call(this, formatted);
@@ -54,13 +56,13 @@
                     let dateId = this.id.replace(/_text$/, '');
                     let dateInp = document.getElementById(dateId);
                     if (dateInp && dateInp.type === 'date') {
-                        originalValueSetter.call(dateInp, val);
+                        originalValueSetter.call(dateInp, valStr);
                     }
                     return;
                 }
                 
                 // If it is in DD-MM-YYYY, sync to native date input
-                let matchDMY = val && val.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+                let matchDMY = valStr && valStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
                 if (matchDMY) {
                     let dateId = this.id.replace(/_text$/, '');
                     let dateInp = document.getElementById(dateId);
