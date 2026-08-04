@@ -180,34 +180,34 @@
         
         .no-data { text-align: center; color: var(--text-muted); font-style: italic; padding: 24px; }
 
-        /* ========== XERO TIMESHEETS STYLES ========== */
-        .xero-filters-card { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 20px 24px; margin-bottom: 24px; }
-        .xero-filters-card .xero-label { font-size: 12px; font-weight: 700; color: #8B6914; margin-bottom: 6px; }
+        /* ========== XERO TIMESHEETS STYLES (Dreams CRM Theme) ========== */
+        .xero-filters-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .xero-filters-card .xero-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
         .xero-filters-card .xero-input,
-        .xero-filters-card .xero-select { height: 34px; width: 100%; border: 1px solid #ccc; border-radius: 3px; padding: 0 10px; font-size: 13px; background: #fff; color: var(--text-dark); outline: none; font-family: inherit; }
-        .xero-filters-card .xero-select { appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; padding-right: 28px; cursor: pointer; }
+        .xero-filters-card .xero-select { height: 32px; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; background: var(--surface); color: var(--text-dark); outline: none; font-family: inherit; transition: all 0.2s; box-shadow: none; }
+        .xero-filters-card .xero-select { appearance: none; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; padding-right: 28px; cursor: pointer; }
         .xero-filters-card .xero-input:focus,
-        .xero-filters-card .xero-select:focus { border-color: #0078C1; box-shadow: 0 0 0 2px rgba(0,120,193,0.12); }
-        .xero-btn-reset { height: 32px; padding: 0 18px; border-radius: 3px; font-weight: 600; font-size: 12px; border: 1px solid #0078C1; background: #fff; color: #0078C1; cursor: pointer; transition: all 0.15s; }
-        .xero-btn-reset:hover { background: #f0f8ff; }
-        .xero-btn-apply { height: 32px; padding: 0 18px; border-radius: 3px; font-weight: 600; font-size: 12px; border: none; background: #0078C1; color: #fff; cursor: pointer; transition: all 0.15s; }
-        .xero-btn-apply:hover { background: #005f9e; }
-        .xero-btn-add { height: 32px; padding: 0 16px; border-radius: 3px; font-weight: 600; font-size: 12px; border: 1px solid #0078C1; background: #fff; color: #0078C1; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
-        .xero-btn-add:hover { background: #e6f3fa; }
+        .xero-filters-card .xero-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
+        .xero-btn-reset { height: 32px; padding: 0 18px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dark); cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .xero-btn-reset:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .xero-btn-apply { height: 32px; padding: 0 18px; border-radius: 6px; font-weight: 600; font-size: 12px; border: none; background: var(--primary); color: #fff; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 6px -1px rgba(228,31,7,0.2); }
+        .xero-btn-apply:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .xero-btn-add { height: 32px; padding: 0 16px; border-radius: 6px; font-weight: 600; font-size: 12px; border: none; background: var(--primary); color: #fff; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 6px -1px rgba(228,31,7,0.2); }
+        .xero-btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .xero-approve-bar { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
-        .xero-approve-bar .xero-btn-approve { height: 28px; padding: 0 14px; border-radius: 3px; font-weight: 600; font-size: 11px; border: 1px solid #cbd5e1; background: #e2e8f0; color: #94a3b8; cursor: not-allowed; transition: all 0.15s; }
-        .xero-approve-bar .xero-btn-approve.active { background: #0078C1; color: #fff; border-color: #0078C1; cursor: pointer; }
-        .xero-approve-bar .xero-btn-approve.active:hover { background: #005f9e; }
+        .xero-approve-bar .xero-btn-approve { height: 28px; padding: 0 14px; border-radius: 6px; font-weight: 600; font-size: 11px; border: 1px solid var(--border); background: #f1f5f9; color: var(--text-muted); cursor: not-allowed; transition: all 0.15s; }
+        .xero-approve-bar .xero-btn-approve.active { background: var(--accent); color: #fff; border-color: var(--accent); cursor: pointer; box-shadow: 0 4px 6px -1px rgba(255,162,1,0.2); }
+        .xero-approve-bar .xero-btn-approve.active:hover { background: var(--accent-hover); transform: translateY(-1px); }
         .xero-ts-table { width: 100%; border-collapse: collapse; }
-        .xero-ts-table thead th { background: #f7f7f7; color: #555; font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; padding: 10px 14px; border-bottom: 2px solid #ddd; text-align: left; white-space: nowrap; }
-        .xero-ts-table thead th.sortable { color: #0078C1; cursor: pointer; user-select: none; }
-        .xero-ts-table thead th.sortable:hover { color: #005f9e; text-decoration: underline; }
+        .xero-ts-table thead th { background: #f8fafc; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+        .xero-ts-table thead th.sortable { color: var(--primary); cursor: pointer; user-select: none; }
+        .xero-ts-table thead th.sortable:hover { color: var(--primary-hover); text-decoration: underline; }
         .xero-ts-table thead th.th-hours { text-align: right; padding-right: 20px; }
         .xero-ts-table thead th.th-check { width: 36px; text-align: center; }
-        .xero-ts-table tbody td { padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 12px; color: #333; vertical-align: middle; }
+        .xero-ts-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-dark); vertical-align: middle; }
         .xero-ts-table tbody tr:hover { background: #fafbfc; }
         .xero-ts-table tbody tr:last-child td { border-bottom: none; }
-        .xero-ts-table tbody td.td-name { color: #0078C1; font-weight: 600; }
+        .xero-ts-table tbody td.td-name { color: var(--primary); font-weight: 600; }
         .xero-ts-table tbody td.td-hours { text-align: right; padding-right: 20px; font-weight: 700; color: var(--text-dark); }
 
         /* ========== TIMESHEET SPREADSHEET (Premium Modern Style) ========== */
@@ -319,7 +319,7 @@
             text-align: center !important;
         }
         .xero-ts-table tbody td.td-name {
-            color: #0078C1;
+            color: var(--primary);
             font-weight: 600;
             text-align: center !important;
         }
@@ -335,7 +335,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         /* Xero Employee Layout Styles */
-        .emp-tab:hover { color: #0073e6 !important; }
+        .emp-tab:hover { color: var(--primary) !important; }
         .btn-xero-secondary:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
         .btn-xero-success:hover { background: #007500 !important; }
         .btn-xero-danger { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 16px; font-size: 12px; font-weight: 600; color: #64748b; cursor: not-allowed; height: 34px; transition: all 0.2s; }
@@ -1746,7 +1746,7 @@
                 </div>
             </div>
 
-            <div id="tsTableCard" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #fff;">
+            <div id="tsTableCard" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
                 <div style="overflow-x: auto;">
                     <table class="xero-ts-table">
                         <thead>
