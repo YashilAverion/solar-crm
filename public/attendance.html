@@ -3380,15 +3380,12 @@ function switchPayrollCompany(companyName) {
     const paySelect = document.getElementById('payrollEmployeeSelect');
     if (paySelect) paySelect.value = '';
     
-    const historyBody = document.getElementById('payrollHistoryBody');
-    if (historyBody) {
-        historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
-    }
     const summaryBox = document.getElementById('payrollSummaryBox');
     if (summaryBox) {
         summaryBox.classList.remove('visible');
     }
     updatePayPeriodSelection();
+    loadPayrollModuleData();
 }
 
 // Populate supervisor selection filters
