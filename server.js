@@ -1556,11 +1556,11 @@ app.get(/\.html$/, (req, res, next) => {
 app.use(express.static('public', {
     maxAge: '1d',
     setHeaders: (res, path) => {
-        if (path.endsWith('.html')) {
+        if (path.endsWith('.html') || path.includes('layout-loader.js')) {
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         }
     }
-})); // Browser will cache static files for 1 Day, except HTML files
+})); // Browser will cache static files for 1 Day, except HTML and layout-loader.js
 
 // Custom route to serve quotations, blocking temporarily if the background Puppeteer compiler is still writing the file
 app.get('/uploads/quotations/:filename', async (req, res) => {
