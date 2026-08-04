@@ -8005,42 +8005,7 @@ function loadPayrollModuleData() {
             if (activePayrollCompanyFilter !== 'Averion Global LLP') {
                 const cycle = document.getElementById('payrollCycle').value;
                 if (cycle === 'Fortnightly') {
-                    let nextStart, nextEnd;
-                    if (rows && rows.length > 0) {
-                        // Sort by pay_period_end string descending to get the latest end date safely (timezone-agnostic)
-                        const endDates = rows.map(r => r.pay_period_end).sort().reverse();
-                        const latestEndStr = endDates[0]; // e.g. "2026-07-26"
-                        
-                        const parts = latestEndStr.split('-');
-                        const y = parseInt(parts[0], 10);
-                        const m = parseInt(parts[1], 10) - 1; // 0-indexed month
-                        const d = parseInt(parts[2], 10);
-                        
-                        nextStart = new Date(y, m, d + 1);
-                        nextEnd = new Date(y, m, d + 14); // nextStart + 13 days
-                    } else {
-                        // Default to start of selected month
-                        const month = parseInt(document.getElementById('payrollMonth').value, 10);
-                        const year = parseInt(document.getElementById('payrollYear').value, 10);
-                        nextStart = new Date(year, month, 1);
-                        nextEnd = new Date(year, month, 14);
-                    }
-                    
-                    const startStr = formatDateISO(nextStart);
-                    const endStr = formatDateISO(nextEnd);
-                    
-                    document.getElementById('payrollStart').value = startStr;
-                    document.getElementById('payrollEnd').value = endStr;
-                    
-                    const subList = document.getElementById('payrollSubCycleList');
-                    if (subList) {
-                        subList.innerHTML = `
-                            <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0;">
-                                <i class="ti ti-calendar" style="margin-right: 6px; font-size: 16px; vertical-align: middle;"></i>
-                                <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
-                            </div>
-                        `;
-                    }
+                    setAustralianFortnightPeriod();
                 }
             }
 
@@ -8416,6 +8381,41 @@ function formatDateString(date) {
     return `${dd}-${mm}-${yyyy}`;
 }
 
+function setAustralianFortnightPeriod() {
+    const anchor = new Date(2026, 5, 29); // Monday, June 29, 2026
+    const today = new Date();
+    
+    // Set hours to 0 to prevent timezone drift
+    const d1 = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
+    const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diffMs = d2.getTime() - d1.getTime();
+    const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
+    
+    let fortnightIndex = Math.floor(diffDays / 14);
+    
+    const nextStart = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + fortnightIndex * 14);
+    const nextEnd = new Date(nextStart.getFullYear(), nextStart.getMonth(), nextStart.getDate() + 13);
+    
+    const startStr = formatDateISO(nextStart);
+    const endStr = formatDateISO(nextEnd);
+    
+    const startInput = document.getElementById('payrollStart');
+    const endInput = document.getElementById('payrollEnd');
+    if (startInput) startInput.value = startStr;
+    if (endInput) endInput.value = endStr;
+    
+    const subList = document.getElementById('payrollSubCycleList');
+    if (subList) {
+        subList.innerHTML = `
+            <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0; display: flex; align-items: center; gap: 6px;">
+                <i class="ti ti-calendar" style="font-size: 16px; vertical-align: middle;"></i>
+                <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
+            </div>
+        `;
+    }
+}
+
 function updatePayPeriodSelection() {
     const monthSelect = document.getElementById('payrollMonth');
     const yearSelect = document.getElementById('payrollYear');
@@ -8484,26 +8484,7 @@ function updatePayPeriodSelection() {
     } 
     else if (cycle === 'Fortnightly') {
         if (activePayrollCompanyFilter !== 'Averion Global LLP') {
-            const empSelect = document.getElementById('payrollEmployeeSelect');
-            const empId = empSelect ? empSelect.value : '';
-            if (empId) {
-                // If employee is selected, load history to calculate correct next fortnight
-                loadPayrollModuleData();
-            } else {
-                // Default month first 14 days
-                const nextStart = new Date(year, month, 1);
-                const nextEnd = new Date(year, month, 14);
-                
-                document.getElementById('payrollStart').value = formatDateISO(nextStart);
-                document.getElementById('payrollEnd').value = formatDateISO(nextEnd);
-                
-                subList.innerHTML = `
-                    <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0;">
-                        <i class="ti ti-calendar" style="margin-right: 6px; font-size: 16px; vertical-align: middle;"></i>
-                        <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
-                    </div>
-                `;
-            }
+            setAustralianFortnightPeriod();
         } else {
             const fortnights = [
                 {
