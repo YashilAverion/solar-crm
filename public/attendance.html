@@ -3370,6 +3370,7 @@ function switchPayrollCompany(companyName) {
     if (summaryBox) {
         summaryBox.classList.remove('visible');
     }
+    updatePayPeriodSelection();
 }
 
 // Populate supervisor selection filters
@@ -7960,16 +7961,31 @@ function deleteUploadedWorkerDoc() {
 }
 
 function loadPayrollModuleData() {
-    const employeeId = document.getElementById('payrollEmployeeSelect').value;
+    const employeeId = document.getElementById('payrollEmployeeSelect') ? document.getElementById('payrollEmployeeSelect').value : '';
     const historyBody = document.getElementById('payrollHistoryBody');
     const summaryBox = document.getElementById('payrollSummaryBox');
     
-    summaryBox.classList.remove('visible');
+    if (summaryBox) summaryBox.classList.remove('visible');
+    
+    const isMgr = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Manager' || currentUser.role.includes('Manager'));
+    
+    if (isMgr && !employeeId) {
+        if (historyBody) {
+            historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
+        }
+        updatePayPeriodSelection();
+        return;
+    }
     
     const targetUserId = employeeId || (currentUser ? currentUser.id : null);
-    if (!targetUserId) return;
+    if (!targetUserId) {
+        updatePayPeriodSelection();
+        return;
+    }
     
-    historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Loading processed payslips ledger...</td></tr>';
+    if (historyBody) {
+        historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Loading processed payslips ledger...</td></tr>';
+    }
     
     const superHeader = document.getElementById('payrollSuperHeader');
     const taxHeader = document.getElementById('payrollTaxHeader');
