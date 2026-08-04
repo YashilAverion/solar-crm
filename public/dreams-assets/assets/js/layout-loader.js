@@ -1282,7 +1282,7 @@
             let hiddenIndices = JSON.parse(localStorage.getItem(storageKey) || "[]");
             hiddenIndices = hiddenIndices.filter(idx => idx < headers.length);
             
-            // Apply visibility CSS specifically for this table
+            // Apply visibility CSS specifically for this table (fast fallback placeholder)
             applyTableColumnVisibilityCSS(tableClass, hiddenIndices);
 
             const dropdownDiv = document.createElement("div");
@@ -1329,6 +1329,31 @@
                 toolbar.appendChild(dropdownDiv);
             }
 
+            // Asynchronously load user-specific column preferences from server
+            const pagePath = window.location.pathname;
+            const apiURL = `/api/user-column-preferences?page_path=${encodeURIComponent(pagePath)}&table_class=${encodeURIComponent(tableClass)}`;
+            fetch(apiURL)
+                .then(res => {
+                    if (res.status === 401) {
+                        return { hidden_columns: null }; // skip if not authenticated (e.g. login page)
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && Array.isArray(data.hidden_columns)) {
+                        hiddenIndices = data.hidden_columns.filter(idx => idx < headers.length);
+                        localStorage.setItem(storageKey, JSON.stringify(hiddenIndices));
+                        applyTableColumnVisibilityCSS(tableClass, hiddenIndices);
+                        
+                        // Update UI checkbox checked states
+                        menu.querySelectorAll("input[type=checkbox]").forEach(chk => {
+                            const idx = parseInt(chk.getAttribute("data-index"));
+                            chk.checked = !hiddenIndices.includes(idx);
+                        });
+                    }
+                })
+                .catch(err => console.error("[ColumnCustomizer] Error fetching DB column preferences:", err));
+
             btn.addEventListener("click", function(e) {
                 e.stopPropagation();
                 const isVisible = menu.style.display === "block";
@@ -1352,6 +1377,24 @@
                     }
                     localStorage.setItem(storageKey, JSON.stringify(hiddenIndices));
                     applyTableColumnVisibilityCSS(tableClass, hiddenIndices);
+
+                    // Autosave changes to the database per logged-in user
+                    fetch('/api/user-column-preferences', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            page_path: pagePath,
+                            table_class: tableClass,
+                            hidden_columns: hiddenIndices
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log("[ColumnCustomizer] Preferences autosaved to DB successfully");
+                        }
+                    })
+                    .catch(err => console.error("[ColumnCustomizer] Error autosaving preferences to DB:", err));
                 });
             });
         }

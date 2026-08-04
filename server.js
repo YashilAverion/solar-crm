@@ -4051,6 +4051,65 @@ app.get('/api/my-permissions', (req, res) => {
     });
 });
 
+// ── GET USER COLUMN PREFERENCES ──────────────────────────────
+app.get('/api/user-column-preferences', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const userId = req.session.user.id;
+    const { page_path, table_class } = req.query;
+    
+    if (!page_path || !table_class) {
+        return res.status(400).json({ error: 'Missing page_path or table_class parameter' });
+    }
+    
+    db.get(
+        'SELECT hidden_columns FROM user_column_preferences WHERE user_id = ? AND page_path = ? AND table_class = ?',
+        [userId, page_path, table_class],
+        (err, row) => {
+            if (err) {
+                console.error('[Preferences GET Error]', err.message);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            if (!row) {
+                return res.json({ hidden_columns: [] });
+            }
+            try {
+                const cols = JSON.parse(row.hidden_columns);
+                return res.json({ hidden_columns: cols });
+            } catch (e) {
+                return res.json({ hidden_columns: [] });
+            }
+        }
+    );
+});
+
+// ── SAVE USER COLUMN PREFERENCES ──────────────────────────────
+app.post('/api/user-column-preferences', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const userId = req.session.user.id;
+    const { page_path, table_class, hidden_columns } = req.body;
+    
+    if (!page_path || !table_class || !Array.isArray(hidden_columns)) {
+        return res.status(400).json({ error: 'Invalid or missing parameters' });
+    }
+    
+    const hiddenColsStr = JSON.stringify(hidden_columns);
+    
+    db.run(
+        `INSERT INTO user_column_preferences (user_id, page_path, table_class, hidden_columns) 
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(user_id, page_path, table_class) 
+         DO UPDATE SET hidden_columns = excluded.hidden_columns, updated_at = CURRENT_TIMESTAMP`,
+        [userId, page_path, table_class, hiddenColsStr],
+        function(err) {
+            if (err) {
+                console.error('[Preferences POST Error]', err.message);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            return res.json({ success: true });
+        }
+    );
+});
+
 // ── GET USER PERMISSIONS ──────────────────────────────────────
 app.get('/api/users/:id/permissions', requireManager, (req, res) => {
     const userId = req.params.id;

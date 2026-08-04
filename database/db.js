@@ -1076,6 +1076,19 @@ db.serialize(() => {
         )
     `);
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS user_column_preferences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            page_path TEXT,
+            table_class TEXT,
+            hidden_columns TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, page_path, table_class)
+        )
+    `);
+    db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_user_col_pref_unique ON user_column_preferences (user_id, page_path, table_class)", () => {});
+
     // Apply migrations for users VoIP columns
     db.run("ALTER TABLE users ADD COLUMN voipline_extension TEXT", () => {});
     db.run("ALTER TABLE users ADD COLUMN voipline_api_key TEXT", () => {});
