@@ -222,7 +222,7 @@
         .ts-sheet-toolbar .ts-field select:focus,
         .ts-sheet-toolbar .ts-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
         .ts-grid-wrap { overflow: auto; max-height: calc(100vh - 262px); border-bottom: 1px solid var(--border); }
-        .ts-grid { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'Inter', system-ui, sans-serif; }
+        .ts-grid { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'Golos Text', system-ui, sans-serif; }
         .ts-grid thead { position: sticky; top: 0; z-index: 3; }
         .ts-grid tr.col-titles th { background: #f8fafc; color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 5px 2px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; white-space: nowrap; }
         .ts-grid tr.col-titles th.wide { min-width: 80px; }
@@ -345,8 +345,7 @@
         #employeesXeroTableBody td { border-bottom: 1px solid #e2e8f0; font-size: 13px; vertical-align: middle; }
         .swal2-container { z-index: 999999 !important; }
         
-        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
-        .swal2-popup:not(.swal2-toast) { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
+        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */        .swal2-popup:not(.swal2-toast) { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Golos Text', system-ui, sans-serif !important; }
         .swal2-popup:not(.swal2-toast) .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
         .swal2-popup:not(.swal2-toast) .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
         .swal2-popup:not(.swal2-toast) .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
@@ -355,13 +354,13 @@
         .swal2-popup:not(.swal2-toast) .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
         .swal2-popup:not(.swal2-toast) .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
         .swal2-popup:not(.swal2-toast) .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
-
+ 
         /* Professional Toast styling */
         .swal2-popup.swal2-toast {
             padding: 8px 12px !important;
             border-radius: 8px !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-            font-family: 'Inter', system-ui, sans-serif !important;
+            font-family: 'Golos Text', system-ui, sans-serif !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             align-items: center !important;
@@ -466,7 +465,7 @@
             border-radius: 8px;
             border: none;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Golos Text', sans-serif !important;
         }
 
         /* Modern Premium Tabs Design */
@@ -846,7 +845,7 @@
             padding: 8px 16px;
             font-size: 13px;
             font-weight: 700;
-            color: #64748b;
+            color: var(--text-muted);
             cursor: pointer;
             position: relative;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -854,13 +853,14 @@
             align-items: center;
             gap: 6px;
             border-radius: 6px 6px 0 0;
+            font-family: 'Golos Text', system-ui, sans-serif;
         }
         .company-tab-btn:hover {
-            color: #1c3557;
-            background: #f1f5f9;
+            color: var(--primary);
+            background: #fff2f0;
         }
         .company-tab-btn.active {
-            color: #1c3557;
+            color: var(--primary);
             background: transparent;
         }
         .company-tab-btn.active::after {
@@ -870,7 +870,7 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #1c3557 0%, #e8681e 100%);
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
             border-radius: 4px;
         }
         .company-tab-dot {
@@ -905,7 +905,7 @@
             border: 1px solid #dde3ed;
             padding: 24px;
             position: relative;
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Golos Text', system-ui, sans-serif;
             animation: slideUp 0.3s ease;
         }
         .super-modal-close {
@@ -1047,7 +1047,7 @@
             width: 100%;
             text-align: center;
             transition: background-color 0.2s;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Golos Text', sans-serif;
         }
         .btn-copy-calc:hover {
             background: var(--accent-hover);
@@ -8209,7 +8209,7 @@ function editPayrollRecord(id, record) {
     Swal.fire({
         title: 'Edit Processed Payslip',
         html: `
-            <div style="text-align: left; display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif;">
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 8px; font-family: 'Golos Text', sans-serif;">
                 <div style="display:flex; flex-direction:column; gap:4px;">
                     <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Actual Hours</label>
                     <input id="edit_actual_hours" type="number" step="0.01" class="swal2-input" style="margin: 0; width:100%; height: 36px; font-size: 13px;" value="${record.actual_hours || 0}">
