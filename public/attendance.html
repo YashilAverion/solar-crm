@@ -217,12 +217,20 @@
         .ts-sheet-toolbar .ts-field { display: flex; flex-direction: column; gap: 2px; }
         .ts-sheet-toolbar .ts-field label { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .ts-sheet-toolbar .ts-field select,
-        .ts-sheet-toolbar .ts-field input { height: 28px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 11px; font-weight: 500; font-family: inherit; color: var(--text-dark); background: var(--surface); min-width: 95px; outline: none; transition: all 0.2s; box-shadow: none; }
+        .ts-sheet-toolbar .ts-field input { height: 28px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font-size: 11px; font-weight: 500; font-family: 'Golos Text', system-ui, sans-serif !important; color: var(--text-dark); background: var(--surface); min-width: 95px; outline: none; transition: all 0.2s; box-shadow: none; }
         .ts-sheet-toolbar .ts-field select { min-width: 140px; }
         .ts-sheet-toolbar .ts-field select:focus,
         .ts-sheet-toolbar .ts-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
         .ts-grid-wrap { overflow: auto; max-height: calc(100vh - 262px); border-bottom: 1px solid var(--border); }
-        .ts-grid { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'Golos Text', system-ui, sans-serif; }
+        .ts-grid,
+        .ts-grid th,
+        .ts-grid td,
+        .ts-grid input,
+        .ts-grid select,
+        .ts-grid option {
+            font-family: 'Golos Text', system-ui, sans-serif !important;
+        }
+        .ts-grid { width: 100%; border-collapse: collapse; font-size: 11px; }
         .ts-grid thead { position: sticky; top: 0; z-index: 3; }
         .ts-grid tr.col-titles th { background: #f8fafc; color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 5px 2px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; white-space: nowrap; }
         .ts-grid tr.col-titles th.wide { min-width: 80px; }
