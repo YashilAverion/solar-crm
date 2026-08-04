@@ -7,15 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1c3557;
-            --primary-hover: #16294a;
-            --accent: #e8681e;
-            --accent-hover: #d05a14;
-            --bg: #f4f6f9;
+            --primary: #e41f07; /* Dreams primary red */
+            --primary-hover: #c11a06;
+            --accent: #ffa201; /* Dreams orange */
+            --accent-hover: #e08f01;
+            --bg: #f7f8f9;
             --surface: #ffffff;
-            --border: #dde3ed;
-            --text-dark: #1c2b3a;
-            --text-muted: #6b7a8d;
+            --border: #e8e8e8;
+            --text-dark: #1f2020;
+            --text-muted: #707070;
             --teal: #0284c7;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -120,7 +120,7 @@
     <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
     
     <!-- Dynamic Layout Loader JS -->
-    <script src="dreams-assets/assets/js/layout-loader.js"></script>
+    <script src="dreams-assets/assets/js/layout-loader.js?v=9"></script>
 </head>
 <body>
 
@@ -400,6 +400,32 @@
 
     <script src="/australian-timezones.js"></script>
     <script>
+        // SIDEBAR CONTROLLER JS
+        function toggleNav(event, element) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const subMenu = element.nextElementSibling;
+            if (!subMenu || !subMenu.classList.contains('sub-menu')) return;
+            
+            const icon = element.querySelector('.toggle-icon');
+            const isCurrentlyOpen = subMenu.style.display === 'block';
+
+            // Close all sibling sub-menus
+            const parent = element.parentElement;
+            const siblingSubMenus = Array.from(parent.children).filter(child => child.classList.contains('sub-menu'));
+            const siblingItems = Array.from(parent.children).filter(child => child.classList.contains('menu-item'));
+            
+            siblingSubMenus.forEach(menu => { menu.style.display = 'none'; });
+            siblingItems.forEach(item => { const itemIcon = item.querySelector('.toggle-icon'); if (itemIcon && item !== element) itemIcon.innerText = '▼'; });
+
+            // Toggle current
+            if (!isCurrentlyOpen) {
+                subMenu.style.display = 'block';
+                if (icon) icon.innerText = '▲';
+            }
+        }
+
         let _templates = [];
         let _selectedCategory = 'All';
         let _lastFocusedInput = null;
@@ -412,6 +438,49 @@
             const bodyInput = document.getElementById('txtTplBody');
             if (subjInput) subjInput.addEventListener('focus', () => _lastFocusedInput = subjInput);
             if (bodyInput) bodyInput.addEventListener('focus', () => _lastFocusedInput = bodyInput);
+
+            // Universal Sidebar Path Highlighting and Navigation Hooks
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar a.menu-item').forEach(el => {
+                const href = el.getAttribute('href');
+                if (!href || href === '#') return;
+                
+                const target = el.getAttribute('data-target') || href;
+                let isMatch = false;
+                
+                if ((target === 'master-leads' || href === '/') && (currentPath === '/' || currentPath.includes('index.html'))) {
+                    isMatch = true;
+                } else if (href !== '/' && (href === currentPath || currentPath.includes(href))) {
+                    isMatch = true;
+                }
+
+                if (isMatch) {
+                    el.classList.add('active-menu');
+                    let parentSub = el.closest('.sub-menu');
+                    
+                    while (parentSub) {
+                        parentSub.style.display = 'block';
+                        const toggleIcon = parentSub.previousElementSibling?.querySelector('.toggle-icon');
+                        if (toggleIcon) toggleIcon.innerText = '▲';
+                        parentSub = parentSub.parentElement ? parentSub.parentElement.closest('.sub-menu') : null;
+                    }
+                }
+                
+                el.addEventListener('click', function(e) {
+                    if (this.nextElementSibling && this.nextElementSibling.classList.contains('sub-menu')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    e.preventDefault();
+                    const targetHref = this.getAttribute('href');
+                    const isSamePage = window.location.pathname === targetHref || (targetHref === '/' && (window.location.pathname === '/' || window.location.pathname.includes('index.html')));
+                    if (isSamePage) {
+                        window.location.reload();
+                    } else {
+                        window.location.href = targetHref;
+                    }
+                });
+            });
         });
 
         // Load Sidebar User Details
@@ -681,5 +750,9 @@
         }
     </script>
     <script src="/responsive.js"></script>
+    <script src="dreams-assets/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="dreams-assets/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="dreams-assets/assets/plugins/simplebar/simplebar.min.js"></script>
+    <script src="dreams-assets/assets/js/script.js"></script>
 </body>
 </html>

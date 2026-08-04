@@ -529,7 +529,8 @@ document.addEventListener("DOMContentLoaded", function(e) {
             <button type="button" class="btn w-50 btn-primary">Buy Product</button>
         </div>
 
-    </div>`
+    </div>`;
+    /* Commented out to remove theme customizer from CRM
 	let wrapper = document.createElement("div");
 	wrapper.innerHTML = themesetting;
 
@@ -537,6 +538,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	while (wrapper.firstChild) {
 		document.body.appendChild(wrapper.firstChild);
 	}
+    */
 	(new ThemeCustomizer).init()
 });
 

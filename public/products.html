@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
     
     <!-- Dynamic Layout Loader JS -->
-    <script src="dreams-assets/assets/js/layout-loader.js"></script>
+    <script src="dreams-assets/assets/js/layout-loader.js?v=11"></script>
 
     <style>
         :root {
@@ -510,7 +510,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">Total Products</span>
-                        <span class="badge badge-soft-primary"><i class="ti ti-chart-bar"></i></span>
+                        <span class="summary-card-icon bg-icon-primary"><i class="ti ti-chart-bar"></i></span>
                     </div>
                     <h3 class="mb-1" id="statTotal">0</h3>
                     <span class="fs-11 text-muted">All active products</span>
@@ -522,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">Active</span>
-                        <span class="badge badge-soft-success"><i class="ti ti-check"></i></span>
+                        <span class="summary-card-icon bg-icon-success"><i class="ti ti-check"></i></span>
                     </div>
                     <h3 class="mb-1" id="statActive">0</h3>
                     <span class="fs-11 text-muted">Click to filter</span>
@@ -534,7 +534,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">Expiring Soon</span>
-                        <span class="badge badge-soft-warning"><i class="ti ti-clock"></i></span>
+                        <span class="summary-card-icon bg-icon-warning"><i class="ti ti-clock"></i></span>
                     </div>
                     <h3 class="mb-1 text-warning" id="statExpiring">0</h3>
                     <span class="fs-11 text-muted">Within 30 days</span>
@@ -542,14 +542,14 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
         <div class="col-xl-3 col-md-6 col-sm-6">
-            <div class="card flex-fill" onclick="setStatFilter('pending')" style="cursor: pointer;">
+            <div class="card flex-fill" onclick="setStatFilter('expired')" style="cursor: pointer;">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fs-12 text-muted fw-semibold">Pending Deletion</span>
-                        <span class="badge badge-soft-danger"><i class="ti ti-trash"></i></span>
+                        <span class="fs-12 text-muted fw-semibold">Expired</span>
+                        <span class="summary-card-icon bg-icon-danger"><i class="ti ti-calendar-off"></i></span>
                     </div>
-                    <h3 class="mb-1 text-danger" id="statPending">0</h3>
-                    <span class="fs-11 text-muted">Awaiting approval</span>
+                    <h3 class="mb-1 text-danger" id="statExpired">0</h3>
+                    <span class="fs-11 text-muted">Already expired</span>
                 </div>
             </div>
         </div>
@@ -1098,7 +1098,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('statTotal').innerText=active.length;
         document.getElementById('statActive').innerText=active.filter(p=>p.product_status==='Active').length;
         document.getElementById('statExpiring').innerText=active.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expiring'; }).length;
-        document.getElementById('statPending').innerText=active.filter(p=>p.product_status==='Pending Deletion').length;
+        document.getElementById('statExpired').innerText=active.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expired'; }).length;
     }
 
     function setChip(chip){
@@ -1168,7 +1168,7 @@ document.addEventListener("DOMContentLoaded", function() {
         else if(activeChip==='other')products=products.filter(p=>!['Panel','Inverter','Battery'].includes(p.product_category));
         if(activeStatFilter==='active')products=products.filter(p=>p.product_status==='Active');
         else if(activeStatFilter==='expiring')products=products.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expiring'; });
-        else if(activeStatFilter==='pending')products=products.filter(p=>p.product_status==='Pending Deletion');
+        else if(activeStatFilter==='expired')products=products.filter(p=>{ const st = getExpiryStatus(p.pro_expiry_date); return st && st.type === 'expired'; });
         if(activeFilters.cat)products=products.filter(p=>p.product_category===activeFilters.cat);
         if(activeFilters.mfg)products=products.filter(p=>p.manufacturer_name&&p.manufacturer_name.toLowerCase().includes(activeFilters.mfg));
         if(activeFilters.brand)products=products.filter(p=>p.brand_name&&p.brand_name.toLowerCase().includes(activeFilters.brand));

@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="dreams-assets/assets/css/style.css" id="app-style">
     
     <!-- Dynamic Layout Loader JS -->
-    <script src="dreams-assets/assets/js/layout-loader.js"></script>
+    <script src="dreams-assets/assets/js/layout-loader.js?v=11"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -408,7 +408,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">Total Postcodes</span>
-                        <span class="badge badge-soft-primary"><i class="ti ti-map"></i></span>
+                        <span class="summary-card-icon bg-icon-primary"><i class="ti ti-map"></i></span>
                     </div>
                     <h3 class="mb-1" id="statTotal">0</h3>
                     <span class="fs-11 text-muted">Mapped in the database</span>
@@ -420,7 +420,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">Unique Zones</span>
-                        <span class="badge badge-soft-warning"><i class="ti ti-map-pin"></i></span>
+                        <span class="summary-card-icon bg-icon-warning"><i class="ti ti-map-pin"></i></span>
                     </div>
                     <h3 class="mb-1" id="statZones">0</h3>
                     <span class="fs-11 text-muted">Different zone ratings</span>
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fs-12 text-muted fw-semibold">States Covered</span>
-                        <span class="badge badge-soft-success"><i class="ti ti-map-pin-share"></i></span>
+                        <span class="summary-card-icon bg-icon-success"><i class="ti ti-map-pin-share"></i></span>
                     </div>
                     <h3 class="mb-1" id="statStates">0</h3>
                     <span class="fs-11 text-muted">Across Australia</span>
@@ -464,6 +464,8 @@ document.addEventListener("DOMContentLoaded", function() {
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 p-3 bg-white border rounded"></div>
             </div>
         </div>
     </div>
@@ -606,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let globalSearchTerm = '';
     let lastFilteredData = [];
     let currentPage = 1;
-    const rowsPerPage = 100;
+    let rowsPerPage = 30;
 
     function renderTable() {
         const body = document.getElementById('stcBody');
@@ -689,13 +691,30 @@ document.addEventListener("DOMContentLoaded", function() {
         const totalPages = Math.ceil(lastFilteredData.length / rowsPerPage) || 1;
 
         controls.innerHTML = `
-            <button class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>← Previous</button>
-            <span class="page-info" style="margin: 0 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);">
-                Page ${currentPage} of ${totalPages}
-            </span>
-            <button class="page-btn" onclick="changePage(1)" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>Next →</button>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fs-13" style="font-size: 12px; font-weight: 500;">Show:</span>
+                <select class="form-select form-select-sm" id="rowsPerPageSelect" onchange="changeRowsPerPage()" style="width: auto; padding: 2px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface);">
+                    <option value="30" ${rowsPerPage === 30 ? 'selected' : ''}>30</option>
+                    <option value="50" ${rowsPerPage === 50 ? 'selected' : ''}>50</option>
+                    <option value="100" ${rowsPerPage === 100 ? 'selected' : ''}>100</option>
+                    <option value="250" ${rowsPerPage === 250 ? 'selected' : ''}>250</option>
+                </select>
+                <span class="badge bg-light text-dark fs-13 py-2 px-3 border" style="font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-weight: 600;">Total: ${lastFilteredData.length}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fs-13 me-2" style="font-size: 12px; font-weight: 500;">Page ${currentPage} of ${totalPages}</span>
+                <button class="btn btn-outline-secondary btn-sm" style="font-size: 11px; font-weight: 600; padding: 4px 10px;" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+                <button class="btn btn-outline-secondary btn-sm" style="font-size: 11px; font-weight: 600; padding: 4px 10px;" onclick="changePage(1)" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>Next →</button>
+            </div>
         `;
     }
+
+    window.changeRowsPerPage = function() {
+        const val = parseInt(document.getElementById('rowsPerPageSelect').value);
+        rowsPerPage = val;
+        currentPage = 1;
+        renderTable();
+    };
 
     function changePage(direction) {
         const newPage = currentPage + direction;
