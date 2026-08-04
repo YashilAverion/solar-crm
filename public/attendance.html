@@ -8971,7 +8971,19 @@ function renderPayrollDatePicker(defaultStart, defaultEnd) {
 
 function setAustralianFortnightPeriod() {
     const anchor = new Date(2026, 5, 29); // Monday, June 29, 2026
-    const today = new Date();
+    
+    // Read selected month and year
+    const monthSelect = document.getElementById('payrollMonth');
+    const yearSelect = document.getElementById('payrollYear');
+    const month = monthSelect ? parseInt(monthSelect.value, 10) : new Date().getMonth();
+    const year = yearSelect ? parseInt(yearSelect.value, 10) : new Date().getFullYear();
+
+    const todayActual = new Date();
+    let today = todayActual;
+    if (todayActual.getFullYear() !== year || todayActual.getMonth() !== month) {
+        // Default to the 15th of the selected month/year to find the active fortnight
+        today = new Date(year, month, 15);
+    }
     
     // Set hours to 0 to prevent timezone drift
     const d1 = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
