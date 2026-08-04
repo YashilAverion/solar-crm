@@ -140,6 +140,12 @@
                                     <li><a href="/project_leads.html" class="menu-item-link" id="nav-project-leads">Leads</a></li>
                                 </ul>
                             </li>
+                        </ul>
+                    </li>
+
+                    <li class="menu-title"><span>Masters</span></li>
+                    <li>
+                        <ul>
                             <li class="submenu">
                                 <a href="javascript:void(0);"><i class="ti ti-box"></i><span>Masters</span><span class="menu-arrow"></span></a>
                                 <ul>
@@ -172,7 +178,19 @@
                                     <li><a href="/company_details.html" class="menu-item-link" id="nav-company-details">Company Details</a></li>
                                 </ul>
                             </li>
-                            <li><a href="/admin.html" class="menu-item-link" id="nav-user-mgmt"><i class="ti ti-users-group"></i><span>User Management</span></a></li>
+                            <li class="submenu" id="nav-user-mgmt-parent">
+                                <a href="javascript:void(0);"><i class="ti ti-users-group"></i><span>User Management</span><span class="menu-arrow"></span></a>
+                                <ul>
+                                    <li><a href="/admin.html" class="menu-item-link" id="nav-manage-users">Manage Users</a></li>
+                                    <li><a href="/admin.html#roles" class="menu-item-link" id="nav-roles-permissions">Roles & Permissions</a></li>
+                                    <li><a href="/admin.html#requests" class="menu-item-link" id="nav-requests">Requests</a></li>
+                                    <li><a href="/admin.html#departments" class="menu-item-link" id="nav-departments">Departments</a></li>
+                                    <li><a href="/admin.html#staff" class="menu-item-link" id="nav-staff-directory">Staff Directory</a></li>
+                                    <li><a href="/admin.html#devices" class="menu-item-link" id="nav-device-mgmt">Device Management</a></li>
+                                    <li><a href="/admin.html#login-history" class="menu-item-link" id="nav-login-history">Login History</a></li>
+                                    <li><a href="/activity_logs.html" class="menu-item-link" id="nav-activity-logs">User Activity Logs</a></li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                     
@@ -182,9 +200,9 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"><i class="ti ti-folder-check"></i><span>Ares & Gill's</span><span class="menu-arrow"></span></a>
                                 <ul>
-                                    <li><a href="/attendance.html" class="menu-item-link" id="nav-emp-employees">Employees</a></li>
+                                    <li><a href="/attendance.html" class="menu-item-link" id="nav-emp-employees">Employee</a></li>
                                     <li><a href="/attendance.html#leave" class="menu-item-link" id="nav-emp-leave">Leaves</a></li>
-                                    <li><a href="/attendance.html#timesheets" class="menu-item-link" id="nav-emp-timesheets">Timesheets</a></li>
+                                    <li><a href="/attendance.html#timesheets" class="menu-item-link" id="nav-emp-timesheets">Timesheet</a></li>
                                     <li><a href="/attendance.html#pay" class="menu-item-link" id="nav-emp-pay">Pay Employee</a></li>
                                     <li><a href="/attendance.html#super" class="menu-item-link" id="nav-emp-super">Superannuation</a></li>
                                 </ul>
@@ -192,12 +210,12 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"><i class="ti ti-file-text"></i><span>Averion Global</span><span class="menu-arrow"></span></a>
                                 <ul>
-                                    <li><a href="/attendance.html#averion-employees" class="menu-item-link" id="nav-averion-employees">Employees</a></li>
+                                    <li><a href="/attendance.html#averion-employees" class="menu-item-link" id="nav-averion-employees">Employee</a></li>
+                                    <li><a href="/attendance.html#averion-pt" class="menu-item-link" id="nav-averion-documentation">Documentation</a></li>
                                     <li><a href="/attendance.html#averion-leave" class="menu-item-link" id="nav-averion-leave">Leaves</a></li>
-                                    <li><a href="/attendance.html#averion-timesheets" class="menu-item-link" id="nav-averion-timesheets">Timesheets</a></li>
+                                    <li><a href="/attendance.html#averion-timesheets" class="menu-item-link" id="nav-averion-timesheets">Attendance Summary</a></li>
                                     <li><a href="/attendance.html#averion-pay" class="menu-item-link" id="nav-averion-pay">Pay Employee</a></li>
-                                    <li><a href="/attendance.html#averion-pt" class="menu-item-link" id="nav-averion-pt">PT Slab</a></li>
-                                    <li><a href="/attendance.html#averion-tax-slab" class="menu-item-link" id="nav-averion-tax-slab">Income Tax Slab</a></li>
+                                    <li><a href="/attendance.html#averion-tax-slab" class="menu-item-link" id="nav-averion-tax-slab">Tax Deductions</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -497,7 +515,23 @@
             } else if (currentPath === "/company_details.html") {
                 targetLinkId = "nav-company-details";
             } else if (currentPath === "/admin.html") {
-                targetLinkId = "nav-user-mgmt";
+                if (currentHash === "#roles") {
+                    targetLinkId = "nav-roles-permissions";
+                } else if (currentHash === "#requests") {
+                    targetLinkId = "nav-requests";
+                } else if (currentHash === "#departments") {
+                    targetLinkId = "nav-departments";
+                } else if (currentHash === "#staff") {
+                    targetLinkId = "nav-staff-directory";
+                } else if (currentHash === "#devices") {
+                    targetLinkId = "nav-device-mgmt";
+                } else if (currentHash === "#login-history") {
+                    targetLinkId = "nav-login-history";
+                } else {
+                    targetLinkId = "nav-manage-users";
+                }
+            } else if (currentPath === "/activity_logs.html") {
+                targetLinkId = "nav-activity-logs";
             } else if (currentPath === "/attendance.html") {
                 // Check hash values for attendance
                 if (currentHash === "#leave") {
@@ -517,7 +551,7 @@
                 } else if (currentHash === "#averion-pay") {
                     targetLinkId = "nav-averion-pay";
                 } else if (currentHash === "#averion-pt") {
-                    targetLinkId = "nav-averion-pt";
+                    targetLinkId = "nav-averion-documentation";
                 } else if (currentHash === "#averion-tax-slab") {
                     targetLinkId = "nav-averion-tax-slab";
                 } else {
@@ -613,25 +647,50 @@
                             };
 
                             // Run permission checks
-                            checkPermission('nav-products', 'Masters', 'Manage Products');
-                            checkPermission('nav-combo', 'Masters', 'Manage Products');
-                            checkPermission('nav-stc', 'Masters', 'Manage STC');
-                            checkPermission('nav-rebate', 'Masters', 'Manage Rebates');
-                            checkPermission('nav-margin', 'Masters', 'Manage Margins');
-                            checkPermission('nav-charges', 'Masters', 'Manage Charges');
-                            checkPermission('nav-installations', 'Ares Installation Outside', 'Installations');
-                            checkPermission('nav-out-pay', 'Ares Installation Outside', 'Outstanding Payments');
-                            checkPermission('nav-paid-pay', 'Ares Installation Outside', 'Paid Payments');
-                            checkPermission('nav-company', 'Ares Installation Outside', 'Company Details');
-                            checkPermission('nav-user-mgmt', 'Settings', 'Manage Users');
-                            checkPermission('nav-project-leads', 'Sales', 'Leads');
-                            checkPermission('nav-lead-approvals', 'Lead Master', 'Lead Approvals');
-                            
-                            checkPermission('nav-emp-employees', 'Attendance & Payroll', 'Employees');
-                            checkPermission('nav-emp-leave', 'Attendance & Payroll', 'Leave');
-                            checkPermission('nav-emp-timesheets', 'Attendance & Payroll', 'Timesheets');
-                            checkPermission('nav-pay-employee', 'Attendance & Payroll', 'Pay Employee');
-                            checkPermission('nav-superannuation', 'Attendance & Payroll', 'Superannuation');
+                             checkPermission('nav-products', 'Masters', 'Manage Products');
+                             checkPermission('nav-product-master', 'Masters', 'Manage Products');
+                             checkPermission('nav-combo', 'Masters', 'Manage Products');
+                             checkPermission('nav-combo-master', 'Masters', 'Manage Products');
+                             checkPermission('nav-stc', 'Masters', 'Manage STC');
+                             checkPermission('nav-stc-master', 'Masters', 'Manage STC');
+                             checkPermission('nav-rebate', 'Masters', 'Manage Rebates');
+                             checkPermission('nav-rebate-master', 'Masters', 'Manage Rebates');
+                             checkPermission('nav-margin', 'Masters', 'Manage Margins');
+                             checkPermission('nav-margin-master', 'Masters', 'Manage Margins');
+                             checkPermission('nav-charges', 'Masters', 'Manage Charges');
+                             checkPermission('nav-install-charges', 'Masters', 'Manage Charges');
+                             checkPermission('nav-installations', 'Ares Installation Outside', 'Installations');
+                             checkPermission('nav-out-pay', 'Ares Installation Outside', 'Outstanding Payments');
+                             checkPermission('nav-paid-pay', 'Ares Installation Outside', 'Paid Payments');
+                             checkPermission('nav-company', 'Ares Installation Outside', 'Company Details');
+                             checkPermission('nav-company-details', 'Ares Installation Outside', 'Company Details');
+                             checkPermission('nav-user-mgmt', 'Settings', 'Manage Users');
+                             checkPermission('nav-user-mgmt-parent', 'Settings', 'Manage Users');
+                             checkPermission('nav-manage-users', 'Settings', 'Manage Users');
+                             checkPermission('nav-roles-permissions', 'Settings', 'Manage Users');
+                             checkPermission('nav-requests', 'Settings', 'Manage Users');
+                             checkPermission('nav-departments', 'Settings', 'Manage Users');
+                             checkPermission('nav-staff-directory', 'Settings', 'Manage Users');
+                             checkPermission('nav-device-mgmt', 'Settings', 'Manage Users');
+                             checkPermission('nav-login-history', 'Settings', 'Manage Users');
+                             checkPermission('nav-activity-logs', 'Settings', 'Manage Users');
+                             checkPermission('nav-project-leads', 'Sales', 'Leads');
+                             checkPermission('nav-lead-approvals', 'Lead Master', 'Lead Approvals');
+                             
+                             checkPermission('nav-emp-employees', 'Attendance & Payroll', 'Employees');
+                             checkPermission('nav-emp-leave', 'Attendance & Payroll', 'Leave');
+                             checkPermission('nav-emp-timesheets', 'Attendance & Payroll', 'Timesheets');
+                             checkPermission('nav-emp-pay', 'Attendance & Payroll', 'Pay Employee');
+                             checkPermission('nav-pay-employee', 'Attendance & Payroll', 'Pay Employee');
+                             checkPermission('nav-emp-super', 'Attendance & Payroll', 'Superannuation');
+                             checkPermission('nav-superannuation', 'Attendance & Payroll', 'Superannuation');
+
+                             checkPermission('nav-averion-employees', 'Attendance & Payroll', 'Employees');
+                             checkPermission('nav-averion-leave', 'Attendance & Payroll', 'Leave');
+                             checkPermission('nav-averion-timesheets', 'Attendance & Payroll', 'Timesheets');
+                             checkPermission('nav-averion-pay', 'Attendance & Payroll', 'Pay Employee');
+                             checkPermission('nav-averion-documentation', 'Attendance & Payroll', 'Employees');
+                             checkPermission('nav-averion-tax-slab', 'Attendance & Payroll', 'Income Tax Slab');
 
                             // Hide empty parent submenus
                             document.querySelectorAll('.sidebar .submenu').forEach(sub => {
