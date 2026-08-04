@@ -7985,6 +7985,47 @@ function loadPayrollModuleData() {
     fetch(`/api/payroll/history/${targetUserId}`)
         .then(res => res.json())
         .then(rows => {
+            // Calculate and display next fortnight date range if cycle is Fortnightly and Australian rules apply (Ares/Gills)
+            if (activePayrollCompanyFilter !== 'Averion Global LLP') {
+                const cycle = document.getElementById('payrollCycle').value;
+                if (cycle === 'Fortnightly') {
+                    let nextStart, nextEnd;
+                    if (rows && rows.length > 0) {
+                        // Find the latest pay_period_end date
+                        const dates = rows.map(r => new Date(r.pay_period_end)).sort((a, b) => b - a);
+                        const latestEnd = dates[0];
+                        
+                        nextStart = new Date(latestEnd);
+                        nextStart.setDate(latestEnd.getDate() + 1);
+                        
+                        nextEnd = new Date(nextStart);
+                        nextEnd.setDate(nextStart.getDate() + 13);
+                    } else {
+                        // Default to start of selected month
+                        const month = parseInt(document.getElementById('payrollMonth').value, 10);
+                        const year = parseInt(document.getElementById('payrollYear').value, 10);
+                        nextStart = new Date(year, month, 1);
+                        nextEnd = new Date(year, month, 14);
+                    }
+                    
+                    const startStr = formatDateISO(nextStart);
+                    const endStr = formatDateISO(nextEnd);
+                    
+                    document.getElementById('payrollStart').value = startStr;
+                    document.getElementById('payrollEnd').value = endStr;
+                    
+                    const subList = document.getElementById('payrollSubCycleList');
+                    if (subList) {
+                        subList.innerHTML = `
+                            <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0;">
+                                <i class="ti ti-calendar" style="margin-right: 6px; font-size: 16px; vertical-align: middle;"></i>
+                                <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
             historyBody.innerHTML = '';
             if (rows.length === 0) {
                 historyBody.innerHTML = '<tr><td colspan="11" class="no-data">No payroll records logged for this employee.</td></tr>';
@@ -8424,30 +8465,53 @@ function updatePayPeriodSelection() {
         updateSelectedWeeksOrFortnights();
     } 
     else if (cycle === 'Fortnightly') {
-        const fortnights = [
-            {
-                num: 1,
-                start: formatDateISO(new Date(year, month, 1)),
-                end: formatDateISO(new Date(year, month, 15))
-            },
-            {
-                num: 2,
-                start: formatDateISO(new Date(year, month, 16)),
-                end: formatDateISO(new Date(year, month + 1, 0))
+        if (activePayrollCompanyFilter !== 'Averion Global LLP') {
+            const empSelect = document.getElementById('payrollEmployeeSelect');
+            const empId = empSelect ? empSelect.value : '';
+            if (empId) {
+                // If employee is selected, load history to calculate correct next fortnight
+                loadPayrollModuleData();
+            } else {
+                // Default month first 14 days
+                const nextStart = new Date(year, month, 1);
+                const nextEnd = new Date(year, month, 14);
+                
+                document.getElementById('payrollStart').value = formatDateISO(nextStart);
+                document.getElementById('payrollEnd').value = formatDateISO(nextEnd);
+                
+                subList.innerHTML = `
+                    <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0;">
+                        <i class="ti ti-calendar" style="margin-right: 6px; font-size: 16px; vertical-align: middle;"></i>
+                        <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
+                    </div>
+                `;
             }
-        ];
-        
-        let html = '';
-        fortnights.forEach((f, idx) => {
-            html += `
-                <label class="period-select-card">
-                    <input type="checkbox" name="payrollFortnights" class="fortnight-checkbox" value="${f.start}_${f.end}" onchange="updateSelectedWeeksOrFortnights()" style="cursor:pointer;" ${idx === 0 ? 'checked' : ''}>
-                    Fortnight ${f.num}
-                </label>
-            `;
-        });
-        subList.innerHTML = html;
-        updateSelectedWeeksOrFortnights();
+        } else {
+            const fortnights = [
+                {
+                    num: 1,
+                    start: formatDateISO(new Date(year, month, 1)),
+                    end: formatDateISO(new Date(year, month, 15))
+                },
+                {
+                    num: 2,
+                    start: formatDateISO(new Date(year, month, 16)),
+                    end: formatDateISO(new Date(year, month + 1, 0))
+                }
+            ];
+            
+            let html = '';
+            fortnights.forEach((f, idx) => {
+                html += `
+                    <label class="period-select-card">
+                        <input type="checkbox" name="payrollFortnights" class="fortnight-checkbox" value="${f.start}_${f.end}" onchange="updateSelectedWeeksOrFortnights()" style="cursor:pointer;" ${idx === 0 ? 'checked' : ''}>
+                        Fortnight ${f.num}
+                    </label>
+                `;
+            });
+            subList.innerHTML = html;
+            updateSelectedWeeksOrFortnights();
+        }
     }
 }
 
