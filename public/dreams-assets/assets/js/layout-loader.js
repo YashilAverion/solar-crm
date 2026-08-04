@@ -1645,6 +1645,12 @@
             if (match3) {
                 return `${match3[3]}-${match3[2]}-${match3[1]}`;
             }
+
+            // Check YYYY-MM-DD to YYYY-MM-DD date range
+            let matchRange = val.match(/^(\d{4})-(\d{2})-(\d{2})\s+to\s+(\d{4})-(\d{2})-(\d{2})$/);
+            if (matchRange) {
+                return `${matchRange[3]}-${matchRange[2]}-${matchRange[1]} to ${matchRange[6]}-${matchRange[5]}-${matchRange[4]}`;
+            }
             
             return str;
         }
