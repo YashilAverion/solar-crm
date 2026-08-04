@@ -1932,11 +1932,24 @@
                     </div>
 
                     <!-- Historic processed payslips -->
-                    <h4 style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; margin-top:24px;">Processed Payslips Ledger</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+                        <h4 style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Processed Payslips Ledger</h4>
+                        <button id="payrollBulkDeleteBtn" class="btn-calc" onclick="bulkDeletePayrollRecords()" style="display: none; background: #ef4444 !important; border-color: #ef4444 !important; height: 30px !important; padding: 0 12px !important; font-size: 11px !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important; align-items: center; justify-content: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                            Bulk Delete (<span id="payrollSelectedCount">0</span>)
+                        </button>
+                    </div>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
+                                    <th style="width: 40px; text-align: center; vertical-align: middle;">
+                                        <input type="checkbox" id="payrollSelectAll" onchange="toggleSelectAllPayrollRows(this)" style="cursor: pointer; transform: scale(1.1); vertical-align: middle;">
+                                    </th>
                                     <th>Pay Period</th>
                                     <th>Actual Hours</th>
                                     <th>Ordinary Hours</th>
@@ -2500,6 +2513,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
     // Listen to hash fragment changes dynamically
     window.addEventListener('hashchange', renderHashTab);
+    
+    initPayrollKeyboardNavigation();
 });
 
 let activeTaxRegime = 'New';
@@ -8084,7 +8099,7 @@ function loadPayrollModuleData() {
     }
     
     if (historyBody) {
-        historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Loading processed payslips ledger...</td></tr>';
+        historyBody.innerHTML = '<tr><td colspan="12" class="no-data">Loading processed payslips ledger...</td></tr>';
     }
     
     const superHeader = document.getElementById('payrollSuperHeader');
@@ -8119,18 +8134,30 @@ function loadPayrollModuleData() {
             }
 
             historyBody.innerHTML = '';
+            
+            // Reset select all checkbox and hide bulk delete button
+            const headerCheckbox = document.getElementById('payrollSelectAll');
+            if (headerCheckbox) headerCheckbox.checked = false;
+            updatePayrollBulkDeleteButton();
+
             if (displayRows.length === 0) {
                 const emptyMsg = (targetUserId === 'all') ? 
                     'No payroll records logged for this company.' : 
                     'No payroll records logged for this employee.';
-                historyBody.innerHTML = `<tr><td colspan="11" class="no-data">${emptyMsg}</td></tr>`;
+                historyBody.innerHTML = `<tr><td colspan="12" class="no-data">${emptyMsg}</td></tr>`;
                 return;
             }
             
             displayRows.forEach(r => {
                 const currencySym = activePayrollCompanyFilter === 'Averion Global LLP' ? '₹' : '$';
                 const taxSign = r.tax_withheld > 0 ? '-' : '';
+                
                 const tr = document.createElement('tr');
+                tr.className = 'payroll-row';
+                tr.setAttribute('tabindex', '0');
+                tr.setAttribute('data-id', r.id);
+                tr.style.outline = 'none';
+                tr.addEventListener('click', (e) => handlePayrollRowClick(e, tr));
                 
                 const periodCellContent = r.full_name ? 
                     `<div style="font-weight: 700; line-height: 1.2;">${r.full_name}</div>
@@ -8138,6 +8165,9 @@ function loadPayrollModuleData() {
                     `<div style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</div>`;
                 
                 tr.innerHTML = `
+                    <td style="text-align: center; vertical-align: middle;">
+                        <input type="checkbox" class="payroll-row-checkbox" value="${r.id}" onchange="updatePayrollBulkDeleteButton()" style="cursor: pointer; transform: scale(1.1);" onclick="event.stopPropagation();">
+                    </td>
                     <td style="vertical-align: middle;">${periodCellContent}</td>
                     <td>${(r.actual_hours || 0).toFixed(2)} hrs</td>
                     <td>${r.ordinary_hours.toFixed(2)} hrs</td>
@@ -8460,6 +8490,214 @@ function deletePayrollRecord(id) {
             .catch(err => {
                 showXeroToast('Failed to delete payslip: ' + err.message, 'error');
             });
+        }
+    });
+}
+
+// Variable to store the index of the last clicked/selected row for shift-selection
+let lastSelectedPayrollIdx = -1;
+
+function initPayrollKeyboardNavigation() {
+    const historyBody = document.getElementById('payrollHistoryBody');
+    if (!historyBody) return;
+    
+    // Keydown navigation & Shift-based multiselection
+    historyBody.addEventListener('keydown', (e) => {
+        const activeRow = document.activeElement;
+        if (!activeRow || !activeRow.classList.contains('payroll-row')) return;
+        
+        const rows = Array.from(historyBody.querySelectorAll('.payroll-row'));
+        const idx = rows.indexOf(activeRow);
+        if (idx === -1) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIdx = idx + 1;
+            if (nextIdx < rows.length) {
+                const nextRow = rows[nextIdx];
+                nextRow.focus();
+                
+                if (e.shiftKey) {
+                    const checkbox = nextRow.querySelector('.payroll-row-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        updatePayrollRowStyle(nextRow, true);
+                    }
+                    // Also make sure active row is checked
+                    const activeCheckbox = activeRow.querySelector('.payroll-row-checkbox');
+                    if (activeCheckbox) {
+                        activeCheckbox.checked = true;
+                        updatePayrollRowStyle(activeRow, true);
+                    }
+                    updatePayrollBulkDeleteButton();
+                }
+            }
+        } 
+        else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIdx = idx - 1;
+            if (prevIdx >= 0) {
+                const prevRow = rows[prevIdx];
+                prevRow.focus();
+                
+                if (e.shiftKey) {
+                    const checkbox = prevRow.querySelector('.payroll-row-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        updatePayrollRowStyle(prevRow, true);
+                    }
+                    // Also make sure active row is checked
+                    const activeCheckbox = activeRow.querySelector('.payroll-row-checkbox');
+                    if (activeCheckbox) {
+                        activeCheckbox.checked = true;
+                        updatePayrollRowStyle(activeRow, true);
+                    }
+                    updatePayrollBulkDeleteButton();
+                }
+            }
+        }
+        else if (e.key === ' ') {
+            e.preventDefault();
+            const checkbox = activeRow.querySelector('.payroll-row-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updatePayrollRowStyle(activeRow, checkbox.checked);
+                updatePayrollBulkDeleteButton();
+            }
+        }
+    });
+}
+
+function updatePayrollRowStyle(row, isChecked) {
+    if (isChecked) {
+        row.style.backgroundColor = '#f1f5f9';
+    } else {
+        row.style.backgroundColor = '';
+    }
+}
+
+function handlePayrollRowClick(e, tr) {
+    if (e.target.closest('button') || e.target.closest('input[type="checkbox"]') || e.target.closest('svg')) {
+        return;
+    }
+    
+    const historyBody = document.getElementById('payrollHistoryBody');
+    const rows = Array.from(historyBody.querySelectorAll('.payroll-row'));
+    const idx = rows.indexOf(tr);
+    
+    tr.focus();
+    
+    if (e.shiftKey && lastSelectedPayrollIdx !== -1) {
+        e.preventDefault();
+        const start = Math.min(lastSelectedPayrollIdx, idx);
+        const end = Math.max(lastSelectedPayrollIdx, idx);
+        
+        for (let i = start; i <= end; i++) {
+            const checkbox = rows[i].querySelector('.payroll-row-checkbox');
+            if (checkbox) {
+                checkbox.checked = true;
+                updatePayrollRowStyle(rows[i], true);
+            }
+        }
+        updatePayrollBulkDeleteButton();
+    } else {
+        lastSelectedPayrollIdx = idx;
+    }
+}
+
+function toggleSelectAllPayrollRows(headerCheckbox) {
+    const checkboxes = document.querySelectorAll('.payroll-row-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = headerCheckbox.checked;
+        const row = cb.closest('tr');
+        if (row) updatePayrollRowStyle(row, cb.checked);
+    });
+    updatePayrollBulkDeleteButton();
+}
+
+function updatePayrollBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('.payroll-row-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    
+    const btn = document.getElementById('payrollBulkDeleteBtn');
+    const countSpan = document.getElementById('payrollSelectedCount');
+    
+    if (btn && countSpan) {
+        if (checked.length > 2) {
+            btn.style.display = 'inline-flex';
+            countSpan.textContent = checked.length;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+    
+    const headerCheckbox = document.getElementById('payrollSelectAll');
+    if (headerCheckbox) {
+        headerCheckbox.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+    }
+}
+
+function bulkDeletePayrollRecords() {
+    const checked = Array.from(document.querySelectorAll('.payroll-row-checkbox:checked'));
+    if (checked.length <= 2) return;
+    
+    Swal.fire({
+        title: 'Bulk Delete Payslips',
+        text: `Are you sure you want to permanently delete all ${checked.length} selected payslip records?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete all!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Deleting Records',
+                html: `Deleting <b>0</b> of ${checked.length} payslips...`,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            let processed = 0;
+            let success = 0;
+            let fail = 0;
+            
+            const promises = checked.map(cb => {
+                const id = cb.value;
+                return fetch(`/api/payroll/history/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(res => {
+                    if (res.ok) success++;
+                    else fail++;
+                })
+                .catch(() => {
+                    fail++;
+                })
+                .finally(() => {
+                    processed++;
+                    if (Swal.getHtmlContainer()) {
+                        Swal.getHtmlContainer().innerHTML = `Deleting <b>${processed}</b> of ${checked.length} payslips...`;
+                    }
+                });
+            });
+            
+            Promise.all(promises)
+                .then(() => {
+                    Swal.fire({
+                        icon: fail === 0 ? 'success' : 'warning',
+                        title: 'Bulk Delete Complete',
+                        text: `Successfully deleted ${success} records. ${fail > 0 ? `Failed to delete ${fail} records.` : ''}`,
+                        confirmButtonColor: '#e41f07'
+                    }).then(() => {
+                        const headerCheckbox = document.getElementById('payrollSelectAll');
+                        if (headerCheckbox) headerCheckbox.checked = false;
+                        loadPayrollModuleData();
+                    });
+                });
         }
     });
 }
