@@ -1255,6 +1255,16 @@
                 border-color: #c11a06 !important;
                 box-shadow: 0 4px 12px rgba(193, 26, 6, 0.25) !important;
             }
+            .btn-calc-all, button.btn-calc-all {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15) !important;
+            }
+            .btn-calc-all:hover, button.btn-calc-all:hover {
+                background: #1d4ed8 !important;
+                border-color: #1d4ed8 !important;
+                box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25) !important;
+            }
             
             /* Submenu labels (EMPLOYEE, MONTH, etc.) */
             .payslip-generator label, .supervisor-filters label, .supervisor-header label, .tab-panel label {

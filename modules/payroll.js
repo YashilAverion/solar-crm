@@ -315,6 +315,22 @@ router.post('/calculate-period', requireAuth, (req, res) => {
 // GET /history/:user_id (Retrieve employee payslip history)
 router.get('/history/:user_id', requireAuth, (req, res) => {
     const userId = req.params.user_id;
+    if (userId === 'all') {
+        db.all(
+            `SELECT r.*, w.full_name, w.role as worker_role, w.company_name
+             FROM payroll_historical_records r
+             JOIN attendance_workers w ON r.user_id = w.id
+             ORDER BY r.pay_period_end DESC, r.created_at DESC`,
+            [],
+            (err, rows) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                res.json(rows || []);
+            }
+        );
+        return;
+    }
     db.all(
         `SELECT * FROM payroll_historical_records WHERE user_id = ? ORDER BY pay_period_end DESC`,
         [userId],

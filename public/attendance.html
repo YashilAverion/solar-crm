@@ -1864,8 +1864,11 @@
                                 </div>
                             </div>
                             
-                            <button class="btn-calc" onclick="calculatePayroll()">
-                                Calculate & Register Payslip
+                            <button class="btn-calc" onclick="calculatePayroll()" style="margin-right: 8px;">
+                                Calculate Pay
+                            </button>
+                            <button class="btn-calc btn-calc-all" onclick="calculatePayrollForAll()">
+                                Calculate & Register All
                             </button>
                         </div>
                     </div>
@@ -5121,6 +5124,111 @@ function calculatePayroll() {
     });
 }
 
+// Calculate and submit payroll for all active employees of the active company
+function calculatePayrollForAll() {
+    const start = document.getElementById('payrollStart').value;
+    const end = document.getElementById('payrollEnd').value;
+    
+    if (!start || !end) {
+        showXeroToast('Please define period start and end bounds.', 'error');
+        return;
+    }
+    
+    const activeEmployees = (window.allWorkers || []).filter(u => {
+        const workerCompany = u.company_name || 'Ares Energy';
+        return u.status === 'Active' && workerCompany === activePayrollCompanyFilter;
+    });
+    
+    if (activeEmployees.length === 0) {
+        showXeroToast('No active employees found for ' + activePayrollCompanyFilter, 'error');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Bulk Payroll Registration',
+        html: `Initializing payroll calculation for <b>${activeEmployees.length}</b> employees...`,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    let processedCount = 0;
+    let successCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    const failedNames = [];
+    
+    const promises = activeEmployees.map(emp => {
+        return fetch('/api/payroll/calculate-period', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: emp.id,
+                pay_period_start: start,
+                pay_period_end: end
+            })
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) {
+                if (data.error && data.error.includes('No approved timesheet entries')) {
+                    skippedCount++;
+                } else {
+                    throw new Error(data.error || 'Failed to process.');
+                }
+            } else {
+                successCount++;
+            }
+        })
+        .catch(err => {
+            console.error(`Failed to process payroll for ${emp.full_name}:`, err);
+            errorCount++;
+            failedNames.push(`${emp.full_name} (${err.message})`);
+        })
+        .finally(() => {
+            processedCount++;
+            if (Swal.getHtmlContainer()) {
+                Swal.getHtmlContainer().innerHTML = `
+                    Processing pay for <b>${processedCount}</b> of ${activeEmployees.length} employees...<br/><br/>
+                    <span style="color: green; font-weight: 600;">Success: ${successCount}</span><br/>
+                    <span style="color: orange; font-weight: 600;">No Shift Logs (Skipped): ${skippedCount}</span><br/>
+                    <span style="color: red; font-weight: 600;">Errors: ${errorCount}</span>
+                `;
+            }
+        });
+    });
+    
+    Promise.all(promises)
+        .then(() => {
+            let resultHtml = `
+                <div style="text-align: left; font-size: 13px; line-height: 1.5;">
+                    <p style="color: green; font-weight: 700; font-size: 14px;">✓ Successfully registered: ${successCount} employees</p>
+                    <p style="color: orange; font-weight: 700; font-size: 14px;">⚠ Skipped (No approved hours): ${skippedCount} employees</p>
+            `;
+            if (errorCount > 0) {
+                resultHtml += `
+                    <p style="color: red; font-weight: 700; font-size: 14px;">✗ Failed to register: ${errorCount} employees</p>
+                    <ul style="max-height: 120px; overflow-y: auto; padding-left: 20px; color: #555; background: #fafafa; border: 1px solid #eee; border-radius: 4px; padding-top: 5px; padding-bottom: 5px;">
+                        ${failedNames.map(name => `<li>${name}</li>`).join('')}
+                    </ul>
+                `;
+            }
+            resultHtml += `</div>`;
+            
+            Swal.fire({
+                icon: errorCount === 0 ? 'success' : 'warning',
+                title: 'Bulk Registration Complete',
+                html: resultHtml,
+                confirmButtonColor: '#e41f07',
+                confirmButtonText: 'Great, refresh ledger'
+            }).then(() => {
+                loadPayrollModuleData();
+            });
+        });
+}
+
 
 // ==================== 5. SUPERANNUATION COMPLIANCE LOGIC ====================
 
@@ -7969,15 +8077,7 @@ function loadPayrollModuleData() {
     
     const isMgr = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Manager' || currentUser.role.includes('Manager'));
     
-    if (isMgr && !employeeId) {
-        if (historyBody) {
-            historyBody.innerHTML = '<tr><td colspan="11" class="no-data">Select an employee to view processed payslips ledger.</td></tr>';
-        }
-        updatePayPeriodSelection();
-        return;
-    }
-    
-    const targetUserId = employeeId || (currentUser ? currentUser.id : null);
+    const targetUserId = (isMgr && !employeeId) ? 'all' : (employeeId || (currentUser ? currentUser.id : null));
     if (!targetUserId) {
         updatePayPeriodSelection();
         return;
@@ -8009,18 +8109,36 @@ function loadPayrollModuleData() {
                 }
             }
 
+            // Filter by company if targetUserId is 'all'
+            let displayRows = rows;
+            if (targetUserId === 'all') {
+                displayRows = rows.filter(r => {
+                    const comp = r.company_name || 'Ares Energy';
+                    return comp === activePayrollCompanyFilter;
+                });
+            }
+
             historyBody.innerHTML = '';
-            if (rows.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="11" class="no-data">No payroll records logged for this employee.</td></tr>';
+            if (displayRows.length === 0) {
+                const emptyMsg = (targetUserId === 'all') ? 
+                    'No payroll records logged for this company.' : 
+                    'No payroll records logged for this employee.';
+                historyBody.innerHTML = `<tr><td colspan="11" class="no-data">${emptyMsg}</td></tr>`;
                 return;
             }
             
-            rows.forEach(r => {
+            displayRows.forEach(r => {
                 const currencySym = activePayrollCompanyFilter === 'Averion Global LLP' ? '₹' : '$';
                 const taxSign = r.tax_withheld > 0 ? '-' : '';
                 const tr = document.createElement('tr');
+                
+                const periodCellContent = r.full_name ? 
+                    `<div style="font-weight: 700; line-height: 1.2;">${r.full_name}</div>
+                     <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${r.pay_period_start} to ${r.pay_period_end}</div>` :
+                    `<div style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</div>`;
+                
                 tr.innerHTML = `
-                    <td style="font-weight: 700;">${r.pay_period_start} to ${r.pay_period_end}</td>
+                    <td style="vertical-align: middle;">${periodCellContent}</td>
                     <td>${(r.actual_hours || 0).toFixed(2)} hrs</td>
                     <td>${r.ordinary_hours.toFixed(2)} hrs</td>
                     <td>${r.overtime_hours.toFixed(2)} hrs</td>
@@ -8028,8 +8146,8 @@ function loadPayrollModuleData() {
                     <td style="font-weight: 600; position: relative;" class="gross-pay-cell" onmouseenter="showGrossPayTooltip(event, this)" onmouseleave="hideGrossPayTooltip()" data-calc="${encodeURIComponent(JSON.stringify(r))}">
                         ${currencySym}${r.gross_pay.toFixed(2)}
                     </td>
-                    <td style="color:var(--danger)">${taxSign}${currencySym}${r.tax_withheld.toFixed(2)}</td></td>
-                    <td style="color:var(--primary)">${currencySym}${r.super_contribution.toFixed(2)}</td></td>
+                    <td style="color:var(--danger)">${taxSign}${currencySym}${r.tax_withheld.toFixed(2)}</td>
+                    <td style="color:var(--primary)">${currencySym}${r.super_contribution.toFixed(2)}</td>
                     <td style="font-weight: 700; color:var(--success)">${currencySym}${r.net_pay.toFixed(2)}</td>
                     <td style="font-size:10px; color:var(--text-muted);">${formatGeneratedOn(r.created_at, r.generated_by)}</td>
                     <td>
@@ -8061,7 +8179,7 @@ function loadPayrollModuleData() {
             });
         })
         .catch(err => {
-            historyBody.innerHTML = '<tr><td colspan="9" class="no-data" style="color:var(--danger)">Failed to load processed payslips.</td></tr>';
+            historyBody.innerHTML = '<tr><td colspan="11" class="no-data" style="color:var(--danger)">Failed to load processed payslips.</td></tr>';
         });
 }
 
