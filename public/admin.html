@@ -470,8 +470,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <div class="main-wrap">
     <div class="topbar">
-        <div class="topbar-title">User Management</div>
-        <div style="margin-left:12px; font-size:11px; color:var(--text-muted); background:var(--bg); padding:4px 10px; border-radius:20px; border:1px solid var(--border); display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;" title="System Backup Status">
+        <div class="topbar-title" id="adminPageTitle">User Management</div>
+        <div id="backup-status-wrapper" style="margin-left:12px; font-size:11px; color:var(--text-muted); background:var(--bg); padding:4px 10px; border-radius:20px; border:1px solid var(--border); display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;" title="System Backup Status">
             <span>&#128190; Last Backup:</span>
             <strong id="lastBackupTime" style="color:var(--primary);">Loading...</strong>
         </div>
@@ -504,10 +504,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 <option value="Service Executive">Service Executive</option>
             </optgroup>
         </select>
+        
+        <!-- Dynamic Roles & Permissions topbar elements -->
+        <input type="text" id="roleSearch" placeholder="Search roles..." oninput="filterRolesTable()" style="display:none; margin-left:12px; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:13px; outline:none; width:200px;">
+        
         <div class="tb-spacer"></div>
-        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
-        <button class="tb-btn" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()"><i class="ti ti-cloud-upload"></i> Backup Now</button>
-        <button class="tb-btn btn-add" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()"><i class="ti ti-plus"></i> Add User</button>
+        <button class="tb-btn" id="btn-restore-backup" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
+        <button class="tb-btn" id="btn-backup-now" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()"><i class="ti ti-cloud-upload"></i> Backup Now</button>
+        <button class="tb-btn btn-add" id="btn-add-user" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()"><i class="ti ti-plus"></i> Add User</button>
+        <button class="tb-btn btn-add" id="btn-add-role" style="display:none;" onclick="openAddRoleModal()"><i class="ti ti-plus"></i> Add New Role</button>
     </div>
 
     <div class="stats-row">
@@ -962,6 +967,53 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
             </div>
         </div>
+
+        <div id="section-roles-permissions" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
+            <div class="table-wrap">
+                <table class="table table-roles">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;"><input type="checkbox" id="selectAllRoles" onchange="toggleSelectAllRoles(this.checked)"></th>
+                            <th style="text-align: left; padding-left: 20px;">Role Name</th>
+                            <th>Created</th>
+                            <th style="text-align: center; width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rolesBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination-footer">
+                <div class="pf-left">
+                    <span class="pf-label">Show:</span>
+                    <select class="rows-select" id="rolesRowsPerPage" onchange="changeRolesRowsPerPage()">
+                        <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                    </select>
+                    <span class="total-badge">Total: <span id="totalRolesCount">0</span></span>
+                </div>
+                <div class="pf-right">
+                    <span class="page-info" id="rolesPageInfo">Page 1 of 1</span>
+                    <button class="page-btn" id="rolesPrevBtn" onclick="prevRolesPage()" disabled>← Prev</button>
+                    <button class="page-btn" id="rolesNextBtn" onclick="nextRolesPage()" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Role Modal -->
+<div id="roleModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="modal-close" type="button" onclick="closeRoleModal()">✕</button>
+        <div class="modal-title">Add New Role</div>
+        <form id="roleForm" onsubmit="saveCustomRole(event)">
+            <div class="field" style="margin-bottom: 15px;">
+                <label class="required">ROLE NAME</label>
+                <input type="text" id="new_role_name" placeholder="e.g. Finance executive" required style="width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px; outline: none;">
+            </div>
+            <div class="form-footer" style="margin-top: 15px;">
+                <button type="submit" class="btn-save">Save Role</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1172,6 +1224,9 @@ document.addEventListener("DOMContentLoaded", function() {
     let currentPage = 1;
     let rowsPerPage = 30;
     let voipStatusInterval = null;
+    let allRolesData = [];
+    let rolesCurrentPage = 1;
+    let rolesRowsPerPage = 30;
     const PERM_ROLES = [
         'Admin',
         'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
@@ -1238,6 +1293,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-storage-backups').style.display = target === 'storage-backups' ? 'flex' : 'none';
         document.getElementById('section-telephony-sandbox').style.display = target === 'telephony-sandbox' ? 'flex' : 'none';
         document.getElementById('section-pylon-config').style.display = target === 'pylon-config' ? 'flex' : 'none';
+        document.getElementById('section-roles-permissions').style.display = target === 'roles-permissions' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
@@ -1245,6 +1301,44 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('tab-storage-backups').classList.toggle('active-chip', target === 'storage-backups');
         document.getElementById('tab-telephony-sandbox').classList.toggle('active-chip', target === 'telephony-sandbox');
         document.getElementById('tab-pylon-config').classList.toggle('active-chip', target === 'pylon-config');
+
+        // Dynamic Topbar adjustment
+        const pageTitleEl = document.getElementById('adminPageTitle');
+        const backupWrapper = document.getElementById('backup-status-wrapper');
+        const userSearchEl = document.getElementById('userSearch');
+        const roleFilterEl = document.getElementById('roleFilter');
+        const restoreBtn = document.getElementById('btn-restore-backup');
+        const backupBtn = document.getElementById('btn-backup-now');
+        const addUserBtn = document.getElementById('btn-add-user');
+        
+        const roleSearchEl = document.getElementById('roleSearch');
+        const addRoleBtn = document.getElementById('btn-add-role');
+
+        if (target === 'roles-permissions') {
+            if (pageTitleEl) pageTitleEl.innerText = 'Roles & Permissions';
+            if (backupWrapper) backupWrapper.style.display = 'none';
+            if (userSearchEl) userSearchEl.style.display = 'none';
+            if (roleFilterEl) roleFilterEl.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            if (backupBtn) backupBtn.style.display = 'none';
+            if (addUserBtn) addUserBtn.style.display = 'none';
+            
+            if (roleSearchEl) roleSearchEl.style.display = 'block';
+            if (addRoleBtn) addRoleBtn.style.display = 'block';
+            
+            loadRolesList();
+        } else {
+            if (pageTitleEl) pageTitleEl.innerText = 'User Management';
+            if (backupWrapper) backupWrapper.style.display = 'flex';
+            if (userSearchEl) userSearchEl.style.display = 'block';
+            if (roleFilterEl) roleFilterEl.style.display = 'block';
+            if (restoreBtn) restoreBtn.style.display = 'block';
+            if (backupBtn) backupBtn.style.display = 'block';
+            if (addUserBtn) addUserBtn.style.display = 'block';
+            
+            if (roleSearchEl) roleSearchEl.style.display = 'none';
+            if (addRoleBtn) addRoleBtn.style.display = 'none';
+        }
         
         if (target === 'rate-limits') {
             loadRateLimits();
@@ -3349,6 +3443,224 @@ Initializing deployment stream...
             }
         } catch(e) { window.location.href = "/login"; }
     })();
+
+    // ── ROLES & PERMISSIONS MANAGER ─────────────────────────
+    async function loadRolesList() {
+        try {
+            const res = await fetch('/api/roles');
+            if (res.ok) {
+                allRolesData = await res.json();
+                document.getElementById('rolesCountBadge').innerText = allRolesData.length;
+                renderRolesTable();
+            }
+        } catch (e) {
+            console.error("Failed to load roles list", e);
+        }
+    }
+
+    function renderRolesTable() {
+        const tbody = document.getElementById('rolesBody');
+        if (!tbody) return;
+
+        const query = document.getElementById('roleSearch').value.toLowerCase().trim();
+        const filtered = allRolesData.filter(r => r.role_name.toLowerCase().includes(query));
+        
+        document.getElementById('totalRolesCount').innerText = filtered.length;
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No roles found.</td></tr>`;
+            return;
+        }
+
+        // Pagination
+        const totalPages = Math.ceil(filtered.length / rolesRowsPerPage);
+        if (rolesCurrentPage > totalPages) rolesCurrentPage = Math.max(1, totalPages);
+
+        const startIdx = (rolesCurrentPage - 1) * rolesRowsPerPage;
+        const endIdx = startIdx + rolesRowsPerPage;
+        const pageData = filtered.slice(startIdx, endIdx);
+
+        // Update footer pagination display
+        document.getElementById('rolesPageInfo').innerText = `Page ${rolesCurrentPage} of ${totalPages}`;
+        document.getElementById('rolesPrevBtn').disabled = rolesCurrentPage === 1;
+        document.getElementById('rolesNextBtn').disabled = rolesCurrentPage === totalPages;
+
+        tbody.innerHTML = pageData.map(r => {
+            const fmtDate = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }) : '25 Sep 2025, 12:12 pm'; // fallback matching Image 3 demo
+
+            return `
+            <tr>
+                <td style="text-align: center;"><input type="checkbox" class="role-select-check" data-role="${r.role_name}"></td>
+                <td style="font-weight: 700; color: #1c3557; padding-left: 20px;">${r.role_name}</td>
+                <td>${fmtDate}</td>
+                <td style="text-align: center; position: relative;">
+                    <div class="dropdown" style="display:inline-block;">
+                        <button type="button" class="btn btn-sm btn-icon" style="background: none; border: none; padding: 0; outline: none; cursor: pointer; color: #64748b;" onclick="toggleRoleActionsMenu(event, '${r.id}')">
+                            <i class="ti ti-dots-vertical" style="font-size: 16px;"></i>
+                        </button>
+                        <div id="role-menu-${r.id}" class="dropdown-menu-custom" style="display:none; position: absolute; right: 0; background: #fff; border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 140px; padding: 4px 0;">
+                            <a href="javascript:void(0);" onclick="openRolePermissionsEditor('${r.role_name}')" style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 12px; color: var(--text-dark); text-decoration: none; font-weight: 600; text-align: left;"><i class="ti ti-settings"></i> Edit Permissions</a>
+                            ${r.role_name === 'Admin' ? '' : `<a href="javascript:void(0);" onclick="deleteRole('${r.role_name}')" style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 12px; color: var(--danger); text-decoration: none; font-weight: 600; text-align: left;"><i class="ti ti-trash"></i> Delete Role</a>`}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    function toggleRoleActionsMenu(event, id) {
+        event.stopPropagation();
+        // Close all other dropdown menus
+        document.querySelectorAll('.dropdown-menu-custom').forEach(el => {
+            if (el.id !== `role-menu-${id}`) el.style.display = 'none';
+        });
+        
+        const menu = document.getElementById(`role-menu-${id}`);
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    // Close action dropdowns when clicking anywhere outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu-custom').forEach(el => el.style.display = 'none');
+    });
+
+    function filterRolesTable() {
+        rolesCurrentPage = 1;
+        renderRolesTable();
+    }
+
+    function toggleSelectAllRoles(checked) {
+        document.querySelectorAll('.role-select-check').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
+    function changeRolesRowsPerPage() {
+        rolesRowsPerPage = parseInt(document.getElementById('rolesRowsPerPage').value) || 30;
+        rolesCurrentPage = 1;
+        renderRolesTable();
+    }
+
+    function prevRolesPage() {
+        if (rolesCurrentPage > 1) {
+            rolesCurrentPage--;
+            renderRolesTable();
+        }
+    }
+
+    function nextRolesPage() {
+        rolesCurrentPage++;
+        renderRolesTable();
+    }
+
+    function openAddRoleModal() {
+        document.getElementById('roleForm').reset();
+        document.getElementById('roleModal').style.display = 'flex';
+    }
+
+    function closeRoleModal() {
+        document.getElementById('roleModal').style.display = 'none';
+    }
+
+    async function saveCustomRole(event) {
+        event.preventDefault();
+        const roleName = document.getElementById('new_role_name').value.trim();
+        if (!roleName) return;
+
+        try {
+            const res = await fetch('/api/roles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role_name: roleName })
+            });
+
+            if (res.ok) {
+                closeRoleModal();
+                Swal.fire({ icon: 'success', title: 'Role Saved', text: `Role "${roleName}" has been successfully added.` });
+                loadRolesList();
+            } else {
+                const errData = await res.json();
+                Swal.fire({ icon: 'error', title: 'Error', text: errData.error || 'Failed to add role.' });
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Network connection failed.' });
+        }
+    }
+
+    function deleteRole(roleName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `This will permanently delete the role "${roleName}". Existing users under this role will not be deleted but they will lose access defaults.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/roles/${encodeURIComponent(roleName)}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Deleted!', `Role "${roleName}" has been deleted.`, 'success');
+                        loadRolesList();
+                    } else {
+                        const data = await res.json();
+                        Swal.fire('Error', data.error || 'Failed to delete role.', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'Connection failed.', 'error');
+                }
+            }
+        });
+    }
+
+    // Role Permissions override modal editor
+    let activeEditingRole = null;
+    function openRolePermissionsEditor(roleName) {
+        activeEditingRole = roleName;
+        const defaults = getStaticRoleDefaults(roleName);
+        let listHtml = `<div style="text-align:left; font-size:12px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background:#f8fafc;">`;
+        for (const [mod, feats] of Object.entries(defaults)) {
+            listHtml += `<div style="margin-bottom:8px;"><strong style="color:var(--primary); text-transform:uppercase;">${mod}</strong><ul style="list-style:none; padding-left:12px; margin: 4px 0 0 0;">`;
+            for (const [feat, val] of Object.entries(feats)) {
+                listHtml += `<li><i class="ti ${val ? 'ti-check text-success' : 'ti-x text-danger'}"></i> ${feat}</li>`;
+            }
+            listHtml += `</ul></div>`;
+        }
+        listHtml += `</div>`;
+
+        Swal.fire({
+            title: `Defaults for: ${roleName}`,
+            html: listHtml,
+            confirmButtonText: 'Close',
+            customClass: { popup: 'swal2-large-popup' }
+        });
+    }
+
+    // Handle hash-based admin routing
+    function handleAdminHashRouting() {
+        const hash = window.location.hash;
+        if (hash === '#roles') {
+            switchAdminSection('roles-permissions');
+        } else {
+            if (!hash || hash === '#users-list' || hash === '#') {
+                switchAdminSection('users-list');
+            }
+        }
+    }
+
+    window.addEventListener('hashchange', handleAdminHashRouting);
+    window.addEventListener('load', handleAdminHashRouting);
 </script>
 <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>

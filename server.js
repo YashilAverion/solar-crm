@@ -4181,6 +4181,42 @@ app.get('/api/role-permissions/:role', (req, res) => {
     });
 });
 
+// ── CUSTOM ROLES API ──────────────────────────────────────
+app.get('/api/roles', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    db.all("SELECT id, role_name, created_at FROM custom_roles ORDER BY id ASC", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/roles', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const { role_name } = req.body;
+    if (!role_name || !role_name.trim()) return res.status(400).json({ error: 'Role name is required' });
+    
+    db.run("INSERT INTO custom_roles (role_name) VALUES (?)", [role_name.trim()], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE')) {
+                return res.status(400).json({ error: 'Role name already exists' });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true, id: this.lastID });
+    });
+});
+
+app.delete('/api/roles/:roleName', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const { roleName } = req.params;
+    if (!roleName) return res.status(400).json({ error: 'Role name is required' });
+    
+    db.run("DELETE FROM custom_roles WHERE role_name = ?", [roleName], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, changes: this.changes });
+    });
+});
+
 // ── BACKUP MANAGER ────────────────────────────────────────
 const backupManager = require('./backup-manager');
 

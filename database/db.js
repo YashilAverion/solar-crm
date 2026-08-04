@@ -1299,6 +1299,36 @@ db.serialize(() => {
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_user_id ON system_file_operations(user_id)", () => {});
     db.run("CREATE INDEX IF NOT EXISTS idx_sys_file_ops_time ON system_file_operations(timestamp)", () => {});
 
+    // ── CUSTOM ROLES TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS custom_roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_name TEXT UNIQUE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating custom_roles table:', err.message);
+        else {
+            console.log('[DB] custom_roles table ready.');
+            db.get("SELECT COUNT(*) as count FROM custom_roles", [], (countErr, row) => {
+                if (!countErr && row.count === 0) {
+                    const defaultRoles = [
+                        'Admin',
+                        'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
+                        'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader',
+                        'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
+                    ];
+                    db.serialize(() => {
+                        const stmt = db.prepare("INSERT INTO custom_roles (role_name) VALUES (?)");
+                        defaultRoles.forEach(r => stmt.run(r));
+                        stmt.finalize();
+                        console.log('[DB] Seeded default roles into custom_roles.');
+                    });
+                }
+            });
+        }
+    });
+
     // ── POSTCODE YIELD FACTORS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS postcode_yield_factors (
