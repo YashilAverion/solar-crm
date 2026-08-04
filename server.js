@@ -1557,7 +1557,9 @@ app.use(express.static('public', {
     maxAge: '1d',
     setHeaders: (res, path) => {
         if (path.endsWith('.html') || path.includes('layout-loader.js')) {
-            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, private, max-age=0');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
         }
     }
 })); // Browser will cache static files for 1 Day, except HTML and layout-loader.js
