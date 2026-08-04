@@ -7991,15 +7991,17 @@ function loadPayrollModuleData() {
                 if (cycle === 'Fortnightly') {
                     let nextStart, nextEnd;
                     if (rows && rows.length > 0) {
-                        // Find the latest pay_period_end date
-                        const dates = rows.map(r => new Date(r.pay_period_end)).sort((a, b) => b - a);
-                        const latestEnd = dates[0];
+                        // Sort by pay_period_end string descending to get the latest end date safely (timezone-agnostic)
+                        const endDates = rows.map(r => r.pay_period_end).sort().reverse();
+                        const latestEndStr = endDates[0]; // e.g. "2026-07-26"
                         
-                        nextStart = new Date(latestEnd);
-                        nextStart.setDate(latestEnd.getDate() + 1);
+                        const parts = latestEndStr.split('-');
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10) - 1; // 0-indexed month
+                        const d = parseInt(parts[2], 10);
                         
-                        nextEnd = new Date(nextStart);
-                        nextEnd.setDate(nextStart.getDate() + 13);
+                        nextStart = new Date(y, m, d + 1);
+                        nextEnd = new Date(y, m, d + 14); // nextStart + 13 days
                     } else {
                         // Default to start of selected month
                         const month = parseInt(document.getElementById('payrollMonth').value, 10);
