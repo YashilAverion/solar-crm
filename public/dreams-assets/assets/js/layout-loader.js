@@ -1171,29 +1171,64 @@
             });
         }
 
-        function applyColumnVisibilityCSS(hiddenIndices) {
-            let styleEl = document.getElementById("col-visibility-dynamic-styles");
+        function applyTableColumnVisibilityCSS(tableClass, hiddenIndices) {
+            const styleId = "col-visibility-" + tableClass.replace(/[^a-zA-Z0-9-]/g, "");
+            let styleEl = document.getElementById(styleId);
             if (!styleEl) {
                 styleEl = document.createElement("style");
-                styleEl.id = "col-visibility-dynamic-styles";
+                styleEl.id = styleId;
                 document.head.appendChild(styleEl);
             }
             
             let css = "";
             hiddenIndices.forEach(idx => {
-                css += `table th:nth-child(${idx + 1}), table td:nth-child(${idx + 1}) { display: none !important; }\n`;
+                css += `${tableClass} th:nth-child(${idx + 1}), ${tableClass} td:nth-child(${idx + 1}) { display: none !important; }\n`;
             });
             styleEl.innerHTML = css;
         }
 
         function initGlobalColumnCustomizer() {
             console.log("[ColumnCustomizer] Starting column customizer initialization");
-            const table = document.querySelector(".content-area table") || document.querySelector("table");
-            if (!table) {
-                console.log("[ColumnCustomizer] No table found on this page.");
+            
+            // Find all tables on the page, filtering out structural tables
+            const tables = Array.from(document.querySelectorAll(".content-area table, table")).filter(t => {
+                return t.classList.contains("xero-ts-table") || 
+                       t.classList.contains("ts-grid") || 
+                       t.classList.contains("table") || 
+                       t.classList.contains("table-hover") || 
+                       t.classList.contains("table-nowrap");
+            });
+            if (tables.length === 0) {
+                console.log("[ColumnCustomizer] No customizable data table found on this page.");
                 return;
             }
 
+            // Prioritize the first visible table, fallback to first table
+            const table = tables.find(t => {
+                // Check if element or any parent has display: none
+                return t.offsetWidth > 0 && t.offsetHeight > 0 && window.getComputedStyle(t).display !== 'none';
+            }) || tables[0];
+
+            // Get unique class of the table to use as a CSS selector
+            let tableClass = "";
+            if (table.classList.contains("xero-ts-table")) {
+                tableClass = ".xero-ts-table";
+            } else if (table.classList.contains("ts-grid")) {
+                tableClass = ".ts-grid";
+            } else if (table.classList.contains("table")) {
+                tableClass = "." + Array.from(table.classList).join(".");
+            } else {
+                tableClass = "table";
+            }
+
+            // Check if dropdown already exists for this table
+            const existingDropdown = document.getElementById("colCustomizerDropdown");
+            if (existingDropdown && existingDropdown.dataset.targetTable === tableClass) {
+                console.log("[ColumnCustomizer] Dropdown already exists for target:", tableClass);
+                return;
+            }
+
+            // Table header validation
             const headerRow = table.querySelector("thead tr");
             if (!headerRow) {
                 console.log("[ColumnCustomizer] Table header row not found.");
@@ -1211,14 +1246,11 @@
                 const text = th.innerText.trim();
                 const hasCheckbox = th.querySelector("input[type=checkbox]");
                 const isAction = text.toLowerCase() === "action" || text.toLowerCase() === "actions" || text === "✏️" || text === "🗑️";
-                console.log(`[ColumnCustomizer DEBUG] Header idx: ${idx}, text: "${text}", hasCheckbox: ${!!hasCheckbox}, isAction: ${isAction}`);
                 
                 if (!hasCheckbox && !isAction && text !== "") {
                     customizableCols.push({ index: idx, name: text });
                 }
             });
-
-            console.log("[ColumnCustomizer] Customizable columns found:", customizableCols);
 
             if (customizableCols.length === 0) {
                 console.log("[ColumnCustomizer] No customizable columns found.");
@@ -1239,21 +1271,23 @@
                 }
             }
 
-            if (document.getElementById("colCustomizerDropdown")) {
-                console.log("[ColumnCustomizer] Dropdown already exists.");
-                return;
+            // Remove existing dropdown if we are switching tables
+            if (existingDropdown) {
+                existingDropdown.remove();
             }
 
-            console.log("[ColumnCustomizer] Creating and inserting dropdown into toolbar:", toolbar);
+            console.log("[ColumnCustomizer] Re-initializing dropdown for target table:", tableClass);
 
-            const storageKey = "hidden-cols-" + window.location.pathname;
+            const storageKey = "hidden-cols-" + window.location.pathname + "-" + tableClass.replace(/\./g, "");
             let hiddenIndices = JSON.parse(localStorage.getItem(storageKey) || "[]");
-
             hiddenIndices = hiddenIndices.filter(idx => idx < headers.length);
-            applyColumnVisibilityCSS(hiddenIndices);
+            
+            // Apply visibility CSS specifically for this table
+            applyTableColumnVisibilityCSS(tableClass, hiddenIndices);
 
             const dropdownDiv = document.createElement("div");
             dropdownDiv.id = "colCustomizerDropdown";
+            dropdownDiv.dataset.targetTable = tableClass; // Store target table selector
             dropdownDiv.className = "dropdown position-relative d-inline-block";
             dropdownDiv.style.marginRight = "8px";
 
@@ -1317,7 +1351,7 @@
                         if (!hiddenIndices.includes(idx)) hiddenIndices.push(idx);
                     }
                     localStorage.setItem(storageKey, JSON.stringify(hiddenIndices));
-                    applyColumnVisibilityCSS(hiddenIndices);
+                    applyTableColumnVisibilityCSS(tableClass, hiddenIndices);
                 });
             });
         }
