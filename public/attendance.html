@@ -1184,12 +1184,139 @@
             margin: 0;
             line-height: 1.2;
         }
+
+        /* Custom Flatpickr Premium Theme matching Image 2 */
+        .flatpickr-calendar {
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+            border: 1px solid #cbd5e1 !important;
+            font-family: 'Golos Text', system-ui, sans-serif !important;
+            width: 310px !important;
+            padding: 10px !important;
+        }
+        .flatpickr-calendar:before, .flatpickr-calendar:after {
+            display: none !important; /* Hide ugly arrow pointer */
+        }
+        .flatpickr-months {
+            align-items: center !important;
+            margin-bottom: 8px !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            height: 34px !important;
+        }
+        .flatpickr-current-month {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            height: 100% !important;
+            padding: 0 !important;
+        }
+        .flatpickr-monthDropdown-months {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            border: none !important;
+            background: transparent !important;
+            pointer-events: auto !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            font-size: 15px !important;
+            padding: 0 !important;
+            width: auto !important;
+        }
+        .flatpickr-current-month input.cur-year {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            pointer-events: none !important;
+            font-size: 15px !important;
+            width: auto !important;
+            padding: 0 !important;
+        }
+        .flatpickr-current-month .numInputWrapper {
+            width: auto !important;
+        }
+        .flatpickr-current-month .numInputWrapper span {
+            display: none !important;
+        }
+        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+            color: #64748b !important;
+            padding: 8px !important;
+            top: 5px !important;
+        }
+        .flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover {
+            color: #1f5f5b !important;
+        }
+        .flatpickr-weekday {
+            color: #475569 !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+        }
+        .flatpickr-day {
+            color: #334155 !important;
+            font-weight: 500 !important;
+            border-radius: 50% !important;
+            margin: 2px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            max-width: 36px !important;
+            flex-basis: 36px !important;
+        }
+        .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+            color: #94a3b8 !important;
+        }
+        .flatpickr-day.today {
+            border-color: #e2e8f0 !important;
+            color: #1f5f5b !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-day.today:hover {
+            background: #f1f5f9 !important;
+            color: #1f5f5b !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange, .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange, .flatpickr-day.endRange:hover {
+            background: #1f5f5b !important;
+            border-color: #1f5f5b !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 6px -1px rgba(31, 95, 91, 0.4) !important;
+        }
+        .flatpickr-day.inRange {
+            background: #e6f6f5 !important;
+            border-color: transparent !important;
+            color: #1f5f5b !important;
+            border-radius: 0 !important;
+        }
+        .flatpickr-wrapper {
+            width: 100% !important;
+            position: relative !important;
+        }
+        .flatpickr-calendar {
+            z-index: 99999 !important;
+        }
+        .cur-year-select {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            cursor: pointer;
+            outline: none;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <link rel="icon" type="image/png" href="/ares_energy_logo.png">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGqZk1aifXriaKoS-pvfJtlUEkC9MfZU4&libraries=places"></script>
     <link rel="stylesheet" href="/responsive.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 
@@ -8749,6 +8876,97 @@ function formatDateString(date) {
     return `${dd}-${mm}-${yyyy}`;
 }
 
+function replaceYearInputWithDropdown(instance) {
+    const calendarContainer = instance.calendarContainer;
+    if (!calendarContainer) return;
+    const yearInputWrapper = calendarContainer.querySelector('.numInputWrapper');
+    if (!yearInputWrapper) return;
+    
+    if (yearInputWrapper.querySelector('select.cur-year-select')) {
+        const yearSelect = yearInputWrapper.querySelector('select.cur-year-select');
+        if (yearSelect) yearSelect.value = instance.currentYear;
+        return;
+    }
+    
+    const yearInput = yearInputWrapper.querySelector('input.cur-year');
+    if (!yearInput) return;
+    
+    yearInput.style.setProperty('display', 'none', 'important');
+    
+    const yearSelect = document.createElement('select');
+    yearSelect.className = 'cur-year-select';
+    
+    const currentYear = new Date().getFullYear();
+    const startYear = 2020;
+    const endYear = 2035;
+    for (let y = startYear; y <= endYear; y++) {
+        const option = document.createElement('option');
+        option.value = y;
+        option.text = y;
+        if (y === instance.currentYear) {
+            option.selected = true;
+        }
+        yearSelect.appendChild(option);
+    }
+    
+    yearSelect.addEventListener('change', (e) => {
+        const selectedYear = parseInt(e.target.value);
+        instance.changeYear(selectedYear);
+    });
+    
+    yearInputWrapper.appendChild(yearSelect);
+    
+    instance.config.onYearChange.push((selectedDates, dateStr, inst) => {
+        yearSelect.value = inst.currentYear;
+    });
+}
+
+let payrollFlatpickrInstance = null;
+
+function renderPayrollDatePicker(defaultStart, defaultEnd) {
+    const subList = document.getElementById('payrollSubCycleList');
+    if (!subList) return;
+
+    // Set initial hidden input values
+    document.getElementById('payrollStart').value = formatDateISO(defaultStart);
+    document.getElementById('payrollEnd').value = formatDateISO(defaultEnd);
+
+    // Create picker container HTML
+    subList.innerHTML = `
+        <div class="flatpickr-wrapper" style="position: relative; width: 230px;">
+            <input type="text" id="payrollPeriodPicker" style="height:32px; padding: 0 10px 0 32px; font-weight:600; font-size:12.5px; color: #1e293b; cursor:pointer; width:100%; border: 1px solid var(--border); border-radius: 8px; background-color: #fff; outline: none; box-sizing: border-box;" readonly>
+            <i class="ti ti-calendar" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #64748b; pointer-events: none;"></i>
+        </div>
+    `;
+
+    // Destroy existing flatpickr instance if it exists
+    if (payrollFlatpickrInstance) {
+        payrollFlatpickrInstance.destroy();
+    }
+
+    // Initialize Flatpickr in range mode
+    payrollFlatpickrInstance = flatpickr("#payrollPeriodPicker", {
+        mode: "range",
+        dateFormat: "d M y",
+        defaultDate: [defaultStart, defaultEnd],
+        onReady: function(selectedDates, dateStr, instance) {
+            replaceYearInputWithDropdown(instance);
+        },
+        onMonthChange: function(selectedDates, dateStr, instance) {
+            replaceYearInputWithDropdown(instance);
+        },
+        onYearChange: function(selectedDates, dateStr, instance) {
+            replaceYearInputWithDropdown(instance);
+        },
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                document.getElementById('payrollStart').value = formatDateISO(selectedDates[0]);
+                document.getElementById('payrollEnd').value = formatDateISO(selectedDates[1]);
+            }
+        }
+    });
+}
+
 function setAustralianFortnightPeriod() {
     const anchor = new Date(2026, 5, 29); // Monday, June 29, 2026
     const today = new Date();
@@ -8764,24 +8982,7 @@ function setAustralianFortnightPeriod() {
     
     const nextStart = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + fortnightIndex * 14);
     const nextEnd = new Date(nextStart.getFullYear(), nextStart.getMonth(), nextStart.getDate() + 13);
-    
-    const startStr = formatDateISO(nextStart);
-    const endStr = formatDateISO(nextEnd);
-    
-    const startInput = document.getElementById('payrollStart');
-    const endInput = document.getElementById('payrollEnd');
-    if (startInput) startInput.value = startStr;
-    if (endInput) endInput.value = endStr;
-    
-    const subList = document.getElementById('payrollSubCycleList');
-    if (subList) {
-        subList.innerHTML = `
-            <div style="font-size: 13px; font-weight: 700; color: #e41f07; padding: 4px 0; display: flex; align-items: center; gap: 6px;">
-                <i class="ti ti-calendar" style="font-size: 16px; vertical-align: middle;"></i>
-                <span>${formatDateString(nextStart)} to ${formatDateString(nextEnd)}</span>
-            </div>
-        `;
-    }
+    renderPayrollDatePicker(nextStart, nextEnd);
 }
 
 function updatePayPeriodSelection() {
@@ -8804,8 +9005,23 @@ function updatePayPeriodSelection() {
     subList.innerHTML = '';
     
     if (cycle === 'Custom') {
-        subContainer.style.display = 'none';
-        customDates.style.display = 'flex';
+        subContainer.style.display = 'flex';
+        customDates.style.display = 'none';
+        const existingStart = document.getElementById('payrollStart').value;
+        const existingEnd = document.getElementById('payrollEnd').value;
+        
+        let defaultStart = new Date();
+        let defaultEnd = new Date();
+        if (existingStart) {
+            const parts = existingStart.split('-');
+            if (parts.length === 3) defaultStart = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+        if (existingEnd) {
+            const parts = existingEnd.split('-');
+            if (parts.length === 3) defaultEnd = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+        
+        renderPayrollDatePicker(defaultStart, defaultEnd);
         return;
     }
     
@@ -8817,9 +9033,7 @@ function updatePayPeriodSelection() {
     const totalDays = lastDay.getDate();
     
     if (cycle === 'Monthly') {
-        subList.innerHTML = `<span style="font-size:12px; font-weight:600; color:var(--text-dark);">${formatDateString(firstDay)} to ${formatDateString(lastDay)}</span>`;
-        document.getElementById('payrollStart').value = formatDateISO(firstDay);
-        document.getElementById('payrollEnd').value = formatDateISO(lastDay);
+        renderPayrollDatePicker(firstDay, lastDay);
     } 
     else if (cycle === 'Weekly') {
         const weeks = [];
@@ -10860,6 +11074,7 @@ function printSalarySlip(recordId, record) {
     </div>
 </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/compliance-docs-template.js"></script>
     <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>
