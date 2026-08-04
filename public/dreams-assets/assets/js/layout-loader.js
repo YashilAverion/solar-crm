@@ -1300,18 +1300,18 @@
             const menu = document.createElement("div");
             menu.id = "colCustomizerMenu";
             menu.className = "shadow-lg border p-2";
-            menu.style.cssText = "display: none; position: absolute; right: 0; top: 110%; z-index: 3000; min-width: 220px; background: #fff; border-radius: 8px; max-height: 480px; overflow-y: auto;";
+            menu.style.cssText = "display: none; position: absolute; right: 0; top: 110%; z-index: 3000; min-width: 280px; background: #fff; border-radius: 8px; max-height: 480px; overflow-y: auto; text-align: left;";
 
             customizableCols.forEach(col => {
                 const isChecked = !hiddenIndices.includes(col.index);
                 const item = document.createElement("div");
-                item.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f1f5f9; gap: 12px;";
+                item.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f1f5f9; gap: 12px; text-align: left;";
                 item.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="ti ti-grid-dots" style="color: #94a3b8; font-size: 15px; cursor: grab;"></i>
-                        <span style="font-size: 12px; font-weight: 500; color: #1e293b;">${col.name}</span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; text-align: left;">
+                        <i class="ti ti-grid-dots" style="color: #94a3b8; font-size: 15px; cursor: grab; flex-shrink: 0;"></i>
+                        <span style="font-size: 12px; font-weight: 500; color: #1e293b; text-align: left; line-height: 1.2;">${col.name}</span>
                     </div>
-                    <label class="col-customizer-switch" style="margin-bottom: 0;">
+                    <label class="col-customizer-switch" style="margin-bottom: 0; flex-shrink: 0;">
                         <input type="checkbox" data-index="${col.index}" ${isChecked ? 'checked' : ''}>
                         <span class="col-customizer-slider"></span>
                     </label>
