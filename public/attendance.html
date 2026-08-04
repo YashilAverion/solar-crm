@@ -8923,6 +8923,14 @@ function replaceYearInputWithDropdown(instance) {
 
 let payrollFlatpickrInstance = null;
 
+function formatFlatpickrDate(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mmm = months[date.getMonth()];
+    const yy = String(date.getFullYear()).substring(2);
+    return `${dd} ${mmm} ${yy}`;
+}
+
 function renderPayrollDatePicker(defaultStart, defaultEnd) {
     const subList = document.getElementById('payrollSubCycleList');
     if (!subList) return;
@@ -8931,10 +8939,12 @@ function renderPayrollDatePicker(defaultStart, defaultEnd) {
     document.getElementById('payrollStart').value = formatDateISO(defaultStart);
     document.getElementById('payrollEnd').value = formatDateISO(defaultEnd);
 
-    // Create picker container HTML
+    const displayValue = `${formatFlatpickrDate(defaultStart)} to ${formatFlatpickrDate(defaultEnd)}`;
+
+    // Create picker container HTML with autocomplete="off" and explicit value
     subList.innerHTML = `
         <div class="flatpickr-wrapper" style="position: relative; width: 230px;">
-            <input type="text" id="payrollPeriodPicker" style="height:32px; padding: 0 10px 0 32px; font-weight:600; font-size:12.5px; color: #1e293b; cursor:pointer; width:100%; border: 1px solid var(--border); border-radius: 8px; background-color: #fff; outline: none; box-sizing: border-box;" readonly>
+            <input type="text" id="payrollPeriodPicker" value="${displayValue}" autocomplete="off" style="height:32px; padding: 0 10px 0 32px; font-weight:600; font-size:12.5px; color: #1e293b; cursor:pointer; width:100%; border: 1px solid var(--border); border-radius: 8px; background-color: #fff; outline: none; box-sizing: border-box;" readonly>
             <i class="ti ti-calendar" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #64748b; pointer-events: none;"></i>
         </div>
     `;
