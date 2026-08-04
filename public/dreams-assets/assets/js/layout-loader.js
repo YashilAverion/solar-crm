@@ -1396,31 +1396,33 @@
                 input.dataset.lastVal = formatted;
                 
                 // Sync to native hidden input if present
-                let nativeId = input.id.replace(/_text$/, "");
-                let nativeInput = document.getElementById(nativeId);
-                if (nativeInput && nativeInput.type === 'date') {
-                    let parts = formatted.split('-');
-                    if (parts.length === 3) {
-                        let dd = parts[0];
-                        let mm = parts[1];
-                        let yyyy = parts[2];
-                        if (yyyy.length === 4) {
-                            let dateVal = `${yyyy}-${mm}-${dd}`;
-                            if (nativeInput.value !== dateVal) {
-                                const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                                if (desc && desc.set) {
-                                    desc.set.call(nativeInput, dateVal);
-                                    nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
-                                    nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                let nativeId = input.id ? input.id.replace(/_text$/, "") : "";
+                if (nativeId) {
+                    let nativeInput = document.getElementById(nativeId);
+                    if (nativeInput && nativeInput.type === 'date') {
+                        let parts = formatted.split('-');
+                        if (parts.length === 3) {
+                            let dd = parts[0];
+                            let mm = parts[1];
+                            let yyyy = parts[2];
+                            if (yyyy.length === 4) {
+                                let dateVal = `${yyyy}-${mm}-${dd}`;
+                                if (nativeInput.value !== dateVal) {
+                                    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                                    if (desc && desc.set) {
+                                        desc.set.call(nativeInput, dateVal);
+                                        nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+                                        nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                                    }
                                 }
                             }
-                        }
-                    } else if (!formatted) {
-                        const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                        if (desc && desc.set) {
-                            desc.set.call(nativeInput, '');
-                            nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
-                            nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                        } else if (!formatted) {
+                            const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                            if (desc && desc.set) {
+                                desc.set.call(nativeInput, '');
+                                nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+                                nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
                         }
                     }
                 }
