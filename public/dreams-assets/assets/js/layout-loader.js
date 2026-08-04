@@ -1874,3 +1874,102 @@
         queueGlobalUpdates();
     });
 })();
+
+// =========================================================================
+// GLOBAL SHIFT-BASED KEYBOARD & MOUSE MULTI-SELECT ENGINE FOR TABLE ROWS
+// =========================================================================
+(function() {
+    let lastClickedCheckbox = null;
+    
+    // Listen for click event on input[type="checkbox"] inside table body
+    document.addEventListener('click', function(e) {
+        const checkbox = e.target.closest('table tbody input[type="checkbox"]');
+        if (!checkbox) return;
+        
+        // Skip custom payroll row checkbox to avoid double handling
+        if (checkbox.closest('.payroll-row')) return;
+        
+        const table = checkbox.closest('table');
+        if (!table) return;
+        
+        // If Shift key is pressed and we have a previously clicked checkbox in the same table
+        if (e.shiftKey && lastClickedCheckbox && lastClickedCheckbox.closest('table') === table) {
+            e.preventDefault();
+            
+            const checkboxes = Array.from(table.querySelectorAll('tbody input[type="checkbox"]'));
+            const startIdx = checkboxes.indexOf(lastClickedCheckbox);
+            const endIdx = checkboxes.indexOf(checkbox);
+            
+            if (startIdx !== -1 && endIdx !== -1) {
+                const start = Math.min(startIdx, endIdx);
+                const end = Math.max(startIdx, endIdx);
+                
+                // Select all checkboxes in range
+                for (let i = start; i <= end; i++) {
+                    const cb = checkboxes[i];
+                    if (!cb.checked) {
+                        cb.checked = true;
+                        cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            }
+        } else {
+            lastClickedCheckbox = checkbox;
+        }
+    }, true); // Use capture phase to intercept checks before other handlers
+    
+    // Listen for keydown event on document
+    document.addEventListener('keydown', function(e) {
+        const active = document.activeElement;
+        const checkbox = active ? active.closest('table tbody input[type="checkbox"]') : null;
+        if (!checkbox) return;
+        
+        // Skip custom payroll row checkbox to avoid double handling
+        if (checkbox.closest('.payroll-row')) return;
+        
+        const table = checkbox.closest('table');
+        if (!table) return;
+        
+        const checkboxes = Array.from(table.querySelectorAll('tbody input[type="checkbox"]'));
+        const idx = checkboxes.indexOf(checkbox);
+        if (idx === -1) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIdx = idx + 1;
+            if (nextIdx < checkboxes.length) {
+                const nextCb = checkboxes[nextIdx];
+                nextCb.focus();
+                
+                if (e.shiftKey) {
+                    nextCb.checked = true;
+                    nextCb.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // Ensure the starting one is checked
+                    if (!checkbox.checked) {
+                        checkbox.checked = true;
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            }
+        } 
+        else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIdx = idx - 1;
+            if (prevIdx >= 0) {
+                const prevCb = checkboxes[prevIdx];
+                prevCb.focus();
+                
+                if (e.shiftKey) {
+                    prevCb.checked = true;
+                    prevCb.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    if (!checkbox.checked) {
+                        checkbox.checked = true;
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            }
+        }
+    });
+})();
