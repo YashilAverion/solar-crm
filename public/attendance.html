@@ -8240,14 +8240,6 @@ function loadPayrollModuleData() {
     fetch(`/api/payroll/history/${targetUserId}`)
         .then(res => res.json())
         .then(rows => {
-            // Calculate and display next fortnight date range if cycle is Fortnightly and Australian rules apply (Ares/Gills)
-            if (activePayrollCompanyFilter !== 'Averion Global LLP') {
-                const cycle = document.getElementById('payrollCycle').value;
-                if (cycle === 'Fortnightly') {
-                    setAustralianFortnightPeriod();
-                }
-            }
-
             // Filter by company if targetUserId is 'all'
             let displayRows = rows;
             if (targetUserId === 'all') {
