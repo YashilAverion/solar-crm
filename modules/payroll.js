@@ -317,7 +317,7 @@ router.get('/history/:user_id', requireAuth, (req, res) => {
     const userId = req.params.user_id;
     if (userId === 'all') {
         db.all(
-            `SELECT r.*, w.full_name, w.role as worker_role, w.company_name
+            `SELECT r.*, (w.first_name || ' ' || w.last_name) AS full_name, w.role as worker_role, w.company_name
              FROM payroll_historical_records r
              JOIN attendance_workers w ON r.user_id = w.id
              ORDER BY r.pay_period_end DESC, r.created_at DESC`,
