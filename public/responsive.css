@@ -1078,13 +1078,13 @@ td {
     border: 1px solid transparent !important;
 }
 
-.sb-won {
+.sb-won, .sb-active {
     background: rgba(16, 185, 129, 0.08) !important;
     color: var(--ares-eco-green) !important;
     border-color: rgba(16, 185, 129, 0.15) !important;
 }
 
-.sb-lost {
+.sb-lost, .sb-inactive, .sb-deleted, .sb-pending-d {
     background: rgba(239, 68, 68, 0.08) !important;
     color: #ef4444 !important;
     border-color: rgba(239, 68, 68, 0.15) !important;
@@ -1094,6 +1094,12 @@ td {
     background: rgba(37, 99, 235, 0.08) !important;
     color: var(--ares-electric-blue) !important;
     border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+.sb-pending, .sb-pending-a, .sb-follow {
+    background: rgba(245, 158, 11, 0.08) !important;
+    color: #f59e0b !important;
+    border-color: rgba(245, 158, 11, 0.15) !important;
 }
 
 /* ==========================================================================
@@ -1705,4 +1711,114 @@ body.theme-dark .flatpickr-current-month .numInputWrapper select.cur-year-select
 
 /* SIDEBAR THEME REDESIGN, GLOBAL FONT, AND SUBMENU TICK MARK OVERRIDES REMOVED FOR DREAMS THEME COMPATIBILITY */
 
+/* Premium Metric Summary Card Icons */
+.summary-card-icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    padding: 0 !important;
+    border: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+}
+.summary-card-icon:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+.summary-card-icon i {
+    font-size: 20px !important;
+    color: #ffffff !important;
+    line-height: 1 !important;
+}
 
+/* Premium Solid Background Colors */
+.bg-icon-primary {
+    background-color: #1b84ff !important; /* Vibrant Corporate Blue */
+}
+.bg-icon-success {
+    background-color: #10b981 !important; /* Premium Emerald Green */
+}
+.bg-icon-warning {
+    background-color: #ff9f43 !important; /* Warm Amber Orange */
+}
+.bg-icon-danger {
+    background-color: #ef4444 !important; /* Vibrant Soft Red */
+}
+
+/* ==========================================================================
+   ACTIVE SIDEBAR SUBMENU ITEM THEME COLOR OVERRIDES
+   ========================================================================== */
+.sidebar-menu ul li a.active,
+.sidebar-menu ul li a.active span,
+.sidebar-menu ul li.active > a,
+.sidebar-menu ul li.active > a span {
+    color: #e41f07 !important;
+}
+.sidebar-menu ul li .submenu > ul li a.active::after,
+.sidebar-menu ul li.active a::after {
+    background-color: #e41f07 !important;
+}
+
+/* ==========================================================================
+   MANAGE COLUMNS DROPDOWN AND SWITCH TOGGLES
+   ========================================================================== */
+#colCustomizerDropdown button {
+    background-color: #1b84ff !important;
+    color: #fff !important;
+    border-color: #1b84ff !important;
+    box-shadow: 0 4px 6px -1px rgba(27, 132, 255, 0.25) !important;
+}
+#colCustomizerDropdown button:hover {
+    background-color: #056ee6 !important;
+    border-color: #056ee6 !important;
+}
+
+/* iOS Switch Toggle */
+.col-customizer-switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+}
+.col-customizer-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.col-customizer-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .2s;
+    border-radius: 18px;
+}
+.col-customizer-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+.col-customizer-switch input:checked + .col-customizer-slider {
+    background-color: #e41f07; /* Red active state */
+}
+.col-customizer-switch input:checked + .col-customizer-slider:before {
+    transform: translateX(14px);
+}
+
+/* Hide old popup-based column visibility buttons */
+button[onclick*="columnVisibilityModal"] {
+    display: none !important;
+}
