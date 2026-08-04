@@ -246,7 +246,7 @@
         }
         .ts-grid { width: 100%; border-collapse: collapse; }
         .ts-grid thead { position: sticky; top: 0; z-index: 3; }
-        .ts-grid tr.col-titles th { background: #f8fafc; color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 5px 2px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; white-space: nowrap; }
+        .ts-grid tr.col-titles th { background: #f8fafc; color: var(--text-dark) !important; font-size: 11px !important; font-weight: 600 !important; padding: 6px 2px !important; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; white-space: nowrap; }
         .ts-grid tr.col-titles th.wide { min-width: 80px; }
         /* Column min-widths to prevent text/digit clipping & optimize space */
         .ts-grid tr.col-titles th:nth-child(1) { min-width: 26px; }  /* Week */
@@ -255,7 +255,7 @@
         .ts-grid tr.col-titles th:nth-child(4) { min-width: 72px; }  /* Employee */
         .ts-grid tr.col-titles th:nth-child(5),
         .ts-grid tr.col-titles th:nth-child(6),
-        .ts-grid tr.col-titles th:nth-child(7) { min-width: 46px; }  /* In Out Break */
+        .ts-grid tr.col-titles th:nth-child(7) { min-width: 52px; }  /* In Out Break */
         .ts-grid tr.col-titles th:nth-child(8),
         .ts-grid tr.col-titles th:nth-child(9),
         .ts-grid tr.col-titles th:nth-child(10),
@@ -273,7 +273,7 @@
         .ts-grid tbody td input.go,
         .ts-grid tbody td input.gb {
             width: 100% !important;
-            min-width: 40px;
+            min-width: 46px;
             padding: 0 2px;
         }
         .ts-grid tbody td input.gx,
@@ -1714,18 +1714,6 @@
                         <div class="ts-field">
                             <label>End Date</label>
                             <input type="text" id="tsSheetEnd" onchange="generateTsGrid(); syncMonthYearFromDateFilters();">
-                        </div>
-                    </div>
-                    <!-- Status Border Key Legend -->
-                    <div class="ts-legend" style="display: flex; gap: 10px; align-items: center; background: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; margin-bottom: 0;">
-                        <div style="font-weight: 600; color: #64748b; margin-right: 2px; white-space: nowrap;">Border Key:</div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <span style="display: inline-block; width: 10px; height: 10px; border: 1.5px solid #f87171; border-radius: 2px; background: #fef2f2; flex-shrink:0;"></span>
-                            <span style="color: #475569; font-weight: 500; white-space: nowrap;">Absent (In/Out empty)</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <span style="display: inline-block; width: 10px; height: 10px; border: 1.5px solid #34d399; border-radius: 2px; background: #ecfdf5; flex-shrink:0;"></span>
-                            <span style="color: #475569; font-weight: 500; white-space: nowrap;">Public Holiday Present</span>
                         </div>
                     </div>
                     <button class="ts-btn-close-icon" onclick="closeTsSheet()" title="Close Timesheet Editor" style="background: transparent; border: none; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 50%; transition: all 0.2s; height: 36px; width: 36px; margin-bottom: 2px;">
