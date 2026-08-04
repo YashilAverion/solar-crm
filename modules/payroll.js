@@ -264,46 +264,108 @@ router.post('/calculate-period', requireAuth, (req, res) => {
 
                     const generatedBy = req.session.user.full_name || req.session.user.username || 'System';
 
-                    // 4. Save to payroll_historical_records
-                    db.run(
-                        `INSERT INTO payroll_historical_records (
-                            user_id, pay_period_start, pay_period_end, 
-                            actual_hours, ordinary_hours, overtime_hours, remaining_hours, gross_pay, 
-                            tax_withheld, super_contribution, net_pay, created_at,
-                            generated_by, calculation_metadata
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [
-                            user_id, pay_period_start, pay_period_end, 
-                            roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedRemainingHours, roundedGrossPay, 
-                            roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
-                            generatedBy, JSON.stringify(calculationMetadata)
-                        ],
-                        function(saveErr) {
-                            if (saveErr) {
-                                return res.status(500).json({ error: saveErr.message });
+                    // 4. Save/Update in payroll_historical_records (UPSERT logic to prevent duplicates)
+                    db.get(
+                        `SELECT id FROM payroll_historical_records 
+                         WHERE user_id = ? AND pay_period_start = ? AND pay_period_end = ?`,
+                        [user_id, pay_period_start, pay_period_end],
+                        (checkErr, existingRecord) => {
+                            if (checkErr) {
+                                return res.status(500).json({ error: checkErr.message });
                             }
 
-                            // 5. Return JSON metadata response
-                            res.status(201).json({
-                                success: true,
-                                payslip_id: this.lastID,
-                                user_id,
-                                pay_period_start,
-                                pay_period_end,
-                                actual_hours: roundedActualHours,
-                                ordinary_hours: roundedOrdinaryHours,
-                                overtime_hours: roundedOvertimeHours,
-                                remaining_hours: roundedRemainingHours,
-                                base_rate: baseRate,
-                                gross_pay: roundedGrossPay,
-                                tax_withheld: roundedTaxWithheld,
-                                super_contribution: roundedSuperContribution,
-                                net_pay: roundedNetPay,
-                                created_at: sydneyTime,
-                                generated_by: generatedBy,
-                                calculation_metadata: calculationMetadata,
-                                message: 'Payroll period computed and ledger saved successfully.'
-                            });
+                            if (existingRecord) {
+                                // Update existing record
+                                db.run(
+                                    `UPDATE payroll_historical_records SET 
+                                        actual_hours = ?, 
+                                        ordinary_hours = ?, 
+                                        overtime_hours = ?, 
+                                        remaining_hours = ?, 
+                                        gross_pay = ?, 
+                                        tax_withheld = ?, 
+                                        super_contribution = ?, 
+                                        net_pay = ?, 
+                                        created_at = ?,
+                                        generated_by = ?, 
+                                        calculation_metadata = ?
+                                     WHERE id = ?`,
+                                    [
+                                        roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedRemainingHours, roundedGrossPay, 
+                                        roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
+                                        generatedBy, JSON.stringify(calculationMetadata),
+                                        existingRecord.id
+                                    ],
+                                    function(updateErr) {
+                                        if (updateErr) {
+                                            return res.status(500).json({ error: updateErr.message });
+                                        }
+
+                                        res.status(200).json({
+                                            success: true,
+                                            payslip_id: existingRecord.id,
+                                            user_id,
+                                            pay_period_start,
+                                            pay_period_end,
+                                            actual_hours: roundedActualHours,
+                                            ordinary_hours: roundedOrdinaryHours,
+                                            overtime_hours: roundedOvertimeHours,
+                                            remaining_hours: roundedRemainingHours,
+                                            base_rate: baseRate,
+                                            gross_pay: roundedGrossPay,
+                                            tax_withheld: roundedTaxWithheld,
+                                            super_contribution: roundedSuperContribution,
+                                            net_pay: roundedNetPay,
+                                            created_at: sydneyTime,
+                                            generated_by: generatedBy,
+                                            calculation_metadata: calculationMetadata,
+                                            message: 'Payroll period computed and existing ledger record updated successfully.'
+                                        });
+                                    }
+                                );
+                            } else {
+                                // Insert new record
+                                db.run(
+                                    `INSERT INTO payroll_historical_records (
+                                        user_id, pay_period_start, pay_period_end, 
+                                        actual_hours, ordinary_hours, overtime_hours, remaining_hours, gross_pay, 
+                                        tax_withheld, super_contribution, net_pay, created_at,
+                                        generated_by, calculation_metadata
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [
+                                        user_id, pay_period_start, pay_period_end, 
+                                        roundedActualHours, roundedOrdinaryHours, roundedOvertimeHours, roundedRemainingHours, roundedGrossPay, 
+                                        roundedTaxWithheld, roundedSuperContribution, roundedNetPay, sydneyTime,
+                                        generatedBy, JSON.stringify(calculationMetadata)
+                                    ],
+                                    function(saveErr) {
+                                        if (saveErr) {
+                                            return res.status(500).json({ error: saveErr.message });
+                                        }
+
+                                        res.status(201).json({
+                                            success: true,
+                                            payslip_id: this.lastID,
+                                            user_id,
+                                            pay_period_start,
+                                            pay_period_end,
+                                            actual_hours: roundedActualHours,
+                                            ordinary_hours: roundedOrdinaryHours,
+                                            overtime_hours: roundedOvertimeHours,
+                                            remaining_hours: roundedRemainingHours,
+                                            base_rate: baseRate,
+                                            gross_pay: roundedGrossPay,
+                                            tax_withheld: roundedTaxWithheld,
+                                            super_contribution: roundedSuperContribution,
+                                            net_pay: roundedNetPay,
+                                            created_at: sydneyTime,
+                                            generated_by: generatedBy,
+                                            calculation_metadata: calculationMetadata,
+                                            message: 'Payroll period computed and ledger saved successfully.'
+                                        });
+                                    }
+                                );
+                            }
                         }
                     );
                 }
