@@ -11,7 +11,7 @@ function getSydneyTime() {
     const min  = String(d.getMinutes()).padStart(2, '0');
     const ampm = hh >= 12 ? 'PM' : 'AM';
     hh = hh % 12 || 12;
-    return `${dd}-${mm}-${yyyy} (${String(hh).padStart(2, '0')}:${min} ${ampm})`;
+    return `${dd}-${mm}-${yyyy} ${String(hh).padStart(2, '0')}:${min} ${ampm}`;
 }
 
 // ── AUTH MIDDLEWARE ───────────────────────────────────────────
@@ -111,9 +111,16 @@ function getSydneyISO() {
 // ── ISO TO DISPLAY DATE FORMAT ─────────────────────────────────
 function isoToDisplay(isoStr) {
     if (!isoStr || isoStr === '-' || isoStr === 'Pending' || isoStr === 'Pending Details') return isoStr;
-    if (isoStr.includes('(')) return isoStr;
     
-    const d = new Date(isoStr.replace(' ', 'T'));
+    // Strip parentheses if present
+    let cleanStr = isoStr.replace(/[()]/g, '').trim();
+    
+    // Check if already in DD-MM-YYYY hh:mm AM/PM format
+    if (/^\d{2}-\d{2}-\d{4} \d{2}:\d{2} [AP]M$/i.test(cleanStr)) {
+        return cleanStr;
+    }
+    
+    const d = new Date(cleanStr.replace(' ', 'T'));
     if (isNaN(d.getTime())) return isoStr;
     
     const dd   = String(d.getDate()).padStart(2, '0');
@@ -123,7 +130,7 @@ function isoToDisplay(isoStr) {
     const min  = String(d.getMinutes()).padStart(2, '0');
     const ampm = hh >= 12 ? 'PM' : 'AM';
     hh = hh % 12 || 12;
-    return `${dd}-${mm}-${yyyy} (${String(hh).padStart(2, '0')}:${min} ${ampm})`;
+    return `${dd}-${mm}-${yyyy} ${String(hh).padStart(2, '0')}:${min} ${ampm}`;
 }
 
 module.exports = {

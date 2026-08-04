@@ -14,10 +14,71 @@
     };
 
 
+    // Overriding HTMLInputElement.prototype.value setter to intercept JS assignments
+    const originalValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    const originalValueGetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get;
+    Object.defineProperty(HTMLInputElement.prototype, 'value', {
+        get: function() {
+            return originalValueGetter.call(this);
+        },
+        set: function(val) {
+            // Case 1: JS updates native date input -> Sync to text input in DD-MM-YYYY
+            if (this.type === 'date' && this.id) {
+                let textInp = document.getElementById(this.id + '_text') || document.querySelector(`input[id="${this.id}_text"]`);
+                if (textInp) {
+                    if (val && val.includes('-')) {
+                        let parts = val.split('-');
+                        if (parts.length === 3 && parts[0].length === 4) {
+                            let formatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            if (originalValueGetter.call(textInp) !== formatted) {
+                                originalValueSetter.call(textInp, formatted);
+                                textInp.dataset.lastVal = formatted;
+                            }
+                        }
+                    } else if (!val) {
+                        originalValueSetter.call(textInp, '');
+                        textInp.dataset.lastVal = '';
+                    }
+                }
+            }
+            
+            // Case 2: JS updates text input -> Sync to native date input in YYYY-MM-DD
+            if (this.type === 'text' && this.id && this.id.endsWith('_text')) {
+                // If the value assigned is in YYYY-MM-DD format (database raw format), convert it to DD-MM-YYYY!
+                let matchYMD = val && val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (matchYMD) {
+                    let formatted = `${matchYMD[3]}-${matchYMD[2]}-${matchYMD[1]}`;
+                    originalValueSetter.call(this, formatted);
+                    this.dataset.lastVal = formatted;
+                    
+                    let dateId = this.id.replace(/_text$/, '');
+                    let dateInp = document.getElementById(dateId);
+                    if (dateInp && dateInp.type === 'date') {
+                        originalValueSetter.call(dateInp, val);
+                    }
+                    return;
+                }
+                
+                // If it is in DD-MM-YYYY, sync to native date input
+                let matchDMY = val && val.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+                if (matchDMY) {
+                    let dateId = this.id.replace(/_text$/, '');
+                    let dateInp = document.getElementById(dateId);
+                    if (dateInp && dateInp.type === 'date') {
+                        originalValueSetter.call(dateInp, `${matchDMY[3]}-${matchDMY[2]}-${matchDMY[1]}`);
+                    }
+                }
+            }
+            
+            originalValueSetter.call(this, val);
+        }
+    });
+
+
     // Dynamically insert theme-script.js in head synchronously during parsing
     if (!document.querySelector('script[src*="theme-script.js"]')) {
         const themeScript = document.createElement("script");
-        themeScript.src = "/dreams-assets/assets/js/theme-script.js";
+        themeScript.src = "/dreams-assets/assets/js/theme-script.js?v=5";
         document.head.appendChild(themeScript);
     }
 
@@ -464,7 +525,15 @@
             const activeEl = document.getElementById(targetLinkId);
             if (activeEl) {
                 activeEl.classList.add("active");
+                if (activeEl.parentElement) {
+                    activeEl.parentElement.classList.add("active");
+                }
+                console.log("ANTIGRAVITY_LOG: Successfully added 'active' class to element and parent list item:", targetLinkId);
+            } else {
+                console.log("ANTIGRAVITY_LOG: Failed to find element with ID:", targetLinkId);
             }
+        } else {
+            console.log("ANTIGRAVITY_LOG: No targetLinkId determined for path:", currentPath);
         }
 
         // 5. Fetch Logged-in User Session Details
@@ -713,7 +782,7 @@
             .table td:nth-child(11),
             .table td:nth-child(12),
             .table th {
-                white-space: nowrap !important;
+                white-space: nowrap;
             }
             .table tbody tr:last-child td {
                 border-bottom: none !important;
@@ -1018,6 +1087,31 @@
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
             }
+
+            /* Active Sidebar Submenu Item Theme Color Override */
+            .sidebar-menu ul li a.active,
+            .sidebar-menu ul li a.active span {
+                color: #e41f07 !important;
+            }
+            .sidebar-menu ul li .submenu > ul li a.active::after {
+                background-color: #e41f07 !important;
+            }
+            
+            /* Custom scrollbar styling for column customizer dropdown menu */
+            #colCustomizerMenu::-webkit-scrollbar {
+                width: 6px !important;
+            }
+            #colCustomizerMenu::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+                border-radius: 4px !important;
+            }
+            #colCustomizerMenu::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+                border-radius: 4px !important;
+            }
+            #colCustomizerMenu::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+            }
         `;
         document.head.appendChild(globalStyle);
 
@@ -1075,13 +1169,425 @@
             });
         }
 
-        // Run immediately
-        replaceEmojisWithIcons();
+        function applyColumnVisibilityCSS(hiddenIndices) {
+            let styleEl = document.getElementById("col-visibility-dynamic-styles");
+            if (!styleEl) {
+                styleEl = document.createElement("style");
+                styleEl.id = "col-visibility-dynamic-styles";
+                document.head.appendChild(styleEl);
+            }
+            
+            let css = "";
+            hiddenIndices.forEach(idx => {
+                css += `table th:nth-child(${idx + 1}), table td:nth-child(${idx + 1}) { display: none !important; }\n`;
+            });
+            styleEl.innerHTML = css;
+        }
 
-        // Setup observer
-        const observer = new MutationObserver(() => {
-            replaceEmojisWithIcons();
+        function initGlobalColumnCustomizer() {
+            console.log("[ColumnCustomizer] Starting column customizer initialization");
+            const table = document.querySelector(".content-area table") || document.querySelector("table");
+            if (!table) {
+                console.log("[ColumnCustomizer] No table found on this page.");
+                return;
+            }
+
+            const headerRow = table.querySelector("thead tr");
+            if (!headerRow) {
+                console.log("[ColumnCustomizer] Table header row not found.");
+                return;
+            }
+
+            const headers = Array.from(headerRow.querySelectorAll("th"));
+            if (headers.length <= 1) {
+                console.log("[ColumnCustomizer] Headers length <= 1");
+                return;
+            }
+
+            const customizableCols = [];
+            headers.forEach((th, idx) => {
+                const text = th.innerText.trim();
+                const hasCheckbox = th.querySelector("input[type=checkbox]");
+                const isAction = text.toLowerCase() === "action" || text.toLowerCase() === "actions" || text === "✏️" || text === "🗑️";
+                console.log(`[ColumnCustomizer DEBUG] Header idx: ${idx}, text: "${text}", hasCheckbox: ${!!hasCheckbox}, isAction: ${isAction}`);
+                
+                if (!hasCheckbox && !isAction && text !== "") {
+                    customizableCols.push({ index: idx, name: text });
+                }
+            });
+
+            console.log("[ColumnCustomizer] Customizable columns found:", customizableCols);
+
+            if (customizableCols.length === 0) {
+                console.log("[ColumnCustomizer] No customizable columns found.");
+                return;
+            }
+
+            let toolbar = document.getElementById("pageActionButtonsContainer") || document.querySelector(".topbar") || document.querySelector(".table-toolbar");
+            if (!toolbar) {
+                const cardBody = table.closest(".card-body");
+                if (cardBody) {
+                    toolbar = document.createElement("div");
+                    toolbar.className = "table-toolbar";
+                    toolbar.style.cssText = "display: flex; justify-content: flex-end; margin-bottom: 12px;";
+                    cardBody.insertBefore(toolbar, cardBody.firstChild);
+                } else {
+                    console.log("[ColumnCustomizer] No toolbar or card-body found.");
+                    return;
+                }
+            }
+
+            if (document.getElementById("colCustomizerDropdown")) {
+                console.log("[ColumnCustomizer] Dropdown already exists.");
+                return;
+            }
+
+            console.log("[ColumnCustomizer] Creating and inserting dropdown into toolbar:", toolbar);
+
+            const storageKey = "hidden-cols-" + window.location.pathname;
+            let hiddenIndices = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+            hiddenIndices = hiddenIndices.filter(idx => idx < headers.length);
+            applyColumnVisibilityCSS(hiddenIndices);
+
+            const dropdownDiv = document.createElement("div");
+            dropdownDiv.id = "colCustomizerDropdown";
+            dropdownDiv.className = "dropdown position-relative d-inline-block";
+            dropdownDiv.style.marginRight = "8px";
+
+            const btn = document.createElement("button");
+            btn.className = "tb-btn";
+            btn.type = "button";
+            btn.style.cssText = "border-radius: 20px; display: flex; align-items: center; gap: 6px; padding: 5px 12px; font-weight: 600; font-size: 12px; cursor: pointer;";
+            btn.innerHTML = `<i class="ti ti-layout-columns" style="font-size: 14px;"></i> Manage Columns`;
+            
+            const menu = document.createElement("div");
+            menu.id = "colCustomizerMenu";
+            menu.className = "shadow-lg border p-2";
+            menu.style.cssText = "display: none; position: absolute; right: 0; top: 110%; z-index: 3000; min-width: 220px; background: #fff; border-radius: 8px; max-height: 480px; overflow-y: auto;";
+
+            customizableCols.forEach(col => {
+                const isChecked = !hiddenIndices.includes(col.index);
+                const item = document.createElement("div");
+                item.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f1f5f9; gap: 12px;";
+                item.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="ti ti-grid-dots" style="color: #94a3b8; font-size: 15px; cursor: grab;"></i>
+                        <span style="font-size: 12px; font-weight: 500; color: #1e293b;">${col.name}</span>
+                    </div>
+                    <label class="col-customizer-switch" style="margin-bottom: 0;">
+                        <input type="checkbox" data-index="${col.index}" ${isChecked ? 'checked' : ''}>
+                        <span class="col-customizer-slider"></span>
+                    </label>
+                `;
+                menu.appendChild(item);
+            });
+
+            dropdownDiv.appendChild(btn);
+            dropdownDiv.appendChild(menu);
+
+            const btnAdd = toolbar.querySelector(".btn-add") || toolbar.querySelector("button:last-child");
+            if (btnAdd) {
+                toolbar.insertBefore(dropdownDiv, btnAdd);
+            } else {
+                toolbar.appendChild(dropdownDiv);
+            }
+
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                const isVisible = menu.style.display === "block";
+                document.querySelectorAll("#colCustomizerMenu").forEach(m => m.style.display = "none");
+                menu.style.display = isVisible ? "none" : "block";
+            });
+
+            document.addEventListener("click", function(e) {
+                if (!dropdownDiv.contains(e.target)) {
+                    menu.style.display = "none";
+                }
+            });
+
+            menu.querySelectorAll("input[type=checkbox]").forEach(chk => {
+                chk.addEventListener("change", function() {
+                    const idx = parseInt(this.getAttribute("data-index"));
+                    if (this.checked) {
+                        hiddenIndices = hiddenIndices.filter(i => i !== idx);
+                    } else {
+                        if (!hiddenIndices.includes(idx)) hiddenIndices.push(idx);
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(hiddenIndices));
+                    applyColumnVisibilityCSS(hiddenIndices);
+                });
+            });
+        }
+
+        // Global Date Masking and Timezone formatting implementation via Event Delegation
+        document.addEventListener("focusin", function(e) {
+            const input = e.target;
+            if (input.tagName === 'INPUT' && input.type === 'text' && 
+                (input.placeholder === 'DD-MM-YYYY' || (input.id && input.id.endsWith('_text')))) {
+                if (input.hasAttribute('oninput')) input.removeAttribute('oninput');
+                if (input.hasAttribute('onblur')) input.removeAttribute('onblur');
+            }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+
+        document.addEventListener("input", function(e) {
+            const input = e.target;
+            if (input.tagName === 'INPUT' && input.type === 'text' && 
+                (input.placeholder === 'DD-MM-YYYY' || (input.id && input.id.endsWith('_text')))) {
+                
+                // Double check to remove inline attributes if they were added dynamically
+                if (input.hasAttribute('oninput')) input.removeAttribute('oninput');
+                if (input.hasAttribute('onblur')) input.removeAttribute('onblur');
+                
+                let val = input.value;
+                let clean = val.replace(/[^0-9-]/g, "");
+                
+                let oldVal = input.dataset.lastVal || "";
+                if (clean.length < oldVal.length) {
+                    input.dataset.lastVal = clean;
+                    input.value = clean;
+                    return;
+                }
+                
+                let digits = clean.replace(/-/g, "");
+                let formatted = "";
+                
+                if (digits.length > 0) {
+                    // Day
+                    let dd = digits.substring(0, 2);
+                    if (dd.length === 1 && dd !== '0' && dd !== '1' && dd !== '2' && dd !== '3') {
+                        dd = '0' + dd;
+                    }
+                    if (dd.length === 2) {
+                        let dNum = parseInt(dd, 10);
+                        if (dNum > 31) dd = "31";
+                        if (dNum === 0) dd = "01";
+                    }
+                    formatted += dd;
+                    
+                    if (digits.length >= 2) {
+                        formatted += "-";
+                        
+                        // Month
+                        let mm = digits.substring(2, 4);
+                        if (mm.length === 1 && mm !== '0' && mm !== '1') {
+                            mm = '0' + mm;
+                        }
+                        if (mm.length === 2) {
+                            let mNum = parseInt(mm, 10);
+                            if (mNum > 12) mm = "12";
+                            if (mNum === 0) mm = "01";
+                        }
+                        formatted += mm;
+                        
+                        if (digits.length >= 4) {
+                            formatted += "-";
+                            
+                            // Year
+                            let yyyy = digits.substring(4, 8);
+                            formatted += yyyy;
+                        }
+                    }
+                }
+                
+                input.value = formatted;
+                input.dataset.lastVal = formatted;
+                
+                // Sync to native hidden input if present
+                let nativeId = input.id.replace(/_text$/, "");
+                let nativeInput = document.getElementById(nativeId);
+                if (nativeInput && nativeInput.type === 'date') {
+                    let parts = formatted.split('-');
+                    if (parts.length === 3) {
+                        let dd = parts[0];
+                        let mm = parts[1];
+                        let yyyy = parts[2];
+                        if (yyyy.length === 4) {
+                            let dateVal = `${yyyy}-${mm}-${dd}`;
+                            if (nativeInput.value !== dateVal) {
+                                const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                                if (desc && desc.set) {
+                                    desc.set.call(nativeInput, dateVal);
+                                    nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+                                    nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                                }
+                            }
+                        }
+                    } else if (!formatted) {
+                        const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                        if (desc && desc.set) {
+                            desc.set.call(nativeInput, '');
+                            nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+                            nativeInput.dispatchEvent(new Event("change", { bubbles: true }));
+                        }
+                    }
+                }
+            }
+        });
+
+        function convertNativeDateInputs() {
+            document.querySelectorAll('input[type="date"]').forEach(dateInput => {
+                if (dateInput.closest('.date-input-container') || dateInput.style.opacity === '0' || dateInput.style.display === 'none') {
+                    return;
+                }
+                
+                const container = document.createElement('div');
+                container.className = 'date-input-container';
+                container.style.cssText = 'display: flex; align-items: center; position: relative; width: 100%;';
+                
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.placeholder = 'DD-MM-YYYY';
+                textInput.maxLength = 10;
+                textInput.className = dateInput.className;
+                textInput.id = dateInput.id ? dateInput.id + '_text' : '';
+                textInput.name = dateInput.name ? dateInput.name + '_text' : '';
+                textInput.style.cssText = 'flex: 1; padding-right: 32px;';
+                
+                const triggerBtn = document.createElement('button');
+                triggerBtn.type = 'button';
+                triggerBtn.className = 'date-picker-trigger';
+                triggerBtn.style.cssText = 'position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; width: 24px; padding: 0; z-index: 1; pointer-events: none;';
+                triggerBtn.innerHTML = '📅';
+                
+                // Position native hidden dateInput over the trigger button
+                dateInput.style.cssText = 'position: absolute; opacity: 0; width: 24px; height: 24px; right: 8px; z-index: 2; cursor: pointer; border: none; padding: 0; margin: 0;';
+                
+                dateInput.parentNode.insertBefore(container, dateInput);
+                container.appendChild(textInput);
+                container.appendChild(triggerBtn);
+                container.appendChild(dateInput);
+                
+                textInput.addEventListener('change', function() {
+                    let val = textInput.value.trim();
+                    if (!val) {
+                        dateInput.value = '';
+                        dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        return;
+                    }
+                    let parts = val.split('-');
+                    if (parts.length === 3) {
+                        let dd = parts[0].padStart(2, '0');
+                        let mm = parts[1].padStart(2, '0');
+                        let yyyy = parts[2];
+                        if (yyyy.length === 4) {
+                            let formatted = `${yyyy}-${mm}-${dd}`;
+                            if (dateInput.value !== formatted) {
+                                dateInput.value = formatted;
+                                dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+                    }
+                });
+                
+                dateInput.addEventListener('change', function() {
+                    let val = dateInput.value;
+                    if (val && val.includes('-')) {
+                        let parts = val.split('-');
+                        if (parts.length === 3) {
+                            textInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                    } else {
+                        textInput.value = '';
+                    }
+                });
+                
+                if (dateInput.value) {
+                    let val = dateInput.value;
+                    let parts = val.split('-');
+                    if (parts.length === 3) {
+                        textInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                }
+            });
+        }
+
+        function formatToSydneyTZ(str) {
+            if (!str || typeof str !== 'string') return str;
+            let val = str.trim();
+            if (!val || val === '-' || val === 'Pending' || val === 'Pending Details') return str;
+            
+            // Check YYYY-MM-DD HH:mm:ss
+            let match1 = val.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})/);
+            if (match1) {
+                let y = parseInt(match1[1]), m = parseInt(match1[2]), d = parseInt(match1[3]);
+                let hh = parseInt(match1[4]), min = parseInt(match1[5]);
+                let period = "AM";
+                let dispHh = hh;
+                if (hh >= 12) {
+                    period = "PM";
+                    if (hh > 12) dispHh = hh - 12;
+                } else if (hh === 0) {
+                    dispHh = 12;
+                }
+                return `${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}-${y} ${String(dispHh).padStart(2, '0')}:${String(min).padStart(2, '0')} ${period}`;
+            }
+            
+            // Check DD-MM-YYYY (hh:mm AM/PM)
+            let match2 = val.match(/^(\d{2})-(\d{2})-(\d{4})\s*\(?(\d{2}):(\d{2})\s*([AP]M)\)?$/i);
+            if (match2) {
+                let d = match2[1], m = match2[2], y = match2[3];
+                let hh = match2[4], min = match2[5], period = match2[6].toUpperCase();
+                return `${d}-${m}-${y} ${hh}:${min} ${period}`;
+            }
+            
+            // Check YYYY-MM-DD (date only)
+            let match3 = val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (match3) {
+                return `${match3[3]}-${match3[2]}-${match3[1]}`;
+            }
+            
+            return str;
+        }
+
+        function formatDatesInTables() {
+            console.log("formatDatesInTables RUNNING");
+            const cells = document.querySelectorAll("table td, table th");
+            console.log("Found cells count:", cells.length);
+            cells.forEach(cell => {
+                if (cell.querySelector("input, select, textarea, button")) return;
+                
+                const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, null, false);
+                let node;
+                while (node = walker.nextNode()) {
+                    let text = node.nodeValue.trim();
+                    let formatted = formatToSydneyTZ(text);
+                    if (formatted !== text) {
+                        console.log("Formatting text:", JSON.stringify(text), "->", JSON.stringify(formatted));
+                        node.nodeValue = formatted;
+                    }
+                }
+            });
+        }
+
+        // Setup observer and debounced queue
+        let runTimeout = null;
+        function queueGlobalUpdates() {
+            if (runTimeout) return;
+            runTimeout = requestAnimationFrame(() => {
+                runTimeout = null;
+                // Temporarily disconnect observer to prevent self-mutation loop
+                observer.disconnect();
+                
+                try {
+                    replaceEmojisWithIcons();
+                    initGlobalColumnCustomizer();
+                    convertNativeDateInputs();
+                    formatDatesInTables();
+                } catch (e) {
+                    console.error("Error in global layout-loader updates:", e);
+                }
+                
+                // Reconnect observer
+                observer.observe(document.body, { childList: true, subtree: true });
+            });
+        }
+
+        const observer = new MutationObserver(queueGlobalUpdates);
+        
+        // Run immediately
+        queueGlobalUpdates();
     });
 })();
