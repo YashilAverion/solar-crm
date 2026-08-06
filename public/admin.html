@@ -1302,6 +1302,17 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('tab-telephony-sandbox').classList.toggle('active-chip', target === 'telephony-sandbox');
         document.getElementById('tab-pylon-config').classList.toggle('active-chip', target === 'pylon-config');
 
+        // Hide/show tab bar and stats row for clean layout
+        const tabBar = document.querySelector('.admin-tab-bar');
+        const statsRow = document.querySelector('.stats-row');
+        if (target === 'roles-permissions') {
+            if (tabBar) tabBar.style.display = 'none';
+            if (statsRow) statsRow.style.display = 'none';
+        } else {
+            if (tabBar) tabBar.style.display = 'flex';
+            if (statsRow) statsRow.style.display = 'grid';
+        }
+
         // Dynamic Topbar adjustment
         const pageTitleEl = document.getElementById('adminPageTitle');
         const backupWrapper = document.getElementById('backup-status-wrapper');
@@ -1326,7 +1337,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (roleSearchEl) roleSearchEl.style.display = 'block';
             if (addRoleBtn) addRoleBtn.style.display = 'block';
             
-            loadRolesList();
+            loadAndPopulateRoles();
         } else {
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
             if (backupWrapper) backupWrapper.style.display = 'flex';
@@ -3055,6 +3066,7 @@ Initializing deployment stream...
 
     window.onload = () => { 
         loadUsers(); 
+        loadAndPopulateRoles();
         fetchLastBackup(); 
         loadPermissions(); 
         checkVoIPLineStatus();
@@ -3444,18 +3456,108 @@ Initializing deployment stream...
         } catch(e) { window.location.href = "/login"; }
     })();
 
-    // ── ROLES & PERMISSIONS MANAGER ─────────────────────────
-    async function loadRolesList() {
+    async function loadAndPopulateRoles() {
         try {
             const res = await fetch('/api/roles');
             if (res.ok) {
                 allRolesData = await res.json();
-                document.getElementById('rolesCountBadge').innerText = allRolesData.length;
+                
+                // Update badge if element exists
+                const badge = document.getElementById('rolesCountBadge');
+                if (badge) badge.innerText = allRolesData.length;
+                
+                // Populate dropdowns dynamically
+                populateRoleDropdowns(allRolesData);
+                
+                // Render table of roles
                 renderRolesTable();
             }
         } catch (e) {
-            console.error("Failed to load roles list", e);
+            console.error("Failed to load and populate roles list", e);
         }
+    }
+
+    function populateRoleDropdowns(roles) {
+        const roleFilter = document.getElementById('roleFilter');
+        const uRole = document.getElementById('u_role');
+        if (!roleFilter || !uRole) return;
+
+        // Group roles
+        const managers = [];
+        const teamLeaders = [];
+        const executives = [];
+        const others = [];
+
+        roles.forEach(r => {
+            const name = r.role_name;
+            if (name === 'Admin') return; // Admin is top-level option
+            
+            if (name.includes('Manager')) {
+                managers.push(name);
+            } else if (name.includes('Team Leader')) {
+                teamLeaders.push(name);
+            } else if (name.includes('Executive')) {
+                executives.push(name);
+            } else {
+                others.push(name);
+            }
+        });
+
+        // Function to build HTML options
+        function buildOptionsHTML(isFilter) {
+            let html = '';
+            if (isFilter) {
+                html += '<option value="">All Roles</option>';
+            } else {
+                html += '<option value="">Select Role</option>';
+            }
+            html += '<option value="Admin">Admin</option>';
+
+            if (managers.length > 0) {
+                html += '<optgroup label="Manager">';
+                managers.forEach(m => {
+                    html += `<option value="${m}">${m}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            if (teamLeaders.length > 0) {
+                html += '<optgroup label="Team Leader">';
+                teamLeaders.forEach(t => {
+                    html += `<option value="${t}">${t}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            if (executives.length > 0) {
+                html += '<optgroup label="Executive">';
+                executives.forEach(e => {
+                    html += `<option value="${e}">${e}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            if (others.length > 0) {
+                html += '<optgroup label="Custom / Other Roles">';
+                others.forEach(o => {
+                    html += `<option value="${o}">${o}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            return html;
+        }
+
+        // Save selected values to restore them after repopulating
+        const selectedFilter = roleFilter.value;
+        const selectedURole = uRole.value;
+
+        roleFilter.innerHTML = buildOptionsHTML(true);
+        uRole.innerHTML = buildOptionsHTML(false);
+
+        // Restore selected values
+        roleFilter.value = selectedFilter;
+        uRole.value = selectedURole;
     }
 
     function renderRolesTable() {
@@ -3587,7 +3689,7 @@ Initializing deployment stream...
             if (res.ok) {
                 closeRoleModal();
                 Swal.fire({ icon: 'success', title: 'Role Saved', text: `Role "${roleName}" has been successfully added.` });
-                loadRolesList();
+                loadAndPopulateRoles();
             } else {
                 const errData = await res.json();
                 Swal.fire({ icon: 'error', title: 'Error', text: errData.error || 'Failed to add role.' });
@@ -3612,7 +3714,7 @@ Initializing deployment stream...
                     const res = await fetch(`/api/roles/${encodeURIComponent(roleName)}`, { method: 'DELETE' });
                     if (res.ok) {
                         Swal.fire('Deleted!', `Role "${roleName}" has been deleted.`, 'success');
-                        loadRolesList();
+                        loadAndPopulateRoles();
                     } else {
                         const data = await res.json();
                         Swal.fire('Error', data.error || 'Failed to delete role.', 'error');

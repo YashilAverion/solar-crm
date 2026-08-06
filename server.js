@@ -1045,7 +1045,10 @@ app.post('/admin/users', requireManager, async (req, res) => {
         if (!email || email.trim().length === 0) {
             return res.status(400).json({ error: 'Email ID is required.' });
         }
-        const VALID_ROLES = ['Admin', 'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager', 'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader', 'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'];
+        const rolesRows = await new Promise((resolve, reject) =>
+            db.all("SELECT role_name FROM custom_roles", [], (err, rows) => err ? reject(err) : resolve(rows))
+        );
+        const VALID_ROLES = rolesRows.map(r => r.role_name);
         if (!VALID_ROLES.includes(role)) {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
@@ -1127,7 +1130,10 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
         if (!email || email.trim().length === 0) {
             return res.status(400).json({ error: 'Email ID is required.' });
         }
-        const VALID_ROLES = ['Admin', 'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager', 'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader', 'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'];
+        const rolesRows = await new Promise((resolve, reject) =>
+            db.all("SELECT role_name FROM custom_roles", [], (err, rows) => err ? reject(err) : resolve(rows))
+        );
+        const VALID_ROLES = rolesRows.map(r => r.role_name);
         if (!VALID_ROLES.includes(role)) {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
