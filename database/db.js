@@ -1329,6 +1329,33 @@ db.serialize(() => {
         }
     });
 
+    // ── DEPARTMENTS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS departments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dept_id TEXT UNIQUE,
+            name TEXT NOT NULL,
+            department_head_id INTEGER,
+            status TEXT DEFAULT 'Active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(department_head_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating departments table:', err.message);
+        else console.log('[DB] departments table ready.');
+    });
+
+    // Add department_id to users defensively
+    db.run("ALTER TABLE users ADD COLUMN department_id INTEGER", (err) => {
+        if (err) {
+            if (!err.message.includes('duplicate column') && !err.message.includes('already exists')) {
+                console.error('[DB] Error adding department_id to users:', err.message);
+            }
+        } else {
+            console.log('[DB] Added department_id column to users table.');
+        }
+    });
+
     // ── POSTCODE YIELD FACTORS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS postcode_yield_factors (

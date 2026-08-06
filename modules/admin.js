@@ -103,7 +103,7 @@ router.generateHTMLSignature = generateHTMLSignature;
 
 // ── GET ALL USERS ─────────────────────────────────────────────
 router.get('/users', requireManager, (req, res) => {
-    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, full_name, email, role, can_edit, can_delete, status, outlook_email, is_outlook_active, voipline_extension, voipline_api_key, voipline_outbound_line, voipline_secret_token, voipline_master_key, designation, mobile_number, email_signature, department_id FROM users", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });

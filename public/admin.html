@@ -997,6 +997,140 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
             </div>
         </div>
+
+        <!-- Section Departments -->
+        <div id="section-departments" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
+            <div class="departments-toolbar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:1px solid var(--border); background:var(--bg-card); flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" id="deptSearchInput" placeholder="Search Department Name..." oninput="filterDepartments()" style="height:32px; border-radius:6px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:12px; outline:none; width:200px;">
+                    <select id="deptSortBy" onchange="filterDepartments()" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; background:var(--bg); color:var(--text-muted); outline:none;">
+                        <option value="id_desc">Sort By: ID (Newest)</option>
+                        <option value="id_asc">Sort By: ID (Oldest)</option>
+                        <option value="name_asc">Name: A-Z</option>
+                        <option value="name_desc">Name: Z-A</option>
+                        <option value="members_desc">Members: High-Low</option>
+                        <option value="members_asc">Members: Low-High</option>
+                    </select>
+                    <input type="date" id="deptDateFrom" onchange="filterDepartments()" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; background:var(--bg); color:var(--text-muted); outline:none; width:120px;" title="Created From">
+                    <input type="date" id="deptDateTo" onchange="filterDepartments()" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; background:var(--bg); color:var(--text-muted); outline:none; width:120px;" title="Created To">
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="page-btn" onclick="toggleDeptFilterPopup()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-filter"></i> Filters</button>
+                    <button class="page-btn" onclick="toggleDeptColumnsManager()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-layout-column"></i> Columns</button>
+                    <button class="page-btn" onclick="exportDepartmentsCSV()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-download"></i> Export</button>
+                    <button class="page-btn" onclick="loadDepartmentsList()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-refresh"></i> Refresh</button>
+                    <button class="tb-btn btn-add" onclick="openAddDepartmentModal()" style="height:32px; line-height:32px; padding:0 12px; font-size:12px; display:flex; align-items:center; gap:5px; margin:0;"><i class="ti ti-plus"></i> Add Department</button>
+                </div>
+            </div>
+
+            <!-- Expandable Filter Popup Box -->
+            <div id="deptFilterPopup" style="display:none; padding:15px; border-bottom:1px solid var(--border); background:var(--bg-card); gap:15px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                <div class="field" style="margin-bottom:0;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted);">DEPARTMENT NAME</label>
+                    <input type="text" id="filterDeptName" placeholder="Enter name..." style="height:32px; border-radius:6px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:12px; width:100%;">
+                </div>
+                <div class="field" style="margin-bottom:0;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted);">DEPARTMENT HEAD</label>
+                    <select id="filterDeptHead" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; background:var(--bg); width:100%;">
+                        <option value="">All heads</option>
+                    </select>
+                </div>
+                <div class="field" style="margin-bottom:0;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted);">STATUS</label>
+                    <select id="filterDeptStatus" style="height:32px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; background:var(--bg); width:100%;">
+                        <option value="">All statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Success">Success</option>
+                        <option value="Restructuring">Restructuring</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:flex-end; gap:8px; height:100%;">
+                    <button class="page-btn" onclick="resetDeptFilters()" style="height:32px; width:100%; border-radius:6px; font-size:12px;">Reset</button>
+                    <button class="tb-btn btn-add" onclick="filterDepartments()" style="height:32px; line-height:32px; width:100%; border-radius:6px; font-size:12px; margin:0;">Filter</button>
+                </div>
+            </div>
+
+            <!-- Columns Selector Popup Box -->
+            <div id="deptColumnsManager" style="display:none; padding:10px 15px; border-bottom:1px solid var(--border); background:var(--bg-card); gap:15px; font-size:12px; flex-wrap:wrap;">
+                <span style="font-weight:600; color:var(--text-muted); display:flex; align-items:center;">Manage Columns:</span>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-id', this.checked)"> Department ID</label>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-name', this.checked)"> Department Name</label>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-head', this.checked)"> Department Head</label>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-members', this.checked)"> Members Count</label>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-status', this.checked)"> Status</label>
+                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-created', this.checked)"> Created At</label>
+            </div>
+
+            <div class="table-wrap">
+                <table class="table table-departments">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;"><input type="checkbox" id="selectAllDepts" onchange="toggleSelectAllDepts(this.checked)"></th>
+                            <th class="col-dept-id" style="text-align: left; padding-left: 20px;">Department ID</th>
+                            <th class="col-dept-name" style="text-align: left;">Department Name</th>
+                            <th class="col-dept-head" style="text-align: left;">Department Head</th>
+                            <th class="col-dept-members" style="text-align: center;">Members Count</th>
+                            <th class="col-dept-status" style="text-align: center;">Status</th>
+                            <th class="col-dept-created" style="text-align: left;">Created At</th>
+                            <th style="text-align: center; width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="departmentsBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="pagination-footer">
+                <div class="pf-left">
+                    <span class="pf-label">Show:</span>
+                    <select class="rows-select" id="deptRowsPerPage" onchange="changeDeptRowsPerPage()">
+                        <option value="30">30</option><option value="50">50</option><option value="100">100</option>
+                    </select>
+                    <span class="total-badge">Total: <span id="totalDeptsCount">0</span></span>
+                </div>
+                <div class="pf-right">
+                    <span class="page-info" id="deptPageInfo">Page 1 of 1</span>
+                    <button class="page-btn" id="deptPrevBtn" onclick="prevDeptPage()" disabled>← Prev</button>
+                    <button class="page-btn" id="deptNextBtn" onclick="nextDeptPage()" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Department Modal -->
+<div id="deptModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="modal-close" type="button" onclick="closeDeptModal()">✕</button>
+        <div class="modal-title" id="deptModalTitle">Add Department</div>
+        <form id="deptForm" onsubmit="saveDepartment(event)">
+            <input type="hidden" id="dept_db_id">
+            
+            <div class="field" style="margin-bottom: 15px;">
+                <label class="required">DEPARTMENT NAME</label>
+                <input type="text" id="dept_name" required placeholder="e.g. Sales, Marketing">
+            </div>
+            
+            <div class="field" style="margin-bottom: 15px;">
+                <label class="required">DEPARTMENT HEAD</label>
+                <select id="dept_head" required style="width:100%; height:36px; border-radius:6px; border:1px solid var(--border); background:var(--bg); font-size:13px; padding:0 8px;">
+                    <option value="">Select Department Head</option>
+                </select>
+            </div>
+            
+            <div class="field" style="margin-bottom: 20px;">
+                <label class="required">STATUS</label>
+                <select id="dept_status" required style="width:100%; height:36px; border-radius:6px; border:1px solid var(--border); background:var(--bg); font-size:13px; padding:0 8px;">
+                    <option value="Active">Active</option>
+                    <option value="Success">Success</option>
+                    <option value="Restructuring">Restructuring</option>
+                </select>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+                <button class="page-btn" type="button" onclick="closeDeptModal()" style="height:36px; width:100px;">Cancel</button>
+                <button class="tb-btn btn-add" type="submit" style="height:36px; width:120px; margin:0;">Save Changes</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1099,6 +1233,11 @@ document.addEventListener("DOMContentLoaded", function() {
                                     <option value="Admin Executive">Admin Executive</option>
                                     <option value="Service Executive">Service Executive</option>
                                 </optgroup>
+                            </select>
+                        </div>
+                        <div class="field"><label>DEPARTMENT</label>
+                            <select id="u_department_id">
+                                <option value="">Select Department</option>
                             </select>
                         </div>
                         <div class="field"><label>DESIGNATION / TITLE</label><input type="text" id="u_designation" placeholder="e.g. Operation Manager"></div>
@@ -1294,6 +1433,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('section-telephony-sandbox').style.display = target === 'telephony-sandbox' ? 'flex' : 'none';
         document.getElementById('section-pylon-config').style.display = target === 'pylon-config' ? 'flex' : 'none';
         document.getElementById('section-roles-permissions').style.display = target === 'roles-permissions' ? 'flex' : 'none';
+        document.getElementById('section-departments').style.display = target === 'departments' ? 'flex' : 'none';
         
         document.getElementById('tab-users-list').classList.toggle('active-chip', target === 'users-list');
         document.getElementById('tab-rate-limits').classList.toggle('active-chip', target === 'rate-limits');
@@ -1305,7 +1445,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Hide/show tab bar and stats row for clean layout
         const tabBar = document.querySelector('.admin-tab-bar');
         const statsRow = document.querySelector('.stats-row');
-        if (target === 'roles-permissions') {
+        if (target === 'roles-permissions' || target === 'departments') {
             if (tabBar) tabBar.style.display = 'none';
             if (statsRow) statsRow.style.display = 'none';
         } else {
@@ -1338,6 +1478,19 @@ document.addEventListener("DOMContentLoaded", function() {
             if (addRoleBtn) addRoleBtn.style.display = 'block';
             
             loadAndPopulateRoles();
+        } else if (target === 'departments') {
+            if (pageTitleEl) pageTitleEl.innerText = 'Departments';
+            if (backupWrapper) backupWrapper.style.display = 'none';
+            if (userSearchEl) userSearchEl.style.display = 'none';
+            if (roleFilterEl) roleFilterEl.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            if (backupBtn) backupBtn.style.display = 'none';
+            if (addUserBtn) addUserBtn.style.display = 'none';
+            
+            if (roleSearchEl) roleSearchEl.style.display = 'none';
+            if (addRoleBtn) addRoleBtn.style.display = 'none';
+            
+            loadDepartmentsList();
         } else {
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
             if (backupWrapper) backupWrapper.style.display = 'flex';
@@ -1867,6 +2020,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_username').value = u.username || '';
         document.getElementById('u_email').value = u.email || '';
         document.getElementById('u_role').value = u.role || 'Standard';
+        document.getElementById('u_department_id').value = u.department_id || '';
         document.getElementById('u_designation').value = u.designation || '';
         document.getElementById('u_mobile_number').value = u.mobile_number || '';
         document.getElementById('u_email_signature').value = u.email_signature || '';
@@ -2320,6 +2474,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (res.ok) {
                 const data = await res.json();
+                
+                // Save user's department
+                const userIdForDept = isEdit ? id : data.id;
+                const deptIdVal = document.getElementById('u_department_id').value;
+                if (userIdForDept) {
+                    try {
+                        await fetch(`/api/users/${userIdForDept}/department`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ department_id: deptIdVal || null })
+                        });
+                    } catch (deptErr) {
+                        console.error('Failed to save user department:', deptErr);
+                    }
+                }
+                
                 document.getElementById('userModal').style.display = 'none';
                 loadUsers();
 
@@ -3067,6 +3237,8 @@ Initializing deployment stream...
     window.onload = () => { 
         loadUsers(); 
         loadAndPopulateRoles();
+        populateUsersDropdowns();
+        populateUserDepartmentDropdown();
         fetchLastBackup(); 
         loadPermissions(); 
         checkVoIPLineStatus();
@@ -3754,6 +3926,8 @@ Initializing deployment stream...
         const hash = window.location.hash;
         if (hash === '#roles') {
             switchAdminSection('roles-permissions');
+        } else if (hash === '#departments') {
+            switchAdminSection('departments');
         } else {
             if (!hash || hash === '#users-list' || hash === '#') {
                 switchAdminSection('users-list');
@@ -3763,6 +3937,373 @@ Initializing deployment stream...
 
     window.addEventListener('hashchange', handleAdminHashRouting);
     window.addEventListener('load', handleAdminHashRouting);
+
+    // ── DEPARTMENTS MANAGER FRONTEND ────────────────────────
+    let allDeptsData = [];
+    let deptCurrentPage = 1;
+    let deptRowsPerPage = 30;
+    let hiddenDeptColumns = new Set();
+
+    async function loadDepartmentsList() {
+        try {
+            const name = document.getElementById('filterDeptName')?.value || '';
+            const head = document.getElementById('filterDeptHead')?.value || '';
+            const status = document.getElementById('filterDeptStatus')?.value || '';
+            const search = document.getElementById('deptSearchInput')?.value || '';
+            
+            let url = `/api/departments?name=${encodeURIComponent(name || search)}&head=${encodeURIComponent(head)}&status=${encodeURIComponent(status)}`;
+            
+            const res = await fetch(url);
+            if (res.ok) {
+                allDeptsData = await res.json();
+                
+                // Sort the data based on sort selection
+                sortDepartments();
+                
+                // Populate the total count badge
+                const totalDeptsEl = document.getElementById('totalDeptsCount');
+                if (totalDeptsEl) totalDeptsEl.innerText = allDeptsData.length;
+                
+                renderDepartmentsTable();
+            }
+        } catch (e) {
+            console.error("Failed to load departments list", e);
+        }
+    }
+
+    function sortDepartments() {
+        const sortBy = document.getElementById('deptSortBy')?.value || 'id_desc';
+        allDeptsData.sort((a, b) => {
+            if (sortBy === 'id_desc') return b.id - a.id;
+            if (sortBy === 'id_asc') return a.id - b.id;
+            if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
+            if (sortBy === 'name_desc') return (b.name || '').localeCompare(a.name || '');
+            if (sortBy === 'members_desc') return (b.member_count || 0) - (a.member_count || 0);
+            if (sortBy === 'members_asc') return (a.member_count || 0) - (b.member_count || 0);
+            return 0;
+        });
+    }
+
+    function renderDepartmentsTable() {
+        const tbody = document.getElementById('departmentsBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        // Filter by date range client-side
+        const dateFrom = document.getElementById('deptDateFrom')?.value;
+        const dateTo = document.getElementById('deptDateTo')?.value;
+        
+        let filtered = allDeptsData;
+        if (dateFrom) {
+            filtered = filtered.filter(d => new Date(d.created_at) >= new Date(dateFrom + 'T00:00:00'));
+        }
+        if (dateTo) {
+            filtered = filtered.filter(d => new Date(d.created_at) <= new Date(dateTo + 'T23:59:59'));
+        }
+
+        const start = (deptCurrentPage - 1) * deptRowsPerPage;
+        const end = start + deptRowsPerPage;
+        const paginated = filtered.slice(start, end);
+
+        // Update pagination buttons and text
+        const totalPages = Math.ceil(filtered.length / deptRowsPerPage) || 1;
+        document.getElementById('deptPageInfo').innerText = `Page ${deptCurrentPage} of ${totalPages}`;
+        document.getElementById('deptPrevBtn').disabled = deptCurrentPage <= 1;
+        document.getElementById('deptNextBtn').disabled = deptCurrentPage >= totalPages;
+
+        if (paginated.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">No departments found.</td></tr>';
+            return;
+        }
+
+        paginated.forEach(d => {
+            let badgeClass = 'badge-success'; 
+            if (d.status === 'Restructuring') {
+                badgeClass = 'badge-purple'; 
+            }
+            
+            const headName = d.head_name || d.head_username || 'N/A';
+            const initials = headName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            const getColStyle = (colName) => hiddenDeptColumns.has(colName) ? 'display:none;' : '';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="width: 50px; text-align: center;"><input type="checkbox" class="dept-row-checkbox" value="${d.id}" onchange="checkSelectAllDepts()"></td>
+                <td class="col-dept-id" style="text-align: left; padding-left: 20px; ${getColStyle('col-dept-id')}">
+                    <h6 class="fs-14 fw-normal mb-0" style="font-weight:600; color:var(--primary);">${d.dept_id || '#DEP' + String(d.id).padStart(4, '0')}</h6>
+                </td>
+                <td class="col-dept-name" style="text-align: left; ${getColStyle('col-dept-name')}">${d.name}</td>
+                <td class="col-dept-head" style="text-align: left; ${getColStyle('col-dept-head')}">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="initials-avatar" style="width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">
+                            ${initials}
+                        </div>
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">${headName}</div>
+                            <div style="font-size:11px; color:var(--text-muted);">${d.head_email || ''}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="col-dept-members" style="text-align: center; ${getColStyle('col-dept-members')}">
+                    <span style="font-weight:600; background:#f1f5f9; padding:4px 10px; border-radius:12px; font-size:12px;">${d.member_count || 0}</span>
+                </td>
+                <td class="col-dept-status" style="text-align: center; ${getColStyle('col-dept-status')}">
+                    <span class="badge ${badgeClass}">${d.status}</span>
+                </td>
+                <td class="col-dept-created" style="text-align: left; ${getColStyle('col-dept-created')}">${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</td>
+                <td style="text-align: center;">
+                    <div class="dropdown table-action" style="position:relative; display:inline-block;">
+                        <a href="javascript:void(0);" class="action-icon btn btn-xs shadow btn-icon btn-outline-light" onclick="toggleRowMenu(this, event)">
+                            <i class="ti ti-dots-vertical"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right row-dropdown-menu" style="display:none; position:absolute; right:0; top:100%; z-index:1000; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); padding:5px 0; min-width:110px;">
+                            <a class="dropdown-item" href="javascript:void(0);" onclick="openEditDepartmentModal(${d.id}, '${d.name.replace(/'/g, "\\'")}', ${d.department_head_id}, '${d.status}')" style="display:flex; align-items:center; gap:8px; padding:6px 12px; font-size:12px; color:var(--text); text-decoration:none;">
+                                <i class="ti ti-edit text-blue"></i> Edit
+                            </a>
+                            <a class="dropdown-item" href="javascript:void(0);" onclick="deleteDepartment(${d.id}, '${d.name.replace(/'/g, "\\'")}')" style="display:flex; align-items:center; gap:8px; padding:6px 12px; font-size:12px; color:#ef4444; text-decoration:none;">
+                                <i class="ti ti-trash"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function toggleRowMenu(el, event) {
+        event.stopPropagation();
+        document.querySelectorAll('.row-dropdown-menu').forEach(m => {
+            if (m !== el.nextElementSibling) m.style.display = 'none';
+        });
+        const menu = el.nextElementSibling;
+        if (menu) {
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+    }
+
+    window.addEventListener('click', () => {
+        document.querySelectorAll('.row-dropdown-menu').forEach(m => m.style.display = 'none');
+    });
+
+    function filterDepartments() {
+        deptCurrentPage = 1;
+        loadDepartmentsList();
+    }
+
+    function resetDeptFilters() {
+        if (document.getElementById('filterDeptName')) document.getElementById('filterDeptName').value = '';
+        if (document.getElementById('filterDeptHead')) document.getElementById('filterDeptHead').value = '';
+        if (document.getElementById('filterDeptStatus')) document.getElementById('filterDeptStatus').value = '';
+        if (document.getElementById('deptSearchInput')) document.getElementById('deptSearchInput').value = '';
+        if (document.getElementById('deptDateFrom')) document.getElementById('deptDateFrom').value = '';
+        if (document.getElementById('deptDateTo')) document.getElementById('deptDateTo').value = '';
+        filterDepartments();
+    }
+
+    function toggleDeptFilterPopup() {
+        const el = document.getElementById('deptFilterPopup');
+        if (el) {
+            el.style.display = el.style.display === 'grid' ? 'none' : 'grid';
+        }
+    }
+
+    function toggleDeptColumnsManager() {
+        const el = document.getElementById('deptColumnsManager');
+        if (el) {
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+        }
+    }
+
+    function toggleDeptColumn(colClass, isChecked) {
+        if (isChecked) {
+            hiddenDeptColumns.delete(colClass);
+        } else {
+            hiddenDeptColumns.add(colClass);
+        }
+        document.querySelectorAll('.' + colClass).forEach(el => {
+            el.style.display = isChecked ? '' : 'none';
+        });
+    }
+
+    function exportDepartmentsCSV() {
+        window.location.href = '/api/departments/export';
+    }
+
+    function toggleSelectAllDepts(checked) {
+        document.querySelectorAll('.dept-row-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
+    function checkSelectAllDepts() {
+        const selectAll = document.getElementById('selectAllDepts');
+        if (!selectAll) return;
+        const cbs = Array.from(document.querySelectorAll('.dept-row-checkbox'));
+        selectAll.checked = cbs.length > 0 && cbs.every(cb => cb.checked);
+    }
+
+    function changeDeptRowsPerPage() {
+        const select = document.getElementById('deptRowsPerPage');
+        if (select) {
+            deptRowsPerPage = parseInt(select.value);
+            deptCurrentPage = 1;
+            renderDepartmentsTable();
+        }
+    }
+
+    function prevDeptPage() {
+        if (deptCurrentPage > 1) {
+            deptCurrentPage--;
+            renderDepartmentsTable();
+        }
+    }
+
+    function nextDeptPage() {
+        const totalPages = Math.ceil(allDeptsData.length / deptRowsPerPage) || 1;
+        if (deptCurrentPage < totalPages) {
+            deptCurrentPage++;
+            renderDepartmentsTable();
+        }
+    }
+
+    function openAddDepartmentModal() {
+        document.getElementById('deptForm').reset();
+        document.getElementById('dept_db_id').value = '';
+        document.getElementById('deptModalTitle').innerText = 'Add Department';
+        document.getElementById('deptModal').style.display = 'flex';
+    }
+
+    function openEditDepartmentModal(dbId, name, headId, status) {
+        document.getElementById('deptForm').reset();
+        document.getElementById('dept_db_id').value = dbId;
+        document.getElementById('dept_name').value = name;
+        document.getElementById('dept_head').value = headId || '';
+        document.getElementById('dept_status').value = status || 'Active';
+        document.getElementById('deptModalTitle').innerText = 'Edit Department';
+        document.getElementById('deptModal').style.display = 'flex';
+    }
+
+    function closeDeptModal() {
+        document.getElementById('deptModal').style.display = 'none';
+    }
+
+    async function saveDepartment(event) {
+        event.preventDefault();
+        const dbId = document.getElementById('dept_db_id').value;
+        const isEdit = !!dbId;
+        const name = document.getElementById('dept_name').value.trim();
+        const headId = document.getElementById('dept_head').value;
+        const status = document.getElementById('dept_status').value;
+
+        if (!name || !headId) {
+            Swal.fire('Required', 'Please fill in all required fields.', 'warning');
+            return;
+        }
+
+        const payload = {
+            name: name,
+            department_head_id: parseInt(headId),
+            status: status
+        };
+
+        const url = isEdit ? `/api/departments/${dbId}` : '/api/departments';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                closeDeptModal();
+                Swal.fire('Success', `Department successfully ${isEdit ? 'updated' : 'created'}.`, 'success');
+                loadDepartmentsList();
+                populateUserDepartmentDropdown();
+            } else {
+                const err = await res.json();
+                Swal.fire('Error', err.error || 'Failed to save department.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Connection failed.', 'error');
+        }
+    }
+
+    function deleteDepartment(dbId, name) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to permanently delete the department "${name}"? Users assigned to this department will be unassigned.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7a8d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/departments/${dbId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Deleted!', `Department "${name}" has been deleted.`, 'success');
+                        loadDepartmentsList();
+                        populateUserDepartmentDropdown();
+                    } else {
+                        const err = await res.json();
+                        Swal.fire('Error', err.error || 'Failed to delete department.', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'Connection failed.', 'error');
+                }
+            }
+        });
+    }
+
+    async function populateUsersDropdowns() {
+        try {
+            const res = await fetch('/admin/users');
+            if (res.ok) {
+                const users = await res.json();
+                const deptHeadSelect = document.getElementById('dept_head');
+                const filterDeptHeadSelect = document.getElementById('filterDeptHead');
+                if (!deptHeadSelect || !filterDeptHeadSelect) return;
+                
+                let optionsHtml = '<option value="">Select Department Head</option>';
+                let filterOptionsHtml = '<option value="">All heads</option>';
+                
+                users.forEach(u => {
+                    const name = u.full_name || u.username;
+                    optionsHtml += `<option value="${u.id}">${name}</option>`;
+                    filterOptionsHtml += `<option value="${u.id}">${name}</option>`;
+                });
+                
+                deptHeadSelect.innerHTML = optionsHtml;
+                filterDeptHeadSelect.innerHTML = filterOptionsHtml;
+            }
+        } catch (e) {
+            console.error('Failed to populate user dropdowns:', e);
+        }
+    }
+
+    async function populateUserDepartmentDropdown() {
+        try {
+            const res = await fetch('/api/departments');
+            if (res.ok) {
+                const depts = await res.json();
+                const uDeptSelect = document.getElementById('u_department_id');
+                if (!uDeptSelect) return;
+                
+                let optionsHtml = '<option value="">Select Department</option>';
+                depts.forEach(d => {
+                    optionsHtml += `<option value="${d.id}">${d.name}</option>`;
+                });
+                
+                uDeptSelect.innerHTML = optionsHtml;
+            }
+        } catch (e) {
+            console.error('Failed to populate user department dropdown:', e);
+        }
+    }
 </script>
 <script src="/crm-autosave-toast.js?v=3"></script>
     <script src="/australian-timezones.js"></script>

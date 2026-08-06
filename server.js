@@ -4223,6 +4223,179 @@ app.delete('/api/roles/:roleName', (req, res) => {
     });
 });
 
+// ── DEPARTMENTS API ────────────────────────────────────────
+app.get('/api/departments', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const { name, head, status } = req.query;
+    let query = `
+        SELECT 
+            d.id,
+            d.dept_id,
+            d.name,
+            d.department_head_id,
+            d.status,
+            d.created_at,
+            u.full_name as head_name,
+            u.username as head_username,
+            u.email as head_email,
+            (SELECT COUNT(*) FROM users u2 WHERE u2.department_id = d.id) as member_count
+        FROM departments d
+        LEFT JOIN users u ON d.department_head_id = u.id
+        WHERE 1=1
+    `;
+    const params = [];
+    
+    if (name && name.trim()) {
+        query += ` AND d.name LIKE ?`;
+        params.push(`%${name.trim()}%`);
+    }
+    if (head && head.trim()) {
+        if (!isNaN(head)) {
+            query += ` AND d.department_head_id = ?`;
+            params.push(parseInt(head));
+        } else {
+            query += ` AND u.full_name LIKE ?`;
+            params.push(`%${head.trim()}%`);
+        }
+    }
+    if (status && status.trim()) {
+        query += ` AND d.status = ?`;
+        params.push(status.trim());
+    }
+    
+    query += ` ORDER BY d.id DESC`;
+    
+    db.all(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/departments', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const { name, department_head_id, status } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Department name is required.' });
+    if (!department_head_id) return res.status(400).json({ error: 'Department Head is required.' });
+    
+    db.get("SELECT id FROM departments WHERE LOWER(name) = ?", [name.trim().toLowerCase()], (err, existing) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (existing) return res.status(400).json({ error: 'A department with this name already exists.' });
+        
+        db.get("SELECT MAX(id) as max_id FROM departments", [], (err, row) => {
+            const nextId = (row && row.max_id ? row.max_id : 0) + 1;
+            const deptId = `#DEP${String(nextId).padStart(4, '0')}`;
+            
+            db.run(
+                "INSERT INTO departments (dept_id, name, department_head_id, status) VALUES (?, ?, ?, ?)",
+                [deptId, name.trim(), department_head_id, status || 'Active'],
+                function(err) {
+                    if (err) return res.status(500).json({ error: err.message });
+                    const newDeptId = this.lastID;
+                    
+                    db.run("UPDATE users SET department_id = ? WHERE id = ?", [newDeptId, department_head_id], (uErr) => {
+                        res.json({ success: true, id: newDeptId, dept_id: deptId });
+                    });
+                }
+            );
+        });
+    });
+});
+
+app.put('/api/departments/:id', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const { name, department_head_id, status } = req.body;
+    const deptDbId = req.params.id;
+    
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Department name is required.' });
+    if (!department_head_id) return res.status(400).json({ error: 'Department Head is required.' });
+    
+    db.get("SELECT id FROM departments WHERE LOWER(name) = ? AND id != ?", [name.trim().toLowerCase(), deptDbId], (err, existing) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (existing) return res.status(400).json({ error: 'A department with this name already exists.' });
+        
+        db.run(
+            "UPDATE departments SET name = ?, department_head_id = ?, status = ? WHERE id = ?",
+            [name.trim(), department_head_id, status || 'Active', deptDbId],
+            function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                
+                db.run("UPDATE users SET department_id = ? WHERE id = ?", [deptDbId, department_head_id], (uErr) => {
+                    res.json({ success: true });
+                });
+            }
+        );
+    });
+});
+
+app.delete('/api/departments/:id', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const deptDbId = req.params.id;
+    
+    db.run("DELETE FROM departments WHERE id = ?", [deptDbId], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        db.run("UPDATE users SET department_id = NULL WHERE department_id = ?", [deptDbId], (uErr) => {
+            res.json({ success: true });
+        });
+    });
+});
+
+app.get('/api/departments/export', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const query = `
+        SELECT 
+            d.dept_id as "Department ID",
+            d.name as "Department Name",
+            u.full_name as "Department Head",
+            (SELECT COUNT(*) FROM users u2 WHERE u2.department_id = d.id) as "Members Count",
+            d.status as "Status",
+            d.created_at as "Created At"
+        FROM departments d
+        LEFT JOIN users u ON d.department_head_id = u.id
+        ORDER BY d.id DESC
+    `;
+    
+    db.all(query, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        try {
+            const { Parser } = require('json2csv');
+            const fields = ["Department ID", "Department Name", "Department Head", "Members Count", "Status", "Created At"];
+            const json2csvParser = new Parser({ fields });
+            const csv = json2csvParser.parse(rows || []);
+            
+            const dateStr = new Date().toISOString().slice(0, 10);
+            res.header('Content-Type', 'text/csv');
+            res.attachment(`Ares_Departments_Export_${dateStr}.csv`);
+            res.send(csv);
+        } catch (csvErr) {
+            console.error('Error generating CSV:', csvErr);
+            res.status(500).json({ error: 'Failed to generate CSV export.' });
+        }
+    });
+});
+
+app.put('/api/users/:id/department', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    const { department_id } = req.body;
+    const userId = req.params.id;
+    
+    db.run(
+        "UPDATE users SET department_id = ? WHERE id = ?",
+        [department_id ? parseInt(department_id) : null, userId],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
 // ── BACKUP MANAGER ────────────────────────────────────────
 const backupManager = require('./backup-manager');
 
