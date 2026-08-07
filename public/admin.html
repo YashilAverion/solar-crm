@@ -1356,6 +1356,18 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 <script>
+    window.allRolePermissions = {};
+    window.loadAllRolePermissions = async function() {
+        try {
+            const res = await fetch('/api/roles-permissions');
+            if (res.ok) {
+                window.allRolePermissions = await res.json();
+            }
+        } catch (e) {
+            console.error('Failed to load role permissions cache:', e);
+        }
+    };
+
     let allUsersData = [];
     let currentPage = 1;
     let rowsPerPage = 30;
@@ -3926,18 +3938,6 @@ Initializing deployment stream...
 
     // Role Permissions override modal editor
     let activeEditingRole = null;
-    window.allRolePermissions = {};
-
-    window.loadAllRolePermissions = async function() {
-        try {
-            const res = await fetch('/api/roles-permissions');
-            if (res.ok) {
-                window.allRolePermissions = await res.json();
-            }
-        } catch (e) {
-            console.error('Failed to load role permissions cache:', e);
-        }
-    };
 
     window.toggleRoleModalModule = function(cb, mod) {
         const isEnabled = cb.checked;
