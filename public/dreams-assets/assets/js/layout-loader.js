@@ -1464,6 +1464,15 @@
                 return t.offsetWidth > 0 && t.offsetHeight > 0 && window.getComputedStyle(t).display !== 'none';
             }) || tables[0];
 
+            if (table && (table.classList.contains("table-departments") || table.classList.contains("table-roles"))) {
+                console.log("[ColumnCustomizer] Skipping customizer for departments/roles table.");
+                const existingDropdown = document.getElementById("colCustomizerDropdown");
+                if (existingDropdown) {
+                    existingDropdown.remove();
+                }
+                return;
+            }
+
             // Get unique class of the table to use as a CSS selector
             let tableClass = "";
             if (table.classList.contains("xero-ts-table")) {
