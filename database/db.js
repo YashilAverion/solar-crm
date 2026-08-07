@@ -1355,6 +1355,114 @@ db.serialize(() => {
         }
     });
 
+    // ── ROLE PERMISSIONS TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS role_permissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_name TEXT NOT NULL,
+            module_name TEXT NOT NULL,
+            feature_name TEXT NOT NULL,
+            access_status INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(role_name, module_name, feature_name)
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating role_permissions table:', err.message);
+        else {
+            console.log('[DB] role_permissions table ready.');
+            db.get("SELECT COUNT(*) as count FROM role_permissions", [], (countErr, row) => {
+                if (!countErr && row.count === 0) {
+                    console.log('[DB] Seeding default role permissions...');
+                    const PERM_ROLES = [
+                        'Admin',
+                        'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
+                        'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader',
+                        'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
+                    ];
+                    const PERM_SCHEMA = {
+                        'Dashboard': ['Access Module', 'Sales', 'Installation', 'Service', 'Ares Installation'],
+                        'Lead Master': ['Access Module', 'View Leads', 'Add Lead', 'Edit Lead', 'Delete Lead', 'Duplicate Lead', 'Lead Approvals', 'View Revenue', 'Edit Address'],
+                        'Projects': ['Access Module', 'Leads'],
+                        'Masters': ['Access Module', 'View Masters', 'Manage Products', 'Manage STC', 'Manage Rebates', 'Manage Margins', 'Manage Charges'],
+                        'Ares Installation Outside': ['Access Module', 'Installations', 'Outstanding Payments', 'Paid Payments', 'Company Details'],
+                        'Settings': ['Access Module', 'View Settings', 'Manage Users', 'Manage Roles'],
+                        'Attendance & Payroll': ['Access Module', 'Employees', 'Leave', 'Timesheets', 'Pay Employee', 'Superannuation', 'Professional Tax', 'Income Tax Slab']
+                    };
+
+                    function getStaticRoleDefaultsNode(role) {
+                        const defaults = {};
+                        for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
+                            defaults[mod] = {};
+                            feats.forEach(feat => {
+                                let val = 0;
+                                if (role === 'Admin') {
+                                    val = 1;
+                                } else {
+                                    if (mod === 'Dashboard') {
+                                        if (feat === 'Access Module') val = 1;
+                                        else if (feat === 'Sales' && role.includes('Sales')) val = 1;
+                                        else if (feat === 'Installation' && role.includes('Installation')) val = 1;
+                                        else if (feat === 'Service' && role.includes('Service')) val = 1;
+                                        else if (feat === 'Ares Installation' && (role.includes('Admin') || role.includes('Manager'))) val = 1;
+                                    } else if (mod === 'Lead Master') {
+                                        if (feat === 'Access Module' || feat === 'View Leads') val = 1;
+                                        else if (feat === 'Add Lead' || feat === 'Edit Lead' || feat === 'Duplicate Lead') {
+                                            val = role.includes('Sales') || role.includes('Admin') || role.includes('Manager') ? 1 : 0;
+                                        } else if (feat === 'Lead Approvals' || feat === 'View Revenue') {
+                                            val = role.includes('Manager') || role.includes('Admin') ? 1 : 0;
+                                        } else if (feat === 'Delete Lead') {
+                                            val = role === 'Admin' ? 1 : 0;
+                                        } else if (feat === 'Edit Address') {
+                                            val = 1;
+                                        }
+                                    } else if (mod === 'Projects') {
+                                        val = 1;
+                                    } else if (mod === 'Masters') {
+                                        if (feat === 'Access Module' || feat === 'View Masters') {
+                                            val = role.includes('Admin') || role.includes('Procurement') || role.includes('Manager') ? 1 : 0;
+                                        } else {
+                                            val = role.includes('Admin') || role.includes('Manager') ? 1 : 0;
+                                        }
+                                    } else if (mod === 'Ares Installation Outside') {
+                                        if (role.includes('Installation') || role.includes('Admin') || role.includes('Manager') || role.includes('Accounts')) {
+                                            val = 1;
+                                        }
+                                    } else if (mod === 'Settings') {
+                                        if (role.includes('Admin') || role === 'Admin Manager') {
+                                            val = 1;
+                                        }
+                                    } else if (mod === 'Attendance & Payroll') {
+                                        if (role.includes('Manager') || role.includes('Accounts') || role.includes('Admin')) {
+                                            val = 1;
+                                        } else if (feat === 'Access Module' || feat === 'Employees' || feat === 'Leave') {
+                                            val = 1;
+                                        }
+                                    }
+                                }
+                                defaults[mod][feat] = val;
+                            });
+                        }
+                        return defaults;
+                    }
+
+                    db.serialize(() => {
+                        const stmt = db.prepare("INSERT OR IGNORE INTO role_permissions (role_name, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
+                        PERM_ROLES.forEach(role => {
+                            const defs = getStaticRoleDefaultsNode(role);
+                            for (const [mod, feats] of Object.entries(defs)) {
+                                for (const [feat, val] of Object.entries(feats)) {
+                                    stmt.run(role, mod, feat, val);
+                                }
+                            }
+                        });
+                        stmt.finalize();
+                        console.log('[DB] Seeded all default role permissions.');
+                    });
+                }
+            });
+        }
+    });
+
     // ── DEPARTMENTS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS departments (

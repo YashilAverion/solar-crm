@@ -4264,6 +4264,80 @@ app.delete('/api/roles/:idOrName', (req, res) => {
     });
 });
 
+// ── ROLE DYNAMIC PERMISSIONS API ───────────────────────────
+app.get('/api/roles-permissions', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    
+    db.all("SELECT role_name, module_name, feature_name, access_status FROM role_permissions", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const matrix = {};
+        (rows || []).forEach(r => {
+            if (!matrix[r.role_name]) matrix[r.role_name] = {};
+            if (!matrix[r.role_name][r.module_name]) matrix[r.role_name][r.module_name] = {};
+            matrix[r.role_name][r.module_name][r.feature_name] = r.access_status;
+        });
+        res.json(matrix);
+    });
+});
+
+app.get('/api/roles/:roleName/permissions', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const { roleName } = req.params;
+    
+    db.all("SELECT module_name, feature_name, access_status FROM role_permissions WHERE role_name = ?", [roleName], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const matrix = {};
+        (rows || []).forEach(r => {
+            if (!matrix[r.module_name]) matrix[r.module_name] = {};
+            matrix[r.module_name][r.feature_name] = r.access_status;
+        });
+        res.json(matrix);
+    });
+});
+
+app.post('/api/roles/:roleName/permissions', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const { roleName } = req.params;
+    const permissions = req.body; // Expecting { "Dashboard": { "Access Module": 1, ... } }
+    
+    if (!permissions || typeof permissions !== 'object') {
+        return res.status(400).json({ error: 'Invalid permissions payload' });
+    }
+    
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+        db.run("DELETE FROM role_permissions WHERE role_name = ?", [roleName], (err) => {
+            if (err) {
+                db.run("ROLLBACK");
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const stmt = db.prepare("INSERT INTO role_permissions (role_name, module_name, feature_name, access_status) VALUES (?, ?, ?, ?)");
+            try {
+                for (const mod in permissions) {
+                    for (const feat in permissions[mod]) {
+                        const val = permissions[mod][feat] ? 1 : 0;
+                        stmt.run(roleName, mod, feat, val);
+                    }
+                }
+                stmt.finalize((err) => {
+                    if (err) {
+                        db.run("ROLLBACK");
+                        return res.status(500).json({ error: err.message });
+                    }
+                    db.run("COMMIT", (err) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        res.json({ success: true });
+                    });
+                });
+            } catch (e) {
+                db.run("ROLLBACK");
+                return res.status(500).json({ error: e.message });
+            }
+        });
+    });
+});
+
 // ── DEPARTMENTS API ────────────────────────────────────────
 app.get('/api/departments', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });

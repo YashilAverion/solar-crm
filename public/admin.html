@@ -2245,6 +2245,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function getStaticRoleDefaults(role) {
+        if (window.allRolePermissions && window.allRolePermissions[role]) {
+            const defaults = {};
+            for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
+                defaults[mod] = {};
+                feats.forEach(feat => {
+                    const dbVal = window.allRolePermissions[role][mod] && window.allRolePermissions[role][mod][feat];
+                    defaults[mod][feat] = dbVal === 1 || dbVal === true;
+                });
+            }
+            return defaults;
+        }
+
         const defaults = {};
         for (const [mod, feats] of Object.entries(PERM_SCHEMA)) {
             defaults[mod] = {};
@@ -3615,7 +3627,8 @@ Initializing deployment stream...
                             }
                         });
                     }
-                } catch(err) {}
+            // Load role permissions cache on load
+            await window.loadAllRolePermissions();
             }
         } catch(e) { window.location.href = "/login"; }
     })();
@@ -3913,42 +3926,122 @@ Initializing deployment stream...
 
     // Role Permissions override modal editor
     let activeEditingRole = null;
+    window.allRolePermissions = {};
+
+    window.loadAllRolePermissions = async function() {
+        try {
+            const res = await fetch('/api/roles-permissions');
+            if (res.ok) {
+                window.allRolePermissions = await res.json();
+            }
+        } catch (e) {
+            console.error('Failed to load role permissions cache:', e);
+        }
+    };
+
+    window.toggleRoleModalModule = function(cb, mod) {
+        const isEnabled = cb.checked;
+        document.querySelectorAll(`.role-perm-modal-check[data-module="${mod}"]`).forEach(subCb => {
+            if (subCb.getAttribute('data-feature') !== 'Access Module') {
+                subCb.disabled = !isEnabled;
+                if (!isEnabled) {
+                    subCb.checked = false;
+                }
+            }
+        });
+    };
+
+    window.saveRolePermissions = async function(roleName) {
+        const checkboxes = document.querySelectorAll('.role-perm-modal-check');
+        const permissions = {};
+        checkboxes.forEach(cb => {
+            const mod = cb.getAttribute('data-module');
+            const feat = cb.getAttribute('data-feature');
+            if (!permissions[mod]) permissions[mod] = {};
+            permissions[mod][feat] = cb.checked ? 1 : 0;
+        });
+        
+        try {
+            const res = await fetch(`/api/roles/${encodeURIComponent(roleName)}/permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(permissions)
+            });
+            if (res.ok) {
+                Swal.fire('Saved!', `Default permissions for ${roleName} updated successfully.`, 'success');
+                await window.loadAllRolePermissions();
+            } else {
+                throw new Error('Failed to save');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Failed to save role permissions.', 'error');
+        }
+    };
+
     function openRolePermissionsEditor(roleName) {
         activeEditingRole = roleName;
         const defaults = getStaticRoleDefaults(roleName);
         
         let listHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; text-align: left; max-height: 420px; overflow-y: auto; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;">`;
         for (const [mod, feats] of Object.entries(defaults)) {
+            const isModEnabled = feats['Access Module'] === true;
+            
             listHtml += `
             <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="font-weight: 700; color: #1c3557; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 8px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">${mod}</div>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">`;
-            for (const [feat, val] of Object.entries(feats)) {
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 8px;">
+                    <span style="font-weight: 700; color: #1c3557; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">${mod}</span>
+                    <label class="ios-switch">
+                        <input type="checkbox" class="role-perm-modal-check" data-module="${mod}" data-feature="Access Module" ${isModEnabled ? 'checked' : ''} onchange="window.toggleRoleModalModule(this, '${mod}')">
+                        <span class="ios-slider"></span>
+                    </label>
+                </div>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
+                
+            Object.keys(feats).forEach(feat => {
+                if (feat === 'Access Module') return;
+                const isFeatEnabled = feats[feat] === true;
+                const isParentDisabled = !isModEnabled;
+                
                 listHtml += `
-                    <li style="font-size: 11px; display: flex; align-items: center; gap: 6px; color: #475569;">
-                        <i class="ti ${val ? 'ti-circle-check text-success' : 'ti-circle-x text-danger'}" style="font-size: 14px;"></i> 
-                        <span>${feat}</span>
+                    <li style="font-size: 11px; display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #475569;">
+                        <span>↳ ${feat}</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" class="role-perm-modal-check" data-module="${mod}" data-feature="${feat}" ${isFeatEnabled ? 'checked' : ''} ${isParentDisabled ? 'disabled' : ''}>
+                            <span class="ios-slider"></span>
+                        </label>
                     </li>`;
-            }
+            });
             listHtml += `</ul></div>`;
         }
         listHtml += `</div>`;
 
         if (window.originalSwalFire) {
             window.originalSwalFire.call(Swal, {
-                title: `Default Permissions for: ${roleName}`,
+                title: `Edit Default Permissions for: ${roleName}`,
                 html: listHtml,
                 width: '800px',
-                confirmButtonText: 'Close',
+                showCancelButton: true,
+                confirmButtonText: 'Save Changes',
+                cancelButtonText: 'Cancel',
                 customClass: { popup: 'premium-swal-popup' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await window.saveRolePermissions(roleName);
+                }
             });
         } else {
             Swal.fire({
-                title: `Default Permissions for: ${roleName}`,
+                title: `Edit Default Permissions for: ${roleName}`,
                 html: listHtml,
                 width: '800px',
-                confirmButtonText: 'Close',
+                showCancelButton: true,
+                confirmButtonText: 'Save Changes',
+                cancelButtonText: 'Cancel',
                 customClass: { popup: 'premium-swal-popup' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await window.saveRolePermissions(roleName);
+                }
             });
         }
     }
