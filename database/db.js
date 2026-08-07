@@ -1340,20 +1340,17 @@ db.serialize(() => {
         if (err) console.error('[DB] Error creating roles table:', err.message);
         else {
             console.log('[DB] roles table ready.');
-            db.get("SELECT COUNT(*) as count FROM roles", [], (countErr, row) => {
-                if (!countErr && row.count === 0) {
-                    const defaultRoles = [
-                        'Admin',
-                        'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
-                        'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader'
-                    ];
-                    db.serialize(() => {
-                        const stmt = db.prepare("INSERT INTO roles (name) VALUES (?)");
-                        defaultRoles.forEach(r => stmt.run(r));
-                        stmt.finalize();
-                        console.log('[DB] Seeded default system roles into roles table.');
-                    });
-                }
+            const defaultRoles = [
+                'Admin',
+                'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
+                'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader', 'Installation Team Leader', 'Admin Team Leader', 'Service Team Leader',
+                'Sales Executive', 'Procurement Executive', 'Account Executive', 'Installation Executive', 'Admin Executive', 'Service Executive'
+            ];
+            db.serialize(() => {
+                const stmt = db.prepare("INSERT OR IGNORE INTO roles (name) VALUES (?)");
+                defaultRoles.forEach(r => stmt.run(r));
+                stmt.finalize();
+                console.log('[DB] Seeded default system roles into roles table.');
             });
         }
     });
