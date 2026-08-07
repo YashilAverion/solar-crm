@@ -507,14 +507,10 @@ document.addEventListener("DOMContentLoaded", function() {
             </optgroup>
         </select>
         
-        <!-- Dynamic Roles & Permissions topbar elements -->
-        <input type="text" id="roleSearch" placeholder="Search roles..." oninput="filterRolesTable()" style="display:none; margin-left:12px; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:13px; outline:none; width:200px;">
-        
         <div class="tb-spacer"></div>
         <button class="tb-btn" id="btn-restore-backup" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
         <button class="tb-btn" id="btn-backup-now" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()"><i class="ti ti-cloud-upload"></i> Backup Now</button>
         <button class="tb-btn btn-add" id="btn-add-user" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()"><i class="ti ti-plus"></i> Add User</button>
-        <button class="tb-btn btn-add btn-danger" id="btn-add-role" style="display:none;" onclick="openAddRoleModal()"><i class="ti ti-plus"></i> Add New Role</button>
     </div>
 
     <div class="stats-row">
@@ -971,6 +967,15 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
 
         <div id="section-roles-permissions" style="display:none; flex: 1; overflow: hidden; flex-direction: column;">
+            <div class="roles-toolbar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:1px solid var(--border); background:var(--bg-card); flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" id="roleSearch" placeholder="Search roles..." oninput="filterRolesTable()" style="height:32px; border-radius:6px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:12px; outline:none; width:200px;">
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="page-btn" onclick="loadAndPopulateRoles()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-refresh"></i> Refresh</button>
+                    <button class="tb-btn btn-add btn-danger" onclick="openAddRoleModal()" style="height:32px; line-height:32px; padding:0 12px; font-size:12px; display:flex; align-items:center; gap:5px; margin:0;"><i class="ti ti-plus"></i> Add New Role</button>
+                </div>
+            </div>
             <div class="table-wrap">
                 <table class="table table-roles">
                     <thead>
@@ -1453,9 +1458,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const restoreBtn = document.getElementById('btn-restore-backup');
         const backupBtn = document.getElementById('btn-backup-now');
         const addUserBtn = document.getElementById('btn-add-user');
-        
-        const roleSearchEl = document.getElementById('roleSearch');
-        const addRoleBtn = document.getElementById('btn-add-role');
 
         if (target === 'roles-permissions') {
             if (pageTitleEl) pageTitleEl.innerText = 'Roles & Permissions';
@@ -1465,9 +1467,6 @@ document.addEventListener("DOMContentLoaded", function() {
             if (restoreBtn) restoreBtn.style.display = 'none';
             if (backupBtn) backupBtn.style.display = 'none';
             if (addUserBtn) addUserBtn.style.display = 'none';
-            
-            if (roleSearchEl) roleSearchEl.style.display = 'block';
-            if (addRoleBtn) addRoleBtn.style.display = 'block';
             
             loadAndPopulateRoles();
         } else if (target === 'departments') {
@@ -1479,9 +1478,6 @@ document.addEventListener("DOMContentLoaded", function() {
             if (backupBtn) backupBtn.style.display = 'none';
             if (addUserBtn) addUserBtn.style.display = 'none';
             
-            if (roleSearchEl) roleSearchEl.style.display = 'none';
-            if (addRoleBtn) addRoleBtn.style.display = 'none';
-            
             loadDepartmentsList();
         } else {
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
@@ -1491,9 +1487,6 @@ document.addEventListener("DOMContentLoaded", function() {
             if (restoreBtn) restoreBtn.style.display = 'block';
             if (backupBtn) backupBtn.style.display = 'block';
             if (addUserBtn) addUserBtn.style.display = 'block';
-            
-            if (roleSearchEl) roleSearchEl.style.display = 'none';
-            if (addRoleBtn) addRoleBtn.style.display = 'none';
         }
         
         if (target === 'rate-limits') {
