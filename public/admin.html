@@ -3728,8 +3728,9 @@ Initializing deployment stream...
         const tbody = document.getElementById('rolesBody');
         if (!tbody) return;
 
-        const query = document.getElementById('roleSearch').value.toLowerCase().trim();
-        const filtered = allRolesData.filter(r => r.role_name.toLowerCase().includes(query));
+        const searchInput = document.getElementById('roleSearch');
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const filtered = allRolesData.filter(r => r.role_name && r.role_name.toLowerCase().includes(query));
         
         document.getElementById('totalRolesCount').innerText = filtered.length;
 
