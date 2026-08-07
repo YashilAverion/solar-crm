@@ -4191,7 +4191,7 @@ app.get('/api/role-permissions/:role', (req, res) => {
 app.get('/api/roles', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const nameFilter = (req.query.name || req.body.name || '').trim();
+    const nameFilter = (req.query.name || (req.body && req.body.name) || '').trim();
     let query = "SELECT id, name, name AS role_name, created_at FROM roles";
     const params = [];
     if (nameFilter) {
@@ -4268,9 +4268,9 @@ app.delete('/api/roles/:idOrName', (req, res) => {
 app.get('/api/departments', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const name = req.query.name || req.body.name;
-    const head = req.query.head || req.body.head;
-    const status = req.query.status || req.body.status;
+    const name = req.query.name || (req.body && req.body.name);
+    const head = req.query.head || (req.body && req.body.head);
+    const status = req.query.status || (req.body && req.body.status);
     
     let query = `
         SELECT 
@@ -4319,9 +4319,9 @@ app.get('/api/departments', (req, res) => {
 app.post('/api/departments', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const name = (req.body.name || req.query.name || '').trim();
-    const department_head_id = req.body.department_head_id || req.query.department_head_id;
-    const status = req.body.status || req.query.status;
+    const name = ((req.body && req.body.name) || req.query.name || '').trim();
+    const department_head_id = (req.body && req.body.department_head_id) || req.query.department_head_id;
+    const status = (req.body && req.body.status) || req.query.status;
     
     if (!name) return res.status(400).json({ error: 'Department name is required.' });
     if (!department_head_id) return res.status(400).json({ error: 'Department Head is required.' });
@@ -4353,9 +4353,9 @@ app.post('/api/departments', (req, res) => {
 app.put('/api/departments/:id', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const name = (req.body.name || req.query.name || '').trim();
-    const department_head_id = req.body.department_head_id || req.query.department_head_id;
-    const status = req.body.status || req.query.status;
+    const name = ((req.body && req.body.name) || req.query.name || '').trim();
+    const department_head_id = (req.body && req.body.department_head_id) || req.query.department_head_id;
+    const status = (req.body && req.body.status) || req.query.status;
     const deptDbId = req.params.id;
     
     if (!name) return res.status(400).json({ error: 'Department name is required.' });
