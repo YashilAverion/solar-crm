@@ -3934,14 +3934,23 @@ Initializing deployment stream...
         }
         listHtml += `</div>`;
 
-        const fireFn = window.originalSwalFire || Swal.fire;
-        fireFn({
-            title: `Default Permissions for: ${roleName}`,
-            html: listHtml,
-            width: '800px',
-            confirmButtonText: 'Close',
-            customClass: { popup: 'premium-swal-popup' }
-        });
+        if (window.originalSwalFire) {
+            window.originalSwalFire.call(Swal, {
+                title: `Default Permissions for: ${roleName}`,
+                html: listHtml,
+                width: '800px',
+                confirmButtonText: 'Close',
+                customClass: { popup: 'premium-swal-popup' }
+            });
+        } else {
+            Swal.fire({
+                title: `Default Permissions for: ${roleName}`,
+                html: listHtml,
+                width: '800px',
+                confirmButtonText: 'Close',
+                customClass: { popup: 'premium-swal-popup' }
+            });
+        }
     }
 
     // Handle hash-based admin routing
