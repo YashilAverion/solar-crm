@@ -1018,10 +1018,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <button class="page-btn" onclick="toggleDeptFilterPopup()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-filter"></i> Filters</button>
-                    <button class="page-btn" onclick="toggleDeptColumnsManager()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-layout-column"></i> Columns</button>
                     <button class="page-btn" onclick="exportDepartmentsCSV()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-download"></i> Export</button>
                     <button class="page-btn" onclick="loadDepartmentsList()" style="height:32px; display:flex; align-items:center; gap:5px; border-radius:6px; font-size:12px;"><i class="ti ti-refresh"></i> Refresh</button>
-                    <button class="tb-btn btn-add" onclick="openAddDepartmentModal()" style="height:32px; line-height:32px; padding:0 12px; font-size:12px; display:flex; align-items:center; gap:5px; margin:0;"><i class="ti ti-plus"></i> Add Department</button>
+                    <button class="tb-btn btn-add btn-danger" onclick="openAddDepartmentModal()" style="height:32px; line-height:32px; padding:0 12px; font-size:12px; display:flex; align-items:center; gap:5px; margin:0;"><i class="ti ti-plus"></i> Add Department</button>
                 </div>
             </div>
 
@@ -1048,19 +1047,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
                 <div style="display:flex; align-items:flex-end; gap:8px; height:100%;">
                     <button class="page-btn" onclick="resetDeptFilters()" style="height:32px; width:100%; border-radius:6px; font-size:12px;">Reset</button>
-                    <button class="tb-btn btn-add" onclick="filterDepartments()" style="height:32px; line-height:32px; width:100%; border-radius:6px; font-size:12px; margin:0;">Filter</button>
+                    <button class="tb-btn btn-add btn-danger" onclick="filterDepartments()" style="height:32px; line-height:32px; width:100%; border-radius:6px; font-size:12px; margin:0;">Filter</button>
                 </div>
-            </div>
-
-            <!-- Columns Selector Popup Box -->
-            <div id="deptColumnsManager" style="display:none; padding:10px 15px; border-bottom:1px solid var(--border); background:var(--bg-card); gap:15px; font-size:12px; flex-wrap:wrap;">
-                <span style="font-weight:600; color:var(--text-muted); display:flex; align-items:center;">Manage Columns:</span>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-id', this.checked)"> Department ID</label>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-name', this.checked)"> Department Name</label>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-head', this.checked)"> Department Head</label>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-members', this.checked)"> Members Count</label>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-status', this.checked)"> Status</label>
-                <label><input type="checkbox" checked onchange="toggleDeptColumn('col-dept-created', this.checked)"> Created At</label>
             </div>
 
             <div class="table-wrap">
@@ -1130,7 +1118,7 @@ document.addEventListener("DOMContentLoaded", function() {
             
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
                 <button class="page-btn" type="button" onclick="closeDeptModal()" style="height:36px; width:100px;">Cancel</button>
-                <button class="tb-btn btn-add" type="submit" style="height:36px; width:120px; margin:0;">Save Changes</button>
+                <button class="tb-btn btn-add btn-danger" type="submit" style="height:36px; width:120px; margin:0;">Save Changes</button>
             </div>
         </form>
     </div>
@@ -3966,7 +3954,6 @@ Initializing deployment stream...
     let allDeptsData = [];
     let deptCurrentPage = 1;
     let deptRowsPerPage = 30;
-    let hiddenDeptColumns = new Set();
 
     async function loadDepartmentsList() {
         try {
@@ -4048,16 +4035,15 @@ Initializing deployment stream...
             
             const headName = d.head_name || d.head_username || 'N/A';
             const initials = headName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            const getColStyle = (colName) => hiddenDeptColumns.has(colName) ? 'display:none;' : '';
 
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td style="width: 50px; text-align: center;"><input type="checkbox" class="dept-row-checkbox" value="${d.id}" onchange="checkSelectAllDepts()"></td>
-                <td class="col-dept-id" style="text-align: left; padding-left: 20px; ${getColStyle('col-dept-id')}">
+                <td class="col-dept-id" style="text-align: left; padding-left: 20px;">
                     <h6 class="fs-14 fw-normal mb-0" style="font-weight:600; color:var(--primary);">${d.dept_id || '#DEP' + String(d.id).padStart(4, '0')}</h6>
                 </td>
-                <td class="col-dept-name" style="text-align: left; ${getColStyle('col-dept-name')}">${d.name}</td>
-                <td class="col-dept-head" style="text-align: left; ${getColStyle('col-dept-head')}">
+                <td class="col-dept-name" style="text-align: left;">${d.name}</td>
+                <td class="col-dept-head" style="text-align: left;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div class="initials-avatar" style="width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">
                             ${initials}
@@ -4068,13 +4054,13 @@ Initializing deployment stream...
                         </div>
                     </div>
                 </td>
-                <td class="col-dept-members" style="text-align: center; ${getColStyle('col-dept-members')}">
+                <td class="col-dept-members" style="text-align: center;">
                     <span style="font-weight:600; background:#f1f5f9; padding:4px 10px; border-radius:12px; font-size:12px;">${d.member_count || 0}</span>
                 </td>
-                <td class="col-dept-status" style="text-align: center; ${getColStyle('col-dept-status')}">
+                <td class="col-dept-status" style="text-align: center;">
                     <span class="badge ${badgeClass}">${d.status}</span>
                 </td>
-                <td class="col-dept-created" style="text-align: left; ${getColStyle('col-dept-created')}">${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</td>
+                <td class="col-dept-created" style="text-align: left;">${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</td>
                 <td style="text-align: center;">
                     <div class="dropdown table-action" style="position:relative; display:inline-block;">
                         <a href="javascript:void(0);" class="action-icon btn btn-xs shadow btn-icon btn-outline-light" onclick="toggleRowMenu(this, event)">
@@ -4130,24 +4116,6 @@ Initializing deployment stream...
         if (el) {
             el.style.display = el.style.display === 'grid' ? 'none' : 'grid';
         }
-    }
-
-    function toggleDeptColumnsManager() {
-        const el = document.getElementById('deptColumnsManager');
-        if (el) {
-            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-        }
-    }
-
-    function toggleDeptColumn(colClass, isChecked) {
-        if (isChecked) {
-            hiddenDeptColumns.delete(colClass);
-        } else {
-            hiddenDeptColumns.add(colClass);
-        }
-        document.querySelectorAll('.' + colClass).forEach(el => {
-            el.style.display = isChecked ? '' : 'none';
-        });
     }
 
     function exportDepartmentsCSV() {

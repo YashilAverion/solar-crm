@@ -4268,7 +4268,10 @@ app.delete('/api/roles/:idOrName', (req, res) => {
 app.get('/api/departments', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const { name, head, status } = req.query;
+    const name = req.query.name || req.body.name;
+    const head = req.query.head || req.body.head;
+    const status = req.query.status || req.body.status;
+    
     let query = `
         SELECT 
             d.id,
@@ -4316,11 +4319,14 @@ app.get('/api/departments', (req, res) => {
 app.post('/api/departments', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const { name, department_head_id, status } = req.body;
-    if (!name || !name.trim()) return res.status(400).json({ error: 'Department name is required.' });
+    const name = (req.body.name || req.query.name || '').trim();
+    const department_head_id = req.body.department_head_id || req.query.department_head_id;
+    const status = req.body.status || req.query.status;
+    
+    if (!name) return res.status(400).json({ error: 'Department name is required.' });
     if (!department_head_id) return res.status(400).json({ error: 'Department Head is required.' });
     
-    db.get("SELECT id FROM departments WHERE LOWER(name) = ?", [name.trim().toLowerCase()], (err, existing) => {
+    db.get("SELECT id FROM departments WHERE LOWER(name) = ?", [name.toLowerCase()], (err, existing) => {
         if (err) return res.status(500).json({ error: err.message });
         if (existing) return res.status(400).json({ error: 'A department with this name already exists.' });
         
@@ -4330,7 +4336,7 @@ app.post('/api/departments', (req, res) => {
             
             db.run(
                 "INSERT INTO departments (dept_id, name, department_head_id, status) VALUES (?, ?, ?, ?)",
-                [deptId, name.trim(), department_head_id, status || 'Active'],
+                [deptId, name, department_head_id, status || 'Active'],
                 function(err) {
                     if (err) return res.status(500).json({ error: err.message });
                     const newDeptId = this.lastID;
@@ -4347,19 +4353,21 @@ app.post('/api/departments', (req, res) => {
 app.put('/api/departments/:id', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const { name, department_head_id, status } = req.body;
+    const name = (req.body.name || req.query.name || '').trim();
+    const department_head_id = req.body.department_head_id || req.query.department_head_id;
+    const status = req.body.status || req.query.status;
     const deptDbId = req.params.id;
     
-    if (!name || !name.trim()) return res.status(400).json({ error: 'Department name is required.' });
+    if (!name) return res.status(400).json({ error: 'Department name is required.' });
     if (!department_head_id) return res.status(400).json({ error: 'Department Head is required.' });
     
-    db.get("SELECT id FROM departments WHERE LOWER(name) = ? AND id != ?", [name.trim().toLowerCase(), deptDbId], (err, existing) => {
+    db.get("SELECT id FROM departments WHERE LOWER(name) = ? AND id != ?", [name.toLowerCase(), deptDbId], (err, existing) => {
         if (err) return res.status(500).json({ error: err.message });
         if (existing) return res.status(400).json({ error: 'A department with this name already exists.' });
         
         db.run(
             "UPDATE departments SET name = ?, department_head_id = ?, status = ? WHERE id = ?",
-            [name.trim(), department_head_id, status || 'Active', deptDbId],
+            [name, department_head_id, status || 'Active', deptDbId],
             function(err) {
                 if (err) return res.status(500).json({ error: err.message });
                 
