@@ -1046,9 +1046,9 @@ app.post('/admin/users', requireManager, async (req, res) => {
             return res.status(400).json({ error: 'Email ID is required.' });
         }
         const rolesRows = await new Promise((resolve, reject) =>
-            db.all("SELECT role_name FROM custom_roles", [], (err, rows) => err ? reject(err) : resolve(rows))
+            db.all("SELECT name FROM roles", [], (err, rows) => err ? reject(err) : resolve(rows))
         );
-        const VALID_ROLES = rolesRows.map(r => r.role_name);
+        const VALID_ROLES = rolesRows.map(r => r.name);
         if (!VALID_ROLES.includes(role)) {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
@@ -1131,9 +1131,9 @@ app.put('/admin/users/:id', requireManager, async (req, res) => {
             return res.status(400).json({ error: 'Email ID is required.' });
         }
         const rolesRows = await new Promise((resolve, reject) =>
-            db.all("SELECT role_name FROM custom_roles", [], (err, rows) => err ? reject(err) : resolve(rows))
+            db.all("SELECT name FROM roles", [], (err, rows) => err ? reject(err) : resolve(rows))
         );
-        const VALID_ROLES = rolesRows.map(r => r.role_name);
+        const VALID_ROLES = rolesRows.map(r => r.name);
         if (!VALID_ROLES.includes(role)) {
             return res.status(400).json({ error: 'Invalid Role selected. Please select a valid role from the hierarchy.' });
         }
@@ -4190,7 +4190,17 @@ app.get('/api/role-permissions/:role', (req, res) => {
 // ── CUSTOM ROLES API ──────────────────────────────────────
 app.get('/api/roles', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
-    db.all("SELECT id, role_name, created_at FROM custom_roles ORDER BY id ASC", [], (err, rows) => {
+    
+    const nameFilter = (req.query.name || req.body.name || '').trim();
+    let query = "SELECT id, name, name AS role_name, created_at FROM roles";
+    const params = [];
+    if (nameFilter) {
+        query += " WHERE name LIKE ?";
+        params.push(`%${nameFilter}%`);
+    }
+    query += " ORDER BY id ASC";
+
+    db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -4198,10 +4208,10 @@ app.get('/api/roles', (req, res) => {
 
 app.post('/api/roles', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
-    const { role_name } = req.body;
-    if (!role_name || !role_name.trim()) return res.status(400).json({ error: 'Role name is required' });
+    const name = (req.body.name || req.body.role_name || req.query.name || '').trim();
+    if (!name) return res.status(400).json({ error: 'Role name is required' });
     
-    db.run("INSERT INTO custom_roles (role_name) VALUES (?)", [role_name.trim()], function(err) {
+    db.run("INSERT INTO roles (name) VALUES (?)", [name], function(err) {
         if (err) {
             if (err.message.includes('UNIQUE')) {
                 return res.status(400).json({ error: 'Role name already exists' });
@@ -4212,12 +4222,43 @@ app.post('/api/roles', (req, res) => {
     });
 });
 
-app.delete('/api/roles/:roleName', (req, res) => {
+app.put('/api/roles/:idOrName', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
-    const { roleName } = req.params;
-    if (!roleName) return res.status(400).json({ error: 'Role name is required' });
+    const { idOrName } = req.params;
+    const name = (req.body.name || req.body.role_name || req.query.name || '').trim();
+    if (!name) return res.status(400).json({ error: 'Role name is required' });
     
-    db.run("DELETE FROM custom_roles WHERE role_name = ?", [roleName], function(err) {
+    let query = "UPDATE roles SET name = ? WHERE name = ?";
+    let param = idOrName;
+    if (!isNaN(idOrName)) {
+        query = "UPDATE roles SET name = ? WHERE id = ? OR name = ?";
+        param = parseInt(idOrName);
+    }
+    
+    db.run(query, isNaN(idOrName) ? [name, param] : [name, param, idOrName], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE')) {
+                return res.status(400).json({ error: 'Role name already exists' });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true, changes: this.changes });
+    });
+});
+
+app.delete('/api/roles/:idOrName', (req, res) => {
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not logged in' });
+    const { idOrName } = req.params;
+    if (!idOrName) return res.status(400).json({ error: 'Role identifier is required' });
+    
+    let query = "DELETE FROM roles WHERE name = ?";
+    let param = idOrName;
+    if (!isNaN(idOrName)) {
+        query = "DELETE FROM roles WHERE id = ? OR name = ?";
+        param = parseInt(idOrName);
+    }
+    
+    db.run(query, isNaN(idOrName) ? [param] : [param, idOrName], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, changes: this.changes });
     });

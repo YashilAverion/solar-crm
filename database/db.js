@@ -1329,6 +1329,35 @@ db.serialize(() => {
         }
     });
 
+    // ── SYSTEM ROLES TABLE ───
+    db.run(`
+        CREATE TABLE IF NOT EXISTS roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) console.error('[DB] Error creating roles table:', err.message);
+        else {
+            console.log('[DB] roles table ready.');
+            db.get("SELECT COUNT(*) as count FROM roles", [], (countErr, row) => {
+                if (!countErr && row.count === 0) {
+                    const defaultRoles = [
+                        'Admin',
+                        'Sales Manager', 'Procurement Manager', 'Accounts Manager', 'Installation Manager', 'Admin Manager', 'Service Manager',
+                        'Sales Team Leader', 'Procurement Team Leader', 'Accounts Team Leader'
+                    ];
+                    db.serialize(() => {
+                        const stmt = db.prepare("INSERT INTO roles (name) VALUES (?)");
+                        defaultRoles.forEach(r => stmt.run(r));
+                        stmt.finalize();
+                        console.log('[DB] Seeded default system roles into roles table.');
+                    });
+                }
+            });
+        }
+    });
+
     // ── DEPARTMENTS TABLE ───
     db.run(`
         CREATE TABLE IF NOT EXISTS departments (
