@@ -545,7 +545,6 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="admin-tab-bar">
             <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')"><i class="ti ti-users"></i> USER ACCOUNTS LIST</button>
             <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')"><i class="ti ti-phone-call"></i> VOIP ANALYTICS & RECORDINGS</button>
-            <button class="tab-chip" id="tab-storage-backups" onclick="switchAdminSection('storage-backups')"><i class="ti ti-database"></i> SYSTEM STORAGE & BACKUPS</button>
             <button class="tab-chip" id="tab-telephony-sandbox" onclick="switchAdminSection('telephony-sandbox')"><i class="ti ti-test-pipe"></i> TELEPHONY SANDBOX & AUDITS</button>
             <button class="tab-chip" id="tab-pylon-config" onclick="switchAdminSection('pylon-config')"><i class="ti ti-sun"></i> PYLON SOLAR INTEGRATION</button>
         </div>
@@ -1380,13 +1379,11 @@ document.addEventListener("DOMContentLoaded", function() {
         
         const tabUsers = document.getElementById('tab-users-list');
         const tabVoip = document.getElementById('tab-voip-analytics');
-        const tabStorage = document.getElementById('tab-storage-backups');
         const tabTelephony = document.getElementById('tab-telephony-sandbox');
         const tabPylon = document.getElementById('tab-pylon-config');
 
         if (tabUsers) tabUsers.classList.toggle('active-chip', target === 'users-list');
         if (tabVoip) tabVoip.classList.toggle('active-chip', target === 'voip-analytics');
-        if (tabStorage) tabStorage.classList.toggle('active-chip', target === 'storage-backups');
         if (tabTelephony) tabTelephony.classList.toggle('active-chip', target === 'telephony-sandbox');
         if (tabPylon) tabPylon.classList.toggle('active-chip', target === 'pylon-config');
 
@@ -1395,7 +1392,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const statsRow = document.querySelector('.stats-row');
         const pageActionsContainer = document.getElementById('pageActionButtonsContainer');
         
-        if (target === 'roles-permissions' || target === 'departments') {
+        if (target === 'roles-permissions' || target === 'departments' || target === 'storage-backups') {
             if (tabBar) tabBar.style.setProperty('display', 'none', 'important');
             if (statsRow) statsRow.style.setProperty('display', 'none', 'important');
             if (pageActionsContainer) pageActionsContainer.style.setProperty('display', 'none', 'important');
@@ -1436,6 +1433,17 @@ document.addEventListener("DOMContentLoaded", function() {
             if (addUserBtn) addUserBtn.style.display = 'none';
             
             loadDepartmentsList();
+        } else if (target === 'storage-backups') {
+            document.title = 'System Storage & Backups - Solar CRM';
+            if (pageTitleEl) pageTitleEl.innerText = 'System Storage & Backups';
+            if (backupWrapper) backupWrapper.style.display = 'none';
+            if (userSearchEl) userSearchEl.style.display = 'none';
+            if (roleFilterEl) roleFilterEl.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            if (backupBtn) backupBtn.style.display = 'none';
+            if (addUserBtn) addUserBtn.style.display = 'none';
+            
+            loadStorageStatsAndBackups();
         } else {
             document.title = 'User Management - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
@@ -1453,8 +1461,6 @@ document.addEventListener("DOMContentLoaded", function() {
         
         if (target === 'voip-analytics') {
             loadVoipAnalytics();
-        } else if (target === 'storage-backups') {
-            loadStorageStatsAndBackups();
         } else if (target === 'telephony-sandbox') {
             loadTelephonyAuditLogs();
         } else if (target === 'pylon-config') {
@@ -3996,6 +4002,8 @@ Initializing deployment stream...
             switchAdminSection('roles-permissions');
         } else if (hash === '#departments') {
             switchAdminSection('departments');
+        } else if (hash === '#storage' || hash === '#backups') {
+            switchAdminSection('storage-backups');
         } else {
             switchAdminSection('users-list');
         }

@@ -184,6 +184,7 @@
                                     <li><a href="/admin.html" class="menu-item-link" id="nav-manage-users">Manage Users</a></li>
                                     <li><a href="/admin.html#roles" class="menu-item-link" id="nav-roles-permissions">Roles & Permissions</a></li>
                                     <li><a href="/admin.html#departments" class="menu-item-link" id="nav-departments">Departments</a></li>
+                                    <li><a href="/admin.html#storage" class="menu-item-link" id="nav-storage-backups">System Storage & Backups</a></li>
                                     <li><a href="/activity_logs.html" class="menu-item-link" id="nav-activity-logs">User Activity Logs</a></li>
                                 </ul>
                             </li>
@@ -515,6 +516,8 @@
                     targetLinkId = "nav-roles-permissions";
                 } else if (currentHash === "#departments") {
                     targetLinkId = "nav-departments";
+                } else if (currentHash === "#storage" || currentHash === "#backups") {
+                    targetLinkId = "nav-storage-backups";
                 } else {
                     targetLinkId = "nav-manage-users";
                 }
@@ -656,6 +659,7 @@
                              checkPermission('nav-manage-users', 'Settings', 'Manage Users');
                              checkPermission('nav-roles-permissions', 'Settings', 'Manage Users');
                              checkPermission('nav-departments', 'Settings', 'Manage Users');
+                             checkPermission('nav-storage-backups', 'Settings', 'Manage Users');
                              checkPermission('nav-activity-logs', 'Settings', 'Manage Users');
                              checkPermission('nav-project-leads', 'Sales', 'Leads');
                              checkPermission('nav-lead-approvals', 'Lead Master', 'Lead Approvals');
