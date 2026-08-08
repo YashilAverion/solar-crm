@@ -183,11 +183,7 @@
                                 <ul>
                                     <li><a href="/admin.html" class="menu-item-link" id="nav-manage-users">Manage Users</a></li>
                                     <li><a href="/admin.html#roles" class="menu-item-link" id="nav-roles-permissions">Roles & Permissions</a></li>
-                                    <li><a href="/admin.html#requests" class="menu-item-link" id="nav-requests">Requests</a></li>
                                     <li><a href="/admin.html#departments" class="menu-item-link" id="nav-departments">Departments</a></li>
-                                    <li><a href="/admin.html#staff" class="menu-item-link" id="nav-staff-directory">Staff Directory</a></li>
-                                    <li><a href="/admin.html#devices" class="menu-item-link" id="nav-device-mgmt">Device Management</a></li>
-                                    <li><a href="/admin.html#login-history" class="menu-item-link" id="nav-login-history">Login History</a></li>
                                     <li><a href="/activity_logs.html" class="menu-item-link" id="nav-activity-logs">User Activity Logs</a></li>
                                 </ul>
                             </li>
@@ -517,16 +513,8 @@
             } else if (currentPath === "/admin.html") {
                 if (currentHash === "#roles") {
                     targetLinkId = "nav-roles-permissions";
-                } else if (currentHash === "#requests") {
-                    targetLinkId = "nav-requests";
                 } else if (currentHash === "#departments") {
                     targetLinkId = "nav-departments";
-                } else if (currentHash === "#staff") {
-                    targetLinkId = "nav-staff-directory";
-                } else if (currentHash === "#devices") {
-                    targetLinkId = "nav-device-mgmt";
-                } else if (currentHash === "#login-history") {
-                    targetLinkId = "nav-login-history";
                 } else {
                     targetLinkId = "nav-manage-users";
                 }
@@ -664,15 +652,10 @@
                              checkPermission('nav-paid-pay', 'Ares Installation Outside', 'Paid Payments');
                              checkPermission('nav-company', 'Ares Installation Outside', 'Company Details');
                              checkPermission('nav-company-details', 'Ares Installation Outside', 'Company Details');
-                             checkPermission('nav-user-mgmt', 'Settings', 'Manage Users');
                              checkPermission('nav-user-mgmt-parent', 'Settings', 'Manage Users');
                              checkPermission('nav-manage-users', 'Settings', 'Manage Users');
                              checkPermission('nav-roles-permissions', 'Settings', 'Manage Users');
-                             checkPermission('nav-requests', 'Settings', 'Manage Users');
                              checkPermission('nav-departments', 'Settings', 'Manage Users');
-                             checkPermission('nav-staff-directory', 'Settings', 'Manage Users');
-                             checkPermission('nav-device-mgmt', 'Settings', 'Manage Users');
-                             checkPermission('nav-login-history', 'Settings', 'Manage Users');
                              checkPermission('nav-activity-logs', 'Settings', 'Manage Users');
                              checkPermission('nav-project-leads', 'Sales', 'Leads');
                              checkPermission('nav-lead-approvals', 'Lead Master', 'Lead Approvals');

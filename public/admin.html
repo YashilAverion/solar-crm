@@ -1506,6 +1506,10 @@ document.addEventListener("DOMContentLoaded", function() {
             if (restoreBtn) restoreBtn.style.display = 'block';
             if (backupBtn) backupBtn.style.display = 'block';
             if (addUserBtn) addUserBtn.style.display = 'block';
+            
+            if (target === 'users-list') {
+                loadUsers();
+            }
         }
         
         if (target === 'rate-limits') {
@@ -3611,7 +3615,7 @@ Initializing deployment stream...
 
             if (user.role !== 'Admin') {
                 try {
-                    const pRes = await fetch(`/api/my-permissions`); // This now correctly merges user overrides
+                    const pRes = await fetch(`/api/my-permissions`);
                     if (pRes.ok) {
                         const matrix = await pRes.json();
                         const check = (href, mod, feat) => {
@@ -3639,9 +3643,12 @@ Initializing deployment stream...
                             }
                         });
                     }
+                } catch (permErr) {
+                    console.error("Failed to check user permissions:", permErr);
+                }
+            }
             // Load role permissions cache on load
             await window.loadAllRolePermissions();
-            }
         } catch(e) { window.location.href = "/login"; }
     })();
 
@@ -4054,9 +4061,7 @@ Initializing deployment stream...
         } else if (hash === '#departments') {
             switchAdminSection('departments');
         } else {
-            if (!hash || hash === '#users-list' || hash === '#') {
-                switchAdminSection('users-list');
-            }
+            switchAdminSection('users-list');
         }
     }
 
