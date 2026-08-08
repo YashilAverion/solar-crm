@@ -1991,18 +1991,17 @@
             const nextIdx = idx + 1;
             if (nextIdx < checkboxes.length) {
                 const nextCb = checkboxes[nextIdx];
-                nextCb.focus();
                 
                 if (e.shiftKey) {
-                    nextCb.checked = true;
-                    nextCb.dispatchEvent(new Event('change', { bubbles: true }));
-                    
-                    // Ensure the starting one is checked
                     if (!checkbox.checked) {
                         checkbox.checked = true;
                         checkbox.dispatchEvent(new Event('change', { bubbles: true }));
                     }
+                    nextCb.checked = true;
+                    nextCb.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
+                nextCb.focus();
             }
         } 
         else if (e.key === 'ArrowUp') {
@@ -2010,17 +2009,17 @@
             const prevIdx = idx - 1;
             if (prevIdx >= 0) {
                 const prevCb = checkboxes[prevIdx];
-                prevCb.focus();
                 
                 if (e.shiftKey) {
-                    prevCb.checked = true;
-                    prevCb.dispatchEvent(new Event('change', { bubbles: true }));
-                    
                     if (!checkbox.checked) {
                         checkbox.checked = true;
                         checkbox.dispatchEvent(new Event('change', { bubbles: true }));
                     }
+                    prevCb.checked = true;
+                    prevCb.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
+                prevCb.focus();
             }
         }
     });
