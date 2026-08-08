@@ -473,10 +473,6 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="main-wrap">
     <div class="topbar">
         <div class="topbar-title" id="adminPageTitle">User Management</div>
-        <div id="backup-status-wrapper" style="margin-left:12px; font-size:11px; color:var(--text-muted); background:var(--bg); padding:4px 10px; border-radius:20px; border:1px solid var(--border); display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;" title="System Backup Status">
-            <span>&#128190; Last Backup:</span>
-            <strong id="lastBackupTime" style="color:var(--primary);">Loading...</strong>
-        </div>
         <input type="text" id="userSearch" placeholder="Search name, username..." oninput="filterUsers()" style="margin-left:12px; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); padding:0 10px; font-size:13px; outline:none; width:200px;">
         <select id="roleFilter" onchange="filterUsers()" style="margin-left:6px; height:30px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; font-weight:600; background:var(--bg); color:var(--text-muted); outline:none; cursor:pointer;">
             <option value="">All Roles</option>
@@ -508,8 +504,6 @@ document.addEventListener("DOMContentLoaded", function() {
         </select>
         
         <div class="tb-spacer"></div>
-        <button class="tb-btn" id="btn-restore-backup" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="openRestoreModal()"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
-        <button class="tb-btn" id="btn-backup-now" data-permission-module="Settings" data-permission-feature="Manage Users" style="margin-right:6px;" onclick="startManualBackup()"><i class="ti ti-cloud-upload"></i> Backup Now</button>
         <button class="tb-btn btn-add" id="btn-add-user" data-permission-module="Settings" data-permission-feature="Manage Users" onclick="openAddUserModal()"><i class="ti ti-plus"></i> Add User</button>
     </div>
 
@@ -684,14 +678,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
             <!-- Backup Management & File Grid Table -->
             <div class="card flex-fill mb-0" style="display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-2">
-                        <h4 class="card-title"><i class="ti ti-archive"></i> VPS Server Backup Archives</h4>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h4 class="card-title mb-0"><i class="ti ti-archive"></i> VPS Server Backup Archives</h4>
                         <span class="badge bg-danger-light">Hostinger VPS Storage</span>
+                        <div id="backup-status-wrapper" style="font-size:11px; color:var(--text-muted); background:#f8fafc; padding:3px 10px; border-radius:20px; border:1px solid var(--border); display:inline-flex; align-items:center; gap:5px; white-space:nowrap;" title="System Backup Status">
+                            <i class="ti ti-database text-primary"></i> Last Backup:
+                            <strong id="lastBackupTime" style="color:var(--primary);">Loading...</strong>
+                        </div>
                     </div>
-                    <div class="d-flex gap-2 align-items-center">
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
                         <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="btn-action-outline btn-action-outline-danger" style="display: none;"><i class="ti ti-trash"></i> Delete Selected (0)</button>
-                        <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="btn-action-outline btn-action-outline-success"><i class="ti ti-cloud-upload"></i> Create Backup</button>
+                        <button type="button" onclick="openRestoreModal()" id="btn-restore-backup" class="btn-action-outline btn-action-outline-primary" title="Restore CRM database from archive"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
+                        <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="btn-action-outline btn-action-outline-success" title="Create instant database backup"><i class="ti ti-cloud-upload"></i> Backup Now</button>
                         <button type="button" onclick="loadStorageStatsAndBackups()" class="btn-action-outline" title="Refresh backups list"><i class="ti ti-refresh"></i> Refresh List</button>
                     </div>
                 </div>
@@ -1404,54 +1403,41 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Dynamic Topbar adjustment
         const pageTitleEl = document.getElementById('adminPageTitle') || document.querySelector('.page-title');
-        const backupWrapper = document.getElementById('backup-status-wrapper');
         const userSearchEl = document.getElementById('userSearch');
         const roleFilterEl = document.getElementById('roleFilter');
-        const restoreBtn = document.getElementById('btn-restore-backup');
-        const backupBtn = document.getElementById('btn-backup-now');
         const addUserBtn = document.getElementById('btn-add-user');
 
         if (target === 'roles-permissions') {
             document.title = 'Roles & Permissions - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'Roles & Permissions';
-            if (backupWrapper) backupWrapper.style.display = 'none';
             if (userSearchEl) userSearchEl.style.display = 'none';
             if (roleFilterEl) roleFilterEl.style.display = 'none';
-            if (restoreBtn) restoreBtn.style.display = 'none';
-            if (backupBtn) backupBtn.style.display = 'none';
             if (addUserBtn) addUserBtn.style.display = 'none';
             
             loadAndPopulateRoles();
         } else if (target === 'departments') {
             document.title = 'Departments - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'Departments';
-            if (backupWrapper) backupWrapper.style.display = 'none';
             if (userSearchEl) userSearchEl.style.display = 'none';
             if (roleFilterEl) roleFilterEl.style.display = 'none';
-            if (restoreBtn) restoreBtn.style.display = 'none';
-            if (backupBtn) backupBtn.style.display = 'none';
             if (addUserBtn) addUserBtn.style.display = 'none';
             
             loadDepartmentsList();
         } else if (target === 'storage-backups') {
             document.title = 'System Storage & Backups - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'System Storage & Backups';
-            if (backupWrapper) backupWrapper.style.display = 'none';
             if (userSearchEl) userSearchEl.style.display = 'none';
             if (roleFilterEl) roleFilterEl.style.display = 'none';
-            if (restoreBtn) restoreBtn.style.display = 'none';
-            if (backupBtn) backupBtn.style.display = 'none';
             if (addUserBtn) addUserBtn.style.display = 'none';
             
+            fetchLastBackup();
             loadStorageStatsAndBackups();
+            loadSpaceAudit();
         } else {
             document.title = 'User Management - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
-            if (backupWrapper) backupWrapper.style.display = 'flex';
             if (userSearchEl) userSearchEl.style.display = 'block';
             if (roleFilterEl) roleFilterEl.style.display = 'block';
-            if (restoreBtn) restoreBtn.style.display = 'block';
-            if (backupBtn) backupBtn.style.display = 'block';
             if (addUserBtn) addUserBtn.style.display = 'block';
             
             if (target === 'users-list') {
