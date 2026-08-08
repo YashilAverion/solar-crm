@@ -2027,4 +2027,189 @@
             }
         }
     });
+
+    // ── GLOBAL PERSISTENT SYSTEM BACKUP TRACKER ────────────────
+    window.GlobalBackupTracker = {
+        pollInterval: null,
+
+        dismiss() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+            const card = document.getElementById('backup-topright-card');
+            if (card) {
+                card.style.transform = 'translateX(130%)';
+                card.style.opacity = '0';
+                setTimeout(() => { card.remove(); }, 400);
+            }
+        },
+
+        ensureWidget() {
+            let card = document.getElementById('backup-topright-card');
+            if (card) return card;
+
+            card = document.createElement('div');
+            card.id = 'backup-topright-card';
+            card.style.cssText = `
+                position: fixed;
+                top: 75px;
+                right: 24px;
+                z-index: 999999;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-left: 4px solid #e41f07;
+                border-radius: 14px;
+                box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.15), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+                padding: 14px 18px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                min-width: 320px;
+                max-width: 380px;
+                font-family: 'Golos Text', system-ui, sans-serif;
+                transform: translateX(130%);
+                opacity: 0;
+                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+                pointer-events: auto;
+            `;
+
+            card.innerHTML = `
+                <div style="position: relative; width: 46px; height: 46px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <svg width="46" height="46" viewBox="0 0 48 48" style="transform: rotate(-90deg);">
+                        <defs>
+                            <linearGradient id="backupRingGradGlobal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#e41f07"/>
+                                <stop offset="100%" stop-color="#ff6b35"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="24" cy="24" r="20" stroke="#f1f5f9" stroke-width="4" fill="none"></circle>
+                        <circle id="backupRingBar" cx="24" cy="24" r="20" stroke="url(#backupRingGradGlobal)" stroke-width="4" stroke-linecap="round" fill="none" stroke-dasharray="125.66" stroke-dashoffset="125.66" style="transition: stroke-dashoffset 0.35s ease, stroke 0.3s ease;"></circle>
+                    </svg>
+                    <div id="backupRingInner" style="position: absolute; font-size: 11px; font-weight: 800; color: #e41f07; display: flex; align-items: center; justify-content: center;">
+                        0%
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <h6 id="backupCardTitle" style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Creating System Backup</h6>
+                        <button type="button" onclick="window.GlobalBackupTracker.dismiss()" style="background: none; border: none; padding: 0; color: #94a3b8; cursor: pointer; font-size: 16px; line-height: 1;" title="Close"><i class="ti ti-x"></i></button>
+                    </div>
+                    <div id="backupCardSub" style="font-size: 11.5px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Compressing database & project files...</div>
+                </div>
+            `;
+
+            document.body.appendChild(card);
+
+            setTimeout(() => {
+                card.style.transform = 'translateX(0)';
+                card.style.opacity = '1';
+            }, 10);
+
+            return card;
+        },
+
+        startPolling() {
+            if (this.pollInterval) clearInterval(this.pollInterval);
+
+            this.pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/backup/status');
+                    if (!res.ok) return;
+                    const s = await res.json();
+
+                    const ringBar = document.getElementById('backupRingBar');
+                    const ringInner = document.getElementById('backupRingInner');
+                    const cardTitle = document.getElementById('backupCardTitle');
+                    const cardSub = document.getElementById('backupCardSub');
+                    const card = document.getElementById('backup-topright-card');
+
+                    const pct = Math.min(100, Math.max(0, parseInt(s.progress || 0)));
+                    const offset = 125.66 * (1 - (pct / 100));
+
+                    if (ringBar) ringBar.style.strokeDashoffset = offset;
+                    if (ringInner) ringInner.innerText = pct + '%';
+
+                    if (s.error) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
+                        if (card) card.style.borderLeftColor = '#ef4444';
+                        if (ringBar) ringBar.style.stroke = '#ef4444';
+                        if (ringInner) ringInner.innerHTML = '<i class="ti ti-alert-circle" style="font-size: 18px; color: #ef4444;"></i>';
+                        if (cardTitle) cardTitle.innerText = 'Backup Failed';
+                        if (cardSub) cardSub.innerText = s.error || 'Could not complete backup';
+                        setTimeout(() => this.dismiss(), 4500);
+                    } else if (!s.isRunning && pct === 100) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
+                        if (card) card.style.borderLeftColor = '#10b981';
+                        if (ringBar) {
+                            ringBar.style.stroke = '#10b981';
+                            ringBar.style.strokeDashoffset = '0';
+                        }
+                        if (ringInner) ringInner.innerHTML = '<i class="ti ti-check" style="font-size: 18px; color: #10b981;"></i>';
+                        if (cardTitle) cardTitle.innerText = 'Backup Created Successfully!';
+                        if (cardSub) cardSub.innerText = 'Auto-refreshed backup table files';
+
+                        // Auto-refresh if on storage admin screen
+                        if (typeof window.loadStorageStatsAndBackups === 'function') window.loadStorageStatsAndBackups();
+                        if (typeof window.fetchLastBackup === 'function') window.fetchLastBackup();
+                        if (typeof window.loadSpaceAudit === 'function') window.loadSpaceAudit();
+
+                        setTimeout(() => this.dismiss(), 3500);
+                    } else if (!s.isRunning && pct !== 100) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
+                        if (card) card.style.borderLeftColor = '#f59e0b';
+                        if (ringBar) ringBar.style.stroke = '#f59e0b';
+                        if (ringInner) ringInner.innerHTML = '<i class="ti ti-alert-triangle" style="font-size: 18px; color: #f59e0b;"></i>';
+                        if (cardTitle) cardTitle.innerText = 'Backup Stopped';
+                        if (cardSub) cardSub.innerText = 'Process terminated unexpectedly';
+                        setTimeout(() => this.dismiss(), 4000);
+                    }
+                } catch (e) {
+                    console.error('Backup status check error:', e);
+                }
+            }, 400);
+        },
+
+        async start() {
+            this.dismiss();
+            try {
+                const res = await fetch('/api/backup/start', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to start backup');
+                this.ensureWidget();
+                this.startPolling();
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ title: 'Error', text: e.message, icon: 'error', confirmButtonColor: '#e41f07' });
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast(e.message, 'error');
+                } else {
+                    alert(e.message);
+                }
+            }
+        },
+
+        async checkInitial() {
+            try {
+                const res = await fetch('/api/backup/status');
+                if (!res.ok) return;
+                const s = await res.json();
+                if (s.isRunning === true) {
+                    this.ensureWidget();
+                    this.startPolling();
+                }
+            } catch (e) {}
+        }
+    };
+
+    // Auto-check on every page load to resume widget if backup is running in background
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        window.GlobalBackupTracker.checkInitial();
+    } else {
+        window.addEventListener('DOMContentLoaded', () => window.GlobalBackupTracker.checkInitial());
+    }
+
 })();
