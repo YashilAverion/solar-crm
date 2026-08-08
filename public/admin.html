@@ -625,52 +625,52 @@ document.addEventListener("DOMContentLoaded", function() {
         <div id="section-storage-backups" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
             <!-- Storage Progress and Info Block (DESIGN METRICS MODULE) -->
             <div class="card mb-3 flex-shrink-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title"><i class="ti ti-database"></i> Hostinger VPS Storage Allocation</h4>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h4 class="card-title mb-0"><i class="ti ti-database"></i> Hostinger VPS Storage Allocation</h4>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">
-                        Used: <span id="backupUsedGB" style="color: #8b5cf6; font-weight: 700;">0.00 GB</span> / 
-                        Available: <span id="backupTotalGB" style="font-weight: 700;">0.00 GB</span> (<span id="backupPercent" style="font-weight: 700;">0%</span> Used)
+                        Used: <span id="backupUsedGB" style="color: #e41f07; font-weight: 700;">0.00 GB</span> / 
+                        Available: <span id="backupTotalGB" style="font-weight: 700; color: #0f172a;">0.00 GB</span> (<span id="backupPercent" style="font-weight: 700; color: #e41f07;">0%</span> Used)
                     </span>
                 </div>
                 <div class="card-body">
                     <!-- Progress Bar -->
-                    <div style="width: 100%; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); display: flex; margin-bottom: 16px;">
-                        <div id="backupProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); transition: width 0.4s ease; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700;"></div>
+                    <div style="width: 100%; height: 14px; background: #f1f5f9; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; display: flex; margin-bottom: 16px;">
+                        <div id="backupProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #e41f07, #ff6b35); transition: width 0.4s ease; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px;"></div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;">
                             <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Uploads Folder</div>
                             <div id="breakdownUploads" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;">
                             <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">CRM Database</div>
                             <div id="breakdownDB" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;">
                             <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Server Backups</div>
                             <div id="breakdownBackups" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;">
                             <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Project</div>
-                            <div id="breakdownProject" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
+                            <div id="breakdownProject" style="font-size: 13px; font-weight: 700; color: #e41f07; margin-top: 4px;">0.00 MB</div>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">System Logs</div>
                                 <div id="breakdownSystemLogs" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                             </div>
-                            <button type="button" onclick="purgeServerCaches()" class="btn-action-outline btn-action-outline-danger" style="height: 22px; padding: 0 8px; font-size: 10px; margin-top: 6px;" title="Clean & truncate traffic logs"><i class="ti ti-trash"></i> Purge Logs</button>
+                            <button type="button" onclick="purgeServerCaches()" class="btn btn-outline-danger btn-sm mt-1" style="height: 22px; padding: 0 8px; font-size: 10px; line-height: 1;" title="Clean & truncate traffic logs"><i class="ti ti-trash"></i> Purge Logs</button>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">PM2 Caches</div>
                                 <div id="breakdownPm2Cache" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-top: 4px;">0.00 MB</div>
                             </div>
-                            <button type="button" onclick="purgeServerCaches()" class="btn-action-outline btn-action-outline-danger" style="height: 22px; padding: 0 8px; font-size: 10px; margin-top: 6px;" title="Flush PM2 runtime logs"><i class="ti ti-trash"></i> Purge Cache</button>
+                            <button type="button" onclick="purgeServerCaches()" class="btn btn-outline-danger btn-sm mt-1" style="height: 22px; padding: 0 8px; font-size: 10px; line-height: 1;" title="Flush PM2 runtime logs"><i class="ti ti-trash"></i> Purge Cache</button>
                         </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 0 1px #8b5cf6; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                            <div style="font-size: 10px; font-weight: 700; color: #8b5cf6; text-transform: uppercase;">OS & Engines</div>
-                            <div id="breakdownOS" style="font-size: 13px; font-weight: 700; color: #8b5cf6; margin-top: 4px;">0.00 MB</div>
+                        <div style="text-align: center; padding: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">OS & Engines</div>
+                            <div id="breakdownOS" style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 4px;">0.00 MB</div>
                         </div>
                     </div>
                 </div>
@@ -682,16 +682,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <h4 class="card-title mb-0"><i class="ti ti-archive"></i> VPS Server Backup Archives</h4>
                         <span class="badge bg-danger-light">Hostinger VPS Storage</span>
-                        <div id="backup-status-wrapper" style="font-size:11px; color:var(--text-muted); background:#f8fafc; padding:3px 10px; border-radius:20px; border:1px solid var(--border); display:inline-flex; align-items:center; gap:5px; white-space:nowrap;" title="System Backup Status">
-                            <i class="ti ti-database text-primary"></i> Last Backup:
-                            <strong id="lastBackupTime" style="color:var(--primary);">Loading...</strong>
+                        <div id="backup-status-wrapper" class="d-inline-flex align-items-center gap-1 px-2 py-1 bg-light border rounded-pill" style="font-size: 11px; font-weight: 600; color: var(--text-dark);" title="System Backup Status">
+                            <i class="ti ti-history text-primary"></i> Last Backup:
+                            <strong id="lastBackupTime" class="text-primary">Loading...</strong>
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="btn-action-outline btn-action-outline-danger" style="display: none;"><i class="ti ti-trash"></i> Delete Selected (0)</button>
-                        <button type="button" onclick="openRestoreModal()" id="btn-restore-backup" class="btn-action-outline btn-action-outline-primary" title="Restore CRM database from archive"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
-                        <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="btn-action-outline btn-action-outline-success" title="Create instant database backup"><i class="ti ti-cloud-upload"></i> Backup Now</button>
-                        <button type="button" onclick="loadStorageStatsAndBackups()" class="btn-action-outline" title="Refresh backups list"><i class="ti ti-refresh"></i> Refresh List</button>
+                        <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" style="display: none; height: 32px; font-size: 12px; font-weight: 600;"><i class="ti ti-trash"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)</button>
+                        <button type="button" onclick="openRestoreModal()" id="btn-restore-backup" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Restore CRM database from archive"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
+                        <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Create instant database backup"><i class="ti ti-cloud-upload"></i> Backup Now</button>
+                        <button type="button" onclick="loadStorageStatsAndBackups()" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Refresh backups list"><i class="ti ti-refresh"></i> Refresh List</button>
                     </div>
                 </div>
 
@@ -701,7 +701,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <table class="table table-hover table-nowrap table-backups mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="padding: 10px 16px; text-align: center; width: 40px; color: var(--text-dark);"><input type="checkbox" id="masterBackupCheckbox" onchange="toggleAllBackupCheckboxes(this)" style="cursor: pointer; transform: scale(1.1);"></th>
+                                    <th style="padding: 10px 16px; text-align: center; width: 40px; color: var(--text-dark);"><input type="checkbox" class="form-check-input" id="masterBackupCheckbox" onchange="toggleAllBackupCheckboxes(this)" style="cursor: pointer;"></th>
                                     <th style="padding: 10px 16px; text-align: left; color: var(--text-dark);">File Name</th>
                                     <th style="padding: 10px 16px; text-align: left; color: var(--text-dark);">Creation Date</th>
                                     <th style="padding: 10px 16px; text-align: right; color: var(--text-dark);">File Size</th>
@@ -2743,11 +2743,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const btn = document.getElementById('btnBulkDeleteBackups');
         if (btn) {
             btn.style.display = 'none';
-            btn.innerText = '🗑️ Delete Selected (0)';
+            const cntSpan = document.getElementById('bulkDeleteCount');
+            if (cntSpan) cntSpan.innerText = '0';
         }
 
         if (!backups || backups.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-muted);">No backup archives found on Hostinger VPS.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;"><i class="ti ti-archive-off" style="font-size: 24px; display: block; margin-bottom: 6px; opacity: 0.5;"></i>No backup archives found on Hostinger VPS.</td></tr>';
             return;
         }
 
@@ -2759,16 +2760,16 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             html += `
                 <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 10px 16px; text-align: center; width: 40px;"><input type="checkbox" class="backup-row-checkbox" data-filename="${file.name}" onchange="updateBulkDeleteButtonState()" style="cursor: pointer; transform: scale(1.1);"></td>
+                    <td style="padding: 10px 16px; text-align: center; width: 40px;"><input type="checkbox" class="form-check-input backup-row-checkbox" data-filename="${file.name}" onchange="updateBulkDeleteButtonState()" style="cursor: pointer;"></td>
                     <td style="padding: 10px 16px; text-align: left; font-weight: 600; color: var(--text-dark);">${file.name}</td>
                     <td style="padding: 10px 16px; text-align: left; color: var(--text-muted);">${dateStr}</td>
                     <td style="padding: 10px 16px; text-align: right; font-weight: 600; color: var(--text-dark);">${file.size} MB</td>
                     <td style="padding: 10px 16px; text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center;">
-                            <button type="button" class="btn-action-outline btn-action-outline-success" onclick="downloadBackupFile('${file.name}')" style="height: 22px; padding: 0 8px; font-size: 11px;" title="Download to PC">
+                            <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1" onclick="downloadBackupFile('${file.name}')" style="height: 26px; padding: 0 10px; font-size: 11px; font-weight: 600;" title="Download to PC">
                                 <i class="ti ti-download"></i> Download
                             </button>
-                            <button type="button" class="btn-action-outline btn-action-outline-danger" onclick="deleteBackupFile('${file.name}')" style="height: 22px; padding: 0 8px; font-size: 11px;" title="Delete from Server">
+                            <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" onclick="deleteBackupFile('${file.name}')" style="height: 26px; padding: 0 10px; font-size: 11px; font-weight: 600;" title="Delete from Server">
                                 <i class="ti ti-trash"></i> Delete
                             </button>
                         </div>
@@ -2792,28 +2793,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     async function deleteBackupFile(filename) {
         const { isConfirmed: confirm1 } = await Swal.fire({
-            title: 'Delete Backup?',
-            text: `Are you sure you want to delete ${filename}?`,
+            title: 'Delete Backup Archive?',
+            text: `Are you sure you want to permanently delete "${filename}"?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#e8681e',
-            cancelButtonColor: '#6b7a8d',
-            confirmButtonText: 'Yes, Delete'
+            confirmButtonColor: '#e41f07',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'premium-swal-popup' }
         });
 
         if (!confirm1) return;
-
-        const { isConfirmed: confirm2 } = await Swal.fire({
-            title: 'Double Confirmation Required',
-            text: 'Warning: This action permanently deletes this backup from Hostinger VPS. Proceed?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, permanently delete!'
-        });
-
-        if (!confirm2) return;
 
         try {
             const res = await fetch(`/api/system/backups/delete/${encodeURIComponent(filename)}`, {
@@ -2821,7 +2812,14 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             if (res.ok) {
                 const data = await res.json();
-                Swal.fire('Deleted!', 'The backup file has been permanently deleted.', 'success');
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'The backup archive has been permanently deleted.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'premium-swal-popup' }
+                });
                 if (data.storageStats) {
                     renderStorageStats(data.storageStats);
                 } else {
@@ -2830,10 +2828,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 loadSpaceAudit();
             } else {
                 const err = await res.json();
-                Swal.fire('Error', err.error || 'Failed to delete backup file.', 'error');
+                Swal.fire({ title: 'Error', text: err.error || 'Failed to delete backup file.', icon: 'error', confirmButtonColor: '#e41f07' });
             }
         } catch (e) {
-            Swal.fire('Error', 'Network error occurred.', 'error');
+            Swal.fire({ title: 'Error', text: 'Network error occurred.', icon: 'error', confirmButtonColor: '#e41f07' });
         }
     }
 
@@ -2849,11 +2847,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const checkedBoxes = document.querySelectorAll('.backup-row-checkbox:checked');
         const count = checkedBoxes.length;
         const btn = document.getElementById('btnBulkDeleteBackups');
+        const cntSpan = document.getElementById('bulkDeleteCount');
+        if (cntSpan) cntSpan.innerText = count;
+
         if (!btn) return;
         
         if (count > 0) {
-            btn.style.display = 'inline-block';
-            btn.innerText = `🗑️ Delete Selected (${count})`;
+            btn.style.display = 'inline-flex';
         } else {
             btn.style.display = 'none';
         }
@@ -2871,33 +2871,23 @@ document.addEventListener("DOMContentLoaded", function() {
         if (filenames.length === 0) return;
 
         const firstConfirm = await Swal.fire({
-            title: `Delete ${filenames.length} backups?`,
-            text: `You have selected ${filenames.length} archives to delete. This cannot be undone.`,
+            title: `Delete ${filenames.length} Backup Archives?`,
+            text: `You have selected ${filenames.length} archives to delete from Hostinger VPS. This action cannot be undone.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7a8d',
-            confirmButtonText: 'Yes, delete selected!'
+            confirmButtonColor: '#e41f07',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Delete Selected',
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'premium-swal-popup' }
         });
 
         if (!firstConfirm.isConfirmed) return;
 
-        const secondConfirm = await Swal.fire({
-            title: 'Are you absolutely sure?',
-            text: 'This will permanently remove the selected backup files from the Hostinger VPS server storage.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7a8d',
-            confirmButtonText: 'Yes, permanently delete!'
-        });
-
-        if (!secondConfirm.isConfirmed) return;
-
         try {
             const btn = document.getElementById('btnBulkDeleteBackups');
             btn.disabled = true;
-            btn.innerText = 'Deleting Selected...';
+            btn.innerText = 'Deleting...';
 
             const res = await fetch('/api/system/backups/bulk-delete', {
                 method: 'POST',
@@ -2912,7 +2902,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     text: data.message,
                     icon: 'success',
                     timer: 2000,
-                    showConfirmButton: false
+                    showConfirmButton: false,
+                    customClass: { popup: 'premium-swal-popup' }
                 });
                 
                 const master = document.getElementById('masterBackupCheckbox');
@@ -2925,10 +2916,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 loadSpaceAudit();
             } else {
-                Swal.fire('Error', data.error || 'Failed to delete selected backups.', 'error');
+                Swal.fire({ title: 'Error', text: data.error || 'Failed to delete selected backups.', icon: 'error', confirmButtonColor: '#e41f07' });
             }
         } catch (e) {
-            Swal.fire('Error', 'Network or server error.', 'error');
+            Swal.fire({ title: 'Error', text: 'Network error occurred.', icon: 'error', confirmButtonColor: '#e41f07' });
         } finally {
             const btn = document.getElementById('btnBulkDeleteBackups');
             if (btn) {
