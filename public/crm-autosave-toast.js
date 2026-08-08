@@ -308,13 +308,13 @@
         }
     }, true);
 
-    // ── 1. INJECT TOAST NOTIFICATION CSS ───────────────────
+    // ── 1. INJECT TOAST NOTIFICATION CSS (DREAMS CRM TEMPLATE THEME) ───
     const toastStyle = document.createElement('style');
     toastStyle.innerHTML = `
         .custom-toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 72px;
+            right: 24px;
             z-index: 100000 !important;
             display: flex;
             flex-direction: column;
@@ -323,45 +323,51 @@
         }
         .custom-toast {
             background: #ffffff !important;
-            color: #1c2b3a !important;
+            color: #0f172a !important;
             padding: 12px 18px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
-            font-family: 'Inter', system-ui, sans-serif !important;
+            border-radius: 10px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+            font-family: 'Golos Text', system-ui, sans-serif !important;
             font-size: 13px !important;
             font-weight: 600 !important;
             min-width: 280px !important;
-            max-width: 400px !important;
+            max-width: 420px !important;
             display: flex !important;
             align-items: center !important;
             gap: 12px !important;
-            border-left: 4px solid #1c3557 !important;
             transform: translateX(120%) !important;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease !important;
             pointer-events: auto !important;
             line-height: 1.4 !important;
         }
         .custom-toast.toast-show {
             transform: translateX(0) !important;
         }
-        .custom-toast.toast-success {
-            border-left-color: #10b981 !important;
+        .custom-toast-icon-wrap {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
         }
-        .custom-toast.toast-error {
-            border-left-color: #ef4444 !important;
-        }
-        .custom-toast.toast-warning {
-            border-left-color: #f59e0b !important;
-        }
-        .custom-toast.toast-info {
-            border-left-color: #3b82f6 !important;
-        }
-        .custom-toast-icon {
-            font-size: 16px !important;
-            flex-shrink: 0 !important;
-        }
+        .custom-toast.toast-success .custom-toast-icon-wrap { background: #ecfdf5; color: #10b981; }
+        .custom-toast.toast-error .custom-toast-icon-wrap { background: #fef2f2; color: #ef4444; }
+        .custom-toast.toast-warning .custom-toast-icon-wrap { background: #fffbeb; color: #f59e0b; }
+        .custom-toast.toast-info .custom-toast-icon-wrap { background: #f0f9ff; color: #0284c7; }
+        
+        .custom-toast.toast-success { border-left: 4px solid #10b981 !important; }
+        .custom-toast.toast-error { border-left: 4px solid #ef4444 !important; }
+        .custom-toast.toast-warning { border-left: 4px solid #f59e0b !important; }
+        .custom-toast.toast-info { border-left: 4px solid #0284c7 !important; }
+
         .custom-toast-message {
             flex: 1 !important;
+            font-size: 12.5px !important;
+            color: #334155 !important;
         }
     `;
 
@@ -427,7 +433,16 @@
         const toast = document.createElement('div');
         toast.className = `custom-toast toast-${type}`;
 
+        const iconMap = {
+            success: 'ti ti-check',
+            error: 'ti ti-alert-circle',
+            warning: 'ti ti-alert-triangle',
+            info: 'ti ti-info-circle'
+        };
+        const iconClass = iconMap[type] || 'ti ti-info-circle';
+
         toast.innerHTML = `
+            <div class="custom-toast-icon-wrap"><i class="${iconClass}"></i></div>
             <span class="custom-toast-message">${message}</span>
         `;
 
@@ -452,8 +467,20 @@
                     window.isAutosaving = false;
                 }
 
-                if (options && typeof options === 'object' && (options.showCancelButton || (options.showConfirmButton === true && options.confirmButtonText && options.confirmButtonText !== 'Close' && options.confirmButtonText !== 'OK'))) {
-                    return originalSwal.call(window.Swal, options, html, icon);
+                // If this is a complex, interactive, or modal dialog (e.g. backup progress, prompt, confirmation), let SweetAlert2 render its full modal
+                if (options && typeof options === 'object') {
+                    if (options.showCancelButton || 
+                        options.input || 
+                        options.didOpen || 
+                        options.willOpen || 
+                        options.preConfirm || 
+                        options.allowOutsideClick === false || 
+                        options.allowEscapeKey === false ||
+                        options.customClass ||
+                        (typeof options.html === 'string' && (options.html.includes('<input') || options.html.includes('<button') || options.html.includes('id="backup-pb"') || options.html.includes('<select') || options.html.includes('progress') || options.html.includes('<table'))) ||
+                        (options.showConfirmButton === true && options.confirmButtonText && options.confirmButtonText !== 'Close' && options.confirmButtonText !== 'OK')) {
+                        return originalSwal.call(window.Swal, options, html, icon);
+                    }
                 }
 
                 let title = '';
@@ -477,7 +504,7 @@
                 window.showToast(fullMsg, type);
                 return Promise.resolve({ isConfirmed: true });
             };
-            console.log('[Autosave] Swal successfully overridden.');
+            console.log('[Autosave] Swal successfully configured.');
         } else {
             setTimeout(overrideSwal, 100);
         }

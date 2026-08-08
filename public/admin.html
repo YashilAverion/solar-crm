@@ -2680,25 +2680,50 @@ document.addEventListener("DOMContentLoaded", function() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to start backup');
             Swal.fire({
-                title: 'Creating Backup...',
-                html: `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Compressing system files... Please wait.</div>
-                    <div style="font-weight:700; font-size:16px; color:var(--text-dark); margin-bottom:8px;" id="backup-text">0%</div>
-                    <div style="width:100%; background:#e2e8f0; border-radius:10px; height:12px; overflow:hidden;"><div id="backup-pb" style="width:0%; background:#10b981; height:100%; transition:width 0.3s ease;"></div></div>`,
-                allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false,
+                title: '<div class="d-flex align-items-center justify-content-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a;"><i class="ti ti-database-export text-primary" style="font-size: 22px;"></i> Creating System Backup</div>',
+                html: `
+                    <div style="font-size:13px; color:#64748b; margin-bottom:12px;">Compressing CRM database and project files. Please wait...</div>
+                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 12px; font-weight: 700; color: #334155;">
+                        <span>Progress:</span>
+                        <span id="backup-text" style="color: #e41f07;">0%</span>
+                    </div>
+                    <div style="width:100%; background:#f1f5f9; border-radius:10px; height:12px; overflow:hidden; border: 1px solid #e2e8f0;">
+                        <div id="backup-pb" style="width:0%; background: linear-gradient(90deg, #e41f07, #ff6b35); height:100%; transition:width 0.3s ease; border-radius: 10px;"></div>
+                    </div>
+                `,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                customClass: { popup: 'premium-swal-popup' },
                 didOpen: () => {
                     const pb = document.getElementById('backup-pb'), pbt = document.getElementById('backup-text');
                     const iv = setInterval(async () => {
                         try {
                             const s = await (await fetch('/api/backup/status')).json();
                             pb.style.width = s.progress + '%'; pbt.innerText = s.progress + '%';
-                            if (s.error) { clearInterval(iv); Swal.fire('Error', s.error, 'error'); }
-                            else if (!s.isRunning && s.progress === 100) { clearInterval(iv); Swal.fire('Success!', 'Backup completed!', 'success').then(() => { window.location.reload(); }); }
-                            else if (!s.isRunning && s.progress !== 100) { clearInterval(iv); Swal.fire('Warning', 'Backup stopped unexpectedly.', 'warning'); }
-                        } catch(e) { clearInterval(iv); Swal.fire('Error', 'Failed to get backup status.', 'error'); }
+                            if (s.error) { 
+                                clearInterval(iv); 
+                                Swal.fire({ title: 'Error', text: s.error, icon: 'error', confirmButtonColor: '#e41f07' }); 
+                            } else if (!s.isRunning && s.progress === 100) { 
+                                clearInterval(iv); 
+                                Swal.fire({ title: 'Success!', text: 'Backup archive created successfully!', icon: 'success', confirmButtonColor: '#e41f07' }).then(() => { 
+                                    loadStorageStatsAndBackups();
+                                    fetchLastBackup();
+                                }); 
+                            } else if (!s.isRunning && s.progress !== 100) { 
+                                clearInterval(iv); 
+                                Swal.fire({ title: 'Warning', text: 'Backup stopped unexpectedly.', icon: 'warning', confirmButtonColor: '#e41f07' }); 
+                            }
+                        } catch(e) { 
+                            clearInterval(iv); 
+                            Swal.fire({ title: 'Error', text: 'Failed to get backup status.', icon: 'error', confirmButtonColor: '#e41f07' }); 
+                        }
                     }, 500);
                 }
             });
-        } catch(e) { Swal.fire('Error', e.message, 'error'); }
+        } catch(e) { 
+            Swal.fire({ title: 'Error', text: e.message, icon: 'error', confirmButtonColor: '#e41f07' }); 
+        }
     }
 
     async function loadStorageStatsAndBackups() {
