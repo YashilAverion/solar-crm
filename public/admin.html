@@ -688,7 +688,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" style="display: none; height: 32px; font-size: 12px; font-weight: 600;"><i class="ti ti-trash"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)</button>
+                        <button type="button" onclick="deleteSelectedBackups()" id="btnBulkDeleteBackups" class="btn btn-sm btn-danger align-items-center gap-1 d-none" style="height: 32px; font-size: 12px; font-weight: 600;"><i class="ti ti-trash"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)</button>
                         <button type="button" onclick="openRestoreModal()" id="btn-restore-backup" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Restore CRM database from archive"><i class="ti ti-rotate-clockwise"></i> Restore from Backup</button>
                         <button type="button" onclick="startManualBackup()" id="btnStartBackupMgr" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Create instant database backup"><i class="ti ti-cloud-upload"></i> Backup Now</button>
                         <button type="button" onclick="loadStorageStatsAndBackups()" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 12px; font-weight: 600;" title="Refresh backups list"><i class="ti ti-refresh"></i> Refresh List</button>
@@ -2742,7 +2742,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (master) master.checked = false;
         const btn = document.getElementById('btnBulkDeleteBackups');
         if (btn) {
-            btn.style.display = 'none';
+            btn.classList.remove('d-inline-flex');
+            btn.classList.add('d-none');
             const cntSpan = document.getElementById('bulkDeleteCount');
             if (cntSpan) cntSpan.innerText = '0';
         }
@@ -2853,9 +2854,11 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!btn) return;
         
         if (count > 0) {
-            btn.style.display = 'inline-flex';
+            btn.classList.remove('d-none');
+            btn.classList.add('d-inline-flex');
         } else {
-            btn.style.display = 'none';
+            btn.classList.remove('d-inline-flex');
+            btn.classList.add('d-none');
         }
         
         const master = document.getElementById('masterBackupCheckbox');
