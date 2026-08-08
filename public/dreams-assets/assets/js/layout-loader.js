@@ -1949,8 +1949,6 @@
         
         // If Shift key is pressed and we have a previously clicked checkbox in the same table
         if (e.shiftKey && lastClickedCheckbox && lastClickedCheckbox.closest('table') === table) {
-            e.preventDefault();
-            
             const checkboxes = Array.from(table.querySelectorAll('tbody input[type="checkbox"]'));
             const startIdx = checkboxes.indexOf(lastClickedCheckbox);
             const endIdx = checkboxes.indexOf(checkbox);
@@ -1962,16 +1960,15 @@
                 // Select all checkboxes in range
                 for (let i = start; i <= end; i++) {
                     const cb = checkboxes[i];
-                    if (!cb.checked) {
-                        cb.checked = true;
-                        cb.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                checkbox.focus();
             }
-        } else {
-            lastClickedCheckbox = checkbox;
         }
-    }, true); // Use capture phase to intercept checks before other handlers
+        
+        lastClickedCheckbox = checkbox;
+    });
     
     // Listen for keydown event on document
     document.addEventListener('keydown', function(e) {
