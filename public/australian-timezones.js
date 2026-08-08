@@ -1481,38 +1481,19 @@
 
     // Global Actions handlers
     async function startGlobalManualBackup() {
-        if (typeof Swal === 'undefined') {
-            alert('Creating backup... Connection established.');
-            try {
-                const res = await fetch('/api/backup/start', { method: 'POST' });
-                if (res.ok) alert('Backup initialized successfully.');
-            } catch(e) { alert('Backup initiation failed.'); }
-            return;
+        if (typeof window.startManualBackup === 'function') {
+            return window.startManualBackup();
         }
         try {
             const res = await fetch('/api/backup/start', { method: 'POST' });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to start backup');
-            Swal.fire({
-                title: 'Creating Backup...',
-                html: `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Compressing system files... Please wait.</div>
-                    <div style="font-weight:700; font-size:16px; color:var(--text-dark); margin-bottom:8px;" id="backup-text">0%</div>
-                    <div style="width:100%; background:#e2e8f0; border-radius:10px; height:12px; overflow:hidden;"><div id="backup-pb" style="width:0%; background:#10b981; height:100%; transition:width 0.3s ease;"></div></div>`,
-                allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false,
-                didOpen: () => {
-                    const pb = document.getElementById('backup-pb'), pbt = document.getElementById('backup-text');
-                    const iv = setInterval(async () => {
-                        try {
-                            const s = await (await fetch('/api/backup/status')).json();
-                            pb.style.width = s.progress + '%'; pbt.innerText = s.progress + '%';
-                            if (s.error) { clearInterval(iv); Swal.fire('Error', s.error, 'error'); }
-                            else if (!s.isRunning && s.progress === 100) { clearInterval(iv); Swal.fire('Success!', 'Backup completed!', 'success').then(() => { window.location.reload(); }); }
-                            else if (!s.isRunning && s.progress !== 100) { clearInterval(iv); Swal.fire('Warning', 'Backup stopped unexpectedly.', 'warning'); }
-                        } catch(e) { clearInterval(iv); Swal.fire('Error', 'Failed to get backup status.', 'error'); }
-                    }, 500);
-                }
-            });
-        } catch(e) { Swal.fire('Error', e.message, 'error'); }
+            if (typeof window.showToast === 'function') {
+                window.showToast('Backup process started in background.', 'info');
+            }
+        } catch(e) {
+            if (typeof window.showToast === 'function') window.showToast(e.message, 'error');
+        }
     }
 
     async function triggerGlobalDeployment() {
