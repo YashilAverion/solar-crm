@@ -538,90 +538,6 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="content-area">
-        <div class="admin-tab-bar">
-            <button class="tab-chip active-chip" id="tab-users-list" onclick="switchAdminSection('users-list')"><i class="ti ti-users"></i> USER ACCOUNTS LIST</button>
-            <button class="tab-chip" id="tab-voip-analytics" onclick="switchAdminSection('voip-analytics')"><i class="ti ti-phone-call"></i> VOIP ANALYTICS & RECORDINGS</button>
-            <button class="tab-chip" id="tab-telephony-sandbox" onclick="switchAdminSection('telephony-sandbox')"><i class="ti ti-test-pipe"></i> TELEPHONY SANDBOX & AUDITS</button>
-            <button class="tab-chip" id="tab-pylon-config" onclick="switchAdminSection('pylon-config')"><i class="ti ti-sun"></i> PYLON SOLAR INTEGRATION</button>
-        </div>
-
-        <div id="section-voip-analytics" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
-            <!-- Metrics Cards Panel -->
-            <div class="row g-3 mb-3 flex-shrink-0">
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card flex-fill mb-0">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fs-12 text-muted fw-semibold uppercase">Total Calls Logged</span>
-                                <span class="summary-card-icon bg-icon-primary"><i class="ti ti-phone-call"></i></span>
-                            </div>
-                            <h3 class="mb-1" id="voip-metric-total">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card flex-fill mb-0">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fs-12 text-muted fw-semibold uppercase">Incoming Calls</span>
-                                <span class="summary-card-icon bg-icon-success"><i class="ti ti-phone-incoming"></i></span>
-                            </div>
-                            <h3 class="mb-1 text-success" id="voip-metric-incoming">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card flex-fill mb-0">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fs-12 text-muted fw-semibold uppercase">Outgoing Calls</span>
-                                <span class="summary-card-icon bg-icon-primary" style="background-color: #1d4ed8 !important;"><i class="ti ti-phone-outgoing"></i></span>
-                            </div>
-                            <h3 class="mb-1" style="color: #1d4ed8;" id="voip-metric-outgoing">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card flex-fill mb-0">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fs-12 text-muted fw-semibold uppercase">Avg Call Duration</span>
-                                <span class="summary-card-icon bg-icon-warning"><i class="ti ti-clock"></i></span>
-                            </div>
-                            <h3 class="mb-1 text-warning" id="voip-metric-duration">0s</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Call Log Table Wrapper -->
-            <div class="card flex-fill mb-0" style="display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title"><i class="ti ti-phone-call"></i> VoIP Call Logs & Transcripts Database</h4>
-                    <button type="button" onclick="loadVoipAnalytics()" class="btn-action-outline"><i class="ti ti-refresh"></i> Refresh Logs</button>
-                </div>
-                <div class="card-body p-0 d-flex flex-column" style="flex: 1; min-height: 0;">
-                    <div class="table-responsive" style="flex: 1; min-height: 0;">
-                        <table class="table table-hover table-nowrap table-voip mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="padding:10px 14px; text-align:left;">Timestamp</th>
-                                    <th style="padding:10px 14px; text-align:left;">CRM User</th>
-                                    <th style="padding:10px 14px; text-align:left;">Caller / Destination</th>
-                                    <th style="padding:10px 14px; text-align:center;">Direction</th>
-                                    <th style="padding:10px 14px; text-align:center;">Duration</th>
-                                    <th style="padding:10px 14px; text-align:center;">Audio Recording</th>
-                                    <th style="padding:10px 14px; text-align:center;">AI Transcript</th>
-                                </tr>
-                            </thead>
-                            <tbody id="voipLogsBody">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- System Storage & Backups Tab Content -->
         <div id="section-storage-backups" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
@@ -715,141 +631,6 @@ document.addEventListener("DOMContentLoaded", function() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Telephony Sandbox & Audits Tab Content -->
-        <div id="section-telephony-sandbox" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0; gap: 16px;">
-            <div class="row g-3" style="flex: 1; min-height: 0; overflow: auto; padding: 10px 0;">
-                
-                <!-- Left Panel: Test & Simulation Cockpit -->
-                <div class="col-xl-4 d-flex">
-                    <div class="card flex-fill mb-0" style="display: flex; flex-direction: column;">
-                        <div class="card-header">
-                            <h4 class="card-title"><i class="ti ti-test-pipe"></i> Simulation Cockpit</h4>
-                        </div>
-                        <div class="card-body d-flex flex-column" style="gap: 12px;">
-                            <form onsubmit="runTelephonySimulation(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">SELECT TARGET LEAD</label>
-                                    <select id="simTargetLeadSelect" class="form-select" required style="height: 32px; font-size: 12px; outline: none;">
-                                        <option value="">-- Load Active Leads --</option>
-                                    </select>
-                                </div>
-                                
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">SIMULATION TRANSCRIPT TEXT</label>
-                                    <textarea id="simTranscriptInput" class="form-control" placeholder="Enter simple Australian English transcript fragment (e.g. tin roof, double storey home, three phase grid, inside the garage)..." required style="height: 100px; font-size: 12px; outline: none; font-family: inherit; resize: none;"></textarea>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary btn-save" id="btnRunSim" style="margin-top: 4px; height: 32px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
-                                    <i class="ti ti-player-play"></i> Execute Simulation
-                                </button>
-                            </form>
-                            
-                            <!-- Result Display -->
-                            <div id="simResultBlock" style="display: none; background: #f8fafc; border: 1.5px dashed var(--border); border-radius: 8px; padding: 12px; font-size: 11px; flex-direction: column; gap: 8px;">
-                                <div style="font-weight: 800; color: var(--primary); text-transform: uppercase;">Simulation Outcome</div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="font-weight: 600; color: var(--text-muted);">Session ID:</span>
-                                    <span id="simSessionIdVal" style="font-family: monospace; font-weight: 700;">-</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="font-weight: 600; color: var(--text-muted);">Latency:</span>
-                                    <span id="simLatencyVal" style="color: #10b981; font-weight: 700;">0 ms</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px;">
-                                    <span style="font-weight: 700; color: var(--text-dark);">Matched Specs:</span>
-                                    <pre id="simMatchedSpecsVal" style="margin: 0; background: #fff; border: 1px solid var(--border); padding: 6px; border-radius: 4px; font-family: monospace; overflow-x: auto; max-height: 80px;"></pre>
-                                </div>
-                            </div>
-
-                            <!-- Force Sync trigger -->
-                            <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
-                                <h4 style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin: 0; text-transform: uppercase;">🔄 Force Sync Evaluator</h4>
-                                <button type="button" onclick="triggerForceSyncEvaluator()" class="btn-action-outline" style="width: 100%; height: 32px; font-size: 12px; margin: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                                    <i class="ti ti-refresh"></i> Trigger Sync Evaluation
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Right Panel: Telemetry Historical Logs -->
-                <div class="col-xl-8 d-flex">
-                    <div class="card flex-fill mb-0" style="display: flex; flex-direction: column;">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h4 class="card-title"><i class="ti ti-history"></i> Historical Log Sheet</h4>
-                            <div class="d-flex gap-2">
-                                <button type="button" onclick="exportTelephonyReports()" class="btn-action-outline btn-action-outline-success" title="Download CSV Report">
-                                    <i class="ti ti-download"></i> Export Report
-                                </button>
-                                <button type="button" onclick="loadTelephonyAuditLogs()" class="btn-action-outline" title="Refresh list">
-                                    <i class="ti ti-refresh"></i> Refresh
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body p-0 d-flex flex-column" style="flex: 1; min-height: 0;">
-                            <div class="table-responsive" style="flex: 1; min-height: 0;">
-                                <table class="table table-hover table-nowrap table-telemetry mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; font-weight: 700;">Session ID</th>
-                                            <th style="padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; font-weight: 700;">Lead Info</th>
-                                            <th style="padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; font-weight: 700;">Representative</th>
-                                            <th style="padding: 10px 12px; text-align: right; font-size: 11px; text-transform: uppercase; font-weight: 700;">Latency</th>
-                                            <th style="padding: 10px 12px; text-align: center; font-size: 11px; text-transform: uppercase; font-weight: 700;">Probability</th>
-                                            <th style="padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; font-weight: 700;">Logged At</th>
-                                            <th style="padding: 10px 12px; text-align: center; font-size: 11px; text-transform: uppercase; font-weight: 700;">Transcript</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="telephonyAuditLogsBody">
-                                        <tr>
-                                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No historical logs found.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pylon Solar Integration Settings Tab Content -->
-        <div id="section-pylon-config" style="display:none; flex: 1; overflow: hidden; flex-direction: column; padding: 10px 0;">
-            <div class="card flex-fill mb-0" style="max-width: 600px; display: flex; flex-direction: column;">
-                <div class="card-header">
-                    <h4 class="card-title"><i class="ti ti-sun"></i> Pylon Solar Integration Settings</h4>
-                </div>
-                <div class="card-body">
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
-                        Configure the master credentials and API integration values for Pylon. This allows sales staff to use the real Pylon design editor inside the CRM completely login-free.
-                    </p>
-
-                    <form onsubmit="savePylonConfig(event)" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div class="field">
-                            <label for="pylonEmailInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon Account Email</label>
-                            <input type="email" id="pylonEmailInput" class="form-control" placeholder="Enter Pylon Email">
-                        </div>
-
-                        <div class="field">
-                            <label for="pylonPasswordInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon Account Password</label>
-                            <input type="password" id="pylonPasswordInput" class="form-control" placeholder="Enter Pylon Password">
-                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">This is used once in the background by the server to fetch the session cookie.</span>
-                        </div>
-
-                        <div class="field">
-                            <label for="pylonApiKeyInput" style="font-size: 12px; font-weight: 700; color: var(--text-dark);">Pylon API Token (Bearer Key)</label>
-                            <input type="text" id="pylonApiKeyInput" class="form-control" placeholder="Enter Pylon API Token">
-                            <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Used for REST API requests (project creation & sync).</span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-save" style="margin-top: 10px; height: 38px; font-size: 13px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            <i class="ti ti-device-floppy"></i> Save Pylon Configuration
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -1182,63 +963,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 <!-- VERTICAL DIVIDER -->
                 <div style="width: 1px; background: #cbd5e1; align-self: stretch; margin: 0 4px;"></div>
                 
-                <!-- RIGHT COLUMN: VoIP Configuration, Signature & Overrides -->
+                <!-- RIGHT COLUMN: Signature & Overrides -->
                 <div style="flex: 1.1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding-right: 4px;">
                     <!-- Sleek sub-tab navigation -->
                     <div style="display: flex; gap: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 4px; flex-shrink: 0;">
-                        <button type="button" id="tab_user_voip" class="sub-tab-btn active" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid var(--primary); cursor: pointer;" onclick="switchUserModalTab('voip')">VOIP & SIP SETTINGS</button>
-                        <button type="button" id="tab_user_sig" class="sub-tab-btn" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid transparent; cursor: pointer;" onclick="switchUserModalTab('sig')"><i class="ti ti-mail"></i> EMAIL SIGNATURE</button>
+                        <button type="button" id="tab_user_sig" class="sub-tab-btn active" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid var(--primary); cursor: pointer;" onclick="switchUserModalTab('sig')"><i class="ti ti-mail"></i> EMAIL SIGNATURE</button>
                         <button type="button" id="tab_user_perms" class="sub-tab-btn" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 2px solid transparent; cursor: pointer;" onclick="switchUserModalTab('perms')">MODULE ACCESS OVERRIDES</button>
                     </div>
 
-                    <!-- VoIP/SIP Settings Content -->
-                    <div id="user_modal_voip_content" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
-
-                        <!-- ══ VoIP Master Feature Toggle ══ -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #fff7f0 0%, #fff3eb 100%); border: 1.5px solid #e8681e; border-radius: 8px; padding: 10px 14px; flex-shrink: 0; gap: 12px; box-shadow: 0 2px 8px rgba(232,104,30,0.10);">
-                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                <span style="font-size: 12px; font-weight: 800; color: #1c3557; letter-spacing: 0.02em;">Enable VoIP Telephony Integration</span>
-                                <span style="font-size: 10px; color: #64748b; font-weight: 500;">Enables dialing, SMS, call history & the communication cabinet for this user.</span>
-                            </div>
-                            <label class="ios-switch-lg" title="Toggle VoIP Telephony Module">
-                                <input type="checkbox" id="u_is_voip_enabled" onchange="onVoipToggleChange(this.checked)">
-                                <span class="ios-slider-lg"></span>
-                            </label>
-                        </div>
-
-                        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-                            <span>VOIP CONFIGURATION</span>
-                            <button type="button" class="btn-action-outline btn-action-outline-primary" style="height: 20px; font-size: 10px; padding: 0 8px; margin: 0;" onclick="injectDefaultVoipCredentials()"><i class="ti ti-plug"></i> Inject Credentials</button>
-                        </div>
-                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; flex-shrink: 0;">
-                            <div class="field"><label>VOIP EXTENSION</label><input type="text" id="u_voipline_extension" placeholder="e.g. 101"></div>
-                            <div class="field"><label>OUTBOUND LINE ID</label><input type="text" id="u_voipline_outbound_line" placeholder="e.g. line_1234"></div>
-                            <div class="field"><label>WEBHOOK SECRET TOKEN</label><input type="text" id="u_voipline_secret_token" placeholder="Webhook token"></div>
-                            <div class="field"><label>VOIP API KEY</label><input type="text" id="u_voipline_api_key" placeholder="API Key if custom"></div>
-                            <div class="field" style="grid-column: span 2;"><label>VOIP MASTER API KEY</label><input type="text" id="u_voipline_master_key" placeholder="VoIPLine Master Key"></div>
-                            <div class="field" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px;">
-                                <label style="margin: 0; font-weight: 600;">SYNC STATUS:</label>
-                                <span id="voipline_sync_status" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">
-                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span>
-                                    Offline
-                                </span>
-                                <span id="voipline_last_sync_time" style="font-size: 11px; color: var(--text-muted); margin-left: auto;">Last Sync: Never</span>
-                            </div>
-                        </div>
-                        
-                        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #c5d3e8; padding-bottom: 4px; margin-top: 10px; margin-bottom: 4px; flex-shrink: 0;">
-                            <span>WEBRTC SIP CONFIGURATION</span>
-                        </div>
-                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; flex-shrink: 0;">
-                            <div class="field"><label>SIP USERNAME</label><input type="text" id="u_voipline_sip_username" placeholder="e.g. 1001"></div>
-                            <div class="field"><label>SIP PASSWORD</label><input type="password" id="u_voipline_sip_password" placeholder="SIP Secret"></div>
-                            <div class="field"><label>SIP DOMAIN</label><input type="text" id="u_voipline_sip_domain" placeholder="au.voipcloud.online"></div>
-                            <div class="field"><label>WSS URL</label><input type="text" id="u_voipline_wss_url" placeholder="wss://au.voipcloud.online:4443"></div>
-                        </div>
-                    </div>
-
                     <!-- Email Signature Content Tab -->
-                    <div id="user_modal_sig_content" style="display: none; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
+                    <div id="user_modal_sig_content" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #c5d3e8; padding-bottom:4px; flex-shrink:0;">
                             <span style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase;">HTML EMAIL SIGNATURE CONFIG</span>
                             <div style="display:flex; gap:6px;">
@@ -1363,42 +1097,23 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         const secUsers = document.getElementById('section-users-list');
-        const secVoip = document.getElementById('section-voip-analytics');
         const secStorage = document.getElementById('section-storage-backups');
-        const secTelephony = document.getElementById('section-telephony-sandbox');
-        const secPylon = document.getElementById('section-pylon-config');
         const secRoles = document.getElementById('section-roles-permissions');
         const secDepts = document.getElementById('section-departments');
 
         if (secUsers) secUsers.style.display = target === 'users-list' ? 'flex' : 'none';
-        if (secVoip) secVoip.style.display = target === 'voip-analytics' ? 'flex' : 'none';
         if (secStorage) secStorage.style.display = target === 'storage-backups' ? 'flex' : 'none';
-        if (secTelephony) secTelephony.style.display = target === 'telephony-sandbox' ? 'flex' : 'none';
-        if (secPylon) secPylon.style.display = target === 'pylon-config' ? 'flex' : 'none';
         if (secRoles) secRoles.style.display = target === 'roles-permissions' ? 'flex' : 'none';
         if (secDepts) secDepts.style.display = target === 'departments' ? 'flex' : 'none';
         
-        const tabUsers = document.getElementById('tab-users-list');
-        const tabVoip = document.getElementById('tab-voip-analytics');
-        const tabTelephony = document.getElementById('tab-telephony-sandbox');
-        const tabPylon = document.getElementById('tab-pylon-config');
-
-        if (tabUsers) tabUsers.classList.toggle('active-chip', target === 'users-list');
-        if (tabVoip) tabVoip.classList.toggle('active-chip', target === 'voip-analytics');
-        if (tabTelephony) tabTelephony.classList.toggle('active-chip', target === 'telephony-sandbox');
-        if (tabPylon) tabPylon.classList.toggle('active-chip', target === 'pylon-config');
-
-        // Hide/show tab bar, stats row, and top actions container for clean layout
-        const tabBar = document.querySelector('.admin-tab-bar');
+        // Hide/show stats row and top actions container for clean layout
         const statsRow = document.querySelector('.stats-row');
         const pageActionsContainer = document.getElementById('pageActionButtonsContainer');
         
         if (target === 'roles-permissions' || target === 'departments' || target === 'storage-backups') {
-            if (tabBar) tabBar.style.setProperty('display', 'none', 'important');
             if (statsRow) statsRow.style.setProperty('display', 'none', 'important');
             if (pageActionsContainer) pageActionsContainer.style.setProperty('display', 'none', 'important');
         } else {
-            if (tabBar) tabBar.style.removeProperty('display');
             if (statsRow) statsRow.style.removeProperty('display');
             if (pageActionsContainer) pageActionsContainer.style.removeProperty('display');
         }
@@ -1434,7 +1149,6 @@ document.addEventListener("DOMContentLoaded", function() {
             
             fetchLastBackup();
             loadStorageStatsAndBackups();
-            loadSpaceAudit();
         } else {
             document.title = 'User Management - Solar CRM';
             if (pageTitleEl) pageTitleEl.innerText = 'User Management';
@@ -1445,167 +1159,6 @@ document.addEventListener("DOMContentLoaded", function() {
             if (target === 'users-list') {
                 loadUsers();
             }
-        }
-        
-        if (target === 'voip-analytics') {
-            loadVoipAnalytics();
-        } else if (target === 'telephony-sandbox') {
-            loadTelephonyAuditLogs();
-        } else if (target === 'pylon-config') {
-            loadPylonConfig();
-        }
-    }
-
-    async function loadRateLimits() {
-        const whiteBody = document.getElementById('whitelistedIpsBody');
-        const blockedBody = document.getElementById('blockedAttemptsBody');
-
-        whiteBody.innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:var(--text-muted); font-size:12px;">Loading whitelisted IPs...</td></tr>';
-        blockedBody.innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:var(--text-muted); font-size:12px;">Loading attempts...</td></tr>';
-
-        // Fetch admin's own current WAN IP from backend to display as helper banner
-        try {
-            const myIpRes = await fetch('/api/my-ip');
-            if (myIpRes.ok) {
-                const { ip: myIp } = await myIpRes.json();
-                const banner = document.getElementById('myCurrentIpBanner');
-                if (banner && myIp) {
-                    banner.innerHTML = `Your current WAN IP: <code style="font-family:monospace; font-weight:700; color:#1c3557; background:#e0f2fe; padding:1px 6px; border-radius:4px;">${myIp}</code>
-                        <button type="button" onclick="whitelistDirect('${myIp}')" class="btn-action-outline btn-action-outline-success" style="margin-left:8px; height:20px; padding:0 8px; font-size:10px;"><i class="ti ti-shield-check"></i> Whitelist My IP</button>`;
-                    banner.style.display = 'flex';
-                }
-            }
-        } catch(e) { /* non-critical */ }
-
-        try {
-            const res = await fetch('/admin/rate-limits');
-            if (res.ok) {
-                const data = await res.json();
-
-                // ── Render Whitelisted IPs ───────────────────────────────────
-                if (data.whitelisted.length === 0) {
-                    whiteBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No whitelisted IPs.</td></tr>';
-                } else {
-                    whiteBody.innerHTML = data.whitelisted.map(w => {
-                        const fmt = new Date(w.added_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
-                        return `<tr>
-                            <td style="padding:6px 10px;"><code style="font-family:monospace; font-size:12px; font-weight:700; background:#f0f9ff; color:#0369a1; padding:2px 6px; border-radius:4px; border:1px solid #bae6fd;">${w.ip}</code></td>
-                            <td style="padding:6px 10px; font-size:12px; color:var(--text-muted);">${w.added_by}</td>
-                            <td style="padding:6px 10px; font-size:11px; color:var(--text-muted);">${fmt}</td>
-                            <td style="padding:6px 10px; text-align:center;"><button type="button" class="act-btn act-btn-del" title="Remove Whitelist" onclick="removeWhitelist('${w.ip}')"><i class="ti ti-trash"></i></button></td>
-                        </tr>`;
-                    }).join('');
-                }
-
-                // ── Render Blocked Attempts ──────────────────────────────────
-                if (data.attempts.length === 0) {
-                    blockedBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No rate-limited attempts logged.</td></tr>';
-                } else {
-                    blockedBody.innerHTML = data.attempts.map(a => {
-                        const fmt = new Date(a.attempted_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
-                        const isBlocked = a.was_blocked === 1;
-                        return `<tr style="${isBlocked ? 'background:#fff5f5;' : ''}">
-                            <td style="padding:6px 10px;">
-                                <code style="font-family:monospace; font-size:12px; font-weight:700; background:${isBlocked ? '#fee2e2' : '#f0f9ff'}; color:${isBlocked ? '#b91c1c' : '#0369a1'}; padding:2px 6px; border-radius:4px; border:1px solid ${isBlocked ? '#fecaca' : '#bae6fd'};">${a.ip}</code>
-                                ${isBlocked ? '<span style="font-size:9px; background:#ef4444; color:#fff; border-radius:3px; padding:1px 4px; margin-left:4px; font-weight:700;">BLOCKED</span>' : ''}
-                            </td>
-                            <td style="padding:6px 10px;"><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">${a.username || '-'}</span></td>
-                            <td style="padding:6px 10px; font-size:11px; color:var(--text-muted);">${fmt}</td>
-                            <td style="padding:6px 10px;">
-                                <div style="display:flex; gap:4px; justify-content:center;">
-                                    <button type="button" class="btn-action-outline" title="Unlock IP (Reset Rate Limit)" onclick="resetRateLimit('${a.ip}')" style="height:22px; padding:0 8px; font-size:10px;"><i class="ti ti-key"></i> Unlock</button>
-                                    <button type="button" class="btn-action-outline btn-action-outline-primary" style="height:22px; padding:0 8px; font-size:10px;" title="Whitelist IP" onclick="whitelistDirect('${a.ip}')"><i class="ti ti-shield"></i> Whitelist</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                    }).join('');
-                }
-            } else {
-                throw new Error('Failed to fetch');
-            }
-        } catch(e) {
-            whiteBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:#b93a20; font-size:12px;">Error loading whitelisted IPs.</td></tr>';
-            blockedBody.innerHTML = '<tr><td colspan="4" style="padding:14px; text-align:center; color:#b93a20; font-size:12px;">Error loading attempts.</td></tr>';
-        }
-    }
-
-    async function loadGlobalOfficeIp() {
-        try {
-            const res = await fetch('/api/configurations');
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.global_office_ip !== undefined) {
-                    document.getElementById('globalOfficeIpInput').value = data.global_office_ip;
-                }
-            }
-        } catch(e) {
-            console.error('Failed to load global office IP:', e);
-        }
-    }
-
-    async function loadPylonConfig() {
-        try {
-            const res = await fetch('/api/configurations');
-            if (res.ok) {
-                const data = await res.json();
-                if (data) {
-                    if (data.pylon_email !== undefined) {
-                        document.getElementById('pylonEmailInput').value = data.pylon_email;
-                    }
-                    if (data.pylon_password !== undefined) {
-                        document.getElementById('pylonPasswordInput').value = data.pylon_password;
-                    }
-                    if (data.pylon_api_key !== undefined) {
-                        document.getElementById('pylonApiKeyInput').value = data.pylon_api_key;
-                    }
-                }
-            }
-        } catch(e) {
-            console.error('Failed to load Pylon configuration:', e);
-        }
-    }
-
-    async function savePylonConfig(event) {
-        event.preventDefault();
-        const email = document.getElementById('pylonEmailInput').value.trim();
-        const password = document.getElementById('pylonPasswordInput').value.trim();
-        const apiKey = document.getElementById('pylonApiKeyInput').value.trim();
-
-        try {
-            // Save email
-            const emailRes = await fetch('/api/configurations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ config_key: 'pylon_email', config_value: email })
-            });
-
-            // Save password
-            const pwdRes = await fetch('/api/configurations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ config_key: 'pylon_password', config_value: password })
-            });
-
-            // Save api key
-            const apiRes = await fetch('/api/configurations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ config_key: 'pylon_api_key', config_value: apiKey })
-            });
-
-            if (emailRes.ok && pwdRes.ok && apiRes.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Settings Saved',
-                    text: 'Pylon Solar configurations saved successfully! Changes are active.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            } else {
-                Swal.fire('Error', 'Failed to save Pylon settings.', 'error');
-            }
-        } catch(e) {
-            Swal.fire('Error', e.message, 'error');
         }
     }
 
@@ -1905,24 +1458,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         document.getElementById('u_allowed_specific_ip').value = '';
         document.getElementById('u_is_bypass_ip_restriction').checked = false;
-        document.getElementById('u_is_voip_enabled').checked = false;
-        document.getElementById('u_voipline_sip_username').value = '';
-        document.getElementById('u_voipline_sip_password').value = '';
-        document.getElementById('u_voipline_sip_domain').value = 'au.voipcloud.online';
-        document.getElementById('u_voipline_wss_url').value = '';
         
         document.getElementById('u_password').required = true;
         document.getElementById('u_pass_label').innerText = 'PASSWORD';
         document.getElementById('u_pass_label').classList.add('required');
         
-        switchUserModalTab('voip');
+        switchUserModalTab('sig');
         document.getElementById('userPermissionsOverrideMatrix').innerHTML = 'Select a role to see permission overrides.';
-        
-        const statusEl = document.getElementById('voipline_sync_status');
-        const lastSyncEl = document.getElementById('voipline_last_sync_time');
-        if (statusEl) {
-            _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
-        }
         
         document.getElementById('userModal').style.display = 'flex';
     }
@@ -1949,85 +1491,45 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('u_can_edit').value = u.can_edit || 'No';
         document.getElementById('u_can_delete').value = u.can_delete || 'No';
         document.getElementById('u_status').value = u.status || 'Active';
-        document.getElementById('u_voipline_extension').value = u.voipline_extension || '';
-        document.getElementById('u_voipline_outbound_line').value = u.voipline_outbound_line || '';
-        document.getElementById('u_voipline_secret_token').value = u.voipline_secret_token || '';
-        document.getElementById('u_voipline_api_key').value = u.voipline_api_key || '';
-        document.getElementById('u_voipline_master_key').value = u.voipline_master_key || '';
         document.getElementById('u_password').value = '';
         
         document.getElementById('u_allowed_specific_ip').value = u.allowed_specific_ip || '';
         document.getElementById('u_is_bypass_ip_restriction').checked = u.is_bypass_ip_restriction === 1;
-        document.getElementById('u_is_voip_enabled').checked = u.is_voip_enabled === 1;
-
-        document.getElementById('u_voipline_sip_username').value = u.voipline_sip_username || '';
-        document.getElementById('u_voipline_sip_password').value = u.voipline_sip_password || '';
-        document.getElementById('u_voipline_sip_domain').value = u.voipline_sip_domain || 'au.voipcloud.online';
-        document.getElementById('u_voipline_wss_url').value = u.voipline_wss_url || '';
-        
-        const statusEl = document.getElementById('voipline_sync_status');
-        const lastSyncEl = document.getElementById('voipline_last_sync_time');
-        if (statusEl) {
-            const voipEnabled = u.is_voip_enabled === 1;
-            const syncStatus = u.voipline_sync_status || 'Offline';
-            const lastSync = u.voipline_last_sync ? new Date(u.voipline_last_sync).toLocaleString() : 'Never';
-            _renderVoipSyncBadge(statusEl, lastSyncEl, voipEnabled, syncStatus, lastSync);
-            
-            if (!voipEnabled) {
-                if (voipStatusInterval) {
-                    clearInterval(voipStatusInterval);
-                    voipStatusInterval = null;
-                }
-            } else {
-                if (!voipStatusInterval) {
-                    voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
-                }
-            }
-        }
         
         document.getElementById('u_password').required = false;
         document.getElementById('u_pass_label').innerText = 'PASSWORD (LEAVE BLANK TO KEEP CURRENT)';
         document.getElementById('u_pass_label').classList.remove('required');
         
-        switchUserModalTab('voip');
+        switchUserModalTab('sig');
         updateModalPermissionsTree(u.role, u.id);
         
         document.getElementById('userModal').style.display = 'flex';
     }
 
-    function _renderVoipSyncBadge(statusEl, lastSyncEl, voipEnabled, syncStatus, lastSync) {
-        if (!voipEnabled) {
-            statusEl.style.background = '#f1f5f9';
-            statusEl.style.color = '#94a3b8';
-            statusEl.style.borderColor = '#e2e8f0';
-            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #94a3b8;" id="voipline_status_dot"></span> Disabled (Offline)`;
-            lastSyncEl.innerText = 'Last Sync: N/A';
-        } else {
-            const isOnline = syncStatus === 'Online';
-            statusEl.style.background = isOnline ? '#dcfce7' : '#fee2e2';
-            statusEl.style.color = isOnline ? '#15803d' : '#ef4444';
-            statusEl.style.borderColor = isOnline ? '#bbf7d0' : '#fecaca';
-            statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${isOnline ? '#22c55e' : '#ef4444'};" id="voipline_status_dot"></span> ${isOnline ? 'Active (Online)' : 'Offline'}`;
-            lastSyncEl.innerText = isOnline ? `Last Sync: ${lastSync}` : 'Last Sync: Never';
-        }
-    }
+    function switchUserModalTab(tabName) {
+        const tabSig = document.getElementById('tab_user_sig');
+        const tabPerms = document.getElementById('tab_user_perms');
+        const sigContent = document.getElementById('user_modal_sig_content');
+        const permsContent = document.getElementById('user_modal_perms_content');
+        
+        [tabSig, tabPerms].forEach(t => {
+            if (t) {
+                t.classList.remove('active');
+                t.style.color = '#64748b';
+                t.style.borderBottom = '2px solid transparent';
+            }
+        });
+        [sigContent, permsContent].forEach(c => {
+            if (c) c.style.display = 'none';
+        });
 
-    function onVoipToggleChange(isChecked) {
-        const statusEl = document.getElementById('voipline_sync_status');
-        const lastSyncEl = document.getElementById('voipline_last_sync_time');
-        if (statusEl && lastSyncEl) {
-            _renderVoipSyncBadge(statusEl, lastSyncEl, isChecked, 'Offline', 'Never');
-        }
-        if (!isChecked) {
-            if (voipStatusInterval) {
-                clearInterval(voipStatusInterval);
-                voipStatusInterval = null;
-            }
+        if (tabName === 'sig') {
+            if (tabSig) { tabSig.classList.add('active'); tabSig.style.color = 'var(--primary)'; tabSig.style.borderBottom = '2px solid var(--primary)'; }
+            if (sigContent) sigContent.style.display = 'flex';
+            updateSigPreview();
         } else {
-            if (!voipStatusInterval) {
-                checkVoIPLineStatus();
-                voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
-            }
+            if (tabPerms) { tabPerms.classList.add('active'); tabPerms.style.color = 'var(--primary)'; tabPerms.style.borderBottom = '2px solid var(--primary)'; }
+            if (permsContent) permsContent.style.display = 'flex';
         }
     }
 
@@ -2378,18 +1880,8 @@ document.addEventListener("DOMContentLoaded", function() {
             can_edit: document.getElementById('u_can_edit').value,
             can_delete: document.getElementById('u_can_delete').value,
             status: document.getElementById('u_status').value,
-            voipline_extension: document.getElementById('u_voipline_extension').value.trim(),
-            voipline_outbound_line: document.getElementById('u_voipline_outbound_line').value.trim(),
-            voipline_secret_token: document.getElementById('u_voipline_secret_token').value.trim(),
-            voipline_api_key: document.getElementById('u_voipline_api_key').value.trim(),
-            voipline_master_key: document.getElementById('u_voipline_master_key').value.trim(),
             allowed_specific_ip: document.getElementById('u_allowed_specific_ip').value.trim(),
             is_bypass_ip_restriction: document.getElementById('u_is_bypass_ip_restriction').checked ? 1 : 0,
-            is_voip_enabled: document.getElementById('u_is_voip_enabled').checked ? 1 : 0,
-            voipline_sip_username: document.getElementById('u_voipline_sip_username').value.trim(),
-            voipline_sip_password: document.getElementById('u_voipline_sip_password').value,
-            voipline_sip_domain: document.getElementById('u_voipline_sip_domain').value.trim(),
-            voipline_wss_url: document.getElementById('u_voipline_wss_url').value.trim(),
             custom_permissions: customPerms
         };
 
@@ -3066,79 +2558,6 @@ Initializing deployment stream...
         });
     }
 
-    function injectDefaultVoipCredentials() {
-        document.getElementById('u_voipline_master_key').value = 'xCRAei2xvzl64n4WzeTlfsNFJlnVXNJDasHeYmK6CMtBTxNFkqJXnPYDNATGP6M2';
-        
-        // Generate a secure 16-character random hex string for webhook secret token
-        const chars = '0123456789abcdef';
-        let token = '';
-        for (let i = 0; i < 16; i++) {
-            token += chars[Math.floor(Math.random() * chars.length)];
-        }
-        document.getElementById('u_voipline_secret_token').value = token;
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'Credentials Injected',
-            text: 'VoIPLine Master Key and a new Webhook Secret Token have been injected successfully.',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    }
-
-    async function checkVoIPLineStatus() {
-        try {
-            const modal = document.getElementById('userModal');
-            const isModalOpen = modal && modal.style.display === 'flex';
-            const editUserId = document.getElementById('edit_user_id')?.value;
-            const isVoipEnabledCheckbox = document.getElementById('u_is_voip_enabled');
-            
-            // If modal is open and VoIP toggle is unchecked, force Disabled (Offline) badge and skip polling
-            if (isModalOpen && isVoipEnabledCheckbox && !isVoipEnabledCheckbox.checked) {
-                const statusEl = document.getElementById('voipline_sync_status');
-                const lastSyncEl = document.getElementById('voipline_last_sync_time');
-                if (statusEl && lastSyncEl) {
-                    _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
-                }
-                return;
-            }
-
-            let url = '/api/voipline/status';
-            if (isModalOpen && editUserId) {
-                url += `?userId=${editUserId}`;
-            }
-
-            const res = await fetch(url);
-            if (res.ok) {
-                const data = await res.json();
-                const statusEl = document.getElementById('voipline_sync_status');
-                const lastSyncEl = document.getElementById('voipline_last_sync_time');
-                if (!statusEl) return;
-                
-                if (data.online) {
-                    statusEl.style.background = '#dcfce7';
-                    statusEl.style.color = '#15803d';
-                    statusEl.style.borderColor = '#bbf7d0';
-                    statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #22c55e;" id="voipline_status_dot"></span> Active (Online)`;
-                    lastSyncEl.innerText = data.lastSync ? `Last Sync: ${new Date(data.lastSync).toLocaleTimeString()}` : 'Last Sync: Just now';
-                } else {
-                    const isVoipActive = isModalOpen ? (isVoipEnabledCheckbox ? isVoipEnabledCheckbox.checked : true) : true;
-                    if (!isVoipActive) {
-                        _renderVoipSyncBadge(statusEl, lastSyncEl, false, 'Offline', 'Never');
-                    } else {
-                        statusEl.style.background = '#fee2e2';
-                        statusEl.style.color = '#b91c1c';
-                        statusEl.style.borderColor = '#fecaca';
-                        statusEl.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444;" id="voipline_status_dot"></span> Offline`;
-                        lastSyncEl.innerText = 'Last Sync: Never';
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Failed to check VoIPLine sync status:', e);
-        }
-    }
-
     window.onload = () => { 
         loadUsers(); 
         loadAndPopulateRoles();
@@ -3146,8 +2565,6 @@ Initializing deployment stream...
         populateUserDepartmentDropdown();
         fetchLastBackup(); 
         loadPermissions(); 
-        checkVoIPLineStatus();
-        voipStatusInterval = setInterval(checkVoIPLineStatus, 10000);
 
         // Storage Background Sync Interval (Every 2 hours - 7200000 ms)
         setInterval(() => {
@@ -3157,333 +2574,7 @@ Initializing deployment stream...
 
         const pwdInput = document.getElementById('u_password');
         if (pwdInput) pwdInput.addEventListener('input', updatePasswordStrength);
-
-        // Auto-refresh VoIP Analytics dashboard on real-time log event
-        if (window.voipSocket) {
-            window.voipSocket.on('voipline-call-log-added', () => {
-                const currentTab = document.querySelector('.tab-chip.active-chip');
-                if (currentTab && currentTab.id === 'tab-voip-analytics') {
-                    loadVoipAnalytics();
-                }
-            });
-        }
     };
-
-    async function loadVoipAnalytics() {
-        const totalEl = document.getElementById('voip-metric-total');
-        const incomingEl = document.getElementById('voip-metric-incoming');
-        const outgoingEl = document.getElementById('voip-metric-outgoing');
-        const durationEl = document.getElementById('voip-metric-duration');
-        const logsBody = document.getElementById('voipLogsBody');
-        
-        if (!logsBody) return;
-        
-        logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:var(--text-muted);">Loading VoIP Call Logs...</td></tr>';
-        
-        try {
-            const res = await fetch('/admin/voip/logs');
-            if (res.ok) {
-                const data = await res.json();
-                
-                // Set metrics
-                totalEl.innerText = data.metrics.total;
-                incomingEl.innerText = data.metrics.incoming;
-                outgoingEl.innerText = data.metrics.outgoing;
-                
-                // Format duration
-                const d = data.metrics.avgDuration;
-                if (d >= 60) {
-                    durationEl.innerText = `${Math.floor(d / 60)}m ${d % 60}s`;
-                } else {
-                    durationEl.innerText = `${d}s`;
-                }
-                
-                // Render logs list
-                if (!data.logs || data.logs.length === 0) {
-                    logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:var(--text-muted);">No calls logged yet.</td></tr>';
-                } else {
-                    logsBody.innerHTML = data.logs.map(log => {
-                        const date = new Date(log.timestamp);
-                        const dateStr = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
-                        const userStr = log.full_name ? `${log.full_name} (${log.username})` : 'System / Unmapped';
-                        const projectLink = log.project_number ? `<a href="/project_profile.html?project=${encodeURIComponent(log.project_number)}" style="color:var(--primary); font-weight:600;">${log.project_number}</a>` : '<span style="color:#94a3b8;">Unlinked</span>';
-                        
-                        const directionBadge = log.direction === 'incoming' 
-                            ? `<span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">INCOMING</span>`
-                            : `<span style="background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">OUTGOING</span>`;
-                        
-                        const durationStr = log.duration >= 60 
-                            ? `${Math.floor(log.duration / 60)}m ${log.duration % 60}s`
-                            : `${log.duration}s`;
-                        
-                        const audioPlayer = log.recording_url 
-                            ? `<audio src="${log.recording_url}" controls style="height:24px; max-width:180px; outline:none;"></audio>` 
-                            : `<span style="color:#94a3b8; font-style:italic;">No recording</span>`;
-                        
-                        const transcriptBtn = log.transcript_text 
-                            ? `<button type="button" class="btn-action-outline btn-action-outline-primary" style="height:22px; padding:0 8px; font-size:11px; margin:0;" onclick="showVoipTranscript('${encodeURIComponent(log.transcript_text)}', '${log.project_number || ''}', '${log.caller_number || ''}')"><i class="ti ti-file-text"></i> View Transcript</button>`
-                            : `<span style="color:#94a3b8; font-style:italic;">No text</span>`;
-                        
-                        return `
-                            <tr style="border-bottom:1px solid var(--border);">
-                                <td style="padding:10px 14px; color:var(--text-dark);">${dateStr}</td>
-                                <td style="padding:10px 14px; color:var(--text-dark); font-weight:500;">${userStr}</td>
-                                <td style="padding:10px 14px; color:var(--text-dark);">${log.caller_number} (${projectLink})</td>
-                                <td style="padding:10px 14px; text-align:center;">${directionBadge}</td>
-                                <td style="padding:10px 14px; text-align:center; color:var(--text-dark); font-weight:600;">${durationStr}</td>
-                                <td style="padding:10px 14px; text-align:center;">${audioPlayer}</td>
-                                <td style="padding:10px 14px; text-align:center;">${transcriptBtn}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-            } else {
-                logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:#b93a20;">Failed to fetch call logs from API.</td></tr>';
-            }
-        } catch (e) {
-            console.error('Error fetching VoIP analytics:', e);
-            logsBody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:#b93a20;">Error loading call logs dashboard.</td></tr>';
-        }
-    }
-
-    window.showVoipTranscript = function(encodedText, project, phone) {
-        const text = decodeURIComponent(encodedText);
-        Swal.fire({
-            title: `📋 Call Transcript - ${project || 'Unlinked'} (${phone})`,
-            html: `<div style="text-align:left; font-size:14px; line-height:1.5; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; max-height:300px; overflow-y:auto; font-family:'Inter', sans-serif;">${text}</div>`,
-            icon: 'info',
-            confirmButtonText: 'Close'
-        });
-    };
-
-    let allTelephonyLogs = [];
-
-    async function loadTelephonyAuditLogs() {
-        try {
-            const leadsRes = await fetch('/api/telephony-admin/active-leads');
-            if (leadsRes.ok) {
-                const leads = await leadsRes.json();
-                const select = document.getElementById('simTargetLeadSelect');
-                if (select) {
-                    select.innerHTML = '<option value="">-- Load Active Leads --</option>';
-                    leads.forEach(l => {
-                        const label = `${l.project_number || 'Lead ' + l.id} - ${l.first_name || ''} ${l.last_name || ''}`;
-                        const opt = document.createElement('option');
-                        opt.value = l.id;
-                        opt.innerText = label;
-                        select.appendChild(opt);
-                    });
-                }
-            }
-
-            const logsRes = await fetch('/api/telephony-admin/sessions');
-            if (logsRes.ok) {
-                const logs = await logsRes.json();
-                allTelephonyLogs = logs;
-                renderTelephonyAuditLogsTable(logs);
-            }
-        } catch (e) {
-            console.error('[Telephony Admin] Error loading audits:', e);
-        }
-    }
-
-    function renderTelephonyAuditLogsTable(logs) {
-        const body = document.getElementById('telephonyAuditLogsBody');
-        if (!body) return;
-
-        if (logs.length === 0) {
-            body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No historical logs found.</td></tr>';
-            return;
-        }
-
-        body.innerHTML = '';
-        logs.forEach(log => {
-            let prob = 50;
-            try {
-                if (log.calculated_metrics_json) {
-                    const parsed = JSON.parse(log.calculated_metrics_json);
-                    prob = parsed.purchase_probability !== undefined ? parsed.purchase_probability : 50;
-                }
-            } catch(e) {}
-
-            let probColor = '#10b981';
-            if (prob < 40) probColor = '#ef4444';
-            else if (prob < 70) probColor = '#f59e0b';
-
-            const leadLabel = `${log.first_name || ''} ${log.last_name || ''}`.trim() || `Lead ${log.lead_id}`;
-            const dateStr = log.logged_at ? new Date(log.logged_at).toLocaleString() : '-';
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="padding: 10px 12px; font-family: monospace; border-bottom: 1px solid var(--border); font-size: 11px;">${log.session_id || ''}</td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600;">${leadLabel} (ID: ${log.lead_id})</td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px;">${log.rep_name || 'System'} (${log.voipline_extension || 'N/A'})</td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-align: right; color: #10b981; font-weight: 700;">${log.execution_latency_ms || 0} ms</td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: center;">
-                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${probColor}15; color: ${probColor}; border: 1px solid ${probColor}30;">
-                        <span style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background-color: ${probColor};"></span>
-                        ${prob}%
-                    </span>
-                </td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-muted);">${dateStr}</td>
-                <td style="padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: center;">
-                    <button type="button" class="btn-action-outline" style="height: 20px; font-size: 10px; padding: 0 8px; margin: 0;" onclick="viewFullTelephonyTranscript(this)" data-idx="${logs.indexOf(log)}"><i class="ti ti-file-text"></i> View</button>
-                </td>
-            `;
-            body.appendChild(tr);
-        });
-    }
-
-    window.viewFullTelephonyTranscript = function(btn) {
-        const idx = btn.getAttribute('data-idx');
-        const log = allTelephonyLogs[idx];
-        if (!log) return;
-        
-        Swal.fire({
-            title: 'Full Transcript Snapshot',
-            html: `<div style="text-align: left; background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; border: 1px solid var(--border); color: #334155;">${escapeHtml(log.full_transcript_snapshot)}</div>`,
-            confirmButtonText: 'Close',
-            confirmButtonColor: 'var(--primary)'
-        });
-    };
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    async function runTelephonySimulation(event) {
-        event.preventDefault();
-        const leadId = document.getElementById('simTargetLeadSelect').value;
-        const text = document.getElementById('simTranscriptInput').value.trim();
-        const btn = document.getElementById('btnRunSim');
-        
-        if (!leadId || !text) return;
-        
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner" style="width: 10px; height: 10px; border-width: 2px;"></span>Running...';
-        
-        try {
-            const res = await fetch('/api/telephony-admin/simulate-payload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lead_id: leadId, text_fragment: text })
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                document.getElementById('simResultBlock').style.display = 'flex';
-                document.getElementById('simSessionIdVal').innerText = data.session_id || '-';
-                document.getElementById('simLatencyVal').innerText = `${data.latency_ms} ms`;
-                document.getElementById('simMatchedSpecsVal').innerText = JSON.stringify(data.extracted_fields, null, 2);
-                
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Simulation completed successfully.',
-                    showConfirmButton: false,
-                    timer: 3000
-                });
-                
-                loadTelephonyAuditLogs();
-            } else {
-                const err = await res.json().catch(() => ({}));
-                Swal.fire('Error', err.error || 'Simulation execution failed.', 'error');
-            }
-        } catch (e) {
-            Swal.fire('Error', 'Network error during simulation.', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Execute Simulation';
-        }
-    }
-
-    function exportTelephonyReports() {
-        if (allTelephonyLogs.length === 0) {
-            Swal.fire('No Data', 'No historical session logs to export.', 'info');
-            return;
-        }
-
-        let csv = 'Session ID,Lead ID,Representative,Latency (ms),Probability (%),Logged At,Transcript Snapshot\n';
-        allTelephonyLogs.forEach(log => {
-            let prob = 50;
-            try {
-                if (log.calculated_metrics_json) {
-                    const parsed = JSON.parse(log.calculated_metrics_json);
-                    prob = parsed.purchase_probability !== undefined ? parsed.purchase_probability : 50;
-                }
-            } catch(e) {}
-
-            const repName = `${log.rep_name || 'System'} (${log.voipline_extension || 'N/A'})`;
-            const dateStr = log.logged_at ? new Date(log.logged_at).toLocaleString() : '-';
-            const escapedTranscript = `"${(log.full_transcript_snapshot || '').replace(/"/g, '""')}"`;
-            
-            csv += `"${log.session_id || ''}",${log.lead_id},"${repName}",${log.execution_latency_ms || 0},${prob},"${dateStr}",${escapedTranscript}\n`;
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute('download', `telephony_session_audit_report_${Date.now()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    async function triggerForceSyncEvaluator() {
-        const leadId = document.getElementById('simTargetLeadSelect').value;
-        if (!leadId) {
-            Swal.fire('Warning', 'Please select a target Lead from the Simulation dropdown first.', 'warning');
-            return;
-        }
-
-        Swal.fire({
-            title: 'Confirm Force Sync',
-            text: 'This will force a temporary evaluation of compliance rules over the lead\'s current transcript sync state. Proceed?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: 'var(--primary)',
-            confirmButtonText: 'Run Sync Evaluation'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const res = await fetch(`/api/compliance/fetch-matrix?lead_id=${leadId}`);
-                    if (res.ok) {
-                        const matrixData = await res.json();
-                        const transcript = matrixData.live_voice_sync ? matrixData.live_voice_sync.live_captions_transcript : '';
-                        
-                        if (!transcript) {
-                            Swal.fire('No Transcript', 'This lead does not have any active call voice transcript to sync.', 'info');
-                            return;
-                        }
-
-                        const simRes = await fetch('/api/telephony-admin/simulate-payload', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ lead_id: leadId, text_fragment: '[Force Sync Evaluation] ' + transcript })
-                        });
-
-                        if (simRes.ok) {
-                            Swal.fire('Success', 'Force sync evaluation resolved successfully. Database details synchronized.', 'success');
-                            loadTelephonyAuditLogs();
-                        } else {
-                            Swal.fire('Error', 'Sync evaluation failed.', 'error');
-                        }
-                    } else {
-                        Swal.fire('Error', 'Failed to retrieve active lead transcript context.', 'error');
-                    }
-                } catch(e) {
-                    Swal.fire('Error', 'Failed to run sync evaluation.', 'error');
-                }
-            }
-        });
-    }
 
     (async function loadSidebarUser() {
         try {
