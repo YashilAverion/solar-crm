@@ -977,9 +977,9 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="d-flex align-items-center mb-1" style="height: 18px;">
                             <label style="font-size: 11px; font-weight: 700; color: #475569; margin: 0; line-height: 1;">Invoice No.</label>
                         </div>
-                        <div style="display: flex; height: 30px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-sizing: border-box;">
-                            <span style="background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; border-right: 1px solid #cbd5e1; height: 100%; user-select: none; margin: 0; line-height: 1;">INV-</span>
-                            <input type="text" id="eq_invoice_number" placeholder="1001" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="flex: 1; min-width: 0; border: none; outline: none; height: 100%; padding: 0 8px; font-size: 12px; font-weight: 700; text-align: center; color: #1e293b; background: transparent; margin: 0;">
+                        <div class="input-group input-group-sm" style="height: 30px; width: 100%;">
+                            <span class="input-group-text bg-light text-muted fw-bold px-2" style="font-size: 11px; height: 30px; border: 1px solid #cbd5e1; border-right: none; border-top-left-radius: 6px; border-bottom-left-radius: 6px; user-select: none;">INV-</span>
+                            <input type="text" class="form-control form-control-sm" id="eq_invoice_number" placeholder="1001" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="height: 30px; font-size: 12px; font-weight: 700; text-align: center !important; border: 1px solid #cbd5e1; border-top-right-radius: 6px; border-bottom-right-radius: 6px; background: #fff; color: #1e293b;">
                         </div>
                     </div>
 
