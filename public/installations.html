@@ -1709,24 +1709,44 @@ document.addEventListener("DOMContentLoaded", function() {
         const meterNoHtml = isFirstRow ? `<input type="text" id="eq_meter_no" class="form-control-sm" placeholder="e.g., 123456789" style="width: 100%; height: 34px;">` : '-';
         const phaseHtml = isFirstRow ? `<select id="eq_phase" class="form-control-sm" style="width: 100%; height: 34px;" onchange="evaluateSmartCharges()"><option value="">Select Phase</option><option value="Single Phase">Single Phase</option><option value="Three Phase">Three Phase</option></select>` : '-';
 
-        let fileInputHtml = '';
+        let fileUploadHtml = '';
         let viewButtonHtml = '';
         if (fileUrl) {
-            fileInputHtml = `<span class="uploaded-cert-name" style="font-size:11px; color:var(--primary); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; display:inline-block;" title="Uploaded File">📄 Uploaded</span><input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="display: none;">`;
-            viewButtonHtml = `<button type="button" class="cert-view-btn" style="background:white; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:4px; color:#2c3e50; width:28px; height:28px; display:flex; align-items:center; justify-content:center;" title="View" onclick="window.open('${fileUrl}', '_blank')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>`;
+            fileUploadHtml = `
+                <label class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center gap-1 cert-upload-btn" style="height: 30px; border-radius: 6px; cursor: pointer; border-color: #cbd5e1; background: #f0fdf4; padding: 0 8px; margin: 0; font-size: 11.5px; font-weight: 600; color: #166534;" title="Re-upload or change certificate">
+                    <i class="ti ti-file-check" style="font-size: 13px;"></i>
+                    <span class="cert-upload-text" style="max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Uploaded</span>
+                    <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="display: none;">
+                </label>
+            `;
+            viewButtonHtml = `
+                <button type="button" class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center cert-view-btn" style="height: 30px; width: 30px; border-radius: 6px; padding: 0; border-color: #cbd5e1; background: #fff;" title="View Certificate" onclick="window.open('${fileUrl}', '_blank')">
+                    <i class="ti ti-eye" style="font-size: 14px; color: #0284c7;"></i>
+                </button>
+            `;
         } else {
-            fileInputHtml = `<span class="uploaded-cert-name" style="font-size:11px; color:var(--primary); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; display:none;"></span><input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="flex: 1; max-width: 140px; height: 34px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer;">`;
-            viewButtonHtml = `<button type="button" class="cert-view-btn" style="display:none; background:white; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:4px; color:#2c3e50; width:28px; height:28px; align-items:center; justify-content:center;" title="View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>`;
+            fileUploadHtml = `
+                <label class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center gap-1 cert-upload-btn" style="height: 30px; border-radius: 6px; cursor: pointer; border-color: #cbd5e1; background: #fff; padding: 0 8px; margin: 0; font-size: 11.5px; font-weight: 600; color: #475569;" title="Upload Certificate">
+                    <i class="ti ti-upload text-primary" style="font-size: 13px;"></i>
+                    <span class="cert-upload-text">Upload</span>
+                    <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleCertUpload(this)" style="display: none;">
+                </label>
+            `;
+            viewButtonHtml = `
+                <button type="button" class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center cert-view-btn" style="display: none; height: 30px; width: 30px; border-radius: 6px; padding: 0; border-color: #cbd5e1; background: #fff;" title="View Certificate">
+                    <i class="ti ti-eye" style="font-size: 14px; color: #0284c7;"></i>
+                </button>
+            `;
         }
 
-        const deleteBtnHtml = isFirstRow ? '' : `<button type="button" class="btn-icon text-danger" style="width:28px; height:28px;" onclick="this.closest('.cert-row').remove()" title="Delete Certificate"><i class="ti ti-trash"></i></button>`;
-        const addBtnHtml = `<button type="button" class="btn-icon text-primary cert-add-btn" style="width:28px; height:28px;" onclick="addCertRow()" title="Add Certificate"><i class="ti ti-plus"></i></button>`;
+        const deleteBtnHtml = isFirstRow ? '' : `<button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center" style="height: 30px; width: 30px; border-radius: 6px; padding: 0; border-color: #cbd5e1; background: #fff;" onclick="this.closest('.cert-row').remove()" title="Delete Certificate"><i class="ti ti-trash" style="font-size: 14px; color: #ef4444;"></i></button>`;
+        const addBtnHtml = `<button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center cert-add-btn" style="height: 30px; width: 30px; border-radius: 6px; padding: 0; border-color: #cbd5e1; background: #fff;" onclick="addCertRow()" title="Add Certificate Row"><i class="ti ti-plus" style="font-size: 14px; color: #e8681e;"></i></button>`;
 
         tr.innerHTML = `
             <td style="padding: 6px 8px;">${meterNoHtml}</td>
             <td style="padding: 6px 8px;">${phaseHtml}</td>
             <td style="padding: 6px 8px;">
-                <select class="form-control-sm eq_cert" style="width: 100%; height: 32px;">
+                <select class="form-control-sm eq_cert" style="width: 100%; height: 30px; border-color: #cbd5e1; border-radius: 6px;">
                     <option value="">Select Certificate</option>
                     <option value="ESC">ESC</option>
                     <option value="NOC">NOC</option>
@@ -1734,11 +1754,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 </select>
             </td>
             <td style="padding: 6px 8px;">
-                <input type="text" class="form-control-sm eq_cert_no" placeholder="No." style="width: 100%; height: 32px;" value="${number}">
+                <input type="text" class="form-control-sm eq_cert_no" placeholder="No." style="width: 100%; height: 30px; border-color: #cbd5e1; border-radius: 6px; padding: 2px 6px;" value="${number}">
             </td>
             <td style="padding: 6px 8px;">
                 <div style="display: flex; gap: 6px; align-items: center;">
-                    ${fileInputHtml}
+                    ${fileUploadHtml}
                     ${viewButtonHtml}
                     ${addBtnHtml}
                     ${deleteBtnHtml}
@@ -1863,25 +1883,33 @@ document.addEventListener("DOMContentLoaded", function() {
                         
                         viewBtn.style.display = 'inline-flex';
                         viewBtn.onclick = () => window.open(persistentFileUrl, '_blank');
-                        input.style.display = 'none';
-                        hiddenUrlInput.value = persistentFileUrl; // Store the URL in hidden input
+                        hiddenUrlInput.value = persistentFileUrl;
 
-                        const nameSpan = input.closest('.cert-row').querySelector('.uploaded-cert-name');
-                        if (nameSpan) {
-                            nameSpan.innerHTML = `📄 ${file.name}`;
-                            nameSpan.title = file.name;
-                            nameSpan.style.display = 'inline-block';
+                        const uploadBtn = input.closest('.cert-upload-btn');
+                        if (uploadBtn) {
+                            uploadBtn.classList.remove('btn-outline-secondary');
+                            uploadBtn.classList.add('btn-outline-success');
+                            uploadBtn.style.background = '#f0fdf4';
+                            uploadBtn.style.color = '#166534';
+                            const uploadText = uploadBtn.querySelector('.cert-upload-text');
+                            if (uploadText) {
+                                uploadText.innerText = file.name ? (file.name.length > 8 ? file.name.substring(0, 8) + '...' : file.name) : 'Uploaded';
+                            }
+                            const icon = uploadBtn.querySelector('i');
+                            if (icon) {
+                                icon.className = 'ti ti-file-check';
+                            }
                         }
 
                         Swal.fire('Uploaded!', 'Certificate uploaded successfully.', 'success');
                     } else {
                         Swal.fire('Error', res.error || 'File upload failed.', 'error');
-                        input.value = ''; // Clear the input
+                        input.value = '';
                     }
                 } else {
                     const errorRes = JSON.parse(xhr.responseText);
                     Swal.fire('Error', errorRes.error || 'File upload failed.', 'error');
-                    input.value = ''; // Clear the input
+                    input.value = '';
                 }
             };
 
