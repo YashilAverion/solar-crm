@@ -94,10 +94,19 @@
         /* ========== COMPONENTS & ACTIONS ========== */
         .cb-col { width: 36px; text-align: center; }
         input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
-        .actions-cell { display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
-        .btn-icon { width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 13px; background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s ease; }
-        .btn-icon:hover { background: #e2e8f0; transform: translateY(-1px); }
+        .actions-cell { display: inline-grid; grid-template-columns: repeat(3, 24px); grid-template-rows: repeat(2, 24px); gap: 3px; justify-content: center; align-items: center; }
+        .btn-icon { width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; background: #ffffff; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s ease; }
+        .btn-icon:hover { background: #f8fafc; border-color: #cbd5e1; transform: scale(1.06); }
         .btn-icon.text-danger:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* ========== CHARGE SELECTION MULTI-SELECT CARDS ========== */
+        .charge-card { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; user-select: none; transition: all 0.15s ease; outline: none; }
+        .charge-card:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .charge-card:focus-visible, .charge-card.focused { border-color: var(--primary) !important; box-shadow: 0 0 0 2px rgba(228, 31, 7, 0.2); }
+        .charge-card.selected { background: #fef2f2; border-color: #fca5a5; }
+        .charge-card.selected .charge-name { color: #991b1b; font-weight: 700; }
+        .charge-rate-badge { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; white-space: nowrap; }
+        .charge-card.selected .charge-rate-badge { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
 
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -513,27 +522,33 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="stats-row mb-2">
         <div class="stat-card" style="border-left: 3px solid var(--primary);">
             <div class="d-flex align-items-center justify-content-between">
-                <span class="stat-label">Total Installations</span>
-                <span class="badge bg-danger-subtle text-danger" style="border-radius: 6px; padding: 4px 6px;"><i class="ti ti-chart-bar fs-14"></i></span>
+                <div>
+                    <span class="stat-label">Total Installations</span>
+                    <div class="stat-val" id="statTotal">0</div>
+                    <div class="stat-sub">All records</div>
+                </div>
+                <span class="avatar avatar-md rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"><i class="ti ti-solar-panel fs-18"></i></span>
             </div>
-            <div class="stat-val" id="statTotal">0</div>
-            <div class="stat-sub">All records</div>
         </div>
         <div class="stat-card" style="border-left: 3px solid #f59e0b;">
             <div class="d-flex align-items-center justify-content-between">
-                <span class="stat-label">Pending</span>
-                <span class="badge bg-warning-subtle text-warning" style="border-radius: 6px; padding: 4px 6px;"><i class="ti ti-clock fs-14"></i></span>
+                <div>
+                    <span class="stat-label">Pending</span>
+                    <div class="stat-val" id="statPending">0</div>
+                    <div class="stat-sub">Installations in progress</div>
+                </div>
+                <span class="avatar avatar-md rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"><i class="ti ti-clock-hour-4 fs-18"></i></span>
             </div>
-            <div class="stat-val" id="statPending">0</div>
-            <div class="stat-sub">Installations in progress</div>
         </div>
         <div class="stat-card" style="border-left: 3px solid #10b981;">
             <div class="d-flex align-items-center justify-content-between">
-                <span class="stat-label">Completed</span>
-                <span class="badge bg-success-subtle text-success" style="border-radius: 6px; padding: 4px 6px;"><i class="ti ti-check fs-14"></i></span>
+                <div>
+                    <span class="stat-label">Completed</span>
+                    <div class="stat-val" id="statCompleted">0</div>
+                    <div class="stat-sub">Successfully installed</div>
+                </div>
+                <span class="avatar avatar-md rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"><i class="ti ti-circle-check fs-18"></i></span>
             </div>
-            <div class="stat-val" id="statCompleted">0</div>
-            <div class="stat-sub">Successfully installed</div>
         </div>
     </div>
 
@@ -782,12 +797,32 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 <div id="chargesSelectionModal" class="modal" style="z-index: 3500;">
-    <div class="modal-content modal-md">
+    <div class="modal-content modal-md" style="max-width: 660px;">
         <button class="modal-close" type="button" onclick="document.getElementById('chargesSelectionModal').style.display='none'">✕</button>
-        <div class="modal-title">Select Additional Charges</div>
-        <div id="chargesCheckboxList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px; max-height: 60vh; overflow-y: auto; padding: 8px;"></div>
-        <div class="form-footer" style="margin-top:12px; padding-top:12px;">
-            <button type="button" class="btn-save" style="width:100%; text-align:center;" onclick="addSelectedCharges()">Add Selected</button>
+        <div class="modal-title d-flex align-items-center justify-content-between">
+            <span><i class="ti ti-receipt-tax me-2 text-danger"></i>Select Additional Charges</span>
+        </div>
+        
+        <div class="mb-2">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0" style="padding: 4px 10px; height: 32px;"><i class="ti ti-search text-muted"></i></span>
+                <input type="text" id="chargeSearchBox" class="form-control border-start-0" placeholder="Search charges (Press ↑/↓ to navigate, Space to toggle)..." oninput="filterChargesList()" style="height:32px; font-size:12px;">
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+            <span class="text-muted fs-11" id="chargesSelectedCount">0 charges selected</span>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" onclick="selectAllCharges(true)"><i class="ti ti-check-all me-1"></i>Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" onclick="selectAllCharges(false)"><i class="ti ti-x me-1"></i>Clear All</button>
+            </div>
+        </div>
+
+        <div id="chargesCheckboxList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 52vh; overflow-y: auto; padding: 2px;"></div>
+        
+        <div class="form-footer" style="margin-top:12px; padding-top:12px; display: flex; justify-content: space-between; align-items: center;">
+            <span class="text-muted fs-11"><kbd class="bg-light text-dark border">Shift+Click</kbd> range, <kbd class="bg-light text-dark border">Space</kbd> toggle, <kbd class="bg-light text-dark border">Enter</kbd> confirm</span>
+            <button type="button" class="btn btn-primary" style="min-width: 140px; height: 34px; font-weight: 600;" onclick="addSelectedCharges()"><i class="ti ti-plus me-1"></i> Add Selected</button>
         </div>
     </div>
 </div>
@@ -912,25 +947,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <!-- Email Invoice Modal -->
 <div id="emailInvoiceModal" class="modal" style="z-index: 3600;">
-    <div class="modal-content modal-md">
+    <div class="modal-content modal-md" style="max-width: 580px;">
         <button class="modal-close" type="button" onclick="document.getElementById('emailInvoiceModal').style.display='none'">✕</button>
-        <div class="modal-title">Send Invoice Email</div>
+        <div class="modal-title d-flex align-items-center">
+            <i class="ti ti-mail-fast me-2 text-danger fs-18"></i>
+            <span>Send Invoice Email</span>
+        </div>
         <form id="emailInvoiceForm" onsubmit="event.preventDefault(); sendInvoiceEmail();">
-            <div class="form-grid" style="grid-template-columns: 1fr;">
-                <div class="field"><label>To (Customer Email)</label>
-                    <input type="email" id="ei_to" required></div>
-                <div class="field"><label>Email Template</label>
-                    <select id="ei_template" onchange="applyEmailTemplate()">
+            <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                <div class="field">
+                    <label>To (Customer Email) <span class="text-danger">*</span></label>
+                    <input type="email" id="ei_to" class="form-control" placeholder="customer@example.com" style="height: 34px; font-size: 13px;" required>
+                </div>
+                <div class="field">
+                    <label>Email Template</label>
+                    <select id="ei_template" class="form-select" style="height: 34px; font-size: 13px;" onchange="applyEmailTemplate()">
                         <option value="standard">Standard Invoice</option>
                         <option value="overdue">Overdue Reminder</option>
                         <option value="custom">Custom Message</option>
-                    </select></div>
-                <div class="field"><label>Subject</label><input type="text" id="ei_subject" required></div>
-                <div class="field"><label>Message</label><textarea id="ei_message" style="height: 120px;" required></textarea></div>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Subject <span class="text-danger">*</span></label>
+                    <input type="text" id="ei_subject" class="form-control" style="height: 34px; font-size: 13px;" required>
+                </div>
+                <div class="field">
+                    <label>Message <span class="text-danger">*</span></label>
+                    <textarea id="ei_message" class="form-control" style="height: 120px; font-size: 13px; padding: 8px 12px;" required></textarea>
+                </div>
             </div>
-            <div class="form-footer" style="display:flex; justify-content:space-between; align-items: center; margin-top: 15px;">
-                <button type="button" class="btn-secondary" style="background:#f8fafc; border:1px solid #cbd5e1; height: 36px; padding: 0 16px; border-radius: 6px; font-weight: 600;" onclick="previewInvoicePDF()">Preview PDF</button>
-                <button type="submit" class="btn-save" id="ei_send_btn" style="height: 36px;">Send Email</button>
+            <div class="form-footer" style="display:flex; justify-content:space-between; align-items: center; margin-top: 16px;">
+                <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" style="height: 36px; font-weight: 600; font-size: 13px;" onclick="previewInvoicePDF()">
+                    <i class="ti ti-file-type-pdf text-danger"></i> Preview PDF
+                </button>
+                <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-1" id="ei_send_btn" style="min-width: 140px; height: 36px; font-weight: 600; font-size: 13px;">
+                    <i class="ti ti-send"></i> Send Email
+                </button>
             </div>
         </form>
     </div>
@@ -939,34 +991,44 @@ document.addEventListener("DOMContentLoaded", function() {
 <div id="historyModal" class="modal">
     <div class="modal-content modal-sm">
         <button class="modal-close" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
-        <div class="modal-title">Project History</div>
+        <div class="modal-title d-flex align-items-center">
+            <i class="ti ti-history me-2 text-danger fs-18"></i>
+            <span>Project History</span>
+        </div>
         <ul class="history-list" id="historyBody"></ul>
     </div>
 </div>
 
 <div id="documentModal" class="modal" style="z-index: 4000;">
-    <div class="modal-content modal-lg">
+    <div class="modal-content modal-lg" style="max-width: 860px;">
         <button class="modal-close" type="button" onclick="document.getElementById('documentModal').style.display='none'">✕</button>
-        <div class="modal-title">Document Management</div>
-        <input type="hidden" id="doc_install_id">
-        <table class="compact-table" id="docTable">
-            <thead>
-                <tr>
-                    <th style="width:35%">Type of Document</th>
-                    <th style="width:20%">Upload File</th>
-                    <th style="width:10%">View</th>
-                    <th style="width:15%">User</th>
-                    <th style="width:15%">Date and Time</th>
-                    <th style="width:5%">Action</th>
-                </tr>
-            </thead>
-            <tbody id="docTableBody"></tbody>
-        </table>
-        <div style="margin-top: 8px;">
-            <button type="button" class="btn-add-row" onclick="addDocumentRow('Other', true)">+ Add Row</button>
+        <div class="modal-title d-flex align-items-center">
+            <i class="ti ti-file-certificate me-2 text-danger fs-18"></i>
+            <span>Document Management</span>
         </div>
-        <div class="form-footer" style="margin-top:16px;">
-            <button type="button" class="btn-save" onclick="saveDocuments()">Save Documents</button>
+        <input type="hidden" id="doc_install_id">
+        <div class="table-responsive">
+            <table class="compact-table" id="docTable" style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th style="width:32%; text-align: left; padding-left: 10px !important;">Type of Document</th>
+                        <th style="width:24%; text-align: left;">Upload File</th>
+                        <th style="width:12%; text-align: center;">View</th>
+                        <th style="width:14%; text-align: center;">User</th>
+                        <th style="width:14%; text-align: center;">Date and Time</th>
+                        <th style="width:4%; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="docTableBody"></tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+            <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="addDocumentRow('Other', true)">
+                <i class="ti ti-plus"></i> Add Row
+            </button>
+            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" style="min-width: 150px; height: 34px; font-weight: 600;" onclick="saveDocuments()">
+                <i class="ti ti-device-floppy"></i> Save Documents
+            </button>
         </div>
     </div>
 </div>
@@ -1919,28 +1981,135 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    let lastCheckedChargeIndex = -1;
+
     function populateChargeDropdown() {
         const list = document.getElementById('chargesCheckboxList');
         if (!list) return;
         list.innerHTML = '';
         const validCharges = allChargeItems.filter(c => !c.state || c.state === 'WA' || c.state === 'All');
-        validCharges.forEach(c => {
-            const div = document.createElement('div');
-            div.className = 'form-check'; div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '8px';
-            div.innerHTML = `
-                <input class="form-check-input extra-charge-cb" type="checkbox" value="${c.id}" data-name="${c.charge_name}" data-rate="${c.rate || 0}" id="cb_charge_${c.id}" style="margin:0; width:14px; height:14px; cursor:pointer;">
-                <label class="form-check-label" for="cb_charge_${c.id}" style="margin:0; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; line-height:1.2;">
-                    ${c.charge_name} ($${parseFloat(c.rate || 0).toFixed(2)})
-                </label>
+        
+        validCharges.forEach((c, idx) => {
+            const card = document.createElement('div');
+            card.className = 'charge-card';
+            card.tabIndex = 0;
+            card.dataset.index = idx;
+            card.dataset.id = c.id;
+            
+            card.innerHTML = `
+                <div class="d-flex align-items-center gap-2" style="flex: 1; min-width: 0;">
+                    <input class="form-check-input extra-charge-cb" type="checkbox" value="${c.id}" data-name="${c.charge_name}" data-rate="${c.rate || 0}" id="cb_charge_${c.id}" style="margin:0; width:15px; height:15px; cursor:pointer; flex-shrink:0;">
+                    <label class="charge-name text-truncate mb-0" for="cb_charge_${c.id}" style="font-size:12px; cursor:pointer; color:#1e293b; font-weight:500;">
+                        ${c.charge_name}
+                    </label>
+                </div>
+                <span class="charge-rate-badge">$${parseFloat(c.rate || 0).toFixed(2)}</span>
             `;
-            list.appendChild(div);
+
+            // Mouse Click & Shift+Click range selection
+            card.addEventListener('click', function(e) {
+                const cb = this.querySelector('.extra-charge-cb');
+                if (e.target !== cb) {
+                    cb.checked = !cb.checked;
+                }
+                
+                if (e.shiftKey && lastCheckedChargeIndex !== -1) {
+                    const cards = Array.from(list.querySelectorAll('.charge-card:not([style*="display: none"])'));
+                    const currentIndex = cards.indexOf(this);
+                    const lastIndex = lastCheckedChargeIndex;
+                    const start = Math.min(currentIndex, lastIndex);
+                    const end = Math.max(currentIndex, lastIndex);
+                    const targetState = cb.checked;
+                    
+                    for (let i = start; i <= end; i++) {
+                        if (cards[i]) {
+                            const cbox = cards[i].querySelector('.extra-charge-cb');
+                            if (cbox) {
+                                cbox.checked = targetState;
+                                cards[i].classList.toggle('selected', targetState);
+                            }
+                        }
+                    }
+                } else {
+                    const visibleCards = Array.from(list.querySelectorAll('.charge-card:not([style*="display: none"])'));
+                    lastCheckedChargeIndex = visibleCards.indexOf(this);
+                    this.classList.toggle('selected', cb.checked);
+                }
+                
+                updateChargeSelectedCount();
+            });
+
+            // Keyboard navigation
+            card.addEventListener('keydown', function(e) {
+                const visibleCards = Array.from(list.querySelectorAll('.charge-card:not([style*="display: none"])'));
+                const currentIndex = visibleCards.indexOf(this);
+                
+                if (e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    const cb = this.querySelector('.extra-charge-cb');
+                    cb.checked = !cb.checked;
+                    this.classList.toggle('selected', cb.checked);
+                    lastCheckedChargeIndex = currentIndex;
+                    updateChargeSelectedCount();
+                } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    const next = visibleCards[currentIndex + 1] || visibleCards[0];
+                    if (next) {
+                        next.focus();
+                        if (e.shiftKey) {
+                            const cb = next.querySelector('.extra-charge-cb');
+                            cb.checked = true;
+                            next.classList.add('selected');
+                            updateChargeSelectedCount();
+                        }
+                    }
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    const prev = visibleCards[currentIndex - 1] || visibleCards[visibleCards.length - 1];
+                    if (prev) {
+                        prev.focus();
+                        if (e.shiftKey) {
+                            const cb = prev.querySelector('.extra-charge-cb');
+                            cb.checked = true;
+                            prev.classList.add('selected');
+                            updateChargeSelectedCount();
+                        }
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSelectedCharges();
+                }
+            });
+
+            list.appendChild(card);
         });
+
+        updateChargeSelectedCount();
+    }
+
+    function updateChargeSelectedCount() {
+        const count = document.querySelectorAll('.extra-charge-cb:checked').length;
+        const countEl = document.getElementById('chargesSelectedCount');
+        if (countEl) countEl.innerText = `${count} charge${count === 1 ? '' : 's'} selected`;
+    }
+
+    function selectAllCharges(select = true) {
+        const visibleCards = document.querySelectorAll('#chargesCheckboxList .charge-card:not([style*="display: none"])');
+        visibleCards.forEach(card => {
+            const cb = card.querySelector('.extra-charge-cb');
+            if (cb) {
+                cb.checked = select;
+                card.classList.toggle('selected', select);
+            }
+        });
+        updateChargeSelectedCount();
     }
 
     function filterChargesList() {
-        const input = document.getElementById('chargeSearchBox').value.toLowerCase();
+        const input = (document.getElementById('chargeSearchBox')?.value || '').toLowerCase();
         const list = document.getElementById('chargesCheckboxList');
-        const items = list.getElementsByClassName('form-check');
+        if (!list) return;
+        const items = list.getElementsByClassName('charge-card');
         for (let i = 0; i < items.length; i++) {
             const label = items[i].innerText.toLowerCase();
             items[i].style.display = label.includes(input) ? 'flex' : 'none';
@@ -2277,31 +2446,31 @@ document.addEventListener("DOMContentLoaded", function() {
         const tr = document.createElement('tr');
         if (existingData && existingData.docId) tr.dataset.docId = existingData.docId;
         
-        const typeHtml = type === 'Other' ? `<input type="text" class="form-control-sm doc-type" placeholder="Enter Document Type" value="Other">` : `<input type="text" class="form-control-sm doc-type" value="${type}" readonly>`;
-        let delBtn = allowDelete ? `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this)">🗑️</button>` : ``;
+        const typeHtml = type === 'Other' ? `<input type="text" class="form-control form-control-sm doc-type" placeholder="Enter Document Type" value="Other" style="height: 30px; font-size: 12px;">` : `<input type="text" class="form-control form-control-sm doc-type" value="${type}" readonly style="height: 30px; font-size: 12px; background: #f8fafc; font-weight: 600;">`;
+        let delBtn = allowDelete ? `<button type="button" class="btn-icon text-danger" onclick="deleteDocumentRow(this)" title="Delete"><i class="ti ti-trash"></i></button>` : ``;
         if (!allowDelete && existingData && existingData.docId) {
-            delBtn = `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this, true)" title="Clear File" style="font-size: 10px;">🧹</button>`;
+            delBtn = `<button type="button" class="btn-icon text-warning" onclick="deleteDocumentRow(this, true)" title="Clear File"><i class="ti ti-backspace"></i></button>`;
         }
 
-        let uploadHtml = `<input type="file" class="doc-file" style="width: 180px; font-size: 11px;" onchange="handleDocUpload(this)">`;
-        let viewHtml = `<span style="color:var(--text-muted); font-size: 11px;">Not Uploaded</span>`;
+        let uploadHtml = `<input type="file" class="doc-file form-control form-control-sm" style="font-size: 11px; height: 28px; padding: 2px 6px;" onchange="handleDocUpload(this)">`;
+        let viewHtml = `<span class="badge bg-light text-muted border">Not Uploaded</span>`;
         let userHtml = `-`;
         let dateHtml = `-`;
 
         if (existingData) {
-            uploadHtml = `<span style="font-size:11px; color:var(--text-dark); font-weight:600;">${existingData.fileName} (${existingData.fileSize})</span>`;
-            viewHtml = `<button type="button" class="act-btn" style="height:26px; width:26px;" title="View" onclick="window.open('${existingData.fileUrl}', '_blank')">👁️</button>`;
+            uploadHtml = `<span style="font-size:12px; color:#1e293b; font-weight:600;"><i class="ti ti-file me-1 text-primary"></i>${existingData.fileName} <span class="text-muted fs-11">(${existingData.fileSize})</span></span>`;
+            viewHtml = `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 d-inline-flex align-items-center gap-1" title="View Document" onclick="window.open('${existingData.fileUrl}', '_blank')"><i class="ti ti-eye"></i> View</button>`;
             userHtml = existingData.user || '-';
             dateHtml = existingData.datetime || '-';
         }
 
         tr.innerHTML = `
-            <td>${typeHtml}</td>
-            <td>${uploadHtml}</td>
-            <td>${viewHtml}</td>
-            <td><span style="font-size:11px;">${userHtml}</span></td>
-            <td><span style="font-size:11px;">${dateHtml}</span></td>
-            <td>${delBtn}</td>
+            <td style="text-align: left; padding: 6px 10px;">${typeHtml}</td>
+            <td style="text-align: left; padding: 6px 10px;">${uploadHtml}</td>
+            <td style="text-align: center; padding: 6px 10px;">${viewHtml}</td>
+            <td style="text-align: center; padding: 6px 10px;"><span style="font-size:11px; color:#64748b;">${userHtml}</span></td>
+            <td style="text-align: center; padding: 6px 10px;"><span style="font-size:11px; color:#64748b;">${dateHtml}</span></td>
+            <td style="text-align: center; padding: 6px 10px;">${delBtn}</td>
         `;
         tbody.appendChild(tr);
     }
@@ -2369,12 +2538,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     const now = new Date();
                     const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
 
-                    tr.children[1].innerHTML = `<span style="font-size:11px; font-weight:600;">${file.name}</span>`;
-                    tr.children[2].innerHTML = `<button type="button" class="act-btn" style="height:26px; width:26px;" title="View" onclick="window.open('${persistentFileUrl}', '_blank')">👁️</button>`;
-                    tr.children[3].innerHTML = `<span style="font-size:11px;">${currentUser}</span>`;
-                    tr.children[4].innerHTML = `<span style="font-size:11px;">${dateStr}</span>`;
+                    tr.children[1].innerHTML = `<span style="font-size:12px; color:#1e293b; font-weight:600;"><i class="ti ti-file me-1 text-primary"></i>${file.name}</span>`;
+                    tr.children[2].innerHTML = `<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 d-inline-flex align-items-center gap-1" title="View Document" onclick="window.open('${persistentFileUrl}', '_blank')"><i class="ti ti-eye"></i> View</button>`;
+                    tr.children[3].innerHTML = `<span style="font-size:11px; color:#64748b;">${currentUser}</span>`;
+                    tr.children[4].innerHTML = `<span style="font-size:11px; color:#64748b;">${dateStr}</span>`;
                     
-                    let newDelBtn = typeInput && typeInput.readOnly ? `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this, true)" title="Clear File" style="font-size: 10px;">🧹</button>` : `<button type="button" class="btn-del-row" onclick="deleteDocumentRow(this)">🗑️</button>`;
+                    let newDelBtn = typeInput && typeInput.readOnly ? `<button type="button" class="btn-icon text-warning" onclick="deleteDocumentRow(this, true)" title="Clear File"><i class="ti ti-backspace"></i></button>` : `<button type="button" class="btn-icon text-danger" onclick="deleteDocumentRow(this)" title="Delete"><i class="ti ti-trash"></i></button>`;
                     tr.children[5].innerHTML = newDelBtn;
 
                     fetch(`/installations/${installId}/documents`, {
