@@ -245,11 +245,12 @@ router.get('/search-suggestions', (req, res) => {
     if (!q) return res.json([]);
     const s = `%${q}%`;
     const query = `
-                SELECT id, company, project_number, first_name, last_name, email, phone, address, suburb, state 
+        SELECT id, company, project_number, first_name, last_name, email, phone, address, suburb, state, postcode, status, type
         FROM installations 
-        WHERE status != 'Deleted' AND (
+        WHERE (status IS NULL OR status != 'Deleted') AND (
             company LIKE ? OR project_number LIKE ? OR first_name LIKE ? OR 
-                    last_name LIKE ? OR email LIKE ? OR phone LIKE ? OR address LIKE ?
+            last_name LIKE ? OR email LIKE ? OR phone LIKE ? OR address LIKE ? OR
+            suburb LIKE ? OR state LIKE ? OR postcode LIKE ?
         )
         ORDER BY id DESC LIMIT 10
     `;

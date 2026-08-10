@@ -3191,6 +3191,14 @@ function applyColumnVisibility() {
             }
         }
 
+        if (urlParams.has('search')) {
+            globalSearchTerm = urlParams.get('search');
+            setTimeout(() => {
+                const omniInput = document.getElementById('globalOmniSearchInput');
+                if (omniInput) omniInput.value = globalSearchTerm;
+            }, 100);
+        }
+
         if (urlParams.has('suburbs')) {
             try {
                 const parsed = JSON.parse(urlParams.get('suburbs'));
@@ -3202,6 +3210,12 @@ function applyColumnVisibility() {
             } catch(e) { }
         }
     }
+
+    window.handleOmniSearchOnInstallations = function(term) {
+        globalSearchTerm = (term || '').trim();
+        currentPage = 1;
+        loadInstallations();
+    };
 
     window.onload = async function() {
         await loadChargeItems();

@@ -245,12 +245,12 @@
                 </button>
 
                 <!-- Global Search -->
-                <div class="me-auto d-flex align-items-center header-search d-lg-flex d-none search-wrap" style="position: relative; max-width: 320px; margin-left: 15px;">
+                <div class="me-auto d-flex align-items-center header-search d-lg-flex d-none search-wrap" style="position: relative; width: 440px; max-width: 480px; margin-left: 15px;">
                     <div class="input-icon position-relative me-2" style="width: 100%;">
-                        <input type="text" class="form-control" id="globalOmniSearchInput" placeholder="Search Keyword" autocomplete="off">
+                        <input type="text" class="form-control" id="globalOmniSearchInput" placeholder="Search Keyword" autocomplete="off" style="width: 100%; height: 34px; font-size: 13px;">
                         <span class="input-icon-addon d-inline-flex p-0 header-search-icon"><i class="ti ti-command"></i></span>
                     </div>
-                    <div id="globalOmniDropdown" style="position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 4px 0;"></div>
+                    <div id="globalOmniDropdown" style="position: absolute; top: calc(100% + 5px); left: 0; width: 100%; min-width: 440px; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; max-height: 350px; overflow-y: auto; display: none; box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.12); z-index: 1000; padding: 4px 0;"></div>
                 </div>
             </div>
 
@@ -716,49 +716,125 @@
         const searchDropdown = document.getElementById('globalOmniDropdown');
         let searchTimeout;
 
+        const isInstallationsPage = window.location.pathname.includes('installations.html') || 
+                                     window.location.pathname.includes('installation_charges.html') ||
+                                     window.location.pathname.includes('outstanding_payments.html') ||
+                                     window.location.pathname.includes('paid_payments.html') ||
+                                     window.location.pathname.includes('company_details.html');
+
         if (searchInput && searchDropdown) {
+            if (isInstallationsPage) {
+                searchInput.placeholder = "Search Ares Installations (Ref, Customer, Company, Phone, Address...)";
+            }
+
             searchInput.addEventListener('input', function(e) {
                 const query = e.target.value.trim();
                 clearTimeout(searchTimeout);
 
-                if (query.length < 2) {
+                // If on installations.html, immediately trigger table filtering
+                if (window.location.pathname.includes('installations.html') && typeof window.handleOmniSearchOnInstallations === 'function') {
+                    window.handleOmniSearchOnInstallations(query);
+                }
+
+                if (query.length < 1) {
                     searchDropdown.style.display = 'none';
                     return;
                 }
 
                 searchTimeout = setTimeout(() => {
-                    fetch('/api/projects/global-search?q=' + encodeURIComponent(query))
-                        .then(res => res.json())
-                        .then(data => {
-                            searchDropdown.innerHTML = '';
-                            if (data && data.length > 0) {
-                                data.forEach(item => {
-                                    const div = document.createElement('div');
-                                    div.className = 'omni-result-item';
-                                    div.style.padding = '8px 12px';
-                                    div.style.borderBottom = '1px solid #f1f5f9';
-                                    div.style.cursor = 'pointer';
-                                    div.style.fontSize = '12px';
-                                    div.style.color = '#1f2020';
-                                    div.textContent = `${item.project_number || 'No Ref'} - ${item.first_name} ${item.last_name || ''} - ${item.address || ''}`;
-                                    div.onclick = () => {
-                                        window.location.href = `/index.html?search=${item.project_number}`;
-                                    };
-                                    searchDropdown.appendChild(div);
-                                });
-                                searchDropdown.style.display = 'block';
-                            } else {
-                                searchDropdown.innerHTML = '<div class="omni-result-item" style="padding: 8px 12px; font-size:12px; color:#707070;">No results found</div>';
-                                searchDropdown.style.display = 'block';
-                            }
-                        })
-                        .catch(err => console.error('Search error:', err));
-                }, 300);
+                    if (isInstallationsPage) {
+                        // Search ONLY Ares Installations data
+                        fetch('/installations/search-suggestions?q=' + encodeURIComponent(query))
+                            .then(res => res.json())
+                            .then(data => {
+                                searchDropdown.innerHTML = '';
+                                if (data && data.length > 0) {
+                                    data.forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.className = 'omni-result-item';
+                                        div.style.padding = '8px 12px';
+                                        div.style.borderBottom = '1px solid #f1f5f9';
+                                        div.style.cursor = 'pointer';
+                                        div.style.fontSize = '12px';
+                                        div.style.color = '#1f2020';
+                                        div.style.display = 'flex';
+                                        div.style.alignItems = 'center';
+                                        div.style.justifyContent = 'space-between';
+                                        div.style.gap = '8px';
+
+                                        const customerName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'No Name';
+                                        const location = [item.address, item.suburb, item.state, item.postcode].filter(Boolean).join(', ');
+                                        const meta = [item.company, item.phone].filter(Boolean).join(' • ');
+
+                                        div.innerHTML = `
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-weight: 700; color: #0f172a; font-size: 12.5px;">
+                                                    <span class="badge bg-danger-subtle text-danger me-1">${item.project_number || 'Pending'}</span>
+                                                    <span>${customerName}</span>
+                                                    ${meta ? `<span class="text-muted fs-11 ms-2 font-normal">(${meta})</span>` : ''}
+                                                </div>
+                                                <div class="text-muted fs-11 text-truncate" style="margin-top: 2px;">
+                                                    <i class="ti ti-map-pin fs-10 me-1 text-danger"></i>${location || '-'}
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-light text-secondary border fs-11">${item.type || 'PV'}</span>
+                                        `;
+
+                                        div.onclick = () => {
+                                            searchInput.value = item.project_number || customerName;
+                                            searchDropdown.style.display = 'none';
+                                            if (window.location.pathname.includes('installations.html')) {
+                                                if (typeof window.handleOmniSearchOnInstallations === 'function') {
+                                                    window.handleOmniSearchOnInstallations(item.project_number || customerName);
+                                                }
+                                            } else {
+                                                window.location.href = `/installations.html?search=${encodeURIComponent(item.project_number || customerName)}`;
+                                            }
+                                        };
+                                        searchDropdown.appendChild(div);
+                                    });
+                                    searchDropdown.style.display = 'block';
+                                } else {
+                                    searchDropdown.innerHTML = '<div class="omni-result-item" style="padding: 8px 12px; font-size:12px; color:#707070;">No matching installations found</div>';
+                                    searchDropdown.style.display = 'block';
+                                }
+                            })
+                            .catch(err => console.error('Installation search error:', err));
+                    } else {
+                        // Generic global search for other modules
+                        fetch('/api/projects/global-search?q=' + encodeURIComponent(query))
+                            .then(res => res.json())
+                            .then(data => {
+                                searchDropdown.innerHTML = '';
+                                if (data && data.length > 0) {
+                                    data.forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.className = 'omni-result-item';
+                                        div.style.padding = '8px 12px';
+                                        div.style.borderBottom = '1px solid #f1f5f9';
+                                        div.style.cursor = 'pointer';
+                                        div.style.fontSize = '12px';
+                                        div.style.color = '#1f2020';
+                                        div.textContent = `${item.project_number || 'No Ref'} - ${item.first_name} ${item.last_name || ''} - ${item.address || ''}`;
+                                        div.onclick = () => {
+                                            window.location.href = `/index.html?search=${item.project_number}`;
+                                        };
+                                        searchDropdown.appendChild(div);
+                                    });
+                                    searchDropdown.style.display = 'block';
+                                } else {
+                                    searchDropdown.innerHTML = '<div class="omni-result-item" style="padding: 8px 12px; font-size:12px; color:#707070;">No results found</div>';
+                                    searchDropdown.style.display = 'block';
+                                }
+                            })
+                            .catch(err => console.error('Search error:', err));
+                    }
+                }, 250);
             });
 
             // Close Omnibox on outside click
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.search-wrap')) {
+                if (!e.target.closest('.search-wrap') && !e.target.closest('#globalOmniDropdown')) {
                     searchDropdown.style.display = 'none';
                 }
             });
