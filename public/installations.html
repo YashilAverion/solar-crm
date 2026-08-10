@@ -768,34 +768,126 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 </div>
 
-<div id="addProjectModal" class="modal">
-    <div class="modal-content modal-lg">
-        <button class="modal-close" onclick="document.getElementById('addProjectModal').style.display='none'">✕</button>
-        <div class="modal-title">Add New Project</div>
+<div id="addProjectModal" class="modal" style="z-index: 3500;">
+    <div class="modal-content modal-lg" style="max-width: 740px; padding: 20px 24px;">
+        <button class="modal-close" type="button" onclick="document.getElementById('addProjectModal').style.display='none'">✕</button>
+        <div class="modal-title d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center">
+                <i class="ti ti-folder-plus me-2 text-danger fs-18"></i>
+                <span class="fs-16 fw-bold" id="addProjectModalTitle">Add New Project</span>
+            </div>
+        </div>
         <form id="projectForm" onsubmit="saveProject(event)">
             <input type="hidden" id="edit_id" value="">
-            <div class="form-grid">
-                <div class="section-divider">Basic Details</div>
-                <div class="field"><label class="required">Type Of Project</label><select id="proj_type"><option>PV</option><option>Battery</option><option>PV + Battery</option><option>Domestic</option><option>Service</option><option>Other</option></select></div>
-                <div class="field ac-wrap"><label class="required">Company</label><input type="text" id="proj_company" autocomplete="off" placeholder="Type to search..."><ul class="ac-drop" id="proj_company_drop"></ul></div>
-                <div class="field"><label class="required">First Name</label><input type="text" id="proj_first_name"></div>
-                <div class="field"><label class="required">Last Name</label><input type="text" id="proj_last_name"></div>
-                <div class="field"><label class="required">Phone Number</label><div class="input-group"><span class="country-code">+61</span><input type="text" id="proj_phone" placeholder="4xx xxx xxx"></div></div>
-                <div class="field"><label>Email ID</label><input type="text" id="proj_email"></div>
-                <div></div>
-                <div class="field"><label>Project Number Reference</label><input type="text" id="proj_project_number" placeholder="Type reference number if any"></div>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px;">
+                <!-- Basic Details Section -->
+                <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 2px 0 4px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                    <i class="ti ti-info-circle text-danger"></i> BASIC DETAILS
+                </div>
                 
-                <div class="section-divider">Address Details</div>
-                <div class="field full-width"><label class="required">Google Search</label><input type="text" id="google_address" placeholder="Type address to auto-fill..."></div>
-                <div class="field"><label>Unit Number</label><input type="text" id="unit_number"></div>
-                <div class="field"><label>Lot Number</label><input type="text" id="lot_number"></div>
-                <div class="field"><label>Street Type</label><input type="text" id="street_type"></div>
-                <div class="field"><label>Address</label><input type="text" id="address"></div>
-                <div class="field"><label>Suburb</label><input type="text" id="suburb"></div>
-                <div class="field"><label>State</label><input type="text" id="state"></div>
-                <div class="field"><label>Postcode</label><input type="text" id="postcode"></div>
+                <div class="field">
+                    <label class="required">Type Of Project</label>
+                    <select class="form-select form-control-sm" id="proj_type" style="height: 32px; font-size: 12.5px;">
+                        <option>PV</option>
+                        <option>Battery</option>
+                        <option>PV + Battery</option>
+                        <option>Domestic</option>
+                        <option>Service</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                
+                <div class="field ac-wrap">
+                    <label class="required">Company</label>
+                    <input type="text" class="form-control form-control-sm" id="proj_company" autocomplete="off" placeholder="Search Company..." style="height: 32px; font-size: 12.5px;" required>
+                    <ul class="ac-drop" id="proj_company_drop"></ul>
+                </div>
+                
+                <div class="field">
+                    <label class="required">First Name</label>
+                    <input type="text" class="form-control form-control-sm" id="proj_first_name" placeholder="First Name" style="height: 32px; font-size: 12.5px;" required>
+                </div>
+                
+                <div class="field">
+                    <label class="required">Last Name</label>
+                    <input type="text" class="form-control form-control-sm" id="proj_last_name" placeholder="Last Name" style="height: 32px; font-size: 12.5px;" required>
+                </div>
+                
+                <div class="field">
+                    <label class="required">Phone Number</label>
+                    <div class="input-group" style="height: 32px;">
+                        <span class="country-code" style="font-size: 12px;">+61</span>
+                        <input type="text" class="form-control" id="proj_phone" placeholder="4xx xxx xxx" style="font-size: 12.5px;" required>
+                    </div>
+                </div>
+                
+                <div class="field">
+                    <label>Email ID</label>
+                    <input type="email" class="form-control form-control-sm" id="proj_email" placeholder="customer@example.com" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field" style="grid-column: 1 / -1;">
+                    <label>Company Job Reference <span class="text-muted fw-normal" style="font-size: 10.5px;">(Optional - Partner Company Reference #)</span></label>
+                    <input type="text" class="form-control form-control-sm" id="proj_project_number" placeholder="Enter company's job reference or leave blank for auto-generation" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <!-- Address Details Section -->
+                <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 8px 0 4px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                    <i class="ti ti-map-pin text-danger"></i> ADDRESS DETAILS
+                </div>
+                
+                <div class="field full-width" style="grid-column: 1 / -1;">
+                    <label class="required">Google Search</label>
+                    <div class="input-group" style="height: 32px;">
+                        <span class="input-group-text bg-light text-muted border-end-0 py-0 px-2"><i class="ti ti-search fs-14"></i></span>
+                        <input type="text" class="form-control border-start-0" id="google_address" placeholder="Type address to auto-fill..." style="font-size: 12.5px;">
+                    </div>
+                </div>
+                
+                <div class="field">
+                    <label>Unit Number</label>
+                    <input type="text" class="form-control form-control-sm" id="unit_number" placeholder="Unit / Suite" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field">
+                    <label>Lot Number</label>
+                    <input type="text" class="form-control form-control-sm" id="lot_number" placeholder="Lot #" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field">
+                    <label>Street Type</label>
+                    <input type="text" class="form-control form-control-sm" id="street_type" placeholder="St, Rd, Ave, etc." style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field">
+                    <label>Address</label>
+                    <input type="text" class="form-control form-control-sm" id="address" placeholder="Street Name" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field">
+                    <label>Suburb</label>
+                    <input type="text" class="form-control form-control-sm" id="suburb" placeholder="Suburb" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field">
+                    <label>State</label>
+                    <input type="text" class="form-control form-control-sm" id="state" placeholder="State (e.g. WA)" style="height: 32px; font-size: 12.5px;">
+                </div>
+                
+                <div class="field" style="grid-column: 1 / -1;">
+                    <label>Postcode</label>
+                    <input type="text" class="form-control form-control-sm" id="postcode" placeholder="Postcode" style="height: 32px; font-size: 12.5px; max-width: 50%;">
+                </div>
             </div>
-            <div class="form-footer"><button type="submit" class="btn-save" id="saveProjectBtn">Save Project</button></div>
+            
+            <div class="form-footer d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
+                <button type="button" class="btn btn-secondary d-inline-flex align-items-center gap-1" style="height: 36px; font-weight: 600; font-size: 13px; background: #f1f5f9; color: #475569; border-color: #cbd5e1;" onclick="document.getElementById('addProjectModal').style.display='none'">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-1" id="saveProjectBtn" style="min-width: 140px; height: 36px; font-weight: 600; font-size: 13px;">
+                    <i class="ti ti-device-floppy"></i> Save Project
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -1292,8 +1384,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function openAddProjectModal() {
         document.getElementById('projectForm').reset();
         document.getElementById('edit_id').value = '';
-        document.querySelector('#addProjectModal .modal-title').innerText = 'Add New Project';
-        document.getElementById('saveProjectBtn').innerText = 'Save Project';
+        const titleEl = document.getElementById('addProjectModalTitle');
+        if (titleEl) titleEl.innerText = 'Add New Project';
+        const saveBtn = document.getElementById('saveProjectBtn');
+        if (saveBtn) saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Save Project';
         document.getElementById('addProjectModal').style.display = 'flex';
     }
 
@@ -1302,15 +1396,17 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!p) return;
         document.getElementById('projectForm').reset();
         document.getElementById('edit_id').value = p.id;
-        document.querySelector('#addProjectModal .modal-title').innerText = 'Edit Project Details';
-        document.getElementById('saveProjectBtn').innerText = 'Update Project';
-        document.getElementById('proj_type').value = p.type || '';
+        const titleEl = document.getElementById('addProjectModalTitle');
+        if (titleEl) titleEl.innerText = 'Edit Project Details';
+        const saveBtn = document.getElementById('saveProjectBtn');
+        if (saveBtn) saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Update Project';
+        document.getElementById('proj_type').value = p.type || 'PV';
         document.getElementById('proj_company').value = p.company || '';
         document.getElementById('proj_first_name').value = p.first_name || '';
         document.getElementById('proj_last_name').value = p.last_name || '';
         document.getElementById('proj_phone').value = p.phone || '';
         document.getElementById('proj_email').value = p.email || '';
-        document.getElementById('proj_project_number').value = p.project_number || '';
+        document.getElementById('proj_project_number').value = p.project_number && p.project_number !== 'Pending' ? p.project_number : '';
         document.getElementById('unit_number').value = p.unit_number || '';
         document.getElementById('lot_number').value = p.lot_number || '';
         document.getElementById('street_type').value = p.street_type || '';
@@ -1323,6 +1419,81 @@ document.addEventListener("DOMContentLoaded", function() {
         const gaEl = document.getElementById('google_address');
         if (fullAddr.length > 4 && gaEl) { gaEl.value = fullAddr; }
         document.getElementById('addProjectModal').style.display = 'flex';
+    }
+
+    async function saveProject(event) {
+        event.preventDefault();
+        const editId = document.getElementById('edit_id').value;
+        const btn = document.getElementById('saveProjectBtn');
+
+        const type = document.getElementById('proj_type').value;
+        const company = document.getElementById('proj_company').value.trim();
+        const firstName = document.getElementById('proj_first_name').value.trim();
+        const lastName = document.getElementById('proj_last_name').value.trim();
+        const phone = document.getElementById('proj_phone').value.trim();
+        const email = document.getElementById('proj_email').value.trim();
+        const projectNumber = document.getElementById('proj_project_number').value.trim();
+
+        const googleAddress = document.getElementById('google_address').value.trim();
+        const unitNumber = document.getElementById('unit_number').value.trim();
+        const lotNumber = document.getElementById('lot_number').value.trim();
+        const streetType = document.getElementById('street_type').value.trim();
+        const address = document.getElementById('address').value.trim();
+        const suburb = document.getElementById('suburb').value.trim();
+        const state = document.getElementById('state').value.trim();
+        const postcode = document.getElementById('postcode').value.trim();
+
+        if (!company) { Swal.fire('Required Field', 'Please enter or select a Company.', 'warning'); return; }
+        if (!firstName) { Swal.fire('Required Field', 'Please enter First Name.', 'warning'); return; }
+        if (!lastName) { Swal.fire('Required Field', 'Please enter Last Name.', 'warning'); return; }
+        if (!phone) { Swal.fire('Required Field', 'Please enter Phone Number.', 'warning'); return; }
+        if (!address && !googleAddress) { Swal.fire('Required Field', 'Please search or enter an Address.', 'warning'); return; }
+
+        const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
+
+        const payload = {
+            type, company, first_name: firstName, last_name: lastName,
+            phone, email, project_number: projectNumber,
+            google_address: googleAddress, unit_number: unitNumber, lot_number: lotNumber,
+            street_type: streetType, address, suburb, state, postcode,
+            currentUser
+        };
+
+        btn.disabled = true;
+        const origText = btn.innerHTML;
+        btn.innerText = 'Saving...';
+
+        try {
+            const url = editId ? `/installations/${editId}` : `/installations`;
+            const method = editId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                const assignedRef = data.project_number || projectNumber || '';
+                Swal.fire({
+                    icon: 'success',
+                    title: editId ? 'Project Updated!' : 'Project Created!',
+                    text: editId ? 'Project details have been updated.' : `Project created successfully${assignedRef ? ` with Reference: ${assignedRef}` : ''}.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                document.getElementById('addProjectModal').style.display = 'none';
+                loadInstallations();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to save project.', 'error');
+            }
+        } catch(err) {
+            Swal.fire('Error', 'Network error. Failed to save project.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
     }
 
     async function viewHistory(id) {
