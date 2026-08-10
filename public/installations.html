@@ -93,9 +93,8 @@
 
         /* ========== COMPONENTS & ACTIONS ========== */
         .cb-col { width: 36px; text-align: center; }
-        input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
-        .actions-cell { display: inline-grid; grid-template-columns: repeat(3, 24px); grid-template-rows: repeat(2, 24px); gap: 3px; justify-content: center; align-items: center; }
-        .btn-icon { width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; background: #ffffff; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s ease; }
+        .actions-cell, .actions-grid-3x2 { display: inline-grid !important; grid-template-columns: repeat(3, 24px) !important; grid-template-rows: repeat(2, 24px) !important; gap: 4px !important; justify-content: center !important; align-items: center !important; width: fit-content !important; margin: 0 auto !important; }
+        .btn-icon { width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; background: #ffffff; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s ease; flex-shrink: 0; }
         .btn-icon:hover { background: #f8fafc; border-color: #cbd5e1; transform: scale(1.06); }
         .btn-icon.text-danger:hover { background: #fee2e2; border-color: #fecaca; }
 
@@ -573,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <th data-col="col_mode" onclick="sortData('payment_mode')">$ Mode <span class="sort-arrow" id="sort_payment_mode"></span></th>
                         <th data-col="col_status" onclick="sortData('status')">$ Status <span class="sort-arrow" id="sort_status"></span></th>
                         <th data-col="col_cert" onclick="sortData('cert_status')">Certificate Status <span class="sort-arrow" id="sort_cert_status"></span></th>
-                        <th style="min-width: 150px; text-align: center;">Actions</th>
+                        <th style="width: 96px; min-width: 96px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="installationsBody"></tbody>
@@ -2978,8 +2977,8 @@ function applyColumnVisibility() {
                     <td data-col="col_mode">${p.payment_mode || '-'}</td>
                     <td data-col="col_status">${p.status === 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' : '<span class="badge bg-warning-subtle text-warning">' + (p.status || 'Pending') + '</span>'}</td>
                     <td data-col="col_cert"><span class="badge bg-light text-secondary border">${p.cert_status || '-'}</span></td>
-                    <td style="text-align: center;">
-                        <div class="actions-cell">
+                    <td style="text-align: center; width: 96px; min-width: 96px; padding: 4px !important;">
+                        <div class="actions-cell actions-grid-3x2" style="display: grid !important; grid-template-columns: repeat(3, 24px) !important; grid-template-rows: repeat(2, 24px) !important; gap: 4px !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; width: fit-content !important;">
                             <button class="btn-icon text-primary" title="Edit Project Details" onclick="editInstallation(${p.id})"><i class="ti ti-edit"></i></button>
                             <button class="btn-icon text-success" title="Add Equipment" onclick="addEquipment(${p.id})"><i class="ti ti-plus"></i></button>
                             <button class="btn-icon text-info" title="Documents" onclick="openDocumentModal(${p.id})"><i class="ti ti-file-text"></i></button>

@@ -870,7 +870,7 @@
                 white-space: nowrap !important;
                 text-align: center !important;
             }
-            .actions-cell, td div[style*="display: grid; grid-template-columns: repeat(2, 1fr)"] {
+            .actions-cell:not(.actions-grid):not(.actions-grid-3x2):not([style*="grid"]) {
                 display: flex !important;
                 flex-wrap: nowrap !important;
                 align-items: center !important;
