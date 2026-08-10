@@ -816,9 +816,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 <div class="field">
                     <label class="required">Phone Number</label>
-                    <div class="input-group" style="height: 32px; border-color: #cbd5e1;">
-                        <span class="country-code" style="font-size: 12px; background: #f8fafc; border-color: #cbd5e1;">+61</span>
-                        <input type="text" class="form-control" id="proj_phone" placeholder="4xx xxx xxx" style="font-size: 12.5px; background-color: #fff;">
+                    <div class="input-group" style="height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
+                        <span class="country-code" style="font-size: 12px; background: #f8fafc; border-right: 1px solid #cbd5e1; padding: 0 10px; display: flex; align-items: center; color: #64748b; font-weight: 600; height: 100%;">+61</span>
+                        <input type="text" class="form-control" id="proj_phone" placeholder="4xx xxx xxx" style="font-size: 12.5px; border: none !important; box-shadow: none !important; height: 100%; padding: 0 10px; background-color: #fff;">
                     </div>
                 </div>
                 
@@ -840,9 +840,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
             <div class="field mb-2">
                 <label class="required">Google Search</label>
-                <div class="input-group" style="height: 32px; border-color: #cbd5e1;">
-                    <span class="input-group-text bg-light text-muted border-end-0 py-0 px-2"><i class="ti ti-search fs-14"></i></span>
-                    <input type="text" class="form-control border-start-0" id="google_address" placeholder="Type address to auto-fill..." style="font-size: 12.5px; background-color: #fff;">
+                <div class="position-relative" style="width: 100%;">
+                    <input type="text" class="form-control" id="google_address" placeholder="Type address to auto-fill..." style="height: 32px; font-size: 12.5px; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; padding-left: 32px !important; width: 100%;">
+                    <span class="position-absolute text-muted" style="left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; line-height: 1; z-index: 5;"><i class="ti ti-search fs-14"></i></span>
                 </div>
             </div>
 
