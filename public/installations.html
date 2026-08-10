@@ -598,67 +598,172 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 </div>
 
-<div id="columnVisibilityModal" class="modal">
-    <div class="modal-content modal-sm">
+<div id="columnVisibilityModal" class="modal" style="z-index: 3500;">
+    <div class="modal-content modal-sm" style="max-width: 440px; padding: 20px;">
         <button class="modal-close" onclick="document.getElementById('columnVisibilityModal').style.display='none'">✕</button>
-        <div class="modal-title">Toggle Columns</div>
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding: 10px;">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_type', this.checked)"> Type</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_company', this.checked)"> Company Name</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_date', this.checked)"> Date</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_ref', this.checked)"> Reference</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_customer', this.checked)"> Customer</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_phone', this.checked)"> Phone</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_email', this.checked)"> Email</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_address', this.checked)"> Address</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_area', this.checked)"> Area</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_pv', this.checked)"> PV Qty / Battery</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_inv', this.checked)"> Inverter</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_invoice', this.checked)"> Invoice $</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_mode', this.checked)"> $ Mode</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_status', this.checked)"> $ Status</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked onchange="toggleColumn('col_cert', this.checked)"> Certificate</label>
+        <div class="modal-title d-flex align-items-center mb-3 pb-2 border-bottom">
+            <i class="ti ti-columns me-2 text-danger fs-18"></i>
+            <span class="fs-16 fw-bold">Manage Columns</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 12px; max-height: 400px; overflow-y: auto; padding: 4px;">
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_type', this.checked)"> Type</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_company', this.checked)"> Company Name</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_date', this.checked)"> Date</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_ref', this.checked)"> Reference</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_customer', this.checked)"> Customer</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_phone', this.checked)"> Phone</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_email', this.checked)"> Email</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_address', this.checked)"> Address</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_area', this.checked)"> Area</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_pv', this.checked)"> PV / Battery</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_inv', this.checked)"> Inverter</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_invoice', this.checked)"> Invoice $</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_mode', this.checked)"> $ Mode</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_status', this.checked)"> $ Status</label>
+            <label class="form-check d-flex align-items-center gap-2 mb-0" style="grid-column: span 2; cursor:pointer; font-size: 12.5px; font-weight: 500;"><input class="form-check-input" type="checkbox" checked onchange="toggleColumn('col_cert', this.checked)"> Certificate</label>
         </div>
     </div>
 </div>
 
-<div id="advancedFilterModal" class="modal">
-    <div class="modal-content modal-lg">
-        <button class="modal-close" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
-        <div class="modal-title">More Filters</div>
-        <div class="adv-filter-grid">
-            <div class="field"><label>Type</label><select class="form-control-sm" id="adv_type"><option value="">All</option><option>PV</option><option>Battery</option><option>PV + Battery</option><option>Domestic</option><option>Service</option><option>Other</option></select></div>
-            <div class="field ac-wrap"><label>Company</label><input type="text" class="form-control-sm" id="flt_company" autocomplete="off" placeholder="Search Company..."><ul class="ac-drop" id="flt_company_drop"></ul></div>
-            <div class="field"><label>Area</label><select class="form-control-sm" id="adv_area"><option value="">All</option><option>Metro</option><option>Regional</option></select></div>
-            
-            <div class="section-divider">Location</div>
-            <div class="field ac-wrap"><label>Suburb</label><div id="flt_suburb_tags" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px;"></div><input type="text" class="form-control-sm" id="flt_suburb" autocomplete="off" placeholder="Search Suburb..."><ul class="ac-drop" id="flt_suburb_drop"></ul></div>
-            <div class="field ac-wrap"><label>State</label><input type="text" class="form-control-sm" id="flt_state" autocomplete="off" placeholder="Search State..."><ul class="ac-drop" id="flt_state_drop"></ul></div>
-            <div></div>
-
-            <div class="section-divider">Dates</div>
-            <div class="section-divider">DATE RANGES</div>
-            <div class="field"><label>Project Created (Start)</label><input type="date" class="form-control-sm" id="adv_created_from"></div>
-            <div class="field"><label>Project Created (End)</label><input type="date" class="form-control-sm" id="adv_created_to"></div>
-            <div></div>
-            <div class="field"><label>Completed Date (Start)</label><input type="date" class="form-control-sm" id="adv_completed_from"></div>
-            <div class="field"><label>Completed Date (End)</label><input type="date" class="form-control-sm" id="adv_completed_to"></div>
-            <div></div>
-
-            <div class="section-divider">Equipment</div>
-            <div class="field ac-wrap"><label>PV Model</label><input type="text" class="form-control-sm" id="flt_panel" autocomplete="off" placeholder="Search PV..."><ul class="ac-drop" id="flt_panel_drop"></ul></div>
-            <div class="field ac-wrap"><label>Battery Model</label><input type="text" class="form-control-sm" id="flt_battery" autocomplete="off" placeholder="Search Battery..."><ul class="ac-drop" id="flt_battery_drop"></ul></div>
-            <div class="field ac-wrap"><label>Inverter Model</label><input type="text" class="form-control-sm" id="flt_inverter" autocomplete="off" placeholder="Search Inverter..."><ul class="ac-drop" id="flt_inverter_drop"></ul></div>
-
-            <div class="section-divider">Finance & Status</div>
-            <div class="field"><label>Payment Mode</label><select class="form-control-sm" id="adv_pay_mode"><option value="">All</option><option>Cash</option><option>Online</option></select></div>
-            <div class="field"><label>Payment Status</label><select class="form-control-sm" id="adv_pay_status"><option value="">All</option><option>Pending</option><option>Paid</option></select></div>
-            <div class="field"><label>Certificate Status</label><select class="form-control-sm" id="adv_cert_status"><option value="">All</option><option>Yes</option><option>No</option></select></div>
+<div id="advancedFilterModal" class="modal" style="z-index: 3500;">
+    <div class="modal-content modal-lg" style="max-width: 720px; padding: 20px 24px;">
+        <button class="modal-close" type="button" onclick="document.getElementById('advancedFilterModal').style.display='none'">✕</button>
+        <div class="modal-title d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center">
+                <i class="ti ti-filter me-2 text-danger fs-18"></i>
+                <span class="fs-16 fw-bold">More Filters</span>
+            </div>
         </div>
-        <div class="form-footer">
-            <button class="btn-save" style="background: var(--text-muted);" onclick="resetAdvancedFilters()">Reset</button>
-            <button class="btn-reset" onclick="resetAdvancedFilters()">Reset Filters</button>
-            <button class="btn-save" onclick="applyAdvancedFilters()">Apply Filters</button>
+        
+        <div class="adv-filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 14px;">
+            <!-- Row 1: Basic Details -->
+            <div class="field">
+                <label>Type</label>
+                <select class="form-select form-control-sm" id="adv_type" style="height: 32px; font-size: 12px;">
+                    <option value="">All</option>
+                    <option>PV</option>
+                    <option>Battery</option>
+                    <option>PV + Battery</option>
+                    <option>Domestic</option>
+                    <option>Service</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="field ac-wrap">
+                <label>Company</label>
+                <input type="text" class="form-control form-control-sm" id="flt_company" autocomplete="off" placeholder="Search Company..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_company_drop"></ul>
+            </div>
+            <div class="field">
+                <label>Area</label>
+                <select class="form-select form-control-sm" id="adv_area" style="height: 32px; font-size: 12px;">
+                    <option value="">All</option>
+                    <option>Metro</option>
+                    <option>Regional</option>
+                </select>
+            </div>
+            
+            <!-- Section 2: Location -->
+            <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 6px 0 2px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                <i class="ti ti-map-pin text-danger"></i> LOCATION
+            </div>
+            <div class="field ac-wrap" style="grid-column: span 2;">
+                <label>Suburb</label>
+                <div id="flt_suburb_tags" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px;"></div>
+                <input type="text" class="form-control form-control-sm" id="flt_suburb" autocomplete="off" placeholder="Search & add suburbs..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_suburb_drop"></ul>
+            </div>
+            <div class="field ac-wrap">
+                <label>State</label>
+                <input type="text" class="form-control form-control-sm" id="flt_state" autocomplete="off" placeholder="Search State..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_state_drop"></ul>
+            </div>
+
+            <!-- Section 3: Date Ranges -->
+            <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 6px 0 2px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                <i class="ti ti-calendar text-danger"></i> DATE RANGES
+            </div>
+            <div class="field">
+                <label>Project Created (Start)</label>
+                <input type="date" class="form-control form-control-sm" id="adv_created_from" style="height: 32px; font-size: 12px;">
+            </div>
+            <div class="field">
+                <label>Project Created (End)</label>
+                <input type="date" class="form-control form-control-sm" id="adv_created_to" style="height: 32px; font-size: 12px;">
+            </div>
+            <div></div>
+            <div class="field">
+                <label>Completed Date (Start)</label>
+                <input type="date" class="form-control form-control-sm" id="adv_completed_from" style="height: 32px; font-size: 12px;">
+            </div>
+            <div class="field">
+                <label>Completed Date (End)</label>
+                <input type="date" class="form-control form-control-sm" id="adv_completed_to" style="height: 32px; font-size: 12px;">
+            </div>
+            <div></div>
+
+            <!-- Section 4: Equipment -->
+            <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 6px 0 2px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                <i class="ti ti-tool text-danger"></i> EQUIPMENT
+            </div>
+            <div class="field ac-wrap">
+                <label>PV Model</label>
+                <input type="text" class="form-control form-control-sm" id="flt_panel" autocomplete="off" placeholder="Search PV..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_panel_drop"></ul>
+            </div>
+            <div class="field ac-wrap">
+                <label>Battery Model</label>
+                <input type="text" class="form-control form-control-sm" id="flt_battery" autocomplete="off" placeholder="Search Battery..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_battery_drop"></ul>
+            </div>
+            <div class="field ac-wrap">
+                <label>Inverter Model</label>
+                <input type="text" class="form-control form-control-sm" id="flt_inverter" autocomplete="off" placeholder="Search Inverter..." style="height: 32px; font-size: 12px;">
+                <ul class="ac-drop" id="flt_inverter_drop"></ul>
+            </div>
+
+            <!-- Section 5: Finance & Status -->
+            <div class="section-divider d-flex align-items-center gap-1" style="grid-column: 1 / -1; margin: 6px 0 2px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b;">
+                <i class="ti ti-cash text-danger"></i> FINANCE & STATUS
+            </div>
+            <div class="field">
+                <label>Payment Mode</label>
+                <select class="form-select form-control-sm" id="adv_pay_mode" style="height: 32px; font-size: 12px;">
+                    <option value="">All</option>
+                    <option>Cash</option>
+                    <option>Online</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Payment Status</label>
+                <select class="form-select form-control-sm" id="adv_pay_status" style="height: 32px; font-size: 12px;">
+                    <option value="">All</option>
+                    <option>Pending</option>
+                    <option>Paid</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Certificate Status</label>
+                <select class="form-select form-control-sm" id="adv_cert_status" style="height: 32px; font-size: 12px;">
+                    <option value="">All</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-footer d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" style="height: 36px; font-weight: 600; font-size: 13px;" onclick="resetAdvancedFilters()">
+                <i class="ti ti-rotate"></i> Reset Filters
+            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary d-inline-flex align-items-center gap-1" style="height: 36px; font-weight: 600; font-size: 13px; background: #f1f5f9; color: #475569; border-color: #cbd5e1;" onclick="document.getElementById('advancedFilterModal').style.display='none'">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" style="min-width: 140px; height: 36px; font-weight: 600; font-size: 13px;" onclick="applyAdvancedFilters()">
+                    <i class="ti ti-filter-check"></i> Apply Filters
+                </button>
+            </div>
         </div>
     </div>
 </div>
