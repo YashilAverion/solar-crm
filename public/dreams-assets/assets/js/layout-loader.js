@@ -245,10 +245,10 @@
                 </button>
 
                 <!-- Global Search -->
-                <div class="me-auto d-flex align-items-center header-search d-lg-flex d-none search-wrap" style="position: relative; width: 440px; max-width: 480px; margin-left: 15px;">
-                    <div class="input-icon position-relative me-2" style="width: 100%;">
-                        <input type="text" class="form-control" id="globalOmniSearchInput" placeholder="Search Keyword" autocomplete="off" style="width: 100%; height: 34px; font-size: 13px;">
-                        <span class="input-icon-addon d-inline-flex p-0 header-search-icon"><i class="ti ti-command"></i></span>
+                <div class="me-auto d-flex align-items-center header-search d-lg-flex d-none search-wrap" style="position: relative; width: 440px; max-width: 520px; margin-left: 15px;">
+                    <div class="position-relative" style="width: 100%;">
+                        <input type="text" class="form-control" id="globalOmniSearchInput" placeholder="Search" autocomplete="off" style="width: 100%; height: 34px; font-size: 13px; padding-left: 34px !important; border-radius: 8px;">
+                        <span class="position-absolute text-muted" style="left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; line-height: 1; z-index: 5;"><i class="ti ti-search fs-14"></i></span>
                     </div>
                     <div id="globalOmniDropdown" style="position: absolute; top: calc(100% + 5px); left: 0; width: 100%; min-width: 440px; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; max-height: 350px; overflow-y: auto; display: none; box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.12); z-index: 1000; padding: 4px 0;"></div>
                 </div>
@@ -723,9 +723,7 @@
                                      window.location.pathname.includes('company_details.html');
 
         if (searchInput && searchDropdown) {
-            if (isInstallationsPage) {
-                searchInput.placeholder = "Search Ares Installations (Ref, Customer, Company, Phone, Address...)";
-            }
+            searchInput.placeholder = "Search";
 
             searchInput.addEventListener('input', function(e) {
                 const query = e.target.value.trim();
