@@ -1046,6 +1046,34 @@ document.addEventListener("DOMContentLoaded", function() {
                 <button type="submit" class="btn-save" id="ap_saveBtn">Save Product</button>
             </div>
         </form>
+    <!-- Invoice Preview Modal -->
+<div id="invoicePreviewModal" class="modal" style="z-index: 3700;">
+    <div class="modal-content modal-lg" style="max-width: 980px; width: 95vw; height: 90vh; display: flex; flex-direction: column; padding: 18px 24px;">
+        <button class="modal-close" type="button" onclick="closeInvoicePreview()">✕</button>
+        <div class="modal-title d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+            <div class="d-flex align-items-center">
+                <i class="ti ti-file-invoice me-2 text-danger fs-18"></i>
+                <span class="fs-16 fw-bold">Tax Invoice Preview</span>
+                <span id="previewInvoiceRefBadge" class="badge bg-danger-subtle text-danger ms-2 fs-12">-</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 me-4">
+                <a id="invoicePreviewNewTabLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 py-1 px-2 fs-12">
+                    <i class="ti ti-external-link"></i> New Tab
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-1 px-2 fs-12" onclick="printInvoiceFromPreview()">
+                    <i class="ti ti-printer"></i> Print / PDF
+                </button>
+            </div>
+        </div>
+        
+        <div style="flex: 1; position: relative; width: 100%; height: calc(100% - 60px); background: #f1f5f9; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div id="invoicePreviewLoader" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #ffffff; z-index: 10;">
+                <div class="spinner-border text-danger" role="status" style="width: 2rem; height: 2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <iframe id="invoicePreviewIframe" src="" style="width: 100%; height: 100%; border: none; background: #fff;" onload="document.getElementById('invoicePreviewLoader').style.display='none'"></iframe>
+        </div>
     </div>
 </div>
 
@@ -2771,8 +2799,45 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('ei_message').value = message;
     }
 
+    function openInvoicePreview(id, projectNumber) {
+        if (!id) return;
+        const modal = document.getElementById('invoicePreviewModal');
+        const iframe = document.getElementById('invoicePreviewIframe');
+        const badge = document.getElementById('previewInvoiceRefBadge');
+        const newTabLink = document.getElementById('invoicePreviewNewTabLink');
+        const loader = document.getElementById('invoicePreviewLoader');
+        
+        if (badge) badge.innerText = projectNumber || `ID #${id}`;
+        if (newTabLink) newTabLink.href = `/invoice.html?id=${id}`;
+        if (loader) loader.style.display = 'flex';
+        
+        iframe.src = `/invoice.html?id=${id}`;
+        modal.style.display = 'flex';
+    }
+
+    function closeInvoicePreview() {
+        const modal = document.getElementById('invoicePreviewModal');
+        const iframe = document.getElementById('invoicePreviewIframe');
+        if (modal) modal.style.display = 'none';
+        if (iframe) iframe.src = '';
+    }
+
+    function printInvoiceFromPreview() {
+        const iframe = document.getElementById('invoicePreviewIframe');
+        if (iframe && iframe.contentWindow) {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch(e) {
+                window.open(iframe.src, '_blank');
+            }
+        }
+    }
+
     function previewInvoicePDF() {
-        if (window.currentInstallId) { window.open(`/invoice.html?id=${window.currentInstallId}`, '_blank'); }
+        if (window.currentInstallId) {
+            openInvoicePreview(window.currentInstallId, window.currentInvoiceProjNo);
+        }
     }
 
     async function sendInvoiceEmail() {
@@ -3070,7 +3135,7 @@ function applyColumnVisibility() {
                     <td data-col="col_type"><span class="badge bg-light text-dark border">${p.type || '-'}</span></td>
                     <td data-col="col_company" class="col-center">${companyHtml}</td>
                     <td data-col="col_date">${p.created_date || '-'}<br><span class="text-muted fs-11">-</span></td>
-                    <td data-col="col_ref">${p.project_number && p.project_number !== 'Pending' ? `<a href="/invoice.html?id=${p.id}" target="_blank" class="proj-num" style="text-decoration: none;" title="Click to view invoice">${p.project_number}</a>` : `<span class="proj-num">${p.project_number || 'Pending'}</span>`}</td>
+                    <td data-col="col_ref">${p.project_number && p.project_number !== 'Pending' ? `<a href="javascript:void(0)" onclick="openInvoicePreview(${p.id}, '${p.project_number}')" class="proj-num" style="text-decoration: none; cursor: pointer;" title="Click to preview invoice">${p.project_number}</a>` : `<span class="proj-num">${p.project_number || 'Pending'}</span>`}</td>
                     <td data-col="col_customer"><a href="javascript:void(0)" onclick="showProjectSnapshot(${p.id})" style="color:var(--primary); font-weight:700; text-decoration:none;" title="Click for Quick Preview">${customerName}</a></td>
                     <td data-col="col_phone">${p.phone || '-'}</td>
                     <td data-col="col_email">${p.email || '-'}</td>
