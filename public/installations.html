@@ -829,8 +829,8 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
 
             <div class="field mb-3">
-                <label>Company Job Reference <span class="text-muted fw-normal" style="font-size: 10.5px;">(Optional - Partner Company Reference #)</span></label>
-                <input type="text" class="form-control" id="proj_project_number" placeholder="Enter company's job reference or leave blank for auto-generation" style="height: 32px; font-size: 12.5px; border-color: #cbd5e1; background-color: #fff;">
+                <label>Company Job Reference <span class="text-muted fw-normal" style="font-size: 10.5px;">(Optional - Partner Company Reference e.g. SJ102345)</span></label>
+                <input type="text" class="form-control" id="proj_company_job_reference" placeholder="Enter company's job reference or leave blank" style="height: 32px; font-size: 12.5px; border-color: #cbd5e1; background-color: #fff;">
             </div>
 
             <!-- SECTION 2: ADDRESS DETAILS -->
@@ -1391,6 +1391,8 @@ document.addEventListener("DOMContentLoaded", function() {
     function openAddProjectModal() {
         document.getElementById('projectForm').reset();
         document.getElementById('edit_id').value = '';
+        const compJobRefEl = document.getElementById('proj_company_job_reference');
+        if (compJobRefEl) compJobRefEl.value = '';
         const titleEl = document.getElementById('addProjectModalTitle');
         if (titleEl) titleEl.innerText = 'Add New Project';
         const saveBtn = document.getElementById('saveProjectBtn');
@@ -1413,7 +1415,8 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('proj_last_name').value = p.last_name || '';
         document.getElementById('proj_phone').value = p.phone || '';
         document.getElementById('proj_email').value = p.email || '';
-        document.getElementById('proj_project_number').value = p.project_number && p.project_number !== 'Pending' ? p.project_number : '';
+        const compJobRefEl = document.getElementById('proj_company_job_reference');
+        if (compJobRefEl) compJobRefEl.value = p.company_job_reference || '';
         document.getElementById('unit_number').value = p.unit_number || '';
         document.getElementById('lot_number').value = p.lot_number || '';
         document.getElementById('street_type').value = p.street_type || '';
@@ -1439,7 +1442,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const lastName = document.getElementById('proj_last_name').value.trim();
         const phone = document.getElementById('proj_phone').value.trim();
         const email = document.getElementById('proj_email').value.trim();
-        const projectNumber = document.getElementById('proj_project_number').value.trim();
+        const compJobRefEl = document.getElementById('proj_company_job_reference');
+        const companyJobReference = compJobRefEl ? compJobRefEl.value.trim() : '';
 
         const googleAddress = document.getElementById('google_address').value.trim();
         const unitNumber = document.getElementById('unit_number').value.trim();
@@ -1460,7 +1464,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const payload = {
             type, company, first_name: firstName, last_name: lastName,
-            phone, email, project_number: projectNumber,
+            phone, email, company_job_reference: companyJobReference,
             google_address: googleAddress, unit_number: unitNumber, lot_number: lotNumber,
             street_type: streetType, address, suburb, state, postcode,
             currentUser
@@ -1482,7 +1486,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const data = await res.json();
             if (res.ok) {
-                const assignedRef = data.project_number || projectNumber || '';
+                const assignedRef = data.project_number || '';
                 Swal.fire({
                     icon: 'success',
                     title: editId ? 'Project Updated!' : 'Project Created!',
@@ -3446,15 +3450,17 @@ function applyColumnVisibility() {
         const addressText = `${p.unit_number ? p.unit_number + ' ' : ''}${p.address || ''}, ${p.suburb || ''} ${p.state || ''} ${p.postcode || ''}`;
         
         // Formatted plain text for clipboard
-        const plainTextToCopy = `Project Ref: ${p.project_number || 'Pending'}\nCustomer: ${customerName}\nCompany: ${p.company || '-'}\nPhone: ${p.phone || '-'}\nEmail: ${p.email || '-'}\nAddress: ${addressText}\nType: ${p.type || '-'}\nStatus: ${p.status || '-'}\nInvoice: $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})\n\nEquipment:\n${plainEquipText}`;
+        const plainTextToCopy = `Project Ref: ${p.project_number || '-'}\nCompany Job Ref: ${p.company_job_reference || '-'}\nCustomer: ${customerName}\nCompany: ${p.company || '-'}\nPhone: ${p.phone || '-'}\nEmail: ${p.email || '-'}\nAddress: ${addressText}\nType: ${p.type || '-'}\nStatus: ${p.status || '-'}\nInvoice: $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})\n\nEquipment:\n${plainEquipText}`;
 
         Swal.fire({
-            title: `<i class="ti ti-layout-grid me-2 text-danger"></i>Snapshot: ${p.project_number || 'Pending'}`,
+            title: `<i class="ti ti-layout-grid me-2 text-danger"></i>Snapshot: ${p.project_number || 'Project'}`,
             html: `
                 <div style="position: relative; text-align: left; font-size: 13px; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;"><i class="ti ti-copy"></i> Copy</button>
                     
-                    <div style="margin-bottom: 8px; padding-right: 65px;"><span class="text-muted fw-semibold">Customer:</span> <strong class="text-dark">${customerName}</strong></div>
+                    <div style="margin-bottom: 6px; padding-right: 65px;"><span class="text-muted fw-semibold">Ares Ref:</span> <span class="badge bg-danger-subtle text-danger fw-bold fs-12">${p.project_number || '-'}</span></div>
+                    ${p.company_job_reference ? `<div style="margin-bottom: 6px;"><span class="text-muted fw-semibold">Company Job Ref:</span> <span class="badge bg-primary-subtle text-primary fw-bold fs-12">${p.company_job_reference}</span></div>` : ''}
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Customer:</span> <strong class="text-dark">${customerName}</strong></div>
                     <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Company:</span> <strong class="text-dark">${p.company || '-'}</strong></div>
                     <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Phone:</span> <strong class="text-dark">${p.phone || '-'}</strong></div>
                     <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Email:</span> <strong class="text-dark">${p.email || '-'}</strong></div>

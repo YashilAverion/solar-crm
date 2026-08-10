@@ -26,7 +26,7 @@
             width: 210mm; 
             min-height: 100vh; 
             margin: 0 auto; 
-            background: #fff;
+            background: #fff; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
             color: #1e293b;
             position: relative;
@@ -263,6 +263,8 @@
                         <div class="invoice-title">TAX INVOICE</div>
                         <table class="meta-data">
                             <tr><th>Invoice #:</th><td>${invNum}</td></tr>
+                            <tr><th>Project Ref:</th><td><strong>${p.project_number || '-'}</strong></td></tr>
+                            ${p.company_job_reference ? `<tr><th>Client Ref:</th><td style="color:#e41f07; font-weight:700;">${p.company_job_reference}</td></tr>` : ''}
                             <tr><th>Invoice Date:</th><td>${invDate === '-' ? formatDateSafe(new Date().toISOString().split('T')[0]) : invDate}</td></tr>
                             <tr><th>Due Date:</th><td>${dueDate === '-' ? formatDateSafe(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]) : dueDate}</td></tr>
                         </table>
@@ -276,6 +278,7 @@
                         ${compStreetLine ? `<p>${compStreetLine}</p>` : ''}
                         ${compSubLine ? `<p>${compSubLine}</p>` : ''}
                         ${p.comp_abn ? `<p>ABN: ${p.comp_abn}</p>` : ''}
+                        ${p.company_job_reference ? `<p style="margin-top:4px; font-size:11.5px; color:#64748b;">Partner Job Ref: <strong style="color:#0f172a;">${p.company_job_reference}</strong></p>` : ''}
                     </div>
                     <div class="address-block">
                         <h3>SITE DETAILS</h3>

@@ -410,9 +410,15 @@ db.serialize(() => {
             invoice_date TEXT, due_date TEXT, charges_configured TEXT DEFAULT 'No',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             equipment_details TEXT DEFAULT '[]',
-            certificate_details TEXT DEFAULT '[]'
+            certificate_details TEXT DEFAULT '[]',
+            company_job_reference TEXT DEFAULT ''
         )
     `);
+
+    // Safe migration: Add company_job_reference if not present
+    db.run(`ALTER TABLE installations ADD COLUMN company_job_reference TEXT DEFAULT ''`, (err) => {
+        // Ignore duplicate column error
+    });
 
     // 6. Installation Documents Table (NEW & CRITICAL FOR FILE UPLOADS)
     db.run(`
