@@ -3316,8 +3316,11 @@ function applyColumnVisibility() {
                     <td class="cb-col"><input type="checkbox" class="row-cb" value="${p.id}" onclick="updateBulkDeleteBtn()"></td>
                     <td data-col="col_type"><span class="badge bg-light text-dark border">${p.type || '-'}</span></td>
                     <td data-col="col_company" class="col-center">${companyHtml}</td>
-                    <td data-col="col_date">${p.created_date || '-'}<br><span class="text-muted fs-11">-</span></td>
-                    <td data-col="col_ref">${p.project_number && p.project_number !== 'Pending' ? `<a href="javascript:void(0)" onclick="openInvoicePreview(${p.id}, '${p.project_number}')" class="proj-num" style="text-decoration: none; cursor: pointer;" title="Click to preview invoice">${p.project_number}</a>` : `<span class="proj-num">${p.project_number || 'Pending'}</span>`}</td>
+                    <td data-col="col_ref">${(() => {
+                        const pfx = (p.type === 'Domestic') ? 'ARDOM' : ((p.type === 'Service') ? 'ARSER' : ((p.type === 'Other') ? 'AROTH' : 'ARINT'));
+                        const ref = (p.project_number && p.project_number !== 'Pending' && p.project_number.trim() !== '') ? p.project_number : `${pfx}${1000 + (p.id || 1)}`;
+                        return `<a href="javascript:void(0)" onclick="openInvoicePreview(${p.id}, '${ref}')" class="proj-num" style="text-decoration: none; cursor: pointer;" title="Click to preview invoice">${ref}</a>`;
+                    })()}</td>
                     <td data-col="col_customer"><a href="javascript:void(0)" onclick="showProjectSnapshot(${p.id})" style="color:var(--primary); font-weight:700; text-decoration:none;" title="Click for Quick Preview">${customerName}</a></td>
                     <td data-col="col_phone">${p.phone || '-'}</td>
                     <td data-col="col_email">${p.email || '-'}</td>

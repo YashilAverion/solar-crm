@@ -155,6 +155,17 @@ function fetchInstallationsData(req, res, overridePayStatus = null) {
                     if (battery) { r.battery_model = battery.model || battery.name; r.battery_qty = battery.qty; }
                 }
                 r.created_date = isoToDisplay(r.created_date);
+
+                // Auto-heal missing or empty project numbers immediately
+                if (!r.project_number || r.project_number.trim() === '' || r.project_number === 'Pending') {
+                    let pfx = 'AROTH';
+                    if (['PV', 'Battery', 'PV + Battery'].includes(r.type)) pfx = 'ARINT';
+                    else if (r.type === 'Domestic') pfx = 'ARDOM';
+                    else if (r.type === 'Service') pfx = 'ARSER';
+                    r.project_number = `${pfx}${1000 + (r.id || 1)}`;
+                    db.run('UPDATE installations SET project_number = ? WHERE id = ?', [r.project_number, r.id]);
+                }
+
                 return r;
             });
 
