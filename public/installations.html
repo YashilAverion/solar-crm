@@ -113,11 +113,11 @@
 
         /* ========== HISTORY ========== */
         .history-list { list-style: none; padding: 0; margin: 0; }
-        .history-item { border-left: 4px solid #cbd5e1; padding: 14px 18px; margin-bottom: 12px; background: #f8fafc; border-radius: 0 10px 10px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .history-item:hover { border-left-color: var(--primary); background: #f1f5f9; transform: translateX(2px); }
-        .history-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
-        .history-action { font-size: 1.05rem; color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
-        .history-detail { font-size: 0.95rem; color: #475569; line-height: 1.4; }
+        .history-item { border-left: 3px solid var(--primary); padding: 10px 14px; margin-bottom: 10px; background: #f8fafc; border-radius: 0 8px 8px 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-item:hover { border-left-color: var(--primary-hover); background: #f1f5f9; }
+        .history-date { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+        .history-action { font-size: 13px; color: var(--text-dark); font-weight: 700; margin-bottom: 2px; }
+        .history-detail { font-size: 12px; color: #475569; line-height: 1.4; }
 
         /* ========== FORM & FILTERS ========== */
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -133,19 +133,19 @@
         .input-group input[type="text"] { border: none !important; box-shadow: none !important; height: 100%; border-radius: 0; flex: 1; padding: 0 10px; font-size: 13px; }
         .section-divider { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; padding-bottom: 6px; border-bottom: 1px solid #c5d3e8; grid-column: 1 / -1; }
         .form-footer { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-bottom: none; border-top: 1px solid var(--border); grid-column: 1 / -1; gap: 8px; }
-        .btn-save { background: var(--accent); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(232,104,30,0.3); transition: all 0.2s; }
-        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-save { background: var(--primary); color: #fff; padding: 8px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 2px 4px rgba(228,31,7,0.25); transition: all 0.2s; }
+        .btn-save:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .btn-save:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .adv-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px; }
         .adv-filter-grid .field label { font-size: 11px; margin-bottom: 2px; }
-        .form-control-sm { height: 26px !important; padding: 5px 8px !important; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; background: var(--surface); outline: none; box-shadow: none; transition: all 0.2s; }
-        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
+        .form-control-sm { height: 28px !important; padding: 4px 8px !important; font-size: 12px !important; color: #212529 !important; font-weight: 500 !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; background: var(--surface); outline: none; box-shadow: none; transition: all 0.2s; }
+        .form-control-sm:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
 
         /* ========== AUTOCOMPLETE DROPDOWNS ========== */
         .ac-wrap { position: relative; }
         .ac-drop { position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 9999; background: var(--surface); border: 1px solid var(--border); max-height: 180px; overflow-y: auto; list-style: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 6px; display: none; padding: 4px 0; }
-        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 11px !important; color: #212529 !important; font-weight: 500 !important; transition: background 0.15s; }
+        .ac-drop li { padding: 6px 10px; cursor: pointer; font-size: 12px !important; color: #212529 !important; font-weight: 500 !important; transition: background 0.15s; }
         .ac-drop li:hover { background: #f1f5f9; color: var(--primary) !important; }
         .ac-drop li.ac-active { background: #f1f5f9; color: var(--primary) !important; border-left: 3px solid var(--primary); }
         .ac-empty { padding: 10px; font-size: 11px !important; color: var(--text-muted) !important; font-style: italic; text-align: center; }
@@ -157,15 +157,17 @@
 
         .pac-container { z-index: 9999 !important; border-radius: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; font-family: 'Inter', sans-serif !important; }
 
-        /* ========== SWEETALERT2 COMPACT OVERRIDES ========== */
-        .swal2-popup { width: 340px !important; padding: 16px 20px 20px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; }
-        .swal2-title { font-size: 14px !important; padding: 0 !important; margin-bottom: 8px !important; color: var(--text-dark) !important; }
-        .swal2-html-container { font-size: 12px !important; margin: 0 0 16px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.4 !important; }
-        .swal2-icon { transform: scale(0.65) !important; margin: 10px auto 4px !important; border-width: 3px !important; }
-        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: center !important; }
-        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 16px !important; height: 28px !important; min-height: 28px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
-        .swal2-confirm { background-color: var(--accent) !important; color: #fff !important; }
-        .swal2-confirm:hover { background-color: var(--accent-hover) !important; }
+        /* ========== SWEETALERT2 DREAMS COMPACT OVERRIDES ========== */
+        .swal2-popup { width: 440px !important; padding: 18px 22px !important; border-radius: 12px !important; font-family: 'Inter', system-ui, sans-serif !important; border: 1px solid #e8e8e8 !important; box-shadow: 0 12px 28px -5px rgba(0,0,0,0.12) !important; }
+        .swal2-title { font-size: 16px !important; font-weight: 700 !important; padding: 0 !important; margin-bottom: 12px !important; color: var(--text-dark) !important; text-align: left !important; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px !important; }
+        .swal2-html-container { font-size: 12.5px !important; margin: 0 0 14px !important; padding: 0 !important; color: var(--text-muted) !important; line-height: 1.5 !important; }
+        .swal2-icon { transform: scale(0.65) !important; margin: 6px auto 2px !important; border-width: 3px !important; }
+        .swal2-actions { margin: 0 !important; gap: 8px !important; width: 100% !important; justify-content: flex-end !important; }
+        .swal2-confirm, .swal2-cancel { font-size: 12px !important; font-weight: 600 !important; padding: 0 18px !important; height: 32px !important; min-height: 32px !important; border-radius: 6px !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
+        .swal2-confirm { background-color: var(--primary) !important; color: #fff !important; }
+        .swal2-confirm:hover { background-color: var(--primary-hover) !important; }
+        .swal2-cancel { background-color: #f1f5f9 !important; color: #475569 !important; border: 1px solid #cbd5e1 !important; }
+        .swal2-cancel:hover { background-color: #e2e8f0 !important; }
 
         /* ========== COLUMN ALIGNMENTS ========== */
         .col-center { text-align: center !important; vertical-align: middle !important; }
@@ -173,15 +175,15 @@
         
         /* ========== COMPACT DYNAMIC TABLES ========== */
         .compact-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .compact-table th { background: #f8fafc; font-size: 11px !important; font-weight: 700 !important; color: #212529 !important; text-transform: uppercase; padding: 4px 6px !important; border: 1px solid var(--border); text-align: center; }
-        .compact-table td { padding: 4px !important; border: 1px solid var(--border); vertical-align: middle; text-align: center; }
-        .compact-table input, .compact-table select { height: 26px !important; padding: 2px 6px !important; font-size: 11px !important; font-weight: 500 !important; color: #212529 !important; border: 1px solid var(--border); border-radius: 4px; width: 100%; box-sizing: border-box; outline: none; background: #fff; box-shadow: none; }
-        .compact-table input:focus, .compact-table select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(28,53,87,0.1); }
-        .compact-table input[readonly] { background: #f1f5f9; color: #212529 !important; cursor: not-allowed; font-weight: 700 !important; border-style: dashed; }
+        .compact-table th { background: #f8fafc; font-size: 11px !important; font-weight: 700 !important; color: #475569 !important; text-transform: uppercase; padding: 6px 8px !important; border: 1px solid var(--border); text-align: center; }
+        .compact-table td { padding: 6px 8px !important; border: 1px solid var(--border); vertical-align: middle; text-align: center; }
+        .compact-table input, .compact-table select { height: 28px !important; padding: 2px 8px !important; font-size: 12px !important; font-weight: 500 !important; color: #1e293b !important; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; background: #fff; box-shadow: none; }
+        .compact-table input:focus, .compact-table select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(228,31,7,0.1); }
+        .compact-table input[readonly] { background: #f8fafc; color: #1e293b !important; cursor: not-allowed; font-weight: 700 !important; border-style: dashed; }
         .btn-add-row { background: transparent; border: 1px dashed var(--primary); color: var(--primary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
-        .btn-add-row:hover { background: #eef2f8; }
-        .btn-del-row { background: #fef0ee; color: #b93a20; border: 1px solid #f5c4bb; border-radius: 4px; width: 24px; height: 24px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-del-row:hover { background: #b93a20; color: #fff; }
+        .btn-add-row:hover { background: #fee2e2; }
+        .btn-del-row { background: #fee2e2; color: var(--primary); border: 1px solid #fecaca; border-radius: 4px; width: 26px; height: 26px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-del-row:hover { background: var(--primary); color: #fff; }
         .qty-wrap { display: flex; align-items: center; gap: 4px; }
 
         /* ========== PAGINATION ========== */
@@ -1281,24 +1283,24 @@ document.addEventListener("DOMContentLoaded", function() {
             viewButtonHtml = `<button type="button" class="cert-view-btn" style="display:none; background:white; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:4px; color:#2c3e50; width:28px; height:28px; align-items:center; justify-content:center;" title="View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>`;
         }
 
-        const deleteBtnHtml = isFirstRow ? '' : `<button type="button" class="btn-del-row" style="background:none; border:none; cursor:pointer; font-size:13px; padding:0; color:#b93a20;" onclick="this.closest('.cert-row').remove()" title="Delete">🗑️</button>`;
-        const addBtnHtml = `<button type="button" class="cert-add-btn" style="background:none; border:none; cursor:pointer; font-size:13px; padding:0; color:#2c3e50;" onclick="addCertRow()" title="Add Certificate">➕</button>`;
+        const deleteBtnHtml = isFirstRow ? '' : `<button type="button" class="btn-icon text-danger" style="width:28px; height:28px;" onclick="this.closest('.cert-row').remove()" title="Delete Certificate"><i class="ti ti-trash"></i></button>`;
+        const addBtnHtml = `<button type="button" class="btn-icon text-primary cert-add-btn" style="width:28px; height:28px;" onclick="addCertRow()" title="Add Certificate"><i class="ti ti-plus"></i></button>`;
 
         tr.innerHTML = `
-            <td style="padding: 10px 8px;">${meterNoHtml}</td>
-            <td style="padding: 10px 8px;">${phaseHtml}</td>
-            <td style="padding: 10px 8px;">
-                <select class="form-control-sm eq_cert" style="width: 100%; height: 34px;">
+            <td style="padding: 6px 8px;">${meterNoHtml}</td>
+            <td style="padding: 6px 8px;">${phaseHtml}</td>
+            <td style="padding: 6px 8px;">
+                <select class="form-control-sm eq_cert" style="width: 100%; height: 32px;">
                     <option value="">Select Certificate</option>
                     <option value="ESC">ESC</option>
                     <option value="NOC">NOC</option>
                     <option value="Other">Other</option>
                 </select>
             </td>
-            <td style="padding: 10px 8px;">
-                <input type="text" class="form-control-sm eq_cert_no" placeholder="No." style="width: 100%; height: 34px;" value="${number}">
+            <td style="padding: 6px 8px;">
+                <input type="text" class="form-control-sm eq_cert_no" placeholder="No." style="width: 100%; height: 32px;" value="${number}">
             </td>
-            <td style="padding: 10px 8px;">
+            <td style="padding: 6px 8px;">
                 <div style="display: flex; gap: 6px; align-items: center;">
                     ${fileInputHtml}
                     ${viewButtonHtml}
@@ -1580,8 +1582,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <td><input type="text" class="eq-size" readonly placeholder="Size" value="${size}"></td>
             <td>
                 <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
-                    <button type="button" class="btn-add-row" onclick="addEquipRow()" title="Add Equipment Row" style="margin:0; padding:2px 6px; font-size:12px;">➕</button>
-                    <button type="button" class="btn-del-row" onclick="if(document.querySelectorAll('.equip-row').length > 1) { this.closest('tr').remove(); calcEquip(); evaluateSmartCharges(); } else { Swal.fire('Warning', 'At least one equipment row is required.', 'warning'); }" style="margin:0; font-size:12px;">🗑️</button>
+                    <button type="button" class="btn-icon text-primary" onclick="addEquipRow()" title="Add Equipment Row"><i class="ti ti-plus"></i></button>
+                    <button type="button" class="btn-icon text-danger" onclick="if(document.querySelectorAll('.equip-row').length > 1) { this.closest('tr').remove(); calcEquip(); evaluateSmartCharges(); } else { Swal.fire('Warning', 'At least one equipment row is required.', 'warning'); }" title="Delete Equipment Row"><i class="ti ti-trash"></i></button>
                 </div>
             </td>
         `;
@@ -2047,7 +2049,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <td><input type="text" class="ch-ex" value="${exGst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; text-align: center;"></td>
             <td><input type="text" class="ch-gst" value="${gst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; text-align: center;"></td>
             <td><input type="text" class="ch-inc" value="${incGst.toFixed(2)}" readonly style="background:#f8fafc; font-weight:700 !important; color:#10b981; text-align: center;"></td>
-            <td style="text-align: center;"><button type="button" class="btn-del-row" title="Delete Charge">🗑️</button></td>
+            <td style="text-align: center;"><button type="button" class="btn-icon text-danger btn-del-row" title="Delete Charge"><i class="ti ti-trash"></i></button></td>
         `;
         tbody.appendChild(tr);
     }
@@ -2931,33 +2933,34 @@ function applyColumnVisibility() {
         const plainTextToCopy = `Project Ref: ${p.project_number || 'Pending'}\nCustomer: ${customerName}\nCompany: ${p.company || '-'}\nPhone: ${p.phone || '-'}\nEmail: ${p.email || '-'}\nAddress: ${addressText}\nType: ${p.type || '-'}\nStatus: ${p.status || '-'}\nInvoice: $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})\n\nEquipment:\n${plainEquipText}`;
 
         Swal.fire({
-            title: `Snapshot: ${p.project_number || 'Pending'}`,
+            title: `<i class="ti ti-layout-grid me-2 text-danger"></i>Snapshot: ${p.project_number || 'Pending'}`,
             html: `
-                <div style="position: relative; text-align: left; font-size: 13px; line-height: 1.6; color: var(--text-dark); background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-                    <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--text-dark); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: flex; align-items: center; gap: 4px;">📋 Copy</button>
+                <div style="position: relative; text-align: left; font-size: 13px; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <button onclick="copySnapshotText(this)" data-copytext="${encodeURIComponent(plainTextToCopy)}" style="position: absolute; top: 12px; right: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;"><i class="ti ti-copy"></i> Copy</button>
                     
-                    <div style="margin-bottom: 8px; padding-right: 60px;"><b>👤 Customer:</b> ${customerName}</div>
-                    <div style="margin-bottom: 8px;"><b>🏢 Company:</b> ${p.company || '-'}</div>
-                    <div style="margin-bottom: 8px;"><b>📞 Phone:</b> ${p.phone || '-'}</div>
-                    <div style="margin-bottom: 8px;"><b>✉️ Email:</b> ${p.email || '-'}</div>
-                    <div style="margin-bottom: 8px;"><b>📍 Address:</b> ${addressText}</div>
+                    <div style="margin-bottom: 8px; padding-right: 65px;"><span class="text-muted fw-semibold">Customer:</span> <strong class="text-dark">${customerName}</strong></div>
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Company:</span> <strong class="text-dark">${p.company || '-'}</strong></div>
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Phone:</span> <strong class="text-dark">${p.phone || '-'}</strong></div>
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Email:</span> <strong class="text-dark">${p.email || '-'}</strong></div>
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Address:</span> <span class="text-dark">${addressText}</span></div>
                     <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
-                        <span><b>Type:</b> ${p.type || '-'}</span>
-                        <span><b>Status:</b> <span style="background:var(--bg); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-weight:600;">${p.status || '-'}</span></span>
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px; align-items: center;">
+                        <span><span class="text-muted fw-semibold">Type:</span> <span class="badge bg-light text-dark border">${p.type || '-'}</span></span>
+                        <span><span class="text-muted fw-semibold">Status:</span> ${p.status === 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' : '<span class="badge bg-warning-subtle text-warning">' + (p.status || 'Pending') + '</span>'}</span>
                     </div>
-                    <div style="margin-bottom: 8px;"><b>💰 Invoice:</b> $${parseFloat(p.invoice_amount || 0).toFixed(2)} (${p.payment_status || 'Pending'})</div>
+                    <div style="margin-bottom: 8px;"><span class="text-muted fw-semibold">Invoice:</span> <strong class="text-dark">$${parseFloat(p.invoice_amount || 0).toFixed(2)}</strong> <span class="text-muted fs-11">(${p.payment_status || 'Pending'})</span></div>
                     <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
-                    <div style="margin-bottom: 4px;"><b>⚙️ Equipment Summary:</b></div>
-                    <div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+                    <div style="margin-bottom: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Equipment Summary</div>
+                    <div style="background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 12px;">
                         ${equipHtml}
                     </div>
                 </div>
             `,
+            showCancelButton: false,
             showConfirmButton: true,
             confirmButtonText: 'Close',
-            confirmButtonColor: '#1c3557',
-            width: '400px'
+            confirmButtonColor: 'var(--primary)',
+            width: '420px'
         });
     }
 
