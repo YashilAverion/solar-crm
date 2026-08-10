@@ -411,14 +411,20 @@ db.serialize(() => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             equipment_details TEXT DEFAULT '[]',
             certificate_details TEXT DEFAULT '[]',
-            company_job_reference TEXT DEFAULT ''
+            company_job_reference TEXT DEFAULT '',
+            preliminary_date TEXT DEFAULT '',
+            notice_cert_date TEXT DEFAULT '',
+            electrical_cert_date TEXT DEFAULT '',
+            invoice_sent_date TEXT DEFAULT ''
         )
     `);
 
-    // Safe migration: Add company_job_reference if not present
-    db.run(`ALTER TABLE installations ADD COLUMN company_job_reference TEXT DEFAULT ''`, (err) => {
-        // Ignore duplicate column error
-    });
+    // Safe migrations
+    db.run(`ALTER TABLE installations ADD COLUMN company_job_reference TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN preliminary_date TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN notice_cert_date TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN electrical_cert_date TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN invoice_sent_date TEXT DEFAULT ''`, () => {});
 
     // 6. Installation Documents Table (NEW & CRITICAL FOR FILE UPLOADS)
     db.run(`

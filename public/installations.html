@@ -939,9 +939,57 @@ document.addEventListener("DOMContentLoaded", function() {
             <!-- Additional Certificates Container (for extra rows) -->
             <div id="extraCertsContainer"></div>
 
-            <!-- Help Text for File Formats -->
-            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px; color: #92400e;">
-                <strong>Accepted formats:</strong> PDF, JPG, JPEG, PNG (Max 5 MB per file)
+            <!-- Certificate & Invoice Milestones (Dreams CRM Space-Optimized Grid) -->
+            <div class="p-3 mb-3 border rounded-3" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                <div class="row g-3">
+                    <!-- 1. Preliminary Generate -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="d-flex flex-column gap-1">
+                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
+                                <input type="checkbox" class="form-check-input mt-0" id="chk_preliminary_date" onchange="toggleCertDateInput('chk_preliminary_date', 'eq_preliminary_date')" style="cursor: pointer; width: 16px; height: 16px;">
+                                <span>Preliminary Generate</span>
+                            </label>
+                            <input type="date" class="form-control form-control-sm" id="eq_preliminary_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                        </div>
+                    </div>
+
+                    <!-- 2. Notice of Certificate -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="d-flex flex-column gap-1">
+                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
+                                <input type="checkbox" class="form-check-input mt-0" id="chk_notice_cert_date" onchange="toggleCertDateInput('chk_notice_cert_date', 'eq_notice_cert_date')" style="cursor: pointer; width: 16px; height: 16px;">
+                                <span>Notice of Certificate</span>
+                            </label>
+                            <input type="date" class="form-control form-control-sm" id="eq_notice_cert_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                        </div>
+                    </div>
+
+                    <!-- 3. Electrical Certificate -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="d-flex flex-column gap-1">
+                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
+                                <input type="checkbox" class="form-check-input mt-0" id="chk_electrical_cert_date" onchange="toggleCertDateInput('chk_electrical_cert_date', 'eq_electrical_cert_date')" style="cursor: pointer; width: 16px; height: 16px;">
+                                <span>Electrical Certificate</span>
+                            </label>
+                            <input type="date" class="form-control form-control-sm" id="eq_electrical_cert_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                        </div>
+                    </div>
+
+                    <!-- 4. Invoice No. (INV- + Numeric) -->
+                    <div class="col-md-6 col-sm-6">
+                        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Invoice No.</label>
+                        <div class="input-group" style="height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
+                            <span class="input-group-text bg-light text-muted fw-bold px-2 py-0" style="font-size: 12px; border: none; border-right: 1px solid #cbd5e1; height: 100%; display: flex; align-items: center;">INV-</span>
+                            <input type="text" class="form-control" id="eq_invoice_number" placeholder="1001" style="font-size: 12px; border: none !important; box-shadow: none !important; height: 100%; padding: 0 10px; background: #fff;">
+                        </div>
+                    </div>
+
+                    <!-- 5. Invoice Sent Date -->
+                    <div class="col-md-6 col-sm-6">
+                        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Invoice Sent Date</label>
+                        <input type="date" class="form-control form-control-sm" id="eq_invoice_sent_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                    </div>
+                </div>
             </div>
 
 
@@ -1571,6 +1619,20 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('eq_meter_no').value = p.meter_number || '';
         document.getElementById('eq_phase').value = p.electricity_phase || '';
         
+        // Populate Certificate Milestones and Invoice Details
+        document.getElementById('eq_preliminary_date').value = p.preliminary_date || '';
+        document.getElementById('chk_preliminary_date').checked = !!(p.preliminary_date && p.preliminary_date.trim());
+
+        document.getElementById('eq_notice_cert_date').value = p.notice_cert_date || '';
+        document.getElementById('chk_notice_cert_date').checked = !!(p.notice_cert_date && p.notice_cert_date.trim());
+
+        document.getElementById('eq_electrical_cert_date').value = p.electrical_cert_date || '';
+        document.getElementById('chk_electrical_cert_date').checked = !!(p.electrical_cert_date && p.electrical_cert_date.trim());
+
+        const rawInvNum = p.invoice_number || '';
+        document.getElementById('eq_invoice_number').value = rawInvNum ? rawInvNum.replace(/^INV-?/i, '') : '';
+        document.getElementById('eq_invoice_sent_date').value = p.invoice_sent_date || '';
+
         calcEquip();
         
         // BUG FIX: Strictly scope and reset distance variables to prevent cross-modal leakage
@@ -2648,6 +2710,13 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
+        const rawInv = document.getElementById('eq_invoice_number').value.trim();
+        const invoice_number = rawInv ? (rawInv.startsWith('INV-') ? rawInv : 'INV-' + rawInv) : '';
+        const invoice_sent_date = document.getElementById('eq_invoice_sent_date').value || '';
+        const preliminary_date = document.getElementById('eq_preliminary_date').value || '';
+        const notice_cert_date = document.getElementById('eq_notice_cert_date').value || '';
+        const electrical_cert_date = document.getElementById('eq_electrical_cert_date').value || '';
+
         const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
 
         const payload = {
@@ -2656,6 +2725,11 @@ document.addEventListener("DOMContentLoaded", function() {
             electricity_phase: electricity_phase,
             travel_distance_km: travel_distance_km,
             travel_charge_amount: travel_charge_amount, // NEW FIELD
+            preliminary_date: preliminary_date,
+            notice_cert_date: notice_cert_date,
+            electrical_cert_date: electrical_cert_date,
+            invoice_number: invoice_number,
+            invoice_sent_date: invoice_sent_date,
             certificate_details: JSON.stringify(certificates), // Store as JSON string
             installation_charges: charges, // This will be handled separately in backend
             currentUser: currentUser
@@ -2673,6 +2747,35 @@ document.addEventListener("DOMContentLoaded", function() {
         } catch(e) { Swal.fire('Error', 'Network error.', 'error'); }
         finally { btn.disabled = false; btn.innerText = 'Save Update'; }
     }
+
+    function toggleCertDateInput(chkId, inputId) {
+        const chk = document.getElementById(chkId);
+        const inp = document.getElementById(inputId);
+        if (!chk || !inp) return;
+        if (chk.checked) {
+            if (!inp.value) {
+                const now = new Date();
+                const yr = now.getFullYear();
+                const mo = String(now.getMonth() + 1).padStart(2, '0');
+                const dy = String(now.getDate()).padStart(2, '0');
+                inp.value = `${yr}-${mo}-${dy}`;
+            }
+        }
+    }
+
+    // Auto check/uncheck checkbox when date is typed or cleared
+    document.addEventListener('DOMContentLoaded', () => {
+        ['eq_preliminary_date', 'eq_notice_cert_date', 'eq_electrical_cert_date'].forEach(inputId => {
+            const el = document.getElementById(inputId);
+            if (el) {
+                el.addEventListener('input', function() {
+                    const chkId = this.id.replace(/^eq_/, 'chk_');
+                    const chk = document.getElementById(chkId);
+                    if (chk) chk.checked = !!this.value;
+                });
+            }
+        });
+    });
 
     // --- Bulk Delete Logic ---
     function toggleAllCheckboxes(masterCheckbox) {

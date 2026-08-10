@@ -366,7 +366,12 @@ router.put('/:id/details', (req, res) => {
                 meter_number = ?, 
                 electricity_phase = ?, 
                 travel_distance_km = ?, 
-                travel_charge_amount = ?
+                travel_charge_amount = ?,
+                preliminary_date = ?,
+                notice_cert_date = ?,
+                electrical_cert_date = ?,
+                invoice_number = ?,
+                invoice_sent_date = ?
                 WHERE id = ?`,
                 [
                     typeof d.equipment_details === 'string' ? d.equipment_details : JSON.stringify(d.equipment_details || []),
@@ -375,6 +380,11 @@ router.put('/:id/details', (req, res) => {
                     d.electricity_phase || '',
                     parseFloat(d.travel_distance_km) || 0,
                     parseFloat(d.travel_charge_amount) || 0,
+                    d.preliminary_date || '',
+                    d.notice_cert_date || '',
+                    d.electrical_cert_date || '',
+                    d.invoice_number || '',
+                    d.invoice_sent_date || '',
                     installationId
                 ], function(err) {
                     if (err) return res.status(500).json({ error: err.message });
