@@ -939,55 +939,49 @@ document.addEventListener("DOMContentLoaded", function() {
             <!-- Additional Certificates Container (for extra rows) -->
             <div id="extraCertsContainer"></div>
 
-            <!-- Certificate & Invoice Milestones (Dreams CRM Space-Optimized Grid) -->
-            <div class="p-3 mb-3 border rounded-3" style="background: #f8fafc; border-color: #e2e8f0 !important;">
-                <div class="row g-3">
+            <!-- Milestone Dates & Invoicing: 5-Column Space-Optimized Grid (Dreams CRM Template) -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: end;">
                     <!-- 1. Preliminary Generate -->
-                    <div class="col-md-4 col-sm-6">
-                        <div class="d-flex flex-column gap-1">
-                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
-                                <input type="checkbox" class="form-check-input mt-0" id="chk_preliminary_date" onchange="toggleCertDateInput('chk_preliminary_date', 'eq_preliminary_date')" style="cursor: pointer; width: 16px; height: 16px;">
-                                <span>Preliminary Generate</span>
-                            </label>
-                            <input type="date" class="form-control form-control-sm" id="eq_preliminary_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                    <div>
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <input type="checkbox" id="chk_preliminary_date" onchange="toggleCertDateInput('chk_preliminary_date', 'eq_preliminary_date')" style="accent-color: #e8681e; width: 16px; height: 16px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
+                            <label for="chk_preliminary_date" style="font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; margin: 0; white-space: nowrap;">Preliminary Gen</label>
                         </div>
+                        <input type="date" class="form-control form-control-sm" id="eq_preliminary_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px;">
                     </div>
 
                     <!-- 2. Notice of Certificate -->
-                    <div class="col-md-4 col-sm-6">
-                        <div class="d-flex flex-column gap-1">
-                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
-                                <input type="checkbox" class="form-check-input mt-0" id="chk_notice_cert_date" onchange="toggleCertDateInput('chk_notice_cert_date', 'eq_notice_cert_date')" style="cursor: pointer; width: 16px; height: 16px;">
-                                <span>Notice of Certificate</span>
-                            </label>
-                            <input type="date" class="form-control form-control-sm" id="eq_notice_cert_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                    <div>
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <input type="checkbox" id="chk_notice_cert_date" onchange="toggleCertDateInput('chk_notice_cert_date', 'eq_notice_cert_date')" style="accent-color: #e8681e; width: 16px; height: 16px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
+                            <label for="chk_notice_cert_date" style="font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; margin: 0; white-space: nowrap;">Notice of Cert</label>
                         </div>
+                        <input type="date" class="form-control form-control-sm" id="eq_notice_cert_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px;">
                     </div>
 
                     <!-- 3. Electrical Certificate -->
-                    <div class="col-md-4 col-sm-6">
-                        <div class="d-flex flex-column gap-1">
-                            <label class="form-check-label d-flex align-items-center gap-2 mb-0" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">
-                                <input type="checkbox" class="form-check-input mt-0" id="chk_electrical_cert_date" onchange="toggleCertDateInput('chk_electrical_cert_date', 'eq_electrical_cert_date')" style="cursor: pointer; width: 16px; height: 16px;">
-                                <span>Electrical Certificate</span>
-                            </label>
-                            <input type="date" class="form-control form-control-sm" id="eq_electrical_cert_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                    <div>
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <input type="checkbox" id="chk_electrical_cert_date" onchange="toggleCertDateInput('chk_electrical_cert_date', 'eq_electrical_cert_date')" style="accent-color: #e8681e; width: 16px; height: 16px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
+                            <label for="chk_electrical_cert_date" style="font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; margin: 0; white-space: nowrap;">Electrical Cert</label>
                         </div>
+                        <input type="date" class="form-control form-control-sm" id="eq_electrical_cert_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px;">
                     </div>
 
-                    <!-- 4. Invoice No. (INV- + Numeric) -->
-                    <div class="col-md-6 col-sm-6">
-                        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Invoice No.</label>
-                        <div class="input-group" style="height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
-                            <span class="input-group-text bg-light text-muted fw-bold px-2 py-0" style="font-size: 12px; border: none; border-right: 1px solid #cbd5e1; height: 100%; display: flex; align-items: center;">INV-</span>
-                            <input type="text" class="form-control" id="eq_invoice_number" placeholder="1001" style="font-size: 12px; border: none !important; box-shadow: none !important; height: 100%; padding: 0 10px; background: #fff;">
+                    <!-- 4. Invoice No. -->
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block; white-space: nowrap;">Invoice No.</label>
+                        <div class="input-group" style="height: 30px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
+                            <span class="input-group-text bg-light text-dark fw-bold px-2 py-0" style="font-size: 11px; border: none; border-right: 1px solid #cbd5e1; height: 100%; display: flex; align-items: center;">INV-</span>
+                            <input type="text" class="form-control" id="eq_invoice_number" placeholder="1001" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="font-size: 12px; font-weight: 600; border: none !important; box-shadow: none !important; height: 100%; padding: 0 8px; background: #fff;">
                         </div>
                     </div>
 
                     <!-- 5. Invoice Sent Date -->
-                    <div class="col-md-6 col-sm-6">
-                        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Invoice Sent Date</label>
-                        <input type="date" class="form-control form-control-sm" id="eq_invoice_sent_date" style="height: 32px; font-size: 12px; border-color: #cbd5e1; background: #fff;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block; white-space: nowrap;">Invoice Sent Date</label>
+                        <input type="date" class="form-control form-control-sm" id="eq_invoice_sent_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px;">
                     </div>
                 </div>
             </div>
@@ -1629,8 +1623,8 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('eq_electrical_cert_date').value = p.electrical_cert_date || '';
         document.getElementById('chk_electrical_cert_date').checked = !!(p.electrical_cert_date && p.electrical_cert_date.trim());
 
-        const rawInvNum = p.invoice_number || '';
-        document.getElementById('eq_invoice_number').value = rawInvNum ? rawInvNum.replace(/^INV-?/i, '') : '';
+        const rawInvNum = (p.invoice_number || '').replace(/[^0-9]/g, '') || (p.project_number || '').replace(/[^0-9]/g, '');
+        document.getElementById('eq_invoice_number').value = rawInvNum;
         document.getElementById('eq_invoice_sent_date').value = p.invoice_sent_date || '';
 
         calcEquip();
@@ -2752,6 +2746,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const chk = document.getElementById(chkId);
         const inp = document.getElementById(inputId);
         if (!chk || !inp) return;
+        const textInp = document.getElementById(inputId + '_text');
         if (chk.checked) {
             if (!inp.value) {
                 const now = new Date();
@@ -2759,7 +2754,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 const mo = String(now.getMonth() + 1).padStart(2, '0');
                 const dy = String(now.getDate()).padStart(2, '0');
                 inp.value = `${yr}-${mo}-${dy}`;
+                if (textInp) textInp.value = `${dy}-${mo}-${yr}`;
             }
+        } else {
+            inp.value = '';
+            if (textInp) textInp.value = '';
         }
     }
 
@@ -2770,6 +2769,14 @@ document.addEventListener("DOMContentLoaded", function() {
             if (el) {
                 el.addEventListener('input', function() {
                     const chkId = this.id.replace(/^eq_/, 'chk_');
+                    const chk = document.getElementById(chkId);
+                    if (chk) chk.checked = !!this.value;
+                });
+            }
+            const textEl = document.getElementById(inputId + '_text');
+            if (textEl) {
+                textEl.addEventListener('input', function() {
+                    const chkId = inputId.replace(/^eq_/, 'chk_');
                     const chk = document.getElementById(chkId);
                     if (chk) chk.checked = !!this.value;
                 });
