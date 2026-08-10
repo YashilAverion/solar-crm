@@ -414,7 +414,9 @@ db.serialize(() => {
             company_job_reference TEXT DEFAULT '',
             preliminary_date TEXT DEFAULT '',
             notice_cert_date TEXT DEFAULT '',
+            amended_noc_date TEXT DEFAULT '',
             electrical_cert_date TEXT DEFAULT '',
+            amended_ccew_date TEXT DEFAULT '',
             invoice_sent_date TEXT DEFAULT ''
         )
     `);
@@ -423,7 +425,9 @@ db.serialize(() => {
     db.run(`ALTER TABLE installations ADD COLUMN company_job_reference TEXT DEFAULT ''`, () => {});
     db.run(`ALTER TABLE installations ADD COLUMN preliminary_date TEXT DEFAULT ''`, () => {});
     db.run(`ALTER TABLE installations ADD COLUMN notice_cert_date TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN amended_noc_date TEXT DEFAULT ''`, () => {});
     db.run(`ALTER TABLE installations ADD COLUMN electrical_cert_date TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE installations ADD COLUMN amended_ccew_date TEXT DEFAULT ''`, () => {});
     db.run(`ALTER TABLE installations ADD COLUMN invoice_sent_date TEXT DEFAULT ''`, () => {});
 
     // 6. Installation Documents Table (NEW & CRITICAL FOR FILE UPLOADS)

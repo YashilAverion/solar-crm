@@ -369,7 +369,9 @@ router.put('/:id/details', (req, res) => {
                 travel_charge_amount = ?,
                 preliminary_date = ?,
                 notice_cert_date = ?,
+                amended_noc_date = ?,
                 electrical_cert_date = ?,
+                amended_ccew_date = ?,
                 invoice_number = ?,
                 invoice_sent_date = ?
                 WHERE id = ?`,
@@ -382,7 +384,9 @@ router.put('/:id/details', (req, res) => {
                     parseFloat(d.travel_charge_amount) || 0,
                     d.preliminary_date || '',
                     d.notice_cert_date || '',
+                    d.amended_noc_date || '',
                     d.electrical_cert_date || '',
+                    d.amended_ccew_date || '',
                     d.invoice_number || '',
                     d.invoice_sent_date || '',
                     installationId

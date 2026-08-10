@@ -962,11 +962,17 @@ document.addEventListener("DOMContentLoaded", function() {
                                 <label for="chk_notice_cert_date" style="font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; margin: 0; line-height: 1;">NOC</label>
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                <input type="checkbox" id="chk_noc_amended" style="accent-color: #e8681e; width: 13px; height: 13px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
+                                <input type="checkbox" id="chk_noc_amended" onchange="toggleAmendedCert('noc')" style="accent-color: #e8681e; width: 13px; height: 13px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
                                 <label for="chk_noc_amended" style="font-size: 10.5px; font-weight: 600; color: #64748b; cursor: pointer; margin: 0; line-height: 1;">Amended</label>
                             </div>
                         </div>
                         <input type="date" class="form-control form-control-sm modern-date-input" id="eq_notice_cert_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px; border-radius: 6px;">
+                        
+                        <!-- Dynamic Amended NOC Date Picker -->
+                        <div id="noc_amended_box" style="display: none; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+                            <label style="font-size: 10.5px; font-weight: 700; color: #e8681e; margin-bottom: 3px; display: block;">Amended NOC</label>
+                            <input type="date" class="form-control form-control-sm modern-date-input" id="eq_amended_noc_date" style="height: 28px; font-size: 11px; border-color: #fbd38d; background: #fffaf0; padding: 2px 6px; border-radius: 6px;">
+                        </div>
                     </div>
 
                     <!-- 3. CCEW -->
@@ -977,11 +983,17 @@ document.addEventListener("DOMContentLoaded", function() {
                                 <label for="chk_electrical_cert_date" style="font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; margin: 0; line-height: 1;">CCEW</label>
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                <input type="checkbox" id="chk_ccew_amended" style="accent-color: #e8681e; width: 13px; height: 13px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
+                                <input type="checkbox" id="chk_ccew_amended" onchange="toggleAmendedCert('ccew')" style="accent-color: #e8681e; width: 13px; height: 13px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; margin: 0;">
                                 <label for="chk_ccew_amended" style="font-size: 10.5px; font-weight: 600; color: #64748b; cursor: pointer; margin: 0; line-height: 1;">Amended</label>
                             </div>
                         </div>
                         <input type="date" class="form-control form-control-sm modern-date-input" id="eq_electrical_cert_date" style="height: 30px; font-size: 11.5px; border-color: #cbd5e1; background: #fff; padding: 2px 6px; border-radius: 6px;">
+                        
+                        <!-- Dynamic Amended CCEW Date Picker -->
+                        <div id="ccew_amended_box" style="display: none; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+                            <label style="font-size: 10.5px; font-weight: 700; color: #e8681e; margin-bottom: 3px; display: block;">Amended CCEW</label>
+                            <input type="date" class="form-control form-control-sm modern-date-input" id="eq_amended_ccew_date" style="height: 28px; font-size: 11px; border-color: #fbd38d; background: #fffaf0; padding: 2px 6px; border-radius: 6px;">
+                        </div>
                     </div>
 
                     <!-- 4. Invoice No. -->
@@ -1636,8 +1648,18 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('eq_notice_cert_date').value = p.notice_cert_date || '';
         document.getElementById('chk_notice_cert_date').checked = !!(p.notice_cert_date && p.notice_cert_date.trim());
 
+        document.getElementById('eq_amended_noc_date').value = p.amended_noc_date || '';
+        const hasAmendedNoc = !!(p.amended_noc_date && p.amended_noc_date.trim());
+        document.getElementById('chk_noc_amended').checked = hasAmendedNoc;
+        document.getElementById('noc_amended_box').style.display = hasAmendedNoc ? 'block' : 'none';
+
         document.getElementById('eq_electrical_cert_date').value = p.electrical_cert_date || '';
         document.getElementById('chk_electrical_cert_date').checked = !!(p.electrical_cert_date && p.electrical_cert_date.trim());
+
+        document.getElementById('eq_amended_ccew_date').value = p.amended_ccew_date || '';
+        const hasAmendedCcew = !!(p.amended_ccew_date && p.amended_ccew_date.trim());
+        document.getElementById('chk_ccew_amended').checked = hasAmendedCcew;
+        document.getElementById('ccew_amended_box').style.display = hasAmendedCcew ? 'block' : 'none';
 
         const rawInvNum = (p.invoice_number || '').replace(/[^0-9]/g, '') || (p.project_number || '').replace(/[^0-9]/g, '');
         document.getElementById('eq_invoice_number').value = rawInvNum;
@@ -1762,6 +1784,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <option value="">Select Certificate</option>
                     <option value="ESC">ESC</option>
                     <option value="NOC">NOC</option>
+                    <option value="Amended ESC">Amended ESC</option>
+                    <option value="Amended NOC">Amended NOC</option>
                     <option value="Other">Other</option>
                 </select>
             </td>
@@ -2753,7 +2777,9 @@ document.addEventListener("DOMContentLoaded", function() {
         const invoice_sent_date = document.getElementById('eq_invoice_sent_date').value || '';
         const preliminary_date = document.getElementById('eq_preliminary_date').value || '';
         const notice_cert_date = document.getElementById('eq_notice_cert_date').value || '';
+        const amended_noc_date = document.getElementById('eq_amended_noc_date').value || '';
         const electrical_cert_date = document.getElementById('eq_electrical_cert_date').value || '';
+        const amended_ccew_date = document.getElementById('eq_amended_ccew_date').value || '';
 
         const currentUser = document.querySelector('.sb-uname') ? document.querySelector('.sb-uname').innerText : 'System';
 
@@ -2765,7 +2791,9 @@ document.addEventListener("DOMContentLoaded", function() {
             travel_charge_amount: travel_charge_amount, // NEW FIELD
             preliminary_date: preliminary_date,
             notice_cert_date: notice_cert_date,
+            amended_noc_date: amended_noc_date,
             electrical_cert_date: electrical_cert_date,
+            amended_ccew_date: amended_ccew_date,
             invoice_number: invoice_number,
             invoice_sent_date: invoice_sent_date,
             certificate_details: JSON.stringify(certificates), // Store as JSON string
@@ -2803,6 +2831,82 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             inp.value = '';
             if (textInp) textInp.value = '';
+        }
+    }
+
+    function toggleAmendedCert(type) {
+        if (type === 'noc') {
+            const chk = document.getElementById('chk_noc_amended');
+            const box = document.getElementById('noc_amended_box');
+            const inp = document.getElementById('eq_amended_noc_date');
+            const textInp = document.getElementById('eq_amended_noc_date_text');
+            if (chk && chk.checked) {
+                if (box) box.style.display = 'block';
+                if (inp && !inp.value) {
+                    const now = new Date();
+                    const yr = now.getFullYear();
+                    const mo = String(now.getMonth() + 1).padStart(2, '0');
+                    const dy = String(now.getDate()).padStart(2, '0');
+                    inp.value = `${yr}-${mo}-${dy}`;
+                    if (textInp) textInp.value = `${dy}-${mo}-${yr}`;
+                }
+                ensureCertRowWithDocType('Amended NOC');
+            } else {
+                if (box) box.style.display = 'none';
+                if (inp) inp.value = '';
+                if (textInp) textInp.value = '';
+            }
+        } else if (type === 'ccew') {
+            const chk = document.getElementById('chk_ccew_amended');
+            const box = document.getElementById('ccew_amended_box');
+            const inp = document.getElementById('eq_amended_ccew_date');
+            const textInp = document.getElementById('eq_amended_ccew_date_text');
+            if (chk && chk.checked) {
+                if (box) box.style.display = 'block';
+                if (inp && !inp.value) {
+                    const now = new Date();
+                    const yr = now.getFullYear();
+                    const mo = String(now.getMonth() + 1).padStart(2, '0');
+                    const dy = String(now.getDate()).padStart(2, '0');
+                    inp.value = `${yr}-${mo}-${dy}`;
+                    if (textInp) textInp.value = `${dy}-${mo}-${yr}`;
+                }
+                ensureCertRowWithDocType('Amended ESC');
+            } else {
+                if (box) box.style.display = 'none';
+                if (inp) inp.value = '';
+                if (textInp) textInp.value = '';
+            }
+        }
+    }
+
+    function ensureCertRowWithDocType(targetDocType) {
+        const tbody = document.getElementById('certTableBody');
+        if (!tbody) return;
+        const existingRows = tbody.querySelectorAll('.cert-row');
+        let found = false;
+        existingRows.forEach(row => {
+            const sel = row.querySelector('.eq_cert');
+            if (sel && sel.value === targetDocType) {
+                found = true;
+            }
+        });
+        if (!found) {
+            let emptyRow = null;
+            existingRows.forEach(row => {
+                const sel = row.querySelector('.eq_cert');
+                const fileUrl = row.querySelector('.cert-file-url');
+                if (sel && !sel.value && (!fileUrl || !fileUrl.value)) {
+                    emptyRow = row;
+                }
+            });
+            if (emptyRow) {
+                const sel = emptyRow.querySelector('.eq_cert');
+                if (sel) sel.value = targetDocType;
+            } else {
+                const newRow = renderCertRow({ type: targetDocType }, false);
+                tbody.appendChild(newRow);
+            }
         }
     }
 
