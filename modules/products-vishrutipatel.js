@@ -183,7 +183,7 @@ router.post('/', requireAuth, upload.none(), (req, res) => {
         return res.status(400).json({ error: 'Purchase price must be a valid number.' });
     }
     if (d.model_number && d.model_number.trim() !== '') {
-        db.get("SELECT id FROM products WHERE model_number = ?", [d.model_number], (err, row) => {
+        db.get("SELECT id FROM products WHERE model_number = ? AND (product_status IS NULL OR product_status != 'Deleted')", [d.model_number], (err, row) => {
             if (row) return res.status(400).json({ error: "Model Already Exist" });
             insertProduct();
         });
@@ -226,7 +226,7 @@ router.put('/:id', requireAuth, upload.none(), (req, res) => {
     const id = req.params.id;
 
     if (d.model_number && d.model_number.trim() !== '') {
-        db.get("SELECT id FROM products WHERE model_number = ? AND id != ?", [d.model_number, id], (err, row) => {
+        db.get("SELECT id FROM products WHERE model_number = ? AND id != ? AND (product_status IS NULL OR product_status != 'Deleted')", [d.model_number, id], (err, row) => {
             if (row) return res.status(400).json({ error: "Model Already Exist" });
             executeEdit();
         });
