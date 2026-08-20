@@ -255,7 +255,7 @@ async function processProductsAndCombos(products) {
 // Calculate route
 router.post('/calculate', requireAuth, async (req, res) => {
     try {
-        const { leadId, postcode, state, products, blackout, phase, house_storey, roof_type, roof_angle, panel_install_type, battery_install_type, battery_location, type_of_lead, site_visit_req, vpp_rebate } = req.body;
+        const { leadId, postcode, state, products, blackout, phase, house_storey, roof_type, roof_angle, panel_install_type, battery_install_type, battery_location, type_of_lead, site_visit_req, vpp_rebate, exclude_install_charges, exclude_travel_charges } = req.body;
 
         const customerState = (state || 'WA').toUpperCase().trim();
         const customerPostcode = parseInt(postcode) || 0;
@@ -293,8 +293,10 @@ router.post('/calculate', requireAuth, async (req, res) => {
         let customerBatteryLocation = battery_location || '';
         let customerSiteVisitReq = site_visit_req || 'No';
         let customerVppRebate = vpp_rebate || 'No';
+        let customerExcludeInstall = exclude_install_charges || '';
+        let customerExcludeTravel = exclude_travel_charges || '';
 
-        if (leadId && (!customerHouseStorey || !customerRoofType || !customerRoofAngle || !customerPanelInstallType || !customerBatteryInstallType || !customerBatteryLocation || !customerSiteVisitReq || !customerVppRebate)) {
+        if (leadId && (!customerHouseStorey || !customerRoofType || !customerRoofAngle || !customerPanelInstallType || !customerBatteryInstallType || !customerBatteryLocation || !customerSiteVisitReq || !customerVppRebate || !customerExcludeInstall || !customerExcludeTravel)) {
             const lead = await dbGet("SELECT engineering_details FROM leads WHERE id = ?", [leadId]);
             if (lead && lead.engineering_details) {
                 try {
@@ -307,11 +309,16 @@ router.post('/calculate', requireAuth, async (req, res) => {
                     if (!customerBatteryLocation) customerBatteryLocation = eng.battery_location || '';
                     if (!customerSiteVisitReq) customerSiteVisitReq = eng.site_visit_req || 'No';
                     if (!customerVppRebate) customerVppRebate = eng.vpp_rebate || 'No';
+                    if (!customerExcludeInstall) customerExcludeInstall = eng.exclude_install_charges || 'No';
+                    if (!customerExcludeTravel) customerExcludeTravel = eng.exclude_travel_charges || 'No';
                 } catch (e) {
                     console.error("Error parsing engineering_details in calculations:", e);
                 }
             }
         }
+
+        if (!customerExcludeInstall) customerExcludeInstall = 'No';
+        if (!customerExcludeTravel) customerExcludeTravel = 'No';
 
         // Fetch all active installation charge rates for the state
         const dbCharges = await dbAll(
@@ -622,6 +629,11 @@ router.post('/calculate', requireAuth, async (req, res) => {
             });
         }
 
+        if (customerExcludeInstall === 'Yes') {
+            totalInstallationFee = 0;
+            installationsBreakdown.length = 0;
+        }
+
         // F. Travel Charges (above 50 km, plus 10% GST)
         let travelDistance = 0;
         let travelCharges = 0;
@@ -639,13 +651,17 @@ router.post('/calculate', requireAuth, async (req, res) => {
         const travelRate = chargeRates['Travel Charges'] !== undefined ? chargeRates['Travel Charges'] : 1.30;
         const travelRateIncGst = travelRate * 1.10;
         const billableDistance = Math.max(0, travelDistance - 50);
-        travelCharges = billableDistance * travelRateIncGst;
-        if (travelCharges > 0) {
-            installationsBreakdown.push({
-                name: "Travel Charges",
-                formula: `${billableDistance.toFixed(0)} km (exceeding 50 km) X $${travelRateIncGst.toFixed(2)}`,
-                total: parseFloat(travelCharges.toFixed(2))
-            });
+        if (customerExcludeTravel === 'Yes') {
+            travelCharges = 0;
+        } else {
+            travelCharges = billableDistance * travelRateIncGst;
+            if (travelCharges > 0) {
+                installationsBreakdown.push({
+                    name: "Travel Charges",
+                    formula: `${billableDistance.toFixed(0)} km (exceeding 50 km) X $${travelRateIncGst.toFixed(2)}`,
+                    total: parseFloat(travelCharges.toFixed(2))
+                });
+            }
         }
 
         // 3. STC REBATES
