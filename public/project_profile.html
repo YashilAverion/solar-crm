@@ -3168,55 +3168,6 @@ function toggleNav(event, element) {
             }
         }
 
-        async function showBifurcationModal() {
-            const btnBif = document.getElementById('btnViewBifurcation');
-            if (btnBif) {
-                btnBif.disabled = true;
-            }
-            try {
-                await triggerCalculation();
-            } catch (err) {
-                console.error("Error triggering calculations for modal:", err);
-            } finally {
-                if (btnBif) {
-                    btnBif.disabled = false;
-                }
-            }
-
-            const data = window.lastCalculationDetails;
-            if (!data || !data.details) {
-                Swal.fire('Error', 'No calculation details available. Please verify products are selected and fields are complete.', 'error');
-                return;
-            }
-
-            const details = data.details;
-
-            // 1. Populate Products Table
-            const productsBody = document.getElementById('bif_products_body');
-            productsBody.innerHTML = '';
-            if (details.productsBreakdown && details.productsBreakdown.length > 0) {
-                details.productsBreakdown.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="status-badge sb-planned" style="padding: 2px 8px; font-size: 10px;">${item.type}</span></td>
-                        <td><strong>${item.name}</strong><br><small style="color: var(--text-muted);">${item.code}</small></td>
-                        <td style="text-align: center;">${item.qty}</td>
-                        <td style="text-align: right;">$${parseFloat(item.rate).toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: 600;">$${parseFloat(item.total).toFixed(2)}</td>
-                    `;
-                    productsBody.appendChild(tr);
-                });
-                
-                const totalTr = document.createElement('tr');
-                totalTr.className = 'bifurcation-total-row';
-                totalTr.innerHTML = `
-                    <td colspan="4">Total Product Cost (Inc. GST)</td>
-                    <td style="text-align: right;">$${details.totalProductCost.toFixed(2)}</td>
-                `;
-                productsBody.appendChild(totalTr);
-            } else {
-                productsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No products selected</td></tr>';
-            }
 
         async function excludeInstallationCharge(chargeName) {
             if (!window.excludedCharges) window.excludedCharges = [];
