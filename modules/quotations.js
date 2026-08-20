@@ -255,7 +255,7 @@ async function processProductsAndCombos(products) {
 // Calculate route
 router.post('/calculate', requireAuth, async (req, res) => {
     try {
-        const { leadId, postcode, state, products, blackout, phase, house_storey, roof_type, roof_angle, panel_install_type, battery_install_type, battery_location, type_of_lead, site_visit_req, vpp_rebate, exclude_install_charges, exclude_travel_charges } = req.body;
+        const { leadId, postcode, state, products, blackout, phase, house_storey, roof_type, roof_angle, panel_install_type, battery_install_type, battery_location, type_of_lead, site_visit_req, vpp_rebate, exclude_install_charges, exclude_travel_charges, excluded_charges } = req.body;
 
         const customerState = (state || 'WA').toUpperCase().trim();
         const customerPostcode = parseInt(postcode) || 0;
@@ -295,8 +295,15 @@ router.post('/calculate', requireAuth, async (req, res) => {
         let customerVppRebate = vpp_rebate || 'No';
         let customerExcludeInstall = exclude_install_charges || '';
         let customerExcludeTravel = exclude_travel_charges || '';
+        let customerExcludedCharges = excluded_charges || [];
 
-        if (leadId && (!customerHouseStorey || !customerRoofType || !customerRoofAngle || !customerPanelInstallType || !customerBatteryInstallType || !customerBatteryLocation || !customerSiteVisitReq || !customerVppRebate || !customerExcludeInstall || !customerExcludeTravel)) {
+        if (typeof customerExcludedCharges === 'string') {
+            try {
+                customerExcludedCharges = JSON.parse(customerExcludedCharges);
+            } catch (e) {}
+        }
+
+        if (leadId && (!customerHouseStorey || !customerRoofType || !customerRoofAngle || !customerPanelInstallType || !customerBatteryInstallType || !customerBatteryLocation || !customerSiteVisitReq || !customerVppRebate || !customerExcludeInstall || !customerExcludeTravel || !customerExcludedCharges || customerExcludedCharges.length === 0)) {
             const lead = await dbGet("SELECT engineering_details FROM leads WHERE id = ?", [leadId]);
             if (lead && lead.engineering_details) {
                 try {
@@ -311,6 +318,9 @@ router.post('/calculate', requireAuth, async (req, res) => {
                     if (!customerVppRebate) customerVppRebate = eng.vpp_rebate || 'No';
                     if (!customerExcludeInstall) customerExcludeInstall = eng.exclude_install_charges || 'No';
                     if (!customerExcludeTravel) customerExcludeTravel = eng.exclude_travel_charges || 'No';
+                    if (!customerExcludedCharges || customerExcludedCharges.length === 0) {
+                        customerExcludedCharges = eng.excluded_charges || [];
+                    }
                 } catch (e) {
                     console.error("Error parsing engineering_details in calculations:", e);
                 }
@@ -319,6 +329,9 @@ router.post('/calculate', requireAuth, async (req, res) => {
 
         if (!customerExcludeInstall) customerExcludeInstall = 'No';
         if (!customerExcludeTravel) customerExcludeTravel = 'No';
+        if (!Array.isArray(customerExcludedCharges)) {
+            customerExcludedCharges = [];
+        }
 
         // Fetch all active installation charge rates for the state
         const dbCharges = await dbAll(
@@ -663,6 +676,33 @@ router.post('/calculate', requireAuth, async (req, res) => {
                 });
             }
         }
+
+        // Post-processing filter to remove individual excluded charges
+        const isExcluded = (name) => {
+            return (customerExcludedCharges || []).includes(name);
+        };
+
+        let activeInstallationFee = 0;
+        let activeTravelCharges = 0;
+        const activeBreakdown = [];
+
+        installationsBreakdown.forEach(item => {
+            if (isExcluded(item.name)) {
+                // Skip
+            } else {
+                activeBreakdown.push(item);
+                if (item.name === 'Travel Charges') {
+                    activeTravelCharges += item.total;
+                } else {
+                    activeInstallationFee += item.total;
+                }
+            }
+        });
+
+        totalInstallationFee = activeInstallationFee;
+        travelCharges = activeTravelCharges;
+        installationsBreakdown.length = 0;
+        activeBreakdown.forEach(item => installationsBreakdown.push(item));
 
         // 3. STC REBATES
         let panelRebate = 0;

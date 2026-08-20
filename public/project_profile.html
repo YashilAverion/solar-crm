@@ -2274,6 +2274,7 @@ function toggleNav(event, element) {
                                         <th>Charge Item</th>
                                         <th>Formula</th>
                                         <th style="text-align: right;">Amount</th>
+                                        <th style="text-align: center; width: 40px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="bif_installations_body">
@@ -2801,6 +2802,10 @@ function toggleNav(event, element) {
                 safeSetRadio('tc_blackout', (projectData.battery_blackout !== undefined && projectData.battery_blackout !== null) ? projectData.battery_blackout : 'No');
                 safeSetRadio('tc_exclude_install', projectData.exclude_install_charges || 'No');
                 safeSetRadio('tc_exclude_travel', projectData.exclude_travel_charges || 'No');
+                window.excludedCharges = projectData.excluded_charges || [];
+                if (typeof window.excludedCharges === 'string') {
+                    try { window.excludedCharges = JSON.parse(window.excludedCharges); } catch (e) { window.excludedCharges = []; }
+                }
                 
                 safeSet('tc_war_panels', projectData.war_panels);
                 safeSet('tc_war_inverter', projectData.war_inverter);
@@ -3066,7 +3071,8 @@ function toggleNav(event, element) {
                 site_visit_req: safeRadioVal('tc_site_visit') || 'No',
                 vpp_rebate: safeRadioVal('tc_vpp') || 'No',
                 exclude_install_charges: safeRadioVal('tc_exclude_install') || 'No',
-                exclude_travel_charges: safeRadioVal('tc_exclude_travel') || 'No'
+                exclude_travel_charges: safeRadioVal('tc_exclude_travel') || 'No',
+                excluded_charges: window.excludedCharges || []
             };
 
             try {
@@ -3212,6 +3218,73 @@ function toggleNav(event, element) {
                 productsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No products selected</td></tr>';
             }
 
+        async function excludeInstallationCharge(chargeName) {
+            if (!window.excludedCharges) window.excludedCharges = [];
+            if (!window.excludedCharges.includes(chargeName)) {
+                window.excludedCharges.push(chargeName);
+            }
+            await saveEngineeringGrid(false);
+            showBifurcationModal();
+        }
+
+        async function restoreInstallationCharge(chargeName) {
+            if (window.excludedCharges) {
+                window.excludedCharges = window.excludedCharges.filter(name => name !== chargeName);
+            }
+            await saveEngineeringGrid(false);
+            showBifurcationModal();
+        }
+
+        async function showBifurcationModal() {
+            const btnBif = document.getElementById('btnViewBifurcation');
+            if (btnBif) {
+                btnBif.disabled = true;
+            }
+            try {
+                await triggerCalculation();
+            } catch (err) {
+                console.error("Error triggering calculations for modal:", err);
+            } finally {
+                if (btnBif) {
+                    btnBif.disabled = false;
+                }
+            }
+
+            const data = window.lastCalculationDetails;
+            if (!data || !data.details) {
+                Swal.fire('Error', 'No calculation details available. Please verify products are selected and fields are complete.', 'error');
+                return;
+            }
+
+            const details = data.details;
+
+            // 1. Populate Products Table
+            const productsBody = document.getElementById('bif_products_body');
+            productsBody.innerHTML = '';
+            if (details.productsBreakdown && details.productsBreakdown.length > 0) {
+                details.productsBreakdown.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="status-badge sb-planned" style="padding: 2px 8px; font-size: 10px;">${item.type}</span></td>
+                        <td><strong>${item.name}</strong><br><small style="color: var(--text-muted);">${item.code}</small></td>
+                        <td style="text-align: center;">${item.qty}</td>
+                        <td style="text-align: right;">$${parseFloat(item.rate).toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: 600;">$${parseFloat(item.total).toFixed(2)}</td>
+                    `;
+                    productsBody.appendChild(tr);
+                });
+                
+                const totalTr = document.createElement('tr');
+                totalTr.className = 'bifurcation-total-row';
+                totalTr.innerHTML = `
+                    <td colspan="4">Total Product Cost (Inc. GST)</td>
+                    <td style="text-align: right;">$${details.totalProductCost.toFixed(2)}</td>
+                `;
+                productsBody.appendChild(totalTr);
+            } else {
+                productsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No products selected</td></tr>';
+            }
+
             // 2. Populate Installation & Travel Charges
             const installationsBody = document.getElementById('bif_installations_body');
             installationsBody.innerHTML = '';
@@ -3224,6 +3297,9 @@ function toggleNav(event, element) {
                         <td><strong>${item.name}</strong></td>
                         <td>${item.formula || 'Flat Rate'}</td>
                         <td style="text-align: right; font-weight: 600;">$${parseFloat(item.total).toFixed(2)}</td>
+                        <td style="text-align: center; width: 40px;">
+                            <button type="button" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px 6px; font-weight: bold; font-size: 13px;" onclick="excludeInstallationCharge('${item.name.replace(/'/g, "\\'")}')" title="Remove Charge">✕</button>
+                        </td>
                     `;
                     installationsBody.appendChild(tr);
                 });
@@ -3233,10 +3309,30 @@ function toggleNav(event, element) {
                 totalTr.innerHTML = `
                     <td colspan="2">Total Installation & Travel Charges</td>
                     <td style="text-align: right;">$${totalInst.toFixed(2)}</td>
+                    <td></td>
                 `;
                 installationsBody.appendChild(totalTr);
+
+                // Show Excluded Charges List with Restore Button
+                if (window.excludedCharges && window.excludedCharges.length > 0) {
+                    const listTr = document.createElement('tr');
+                    listTr.innerHTML = `
+                        <td colspan="4" style="padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                            <div style="font-size: 11px; font-weight: 700; color: #ef4444; margin-bottom: 6px; letter-spacing: 0.3px;">EXCLUDED CHARGES:</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${window.excludedCharges.map(name => `
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid #fca5a5;">
+                                        ${name}
+                                        <button type="button" style="background: none; border: none; color: #991b1b; cursor: pointer; padding: 0; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center;" onclick="restoreInstallationCharge('${name.replace(/'/g, "\\'")}')" title="Restore Charge">↺</button>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </td>
+                    `;
+                    installationsBody.appendChild(listTr);
+                }
             } else {
-                installationsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No installation charges applied</td></tr>';
+                installationsBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No installation charges applied</td></tr>';
             }
 
             // 3. Populate Rebates Table
@@ -6054,6 +6150,7 @@ function toggleNav(event, element) {
                 margin_metrics: safeVal('td_override_margin'),
                 exclude_install_charges: safeRadioVal('tc_exclude_install'),
                 exclude_travel_charges: safeRadioVal('tc_exclude_travel'),
+                excluded_charges: window.excludedCharges || [],
                 is_create_installation: isCreate
             };
             
