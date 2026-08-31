@@ -3202,7 +3202,7 @@ let xeroSortDirection = 'asc';
 
 // Load admin employee database (default view) - updated for Xero layout
 function loadAdminEmployeesList() {
-    fetch('/api/attendance/workers')
+    fetch('/api/attendance/workers?_t=' + Date.now())
         .then(res => res.json())
         .then(workers => {
             allXeroEmployees = workers;
@@ -4760,7 +4760,7 @@ async function generateTsGrid() {
     // Fetch existing records for this user
     let existingRecords = {};
     try {
-        const res = await fetch(`/api/attendance/timesheet/${empId}`);
+        const res = await fetch(`/api/attendance/timesheet/${empId}?_t=${Date.now()}`);
         const data = await res.json();
         data.forEach(row => {
             existingRecords[row.work_date] = row;
@@ -4903,12 +4903,12 @@ async function generateTsGrid() {
             <td class="ro">${dateLabel}</td>
             <td class="ro" style="font-weight:600">${dayN[dn]}</td>
             <td class="ro">${empName.split(' ')[0]}</td>
-            <td><input type="text" class="gi" value="${defIn}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00"></td>
-            <td><input type="text" class="go" value="${defOut}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00"></td>
-            <td><input type="text" class="gb" value="${defBrk}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00"></td>
-            <td><input type="text" class="gx" value="${defExt}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder=""></td>
-            <td><input type="text" class="gsl" value="${defSl}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder=""></td>
-            <td><input type="text" class="gal" value="${defAl}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder=""></td>
+            <td><input type="text" class="gi" value="${defIn}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00" autocomplete="off"></td>
+            <td><input type="text" class="go" value="${defOut}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00" autocomplete="off"></td>
+            <td><input type="text" class="gb" value="${defBrk}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="0:00" autocomplete="off"></td>
+            <td><input type="text" class="gx" value="${defExt}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="" autocomplete="off"></td>
+            <td><input type="text" class="gsl" value="${defSl}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="" autocomplete="off"></td>
+            <td><input type="text" class="gal" value="${defAl}" onchange="recalcTsRow(${ri}); autosaveTsRow(${ri});" placeholder="" autocomplete="off"></td>
             <td class="calc gtt">${isWE && !rec ? '0:00:00' : ''}</td>
             <td style="position: relative; vertical-align: middle;">
                 <select class="grm" onchange="autosaveTsRow(${ri})">
@@ -4926,7 +4926,7 @@ async function generateTsGrid() {
                 </select>
                 <span class="save-status"></span>
             </td>
-            <td><input type="text" class="gcm" value="${defCm}" style="text-align:left" onchange="autosaveTsRow(${ri})" placeholder=""></td>
+            <td><input type="text" class="gcm" value="${defCm}" style="text-align:left" onchange="autosaveTsRow(${ri})" placeholder="" autocomplete="off"></td>
             <td class="calc gah"></td>
             <td class="smry grt"></td>
             <td class="smry gwh"></td>
@@ -7047,6 +7047,7 @@ function actionPhaseDoc(category, action) {
         'Phase2_Appointment_Letter': 'Letter of Appointment',
         'Phase2_Employment_Agreement': 'Comprehensive Employment Agreement',
         'Phase2_Internship_Contract': '6-Month Internship / Apprenticeship Contract',
+        'Phase2_Workplace_Discipline_Policy': 'Workplace Attendance, Break, Mobile Phone & Leave Policy',
         'Phase3_Mobile_Phone_Policy': 'Mobile Phone & VoIP Communications Policy',
         'Phase3_Rest_Breaks_Policy': 'Rest Breaks & Shift Interval Policy',
         'Phase3_Data_Protection_Policy': 'Data Protection & Confidentiality Policy',
@@ -7377,7 +7378,7 @@ function handleHolidayGroupChange(groupName) {
                 cancelButtonText: 'No, keep current'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    currentWorkerHolidays = [...defaults[groupName]];
+                    currentWorkerHolidays = [...HOLIDAY_DEFAULTS[groupName]];
                     renderHolidays();
                 }
             });
@@ -10729,6 +10730,24 @@ function printSalarySlip(recordId, record) {
                 <div style="display: flex; gap: 6px; margin-top: auto;">
                     <button type="button" onclick="actionPhaseDoc('Phase2_Internship_Contract', 'preview')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer;">👁️ Preview</button>
                     <button type="button" onclick="actionPhaseDoc('Phase2_Internship_Contract', 'email')" style="flex: 1; height: 30px; font-size: 11px; font-weight: 700; background: #d97706; border: none; color: #fff; border-radius: 6px; cursor: pointer;">✉️ Email</button>
+                </div>
+            </div>
+
+            <!-- Card: Phase2 — Workplace Attendance, Break, Mobile Phone & Leave Policy -->
+            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 13px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-left: 3px solid #db2777; grid-column: span 2;">
+                <div style="flex: 1; padding-right: 16px;">
+                    <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 5px;">
+                        <span style="font-size: 17px;">📋</span>
+                        <div>
+                            <strong style="font-size: 12px; color: #0f172a; display: block;">Workplace Discipline, Attendance &amp; Leave Policy</strong>
+                            <span style="font-size: 10px; color: #db2777; font-weight: 700;">Phase 2 — Workplace Guidelines</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.4;">Comprehensive policy outlining daily shift punctuality, strict mobile phone floor rules, 60-min / 20-min daily break limits, emergency exceptions, and leave rules.</p>
+                </div>
+                <div style="display: flex; gap: 6px; flex-shrink: 0; margin-left: 16px;">
+                    <button type="button" onclick="actionPhaseDoc('Phase2_Workplace_Discipline_Policy', 'preview')" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 700; background: #e2e8f0; border: none; color: #334155; border-radius: 6px; cursor: pointer; white-space: nowrap;">👁️ Preview</button>
+                    <button type="button" onclick="actionPhaseDoc('Phase2_Workplace_Discipline_Policy', 'email')" style="height: 30px; padding: 0 14px; font-size: 11px; font-weight: 700; background: #db2777; border: none; color: #fff; border-radius: 6px; cursor: pointer; white-space: nowrap;">✉️ Email</button>
                 </div>
             </div>
         </div>

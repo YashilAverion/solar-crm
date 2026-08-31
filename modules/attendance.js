@@ -2,6 +2,12 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const config = require('../config');
 const router = express.Router();
+
+// Prevent browser and proxy caching of attendance API responses
+router.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
 const db = require('../database/db');
 const { requireAuth } = require('../helpers');
 const axios = require('axios');
@@ -582,15 +588,6 @@ router.post('/workers', requireAuth, (req, res) => {
             if (err) return res.status(500).json({ error: err.message });
             const workerId = this.lastID;
 
-            // Sync all workers' holiday group and custom holidays globally
-            db.run(
-                `UPDATE attendance_workers SET holiday_group = ?, custom_holidays = ?`,
-                [holiday_group || '', custom_holidays || '[]'],
-                (syncErr) => {
-                    if (syncErr) console.error('Error syncing global holiday group:', syncErr.message);
-                }
-            );
-
             // Save employee compliance profile values
             db.run(
                 `INSERT INTO employee_compliance_profiles (
@@ -708,15 +705,6 @@ router.put('/workers/:id', requireAuth, (req, res) => {
             ],
             function(err) {
                 if (err) return res.status(500).json({ error: err.message });
-
-                // Sync all workers' holiday group and custom holidays globally
-                db.run(
-                    `UPDATE attendance_workers SET holiday_group = ?, custom_holidays = ?`,
-                    [holiday_group || '', custom_holidays || '[]'],
-                    (syncErr) => {
-                        if (syncErr) console.error('Error syncing global holiday group:', syncErr.message);
-                    }
-                );
 
                 // Update employee compliance profile values
                 db.run(
