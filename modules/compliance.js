@@ -2655,52 +2655,51 @@ function compilePhaseDoc(category, emp, registry) {
             <div class="doc-title">Workplace Attendance, Break, Mobile Phone &amp; Leave Policy</div>
             <p style="text-align: center; font-weight: bold; margin-top: -10px; margin-bottom: 20px; color: #64748b;">Effective from 1 September 2026</p>
 
-            <p>Dear Team,</p>
-            <p>Please carefully read and follow the following workplace discipline, attendance, break, mobile phone and leave management policy. The purpose of this policy is to maintain punctuality, workplace discipline, accurate attendance records, productivity and smooth business operations.</p>
+            <p>Dear Team, please carefully read and follow the following workplace discipline, attendance, break, mobile phone and leave management policy. The purpose of this policy is to maintain punctuality, workplace discipline, accurate attendance records, productivity and smooth business operations.</p>
 
             <h3>1. WORKING HOURS</h3>
             <ul>
-                <li><strong>Regular Shift:</strong> 4:00 AM to 1:00 PM</li>
+                <li>Regular Shift: 4:00 AM to 1:00 PM</li>
                 <li>Employees are expected to be ready and available for work at the scheduled starting time of 4:00 AM and must accurately record all required attendance and break punches.</li>
             </ul>
 
             <h3>2. MOBILE PHONE POLICY</h3>
             <ul>
-                <li><strong>Mobile Phone Usage:</strong> Personal mobile phones are strictly prohibited on the work floor during working hours.
+                <li>Mobile Phone Usage: Personal mobile phones are strictly prohibited on the work floor during working hours.
                     <ol type="i" style="margin-top: 6px;">
                         <li>Keep personal mobile phones silent.</li>
                         <li>Store personal mobile phones in the designated area during working hours.</li>
                         <li>Use personal mobile phones only during permitted breaks.</li>
-                        <li>Do not use personal mobile phones while working unless specifically authorized by management.</li>
+                        <li>Do not use personal mobile phones while working unless speciifcally authorized by management.</li>
                     </ol>
                 </li>
-                <li><strong>Emergency Contact:</strong> Employees may provide the following company number to family members for genuine emergencies: <strong>+91 79846 47771</strong>.</li>
+                <li>Emergency Contact: Employees may provide the following company number to family members for genuine emergencies: +91 79846 47771.</li>
                 <li>In a genuine emergency, the employee may contact their family or receive urgent communication with Manager approval. Unauthorized personal mobile-phone use during working hours may result in disciplinary action.</li>
             </ul>
 
             <h3>3. DAILY BREAK POLICY</h3>
             <ul>
-                <li><strong>Full-Day Employees — 60 Minutes</strong>
+                <li>Full-Day Employees - 60 Minutes
                     <ol type="i" style="margin-top: 6px;">
                         <li>Employees working a regular full shift are entitled to a maximum total break time of 60 minutes per working day:
                             <ol type="1" style="margin-top: 4px;">
-                                <li>30 minutes — Lunch Break</li>
-                                <li>15 minutes — Tea/Coffee Break 1</li>
-                                <li>15 minutes — Tea/Coffee Break 2</li>
+                                <li>30 minutes - Lunch Break</li>
+                                <li>15 minutes - Tea/Coffee Break 1</li>
+                                <li>15 minutes - Tea/Coffee Break 2</li>
                             </ol>
                         </li>
                     </ol>
                 </li>
-                <li><strong>Half-Day Attendance — One 20-Minute Break Only</strong>
+                <li>Half-Day Attendance - One 20 - Minute Break Only
                     <ol type="i" style="margin-top: 6px;">
-                        <li>An employee recorded as Half-Day Attendance for a particular working day is entitled to one (1) break of a maximum 20 minutes only for that day.
+                        <li>An employee recorded as Half - Day Attendance for a particular working day is entitled to one (1) break of a maximum 20 minutes only for that day.
                             <ol type="1" style="margin-top: 4px;">
                                 <li>Only one break is permitted.</li>
                                 <li>The maximum duration is 20 minutes.</li>
                                 <li>No second break is permitted.</li>
-                                <li>The normal 60-minute full-day entitlement does not apply.</li>
-                                <li>The 20-minute break cannot be split into multiple breaks or combined with another break.</li>
-                                <li>The 20-minute break remains subject to the minimum 2-hour first-break rule, the 3-hour gap rule, floor-coverage requirements and the 12:00 PM final break cutoff.</li>
+                                <li>The normal 60 - minute full-day entitlement does not apply.</li>
+                                <li>The 20 - minute break cannot be split into multiple breaks or combined with another break.</li>
+                                <li>The 20 - minute break remains subject to the minimum 2 - hour ifrst-break rule, the 3 - hour gap rule, floor-coverage requirements and the 12:00 PM ifnal break cutoff.</li>
                             </ol>
                         </li>
                     </ol>
@@ -2712,28 +2711,28 @@ function compilePhaseDoc(category, emp, registry) {
             ${letterheadHTML}
             <h3>3. DAILY BREAK POLICY (CONTINUED)</h3>
             <ul>
-                <li><strong>First Break — Minimum 2 Hours After Actual Punch In</strong>
+                <li>Ifrst Break - Minimum 2 Hours After Actual Punch In
                     <ol type="i" style="margin-top: 6px;">
-                        <li>The first break may be taken only after completing a minimum of 2 hours from the employee's actual Punch In time.
+                        <li>The ifrst break may be taken only after completing a minimum of 2 hours from the employee's actual Punch In time.
                             <ol type="1" style="margin-top: 4px;">
-                                <li>Punch In at 4:00 AM &rarr; First break may start from 6:00 AM.</li>
-                                <li>Punch In at 5:30 AM &rarr; First break may start from 7:30 AM.</li>
+                                <li>Punch In at 4:00 AM if Ifrst break may start at 6:00 AM.</li>
+                                <li>Punch In at 5:30 AM if Ifrst break may start at 7:30 AM.</li>
                             </ol>
                         </li>
-                        <li>The 2-hour period is calculated from the actual Punch In time, not from the scheduled shift start time.</li>
+                        <li>The 2 - hour period is calculated from the actual Punch In time, not from the scheduled shift start time.</li>
                     </ol>
                 </li>
-                <li><strong>Minimum 3-Hour Gap Between Breaks</strong>
+                <li>Minimum 3 - Hour Gap Between Breaks
                     <ol type="i" style="margin-top: 6px;">
-                        <li>A minimum 3-hour gap must be maintained between the end of one break and the beginning of the next break. The gap is calculated from Break In / return-to-work time.
+                        <li>A minimum 3 - hour gap must be maintained between the end of one break and the beginning of the next break. The gap is calculated from Break In / return - to - work time.
                             <ol type="1" style="margin-top: 4px;">
-                                <li>Example: Break Out 6:00 AM. If Break In is at 6:30 AM &rarr; next break may start from 9:30 AM.</li>
+                                <li>Example: Break Out 6:00 AM. If Break In 6:30 AM if next break may start from 9:30 AM.</li>
+                                <li>Employees may not combine, split, manipulate or rearrange breaks to bypass this requirement.</li>
                             </ol>
                         </li>
-                        <li>Employees may not combine, split, manipulate or rearrange breaks to bypass this requirement.</li>
                     </ol>
                 </li>
-                <li><strong>Floor Coverage &amp; Employee Coordination</strong>
+                <li>Floor Coverage &amp; Employee Coordination
                     <ol type="i" style="margin-top: 6px;">
                         <li>Breaks are subject to floor coverage and operational requirements. Before taking a break, employees must check the floor and coordinate with other team members.
                             <ol type="1" style="margin-top: 4px;">
@@ -2745,7 +2744,7 @@ function compilePhaseDoc(category, emp, registry) {
                         <li>The Team Leader/Manager may control the timing of breaks where necessary to maintain adequate floor coverage and business operations.</li>
                     </ol>
                 </li>
-                <li><strong>Final Working Hour — No Breaks</strong>
+                <li>Final Working Hour - No Breaks
                     <ol type="i" style="margin-top: 6px;">
                         <li>The final working hours are 12:00 PM to 1:00 PM. No break may be started during the final working hour.</li>
                         <li>Any employee already on an approved break before 12:00 PM must return to the workstation and record Break In no later than 12:00 PM.
@@ -2759,35 +2758,35 @@ function compilePhaseDoc(category, emp, registry) {
                         </li>
                     </ol>
                 </li>
-                <li><strong>Break Punching</strong>
+                <li>Break Punching
                     <ol type="i" style="margin-top: 6px;">
-                        <li>Every break must have both Break Out &rarr; Break In. Both punches are mandatory.</li>
-                        <li>Failure to record a required Break Out or Break In will be treated as a missed attendance punch and will be subject to the applicable company consequence, including the applicable Rs 500 per-instance consequence, subject to the company's lawful payroll/disciplinary procedure.</li>
+                        <li>Every break must have both Break Out if Break In. Both punches are mandatory.</li>
+                        <li>Failure to record a required Break Out or Break In will be treated as a missed attendance punch and will be subject to the applicable company’s consequence, including the applicable Rs 500 per - instance consequence, subject to the company's lawful payroll/disciplinary procedure.</li>
                         <li>Employees must not intentionally miss, delay, alter or manipulate break punches.</li>
                     </ol>
                 </li>
-                <li><strong>Extended Break Consequences</strong>
+                <li>Extended Break Consequences
                     <ol type="i" style="margin-top: 6px;">
-                        <li>For a Half-Day Attendance employee, the applicable break limit is one 20-minute break. Exceeding the permitted 20-minute break may attract the same extended break consequences.</li>
+                        <li>For a Half - Day Attendance employee, the applicable break limit is one 20 - minute break. Exceeding the permitted 20 - minute break may attract the same extended break consequences.</li>
                     </ol>
                     <table class="annexure-table" style="margin-top: 10px;">
                         <thead>
                             <tr>
-                                <th>Extended Break Duration</th>
+                                <th>Extended Break</th>
                                 <th>Consequence</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>1 &ndash; 5 Minutes Over</td>
+                                <td>1 - 5 Minutes Over</td>
                                 <td>Rs 200</td>
                             </tr>
                             <tr>
-                                <td>More than 5-10 Minutes Over</td>
+                                <td>More than 5 - 10 Minutes Over</td>
                                 <td>Rs 250</td>
                             </tr>
                             <tr>
-                                <td>More than 10-15 Minutes Over</td>
+                                <td>More than 10 - 15 Minutes Over</td>
                                 <td>Rs 300</td>
                             </tr>
                             <tr>
@@ -2805,8 +2804,8 @@ function compilePhaseDoc(category, emp, registry) {
             <h3>4. MANDATORY PUNCHING REQUIREMENTS</h3>
             <ul>
                 <li>Employees are responsible for correctly recording Punch In, Punch Out, Break Out and Break In.</li>
-                <li><strong>Missed Punch:</strong> Failure to record any required Punch In, Punch Out, Break Out or Break In will be treated as an attendance-recording violation.</li>
-                <li><strong>Company consequence:</strong> Rs 500 per verified missed-punch instance, subject to the company's lawful payroll/disciplinary procedure and applicable law.</li>
+                <li>Missed Punch: Failure to record any required Punch In, Punch Out, Break Out or Break In will be treated as an attendance-recording violation.</li>
+                <li>Company consequence: Rs 500 per verified missed-punch instance, subject to the company's lawful payroll/disciplinary procedure and applicable law.</li>
                 <li>A missed punch does not automatically mean the employee was absent. If the employee worked but failed to record a punch, the employee must immediately report the issue to the Team Leader/Manager so the attendance record can be verified.</li>
                 <li>Deliberately failing to record a punch, falsely recording attendance, asking another employee to punch on one's behalf, or manipulating attendance records will be treated as a serious disciplinary violation.</li>
             </ul>
@@ -2816,10 +2815,10 @@ function compilePhaseDoc(category, emp, registry) {
                 <li>Every employee is entitled to two (2) grace-period instances per calendar month. The grace period is 15 minutes from the scheduled 4:00 AM start time.
                     <ol type="i" style="margin-top: 6px;">
                         <li>4:00 AM = Scheduled Start Time</li>
-                        <li>4:01 AM–4:15 AM = Within Grace Period
+                        <li>4:01 AM - 4:15 AM = Within Grace Period
                             <ol type="1" style="margin-top: 4px;">
-                                <li>First qualifying late arrival within 4:15 AM &rarr; 1st grace used.</li>
-                                <li>Second qualifying late arrival within 4:15 AM &rarr; 2nd grace used.</li>
+                                <li>First qualifying late arrival within 4:15 AM if 1st grace is used.</li>
+                                <li>Second qualifying late arrival within 4:15 AM if 2nd grace is used.</li>
                             </ol>
                         </li>
                     </ol>
@@ -2830,17 +2829,17 @@ function compilePhaseDoc(category, emp, registry) {
 
             <h3>6. HALF-DAY ATTENDANCE &amp; NO EARLY-RELEASE</h3>
             <ul>
-                <li>Once both monthly grace instances have been exhausted, an arrival at 4:16 AM or later will be recorded as Half-Day Attendance, subject to applicable law and company payroll rules.</li>
-                <li>Half-Day Attendance does not give an employee permission to leave the workplace after arriving late. The employee remains required to stay at work and perform assigned duties until the scheduled end of the shift unless the Manager expressly authorizes an early release.</li>
-                <li><strong>Example:</strong> An employee arrives at 4:20 AM after using both grace instances. The employee is recorded as Half-Day Attendance but cannot independently leave at 8:30 AM. Leaving without approval will be treated separately as unauthorized early departure/absence.</li>
-                <li>An employee cannot use Half-Day Attendance status to avoid responsibility for unauthorized early departure.</li>
+                <li>Once both monthly grace instances have been exhausted, an arrival at 4:16 AM or later will be recorded as Half - Day Attendance, subject to applicable law and company payroll rules.</li>
+                <li>Half - Day Attendance does not give an employee permission to leave the workplace after arriving late. The employee remains required to stay at work and perform assigned duties until the scheduled end of the shift unless the Manager expressly authorizes an early release.</li>
+                <li>Example: An employee arrives at 4:20 AM after using both grace instances. The employee is recorded as Half - Day Attendance but cannot independently leave at 8:30 AM. Leaving without approval will be treated separately as unauthorized early departure/absence.</li>
+                <li>An employee cannot use Half - Day Attendance status to avoid responsibility for unauthorized early departure.</li>
             </ul>
 
             <h3>7. LATE ARRIVAL, EARLY DEPARTURE &amp; ABSENCE</h3>
             <ul>
-                <li><strong>Late Arrival:</strong> Reporting after the applicable permitted arrival time.</li>
-                <li><strong>Unauthorized Early Departure:</strong> Leaving before the scheduled end of the shift without Manager approval.</li>
-                <li><strong>Unauthorized Absence:</strong> Failing to report for work or remaining absent without approved leave.</li>
+                <li>Late Arrival: Reporting after the applicable permitted arrival time.</li>
+                <li>Unauthorized Early Departure: Leaving before the scheduled end of the shift without Manager approval.</li>
+                <li>Unauthorized Absence: Failing to report for work or remaining absent without approved leave.</li>
                 <li>These are separate attendance matters. One attendance status does not automatically authorize another violation.</li>
             </ul>
 
@@ -2855,8 +2854,8 @@ function compilePhaseDoc(category, emp, registry) {
             <ul>
                 <li>Subject to the employees’ applicable employment terms and statutory entitlement, the company's internal leave structure provides:
                     <ol type="i" style="margin-top: 6px;">
-                        <li>1 Sick Leave per month</li>
-                        <li>1 Casual Leave per month</li>
+                        <li>1 - Sick Leave per month</li>
+                        <li>1 - Casual Leave per month</li>
                     </ol>
                 </li>
                 <li>Any statutory leave entitlement that applies under applicable law will continue to be honored separately and will not be reduced by this internal policy.</li>
@@ -2876,7 +2875,7 @@ function compilePhaseDoc(category, emp, registry) {
             <ul>
                 <li>Saturday and Sunday are regular weekly off-days, subject to the applicable work schedule.</li>
                 <li>Where an employee is absent on Monday without approved leave, the company may apply its Sandwich Leave/attendance policy in accordance with applicable law and the employee's terms of employment.</li>
-                <li>If the employee has not exhausted the two monthly grace instances, arrival by 4:15 AM remains within the applicable grace period. If both grace instances have already been used, arrival at 4:16 AM or later is Late Attendance / Half-Day Attendance.</li>
+                <li>If the employee has not exhausted the two monthly grace instances, arrival by 4:15 AM remains within the applicable grace period. If both grace instances have already been used, arrival at 4:16 AM or later is Late Attendance / Half - Day Attendance.</li>
                 <li>An unauthorized Monday absence or qualifying late attendance may result in the applicable attendance/payroll consequence under the company's lawful Sandwich Leave procedure.</li>
                 <li>The company will not treat a weekly day off as a deduction merely because it falls before or after an absence unless such treatment is legally permissible and applicable to the employee's employment terms.</li>
             </ul>
@@ -2896,7 +2895,7 @@ function compilePhaseDoc(category, emp, registry) {
                         <li>Incorrect attendance record</li>
                     </ol>
                 </li>
-                <li>Any suspected system error must be reported to the Team Leader/Manager as soon as possible. The company may verify attendance using legitimate available workplace records.</li>
+                <li>Any suspected system error must be reported to the Team Leader/Manager as soon as possible. The company may verify attendance using legitimate available workplace records</li>
                 <li>A genuine technical/system error will not be treated as deliberate attendance manipulation.</li>
             </ul>
 
@@ -2920,7 +2919,7 @@ function compilePhaseDoc(category, emp, registry) {
                         <li>Verbal counselling</li>
                         <li>Written warning</li>
                         <li>Formal disciplinary notice</li>
-                        <li>Attendance/payroll consequences where legally permitted</li>
+                        <li>Attendance/payroll consequences were legally permitted</li>
                         <li>Further disciplinary action in accordance with applicable law and employment terms.</li>
                         <li>For any disciplinary fine or other statutory deduction mechanism, the company will follow the procedure required by applicable law, including any required notice, opportunity to explain/show cause, record keeping and applicable limits.</li>
                     </ol>
