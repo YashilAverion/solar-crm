@@ -132,7 +132,7 @@ function getLetterheadHTML(emp, logoBase64) {
         <div>Shop 2, Sthapatya Residency, Near Nayara Petrol Pump,</div>
         <div>SP Ring Road, Ognaj, Ahmedabad – 380060, Gujarat, India</div>
         <div>GST: ${emp.gst || '24ACMFA7488G1Z0'} | PAN: ${emp.pan || 'ACMFA7488G'}</div>
-        <div>Email: hr@averionglobal.co.in | Web: www.averionglobal.co.in</div>
+        <div>Phone: +91 79846 47771 | Email: hr@averionglobal.co.in | Web: www.averionglobal.co.in</div>
       </div>
     </div>
     `;
